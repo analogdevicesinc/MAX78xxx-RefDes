@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MaxCamAndroid</string>
+    <string name="file_operations">File Operations</string>
+    <string name="diagnostics">Diagnostics</string>
+    <string name="face_id">Face ID</string>
+    <string name="test">Test</string>
 </resources>

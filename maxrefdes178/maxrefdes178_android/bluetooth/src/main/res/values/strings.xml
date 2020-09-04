@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_version">App Version: %1$s</string>
+
+    <string name="bluetooth_title">Bluetooth</string>
+    <string name="bluetooth_list_header_paired_devices">Paired Devices</string>
+    <string name="bluetooth_list_header_available_devices">Available Devices</string>
+    <string name="bluetooth_no_available_devices_message">No nearby Bluetooth devices were found.</string>
+
+    <string name="bluetooth_scan_start">Scan</string>
+    <string name="bluetooth_scan_stop">Stop</string>
+    <string name="bluetooth_scan_cancel">Cancel</string>
+
+    <string name="bluetooth_rssi_value">%1$d dBm</string>
+
+    <string name="bluetooth_off_error_message">Bluetooth is OFF</string>
+    <string name="bluetooth_off_error_action">Turn On</string>
+
+    <string name="bluetooth_location_permission_message">Location permission is required to discover nearby devices</string>
+    <string name="bluetooth_location_permission_action">Grant</string>
+
+    <string name="bluetooth_storage_permission_message">Storage permission is required for logging</string>
+    <string name="bluetooth_storage_permission_action">Grant</string>
+    <string name="multiple_connection_warning">In environments with weak BLE connections to Maxim’s and 3rd party reference devices, data packet losses may occur. To avoid this, it is recommended that access to other wireless radios be limited while evaluating the application.</string>
+    <string name="warning">Warning!</string>
+
+    <string-array name="supported_devices_prefix">
+        <item>MAXCAM</item>
+    </string-array>
+</resources>

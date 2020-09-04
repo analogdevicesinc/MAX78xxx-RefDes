@@ -39,6 +39,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(':style')
+    implementation project(':bluetooth')
 
     implementation deps.kotlinStdLib
     implementation deps.appcompat

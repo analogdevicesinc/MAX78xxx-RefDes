@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@drawable/ic_signal_strength_0_bar"
+        android:maxLevel="0" />
+    <item
+        android:drawable="@drawable/ic_signal_strength_1_bar"
+        android:maxLevel="33" />
+    <item
+        android:drawable="@drawable/ic_signal_strength_2_bar"
+        android:maxLevel="66" />
+    <item
+        android:drawable="@drawable/ic_signal_strength_3_bar"
+        android:maxLevel="99" />
+    <item
+        android:drawable="@drawable/ic_signal_strength_4_bar"
+        android:maxLevel="100"/>
+</level-list>
