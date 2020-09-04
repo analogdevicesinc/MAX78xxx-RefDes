@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Base.V23.Theme.Maxim" parent="Base.Theme.Maxim">
+        <item name="android:statusBarColor">?colorSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="Theme.Maxim" parent="Base.V23.Theme.Maxim" />
+
+</resources>

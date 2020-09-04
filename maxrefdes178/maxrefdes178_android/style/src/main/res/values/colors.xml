@@ -1,0 +1,31 @@
+<resources>
+    <!-- Maxim colors -->
+    <color name="maxim_teal">#00B2A9</color>
+    <color name="ic_launcher_background">@color/maxim_teal</color>
+
+    <!--colorPrimary colors map to components and elements, such as app bars and buttons. -->
+    <!--colorSecondary colors are most often used as accents on components, such as FABs and -->
+    <!--selection controls.-->
+    <color name="color_primary">@color/maxim_teal</color>
+    <color name="color_primary_variant">@color/maxim_teal</color>
+    <color name="color_secondary">@color/maxim_teal</color>
+    <color name="color_secondary_variant">@color/maxim_teal</color>
+
+    <!--colorBackground appears behind scrollable content and is used for the default window-->
+    <!--background. colorSurface is mapped to the surface of components such as cards, sheets-->
+    <!--and menus. colorError is used to indicate an error state for components such as-->
+    <!--text fields.-->
+    <color name="color_background">#ffffff</color>
+    <color name="color_surface">#ffffff</color>
+    <color name="color_error">#b00020</color>
+
+    <!--"On" colors define how text, icons and strokes are colored in relation to the surface-->
+    <!--on which they appear.-->
+    <color name="color_on_primary">#ffffff</color>
+    <color name="color_on_secondary">#ffffff</color>
+    <color name="color_on_background">#000000</color>
+    <color name="color_on_surface">#000000</color>
+    <color name="color_on_error">#ffffff</color>
+
+    <color name="bottom_divider">#1F000000</color>
+</resources>
