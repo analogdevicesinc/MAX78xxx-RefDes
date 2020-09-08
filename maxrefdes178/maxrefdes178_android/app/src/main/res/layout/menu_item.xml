@@ -14,7 +14,8 @@
                 style="@style/MenuItemImageView"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginStart="10dp"/>
             <TextView
                 android:id="@+id/menuItemTextView"
                 style="@style/MenuItemTextView"

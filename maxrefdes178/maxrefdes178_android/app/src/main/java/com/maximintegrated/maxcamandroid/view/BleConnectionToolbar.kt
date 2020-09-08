@@ -16,9 +16,7 @@ import kotlinx.android.synthetic.main.connection.view.*
 data class BleConnectionInfo(
     val connectionStateCode: Int,
     val deviceName: String?,
-    val deviceAddress: String,
-    val batteryLevel: Int? = null,
-    val isCharging: Boolean = false
+    val deviceAddress: String
 ) {
     val bluetoothState: BluetoothState.State
         get() = when (connectionStateCode) {

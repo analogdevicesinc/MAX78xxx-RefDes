@@ -7,7 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.core.view.isVisible
+import androidx.lifecycle.ViewModelProviders
 import com.maximintegrated.bluetooth.devicelist.OnBluetoothDeviceClickListener
+import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.exts.getCurrentFragment
 import com.maximintegrated.maxcamandroid.exts.replaceFragment
 import com.maximintegrated.maxcamandroid.main.LandingPage
@@ -16,7 +18,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
 
-    private lateinit var bluetoothDevice: BluetoothDevice
+    private var bluetoothDevice: BluetoothDevice? = null
+    private lateinit var maxCamViewModel: MaxCamViewModel
 
     companion object {
         private const val KEY_BLUETOOTH_DEVICE = "com.maximintegrated.maxcamandroid.BLUETOOTH_DEVICE"
@@ -38,9 +41,20 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
 
         appVersion.text = getString(R.string.app_version, BuildConfig.VERSION_NAME)
         bluetoothDevice = intent.getParcelableExtra(KEY_BLUETOOTH_DEVICE)
-        firmwareVersion.text = bluetoothDevice.name
+        firmwareVersion.text = bluetoothDevice?.name
         progressBar.isVisible = false
         replaceFragment(MainFragment.newInstance())
+
+        maxCamViewModel = ViewModelProviders.of(this).get(MaxCamViewModel::class.java)
+        bluetoothDevice?.let {
+            maxCamViewModel.connect(it, getRequestedMtuSize())
+        }
+
+        mainFab.setOnClickListener {
+            if(getCurrentFragment() as? LandingPage == null){
+                onBackPressed()
+            }
+        }
     }
 
     override fun onBackPressed() {
@@ -59,5 +73,9 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
     override fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice) {
         val fragment = (getCurrentFragment() as? OnBluetoothDeviceClickListener)
         fragment?.onBluetoothDeviceClicked(bluetoothDevice)
+    }
+
+    private fun getRequestedMtuSize(): Int {
+        return 247
     }
 }
