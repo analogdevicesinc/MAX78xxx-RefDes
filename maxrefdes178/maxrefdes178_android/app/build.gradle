@@ -17,6 +17,11 @@ android {
         versionCode config.versionCode
         versionName config.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+        }
     }
     buildTypes {
         release {
@@ -32,6 +37,12 @@ android {
 
     androidExtensions {
         experimental = true
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
     }
 }
 
