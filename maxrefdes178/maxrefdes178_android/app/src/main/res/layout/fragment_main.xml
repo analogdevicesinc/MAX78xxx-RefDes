@@ -1,112 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:fillViewport="true">
 
-
-    <include layout="@layout/app_bar_layout" />
-
-    <ScrollView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        android:layout_height="wrap_content">
 
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/startGuideline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.10" />
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/startGuideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.10" />
 
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/endGuideline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.90" />
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/endGuideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.90" />
 
-            <ImageView
-                android:id="@+id/maximLogoImageView"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:layout_marginTop="40dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                android:src="@drawable/maxim_logo_big"/>
+        <ImageView
+            android:id="@+id/maximLogoImageView"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="40dp"
+            android:src="@drawable/maxim_logo_big"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <com.maximintegrated.maxcamandroid.view.MenuItemView
-                android:id="@+id/fileOperationsButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                app:image="@drawable/ic_folder"
-                app:layout_constraintBottom_toTopOf="@id/faceIdButton"
-                app:layout_constraintEnd_toEndOf="@id/endGuideline"
-                app:layout_constraintStart_toStartOf="@id/startGuideline"
-                app:layout_constraintTop_toBottomOf="@id/maximLogoImageView"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:text="@string/file_operations" />
+        <com.maximintegrated.maxcamandroid.view.MenuItemView
+            android:id="@+id/fileOperationsButton"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/menu_item_height"
+            app:image="@drawable/ic_folder"
+            app:layout_constraintBottom_toTopOf="@id/faceIdButton"
+            app:layout_constraintEnd_toEndOf="@id/endGuideline"
+            app:layout_constraintStart_toStartOf="@id/startGuideline"
+            app:layout_constraintTop_toBottomOf="@id/maximLogoImageView"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:text="@string/file_operations"
+            android:clickable="true"
+            android:focusable="true"/>
 
-            <com.maximintegrated.maxcamandroid.view.MenuItemView
-                android:id="@+id/faceIdButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:image="@drawable/ic_face_id"
-                app:layout_constraintBottom_toTopOf="@id/diagnosticsButton"
-                app:layout_constraintEnd_toEndOf="@id/endGuideline"
-                app:layout_constraintStart_toStartOf="@id/startGuideline"
-                app:layout_constraintTop_toBottomOf="@id/fileOperationsButton"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:text="@string/face_id" />
+        <com.maximintegrated.maxcamandroid.view.MenuItemView
+            android:id="@+id/faceIdButton"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/menu_item_height"
+            android:layout_marginTop="20dp"
+            app:image="@drawable/ic_face_id"
+            app:layout_constraintBottom_toTopOf="@id/diagnosticsButton"
+            app:layout_constraintEnd_toEndOf="@id/endGuideline"
+            app:layout_constraintStart_toStartOf="@id/startGuideline"
+            app:layout_constraintTop_toBottomOf="@id/fileOperationsButton"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:text="@string/face_id" />
 
-            <com.maximintegrated.maxcamandroid.view.MenuItemView
-                android:id="@+id/diagnosticsButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:image="@drawable/ic_diagnostics"
-                app:layout_constraintBottom_toTopOf="@id/keywordSpottingButton"
-                app:layout_constraintEnd_toEndOf="@id/endGuideline"
-                app:layout_constraintStart_toStartOf="@id/startGuideline"
-                app:layout_constraintTop_toBottomOf="@id/faceIdButton"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:text="@string/diagnostics" />
+        <com.maximintegrated.maxcamandroid.view.MenuItemView
+            android:id="@+id/diagnosticsButton"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/menu_item_height"
+            android:layout_marginTop="20dp"
+            app:image="@drawable/ic_diagnostics"
+            app:layout_constraintBottom_toTopOf="@id/keywordSpottingButton"
+            app:layout_constraintEnd_toEndOf="@id/endGuideline"
+            app:layout_constraintStart_toStartOf="@id/startGuideline"
+            app:layout_constraintTop_toBottomOf="@id/faceIdButton"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:text="@string/diagnostics" />
 
-            <com.maximintegrated.maxcamandroid.view.MenuItemView
-                android:id="@+id/keywordSpottingButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:image="@drawable/ic_keyword_spotting"
-                app:layout_constraintBottom_toTopOf="@id/testButton"
-                app:layout_constraintEnd_toEndOf="@id/endGuideline"
-                app:layout_constraintStart_toStartOf="@id/startGuideline"
-                app:layout_constraintTop_toBottomOf="@id/diagnosticsButton"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:text="@string/keyword_spotting" />
+        <com.maximintegrated.maxcamandroid.view.MenuItemView
+            android:id="@+id/keywordSpottingButton"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/menu_item_height"
+            android:layout_marginTop="20dp"
+            app:image="@drawable/ic_keyword_spotting"
+            app:layout_constraintBottom_toTopOf="@id/testButton"
+            app:layout_constraintEnd_toEndOf="@id/endGuideline"
+            app:layout_constraintStart_toStartOf="@id/startGuideline"
+            app:layout_constraintTop_toBottomOf="@id/diagnosticsButton"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:text="@string/keyword_spotting" />
 
 
-            <com.maximintegrated.maxcamandroid.view.MenuItemView
-                android:id="@+id/testButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="25dp"
-                app:image="@drawable/ic_test"
-                app:layout_constraintEnd_toEndOf="@id/endGuideline"
-                app:layout_constraintStart_toStartOf="@id/startGuideline"
-                app:layout_constraintTop_toBottomOf="@+id/keywordSpottingButton"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:text="@string/test" />
+        <com.maximintegrated.maxcamandroid.view.MenuItemView
+            android:id="@+id/testButton"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/menu_item_height"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="25dp"
+            app:image="@drawable/ic_test"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/endGuideline"
+            app:layout_constraintStart_toStartOf="@id/startGuideline"
+            app:layout_constraintTop_toBottomOf="@+id/keywordSpottingButton"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:text="@string/test" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </ScrollView>
-
-</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

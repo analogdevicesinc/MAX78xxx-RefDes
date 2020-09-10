@@ -18,6 +18,16 @@
         <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
     </style>
 
+    <style name="SectionCardView" parent="Widget.MaterialComponents.CardView">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="android:layout_margin">10dp</item>
+        <item name="android:clipToPadding">true</item>
+
+    </style>
+
     <style name="MenuItemImageView">
         <item name="android:layout_height">40dp</item>
         <item name="android:layout_width">40dp</item>
@@ -29,8 +39,51 @@
         <item name="android:layout_width">0dp</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">#FFF</item>
+        <item name="android:textColor">@color/color_on_primary</item>
         <item name="android:gravity">center</item>
+    </style>
+
+    <style name="CardViewTitleTextView">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:padding">4dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">@color/color_primary</item>
+        <item name="android:textColor">@color/color_on_primary</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="CardViewBoldTextView">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/color_primary</item>
+    </style>
+
+    <style name="CardViewNormalTextView">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="MaximOutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="strokeColor">@color/outlined_button_background</item>
+        <item name="android:textColor">@color/outlined_button_background</item>
+    </style>
+
+    <style name="MaximDefaultButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+    </style>
+
+    <style name="TreeNodeStyleCustom">
+        <item name="android:paddingStart">25dp</item>
+        <!--<item name="android:showDividers">middle</item>-->
+        <!--<item name="android:divider">@android:drawable/divider_horizontal_bright</item>-->
     </style>
 
 </resources>

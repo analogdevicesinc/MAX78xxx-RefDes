@@ -39,16 +39,18 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
     val mtuSize: LiveData<Int>
         get() = _mtuSize
 
-    init {
+    private val _writeStatus = MutableLiveData<Pair<Int, Int>>(Pair(0, 0))
+    val writeStatus: LiveData<Pair<Int, Int>>
+        get() = _writeStatus
 
+    init {
         deviceManager.setGattCallbacks(this)
     }
 
     override fun onCleared() {
         super.onCleared()
         if(deviceManager.isConnected){
-            //TODO: stop
-            //TODO: disconnect
+            disconnect()
         }
     }
 
@@ -146,10 +148,10 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
 
     override fun onDataReceived(device: BluetoothDevice, packet: ByteArray) {
         _receivedData.value = packet
-        Timber.i("Data Received: ${packet.contentToString()}")
+        Timber.i("Data Received: ViewModel")
     }
 
     override fun onWriteCompleted(byteSent: Int, packetSize: Int) {
-        Timber.i("Write to char is completed: $byteSent / $packetSize")
+        _writeStatus.value = Pair(byteSent, packetSize)
     }
 }

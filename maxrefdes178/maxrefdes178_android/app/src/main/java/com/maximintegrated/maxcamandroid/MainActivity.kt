@@ -8,13 +8,18 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.observe
 import com.maximintegrated.bluetooth.devicelist.OnBluetoothDeviceClickListener
+import com.maximintegrated.communication.MaxCamCallbacks
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.exts.getCurrentFragment
 import com.maximintegrated.maxcamandroid.exts.replaceFragment
 import com.maximintegrated.maxcamandroid.main.LandingPage
 import com.maximintegrated.maxcamandroid.main.MainFragment
+import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
+import com.maximintegrated.maxcamandroid.view.BleConnectionInfo
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.app_bar_layout.*
 
 class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
 
@@ -41,14 +46,24 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
 
         appVersion.text = getString(R.string.app_version, BuildConfig.VERSION_NAME)
         bluetoothDevice = intent.getParcelableExtra(KEY_BLUETOOTH_DEVICE)
-        firmwareVersion.text = bluetoothDevice?.name
-        progressBar.isVisible = false
+        firmwareVersion.text = "${bluetoothDevice?.name} - ${MaxCamNativeLibrary.getVersion()}"
         replaceFragment(MainFragment.newInstance())
 
         maxCamViewModel = ViewModelProviders.of(this).get(MaxCamViewModel::class.java)
         bluetoothDevice?.let {
-            maxCamViewModel.connect(it, getRequestedMtuSize())
+            maxCamViewModel.connect(it, MaxCamNativeLibrary.getMaxMtu())
         }
+        maxCamViewModel.connectionState
+            .observe(this) { connectionState ->
+                val device = maxCamViewModel.bluetoothDevice
+                toolbar.connectionInfo = if (device != null) {
+                    BleConnectionInfo(connectionState, device.name, device.address)
+                } else {
+                    null
+                }
+            }
+
+        toolbar.pageTitle = "MAXCAM AI85"
 
         mainFab.setOnClickListener {
             if(getCurrentFragment() as? LandingPage == null){
@@ -73,9 +88,5 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
     override fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice) {
         val fragment = (getCurrentFragment() as? OnBluetoothDeviceClickListener)
         fragment?.onBluetoothDeviceClicked(bluetoothDevice)
-    }
-
-    private fun getRequestedMtuSize(): Int {
-        return 247
     }
 }

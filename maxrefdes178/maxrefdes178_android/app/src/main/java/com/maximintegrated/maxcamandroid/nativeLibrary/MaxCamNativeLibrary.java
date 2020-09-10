@@ -8,6 +8,7 @@ public class MaxCamNativeLibrary {
 
     private JniListener jniListener;
 
+    //NOTE: Do not use it
     private MaxCamNativeLibrary(){
         initialize();
     }
@@ -17,50 +18,50 @@ public class MaxCamNativeLibrary {
     synchronized public static MaxCamNativeLibrary getInstance(JniListener listener){
          if (INSTANCE == null){
              INSTANCE = new MaxCamNativeLibrary();
-             INSTANCE.jniListener = listener;
          }
+        INSTANCE.jniListener = listener;
          return INSTANCE;
     }
 
     private native void initialize();
 
-    public native static void setMtu(int mtu);
+    public native void setMtu(int mtu);
 
     public native static int getMaxMtu();
 
     public native static String getVersion();
 
-    public native static void sendFile(String fileName, byte[] data);
+    public native void sendFile(String fileName, byte[] data);
 
-    public native static void bleDataReceived(byte[] data);
+    public native void bleDataReceived(byte[] data);
 
-    public native static void getDirectoryRequest();
+    public native void getDirectoryRequest();
 
-    public native static void getFile(String fileName);
+    public native void getFile(String fileName);
 
-    public native static void bleReset();
+    public native void bleReset();
 
-    public native static void enterDemo();
+    public native void enterDemo();
 
-    public native static void captureImage(int fileLength);
+    public native void captureImage(int fileLength);
 
-    public native static void loadImage(String filename);
+    public native void loadImage(String filename);
 
-    public native static void sendImage(String filename, byte[] content);
+    public native void sendImage(String filename, byte[] content);
 
-    private void sendNotification(byte[] data){
+    public void sendNotification(byte[] data){
         if(jniListener != null){
             jniListener.sendNotification(data);
         }
     }
 
-    private void payloadReceived(byte[] payload){
+    public void payloadReceived(byte[] payload){
         if(jniListener != null){
             jniListener.payloadReceived(payload);
         }
     }
 
-    interface JniListener {
+    public interface JniListener {
         void sendNotification(byte[] data);
         void payloadReceived(byte[] payload);
     }

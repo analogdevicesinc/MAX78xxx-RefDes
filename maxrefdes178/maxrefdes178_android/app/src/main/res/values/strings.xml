@@ -5,4 +5,20 @@
     <string name="face_id">Face ID</string>
     <string name="test">Test</string>
     <string name="keyword_spotting">Keyword Spotting</string>
+    <string name="step1">Step 1:</string>
+    <string name="choose_the_file_to_send">Choose the file to send</string>
+    <string name="select_file">Select File</string>
+    <string name="file_selected">File Selected:</string>
+    <string name="step2">Step 2:</string>
+    <string name="send_the_file_when_ready">Send the file when ready</string>
+    <string name="send_file">Send File</string>
+    <string name="choose_a_file">Choose a file</string>
+    <string name="no_file_is_selected">No file is selected</string>
+    <string name="content">Content</string>
+    <string name="get_the_file_content_from_device">Get the file content from device</string>
+    <string name="get_content">Get Content</string>
+    <string name="review_the_file_system">Review the file system</string>
+    <string name="get_file">Get File</string>
+    <string name="step3">Step 3:</string>
+    <string name="show_file_content">Show File Content</string>
 </resources>

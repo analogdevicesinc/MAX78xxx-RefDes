@@ -20,7 +20,7 @@ buildscript {
     ]
 
     final versions = [
-            kotlin               : '1.3.41',
+            kotlin               : '1.4.0',
             support              : '1.1.0-rc01',
             material             : '1.2.0-alpha03',
             constraintLayout     : '2.0.0-beta6',
@@ -42,7 +42,8 @@ buildscript {
             bluetoothStateView   : '1.1.1',
             batteryMeterView     : '2.0.0',
             roomPersistence      : '1.1.1',
-            legacySupport        : '1.0.0'
+            legacySupport        : '1.0.0',
+            coroutine            : '1.3.9'
     ]
 
     ext.deps = [
@@ -75,7 +76,8 @@ buildscript {
             roomCompiler                  : "androidx.room:room-compiler:${versions.room}",
             roomPersistence               : "android.arch.persistence.room:compiler:${versions.roomPersistence}",
             appIntro                      : "com.github.AppIntro:AppIntro:${versions.appIntro}",
-            legacySupport                 : "androidx.legacy:legacy-support-v4:${versions.legacySupport}"
+            legacySupport                 : "androidx.legacy:legacy-support-v4:${versions.legacySupport}",
+            coroutine                     : "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.coroutine}"
     ]
 
     repositories {

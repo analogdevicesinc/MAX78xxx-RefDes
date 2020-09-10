@@ -58,31 +58,26 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-jmethodID javaSendNotification;
-jmethodID javaPayloadReceived;
-JNIEnv *g_env_MaxCamNativeLibrary;
-jobject g_thiz_MaxCamNativeLibrary;
-jobject g_this_MaxCamBLEConnection;
+static jmethodID javaSendNotification;
+static jmethodID javaPayloadReceived;
+static JNIEnv *g_env_MaxCamNativeLibrary;
+static jobject g_thiz_MaxCamNativeLibrary;
 int g_mtu = 23;
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
 
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+/*JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     JNIEnv *env;
     if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {
         return JNI_ERR;
     }
 
-    jclass libraryClass = env->FindClass(
-            "com/maximintegrated/maxcamandroid/nativeLibrary/MaxCamNativeLibrary");
 
-    javaSendNotification = env->GetMethodID(libraryClass, "sendNotification", "([B)V");
-    javaPayloadReceived = env->GetMethodID(libraryClass, "payloadReceived", "([B)V");
 
     return JNI_VERSION_1_6;
-}
+}*/
 
 extern "C"
 void sendNotificationHelper(JNIEnv *env, jobject thiz, unsigned char *inputArray, int length) {
@@ -155,7 +150,7 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_initial
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_setMtu(JNIEnv *env,
-                                                                                jclass clazz,
+                                                                                jobject thiz,
                                                                                 jint mtu) {
     g_mtu = mtu;
 }
@@ -179,13 +174,18 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getVers
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_sendFile(JNIEnv *env,
-                                                                                  jclass clazz,
+                                                                                  jobject thiz,
                                                                                   jstring file_name,
                                                                                   jbyteArray data) {
-    const char *nativeFileName = env->GetStringUTFChars(file_name, 0);
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
 
-    auto *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data, 0));
-    auto inputLen = static_cast<uint16_t>(env->GetArrayLength(data));
+    const char *nativeFileName = env->GetStringUTFChars(file_name, 0);
+    // Get the input array from Java
+    unsigned char *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data, 0));
+    uint32_t inputLen = env->GetArrayLength(data);
 
     PacketHelper_SendFile(nativeFileName, (const char *) (inputArray), inputLen);
 }
@@ -193,10 +193,15 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_sendFil
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_bleDataReceived(
-        JNIEnv *env, jclass clazz, jbyteArray data) {
+        JNIEnv *env, jobject thiz, jbyteArray data) {
 
-    auto *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data, 0));
-    auto packetLen = static_cast<uint16_t>(env->GetArrayLength(data));
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaPayloadReceived = env->GetMethodID(thisClass, "payloadReceived", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
+
+    unsigned char *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data, 0));
+    uint32_t packetLen = env->GetArrayLength(data);
 
     PacketHelper_Receive(packetLen, inputArray);
 }
@@ -204,15 +209,23 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_bleData
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getDirectoryRequest(
-        JNIEnv *env, jclass clazz) {
+        JNIEnv *env, jobject thiz) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
     PacketHelper_RequestGetDir();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getFile(JNIEnv *env,
-                                                                                 jclass clazz,
+                                                                                 jobject thiz,
                                                                                  jstring file_name) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
     const char *nativeFileName = env->GetStringUTFChars(file_name, 0);
     PacketHelper_RequestGetFile(nativeFileName);
 }
@@ -220,30 +233,42 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getFile
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_bleReset(JNIEnv *env,
-                                                                                  jclass clazz) {
+                                                                                  jobject thiz) {
     PacketHelper_ResetPacketNumber();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_enterDemo(JNIEnv *env,
-                                                                                   jclass clazz) {
+                                                                                   jobject thiz) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
     PacketHelper_EnterDEMO();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_captureImage(JNIEnv *env,
-                                                                                      jclass clazz,
+                                                                                      jobject thiz,
                                                                                       jint file_length) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
     PacketHelper_CaptureImage(static_cast<const uint32_t>(file_length));
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_loadImage(JNIEnv *env,
-                                                                                   jclass clazz,
+                                                                                   jobject thiz,
                                                                                    jstring filename) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
     const char *nativeFileName = env->GetStringUTFChars(filename, 0);
     PacketHelper_LoadImage(nativeFileName);
 }
@@ -251,9 +276,13 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_loadIma
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_sendImage(JNIEnv *env,
-                                                                                   jclass clazz,
+                                                                                   jobject thiz,
                                                                                    jstring filename,
                                                                                    jbyteArray content) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
     const char *nativeFileName = env->GetStringUTFChars(filename, 0);
     // Get the input array from Java
     char *inputArray = reinterpret_cast<char *>(env->GetByteArrayElements(content, 0));
