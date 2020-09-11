@@ -89,6 +89,7 @@ dependencies {
     implementation deps.appIntro
     implementation deps.coroutine
     implementation 'com.github.bmelnychuk:atv:1.2.9'
+    api 'com.theartofdev.edmodo:android-image-cropper:2.8.0'
 
     if(JavaVersion.current().ordinal() >= JavaVersion.VERSION_1_9.ordinal()){
         kapt 'javax.xml.bind:jaxb-api:2.3.1'

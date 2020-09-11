@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.diagnostics.DiagnosticsFragment
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.fileOperations.FileOperationsFragment
 import kotlinx.android.synthetic.main.fragment_main.*
@@ -37,13 +38,12 @@ class MainFragment : Fragment(), LandingPage {
 
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
 
-
-        fileOperationsButton.isEnabled = true
-        fileOperationsButton.isVisible = true
-
         fileOperationsButton.setOnClickListener {
-            Timber.d("FileOperationsButton clicked")
             requireActivity().addFragment(FileOperationsFragment.newInstance())
+        }
+
+        diagnosticsButton.setOnClickListener {
+            requireActivity().addFragment(DiagnosticsFragment.newInstance())
         }
     }
 }
