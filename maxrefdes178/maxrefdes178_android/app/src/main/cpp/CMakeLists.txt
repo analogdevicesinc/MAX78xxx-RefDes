@@ -5,12 +5,13 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-# Add modules
-set(MODULE_MAXCAM ../../../../../maxcam)
+# Project name
+set(ROOT_PATH ./../../../../../)
 
-add_subdirectory( ${MODULE_MAXCAM} maxcam_build)
+# Add module
+add_subdirectory(packetHelper)
 
-include_directories( ${MODULE_MAXCAM}/include)
+include_directories( ${ROOT_PATH}/include ${ROOT_PATH}/maxcam/include/ ./packetHelper/)
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
