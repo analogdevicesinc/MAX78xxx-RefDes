@@ -36,7 +36,7 @@
 
 # This is the name of the build output file
 ifeq "$(PROJECT)" ""
-PROJECT=max32665
+PROJECT=max32666
 endif
 
 # Specify the target processor
