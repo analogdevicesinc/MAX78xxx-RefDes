@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/SectionCardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp">
+
+        <TextView
+            android:id="@+id/scenarioTitleTextView"
+            style="@style/CardViewTitleTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Scenario Name" />
+
+        <ImageView
+            android:id="@+id/sourceImageView"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_margin="5dp"
+            android:src="@drawable/ic_input"
+            android:tint="@color/color_primary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/scenarioTitleTextView" />
+
+        <TextView
+            android:id="@+id/sourceTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginStart="10dp"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="@id/sourceImageView"
+            app:layout_constraintStart_toEndOf="@id/sourceImageView"
+            app:layout_constraintTop_toTopOf="@id/sourceImageView"
+            tools:text="Onboard Camera" />
+
+        <ImageView
+            android:id="@+id/sizeImageView"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_margin="5dp"
+            android:src="@drawable/ic_photo_size"
+            android:tint="@color/color_primary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sourceImageView" />
+
+        <TextView
+            android:id="@+id/sizeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginStart="10dp"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="@id/sizeImageView"
+            app:layout_constraintStart_toEndOf="@id/sizeImageView"
+            app:layout_constraintTop_toTopOf="@id/sizeImageView"
+            tools:text="120 x 160" />
+
+        <ImageView
+            android:id="@+id/configurationImageView"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_margin="5dp"
+            android:src="@drawable/ic_text_file"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/scenarioTitleTextView" />
+
+        <TextView
+            android:id="@+id/configurationTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginEnd="10dp"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="@id/configurationImageView"
+            app:layout_constraintEnd_toStartOf="@id/configurationImageView"
+            app:layout_constraintTop_toTopOf="@id/configurationImageView"
+            tools:text="LayerConfig2.cfg" />
+
+        <ImageView
+            android:id="@+id/outputImageView"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_margin="5dp"
+            android:src="@drawable/ic_image"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/configurationImageView" />
+
+        <TextView
+            android:id="@+id/outputTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginEnd="10dp"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="@id/outputImageView"
+            app:layout_constraintEnd_toStartOf="@id/outputImageView"
+            app:layout_constraintTop_toTopOf="@id/outputImageView"
+            tools:text="Onboard LCD" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/selectButton"
+            style="@style/MaximOutlinedButton"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="5dp"
+            android:text="@string/select"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/outputImageView" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editButton"
+            style="@style/MaximOutlinedButton"
+            android:layout_marginEnd="10dp"
+            android:text="@string/edit"
+            app:layout_constraintEnd_toStartOf="@id/selectButton"
+            app:layout_constraintTop_toTopOf="@id/selectButton" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -289,3 +289,14 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_sendIma
     auto inputLen = static_cast<uint32_t>(env->GetArrayLength(content));
     PacketHelper_SendImage(nativeFileName, inputArray, inputLen);
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_test(JNIEnv *env,
+                                                                              jobject thiz,
+                                                                              jstring filename,
+                                                                              jint length) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
+}

@@ -35,6 +35,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
+
     androidExtensions {
         experimental = true
     }
@@ -90,8 +94,9 @@ dependencies {
     implementation deps.coroutine
     implementation 'com.github.bmelnychuk:atv:1.2.9'
     api 'com.theartofdev.edmodo:android-image-cropper:2.8.0'
+    implementation deps.gson
 
-    if(JavaVersion.current().ordinal() >= JavaVersion.VERSION_1_9.ordinal()){
+    if (JavaVersion.current().ordinal() >= JavaVersion.VERSION_1_9.ordinal()) {
         kapt 'javax.xml.bind:jaxb-api:2.3.1'
         kapt 'com.sun.xml.bind:jaxb-core:2.3.0.1'
         kapt 'com.sun.xml.bind:jaxb-impl:2.3.2'

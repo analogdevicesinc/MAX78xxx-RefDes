@@ -2,25 +2,28 @@ package com.maximintegrated.maxcamandroid.nativeLibrary;
 
 public class MaxCamNativeLibrary {
 
-    static  {
+    static {
         System.loadLibrary("native-lib");
     }
 
     private JniListener jniListener;
 
     //NOTE: Do not use it
-    private MaxCamNativeLibrary(){
+    private MaxCamNativeLibrary() {
         initialize();
     }
 
     private static MaxCamNativeLibrary INSTANCE = null;
 
-    synchronized public static MaxCamNativeLibrary getInstance(JniListener listener){
-         if (INSTANCE == null){
-             INSTANCE = new MaxCamNativeLibrary();
-         }
-        INSTANCE.jniListener = listener;
-         return INSTANCE;
+    synchronized public static MaxCamNativeLibrary getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new MaxCamNativeLibrary();
+        }
+        return INSTANCE;
+    }
+
+    public void setJniListener(JniListener listener) {
+        jniListener = listener;
     }
 
     private native void initialize();
@@ -49,20 +52,21 @@ public class MaxCamNativeLibrary {
 
     public native void sendImage(String filename, byte[] content);
 
-    public void sendNotification(byte[] data){
-        if(jniListener != null){
+    public void sendNotification(byte[] data) {
+        if (jniListener != null) {
             jniListener.sendNotification(data);
         }
     }
 
-    public void payloadReceived(byte[] payload){
-        if(jniListener != null){
+    public void payloadReceived(byte[] payload) {
+        if (jniListener != null) {
             jniListener.payloadReceived(payload);
         }
     }
 
     public interface JniListener {
         void sendNotification(byte[] data);
+
         void payloadReceived(byte[] payload);
     }
 }

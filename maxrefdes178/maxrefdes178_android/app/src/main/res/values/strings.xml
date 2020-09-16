@@ -29,4 +29,50 @@
     <string name="read_serial_number">Read Serial Number</string>
     <string name="load_image">Load Image</string>
     <string name="send_test_bytes">Send Test Bytes</string>
+    <string name="back">Back</string>
+    <string name="next">Next</string>
+    <string name="done">Done</string>
+    <string name="no_saved_scenarios">There are no saved scenarios.</string>
+    <string name="select">Select</string>
+    <string name="enter_a_scenario_name">Enter a scenario name</string>
+    <string name="new_scenario">New Scenario</string>
+    <string name="create">Create</string>
+    <string name="edit">Edit</string>
+    <string name="input_params">Input Params</string>
+    <string name="layer_config">Layer Config</string>
+    <string name="output_params">Output Params</string>
+    <string name="configure_the_input_parameters">Configure the input parameters</string>
+    <string name="image_source">Image Source</string>
+    <string name="image_size">Image Size</string>
+
+    <string-array name="image_sources">
+        <item>Onboard Camera</item>
+        <item>File System</item>
+        <item>Android</item>
+    </string-array>
+    <string-array name="image_sizes">
+        <item>120 x 160</item>
+        <item>240 x 320</item>
+    </string-array>
+    <string-array name="image_outputs">
+        <item>Onboard LCD</item>
+        <item>File System</item>
+        <item>Android</item>
+    </string-array>
+
+    <string name="configure_the_layers">Configure the layers</string>
+    <string name="select_configuration">Select Configuration</string>
+    <string name="details_of_selected_configuration">Details of selected configuration:</string>
+    <string name="configure_where_the_output_will_be_fed">Configure where the output will be fed</string>
+    <string name="image_output">Image Output</string>
+    <string name="update_device">Update Device</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="demo">Demo</string>
+    <string name="review_the_parameters">Review the parameters</string>
+    <string name="run_the_demo_and_evaluate_the_results">Run the demo and evaluate the results</string>
+    <string name="select_image">Select Image</string>
+    <string name="run_demo">Run Demo</string>
+    <string name="save_scenario">Save Scenario</string>
 </resources>

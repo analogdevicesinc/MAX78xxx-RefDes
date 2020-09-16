@@ -10,19 +10,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import androidx.core.graphics.scale
 import androidx.core.text.bold
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.observe
 import com.google.android.material.snackbar.Snackbar
 import com.maximintegrated.communication.MaxCamViewModel
-import com.maximintegrated.maxcamandroid.MainActivity
-import com.maximintegrated.maxcamandroid.OperationState
-import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.*
 import com.maximintegrated.maxcamandroid.exts.fromHexStringToMeaningfulAscii
 import com.maximintegrated.maxcamandroid.exts.getMaxCamFile
 import com.maximintegrated.maxcamandroid.exts.toHexString
@@ -37,22 +33,15 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_file_operations.*
 import timber.log.Timber
 
-class FileOperationsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
+class FileOperationsFragment : Fragment() {
 
     companion object {
         private const val PICK_FILE_RESULT_CODE = 143
         fun newInstance() = FileOperationsFragment()
     }
 
-    private val maxCamNativeLibrary = MaxCamNativeLibrary.getInstance(this)
-
-    private lateinit var fileOperationsViewModel: FileOperationsViewModel
+    private lateinit var mainViewModel: MainViewModel
     private lateinit var maxCamViewModel: MaxCamViewModel
-
-
-    private val dataReceivedObserver = Observer<ByteArray> { data ->
-        fileOperationsViewModel.onBleDataReceived(data)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -63,18 +52,17 @@ class FileOperationsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
 
     private var previousTreeNode: TreeNode? = null
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        fileOperationsViewModel =
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mainViewModel =
             ViewModelProvider(
-                this,
-                FileOperationsViewModelFactory(requireActivity().application, maxCamNativeLibrary)
-            ).get(FileOperationsViewModel::class.java)
+                requireActivity(),
+                MainViewModelFactory(
+                    requireActivity().application,
+                    MaxCamNativeLibrary.getInstance()
+                )
+            ).get(MainViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
-
-        maxCamViewModel.mtuSize.observe(viewLifecycleOwner) {
-            fileOperationsViewModel.onMtuSizeChanged(it)
-        }
 
         maxCamViewModel.writeStatus.observe(viewLifecycleOwner) {
             val byteSent = it.first
@@ -86,64 +74,68 @@ class FileOperationsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
                     "Error occurred while sending data.",
                     Toast.LENGTH_SHORT
                 ).show()
-                fileOperationsViewModel.onFileSendCompleted(OperationState.FAIL)
+                if(mainViewModel.fileSendOperation.value == OperationState.PROGRESS){
+                    mainViewModel.onFileSendCompleted(OperationState.FAIL)
+                }
             } else if (byteSent > 0) {
-                fileOperationsViewModel.onFileSendProgress(byteSent)
+                if(mainViewModel.fileSendOperation.value == OperationState.PROGRESS){
+                    mainViewModel.onFileSendProgress(byteSent)
+                }
             }
         }
 
-        maxCamViewModel.receivedData.observeForever(dataReceivedObserver)
-
-        fileOperationsViewModel.selectedFileName.observe(viewLifecycleOwner) {
+        mainViewModel.selectedFileName.observe(viewLifecycleOwner) {
             sendFileSelectedTextView.text = it
         }
 
-        fileOperationsViewModel.fileSendOperation.observe(viewLifecycleOwner) {
-            (requireActivity() as MainActivity).progressBar.isVisible = it == OperationState.PROGRESS
+        mainViewModel.fileSendOperation.observe(viewLifecycleOwner) {
+            (requireActivity() as MainActivity).progressBar.isVisible =
+                it == OperationState.PROGRESS
             if (it == OperationState.SUCCESS) {
                 Toast.makeText(requireContext(), "File is sent successfully", Toast.LENGTH_SHORT)
                     .show()
             }
         }
 
-        fileOperationsViewModel.selectedTreeItem.observe(viewLifecycleOwner) {
+        mainViewModel.selectedTreeItem.observe(viewLifecycleOwner) {
             getFileTextView.text = it?.text ?: ""
         }
 
-        fileOperationsViewModel.treeItemList.observe(viewLifecycleOwner) {
+        mainViewModel.treeItemList.observe(viewLifecycleOwner) {
             updateTreeView(it)
         }
 
-        fileOperationsViewModel.fileGetOperation.observe(viewLifecycleOwner) {
-            (requireActivity() as MainActivity).progressBar.isVisible = it == OperationState.PROGRESS
+        mainViewModel.fileGetOperation.observe(viewLifecycleOwner) {
+            (requireActivity() as MainActivity).progressBar.isVisible =
+                it == OperationState.PROGRESS
             getFileButton.isEnabled = it != OperationState.PROGRESS
             if (it == OperationState.SUCCESS) {
-                fileOperationsViewModel.onGetFileCompleted()
-                fileOperationsViewModel.latestReceivedTreeItem?.let { item ->
+                mainViewModel.onGetFileCompleted()
+                mainViewModel.latestReceivedTreeItem?.let { item ->
                     val dotIndex = item.text.lastIndexOf('.')
                     val intentType: String
                     when (item.text.substring(dotIndex + 1)) {
                         "jpg", "jpeg", "png" -> {
-                            fileOperationsViewModel.payload?.let { payload ->
+                            mainViewModel.payload?.let { payload ->
                                 updateFileContentImageView(payload)
                             }
                             intentType = "image/*"
                         }
                         "txt", "set" -> {
-                            fileOperationsViewModel.payload?.let { payload ->
+                            mainViewModel.payload?.let { payload ->
                                 updateFileContentTextView(payload.toHexToString())
                             }
                             intentType = "text/plain"
                         }
                         else -> {
-                            fileOperationsViewModel.payload?.let { payload ->
+                            mainViewModel.payload?.let { payload ->
                                 updateFileContentTextView(payload)
                             }
                             intentType = "text/plain"
                         }
                     }
                     Snackbar.make(
-                        view!!,
+                        view,
                         item.text + " received.",
                         Snackbar.LENGTH_SHORT
                     )
@@ -175,43 +167,26 @@ class FileOperationsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
         }
 
         sendFileButton.setOnClickListener {
-            fileOperationsViewModel.onFileSendButtonClicked()
+            mainViewModel.onFileSendButtonClicked()
         }
 
         getContentButton.setOnClickListener {
-            fileOperationsViewModel.onGetContentButtonClicked()
+            mainViewModel.onGetContentButtonClicked()
         }
 
         getFileButton.setOnClickListener {
-            fileOperationsViewModel.onGetFileButtonClicked()
+            mainViewModel.onGetFileButtonClicked()
         }
 
         updateTreeView(arrayListOf())
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        maxCamViewModel.receivedData.removeObserver(dataReceivedObserver)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_FILE_RESULT_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                fileOperationsViewModel.onFileSelected(data?.data)
+                mainViewModel.onFileSelected(data?.data)
             }
-        }
-    }
-
-    override fun sendNotification(data: ByteArray?) {
-        data?.let {
-            maxCamViewModel.sendData(data)
-        }
-    }
-
-    override fun payloadReceived(payload: ByteArray?) {
-        payload?.let {
-            fileOperationsViewModel.onPayloadReceived(payload)
         }
     }
 
@@ -243,11 +218,11 @@ class FileOperationsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
                 (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)
                 val item = value as CustomTreeItem
                 previousTreeNode = if (node == previousTreeNode) {
-                    fileOperationsViewModel.onTreeItemDeselected()
+                    mainViewModel.onTreeItemDeselected()
                     null
                 } else {
                     (node.viewHolder as TreeViewHolder).changeBackground(true)
-                    fileOperationsViewModel.onTreeItemSelected(item)
+                    mainViewModel.onTreeItemSelected(item)
                     node
                 }
             }
@@ -258,11 +233,11 @@ class FileOperationsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
                 (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)
                 val item = value as CustomTreeItem
                 previousTreeNode = if (node == previousTreeNode) {
-                    fileOperationsViewModel.onTreeItemDeselected()
+                    mainViewModel.onTreeItemDeselected()
                     null
                 } else {
                     (node.viewHolder as TreeViewHolder).changeBackground(true)
-                    fileOperationsViewModel.onTreeItemSelected(item)
+                    mainViewModel.onTreeItemSelected(item)
                     node
                 }
             }

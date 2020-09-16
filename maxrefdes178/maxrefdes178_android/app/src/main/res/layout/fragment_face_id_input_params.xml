@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".faceId.FaceIdInputParamsFragment">
+
+    <com.google.android.material.card.MaterialCardView
+        style="@style/SectionCardView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:paddingBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@id/stepperView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/selectionImageView"
+                    android:layout_width="0dp"
+                    android:layout_height="250dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/face_id_demo"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/inputParametersTextView"
+                    style="@style/CardViewBoldTextView"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="30dp"
+                    android:text="@string/configure_the_input_parameters"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/selectionImageView" />
+
+                <TextView
+                    android:id="@+id/imageSourceTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="10dp"
+                    android:gravity="center"
+                    android:text="@string/image_source"
+                    app:layout_constraintBottom_toBottomOf="@id/imageSourceSpinner"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/imageSourceSpinner" />
+
+                <Spinner
+                    android:id="@+id/imageSourceSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="10dp"
+                    android:background="@android:drawable/editbox_background_normal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/imageSourceTextView"
+                    app:layout_constraintTop_toBottomOf="@id/inputParametersTextView" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_arrow_down"
+                    app:layout_constraintBottom_toBottomOf="@id/imageSourceSpinner"
+                    app:layout_constraintEnd_toEndOf="@id/imageSourceSpinner"
+                    app:layout_constraintTop_toTopOf="@id/imageSourceSpinner" />
+
+                <TextView
+                    android:id="@+id/imageSizeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="10dp"
+                    android:gravity="center"
+                    android:text="@string/image_size"
+                    app:layout_constraintBottom_toBottomOf="@id/imageSizeSpinner"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/imageSizeSpinner" />
+
+                <Spinner
+                    android:id="@+id/imageSizeSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@android:drawable/editbox_background_normal"
+                    app:layout_constraintEnd_toEndOf="@id/imageSourceSpinner"
+                    app:layout_constraintStart_toStartOf="@id/imageSourceSpinner"
+                    app:layout_constraintTop_toBottomOf="@id/imageSourceSpinner" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_arrow_down"
+                    app:layout_constraintBottom_toBottomOf="@id/imageSizeSpinner"
+                    app:layout_constraintEnd_toEndOf="@id/imageSizeSpinner"
+                    app:layout_constraintTop_toTopOf="@id/imageSizeSpinner" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+
+    <com.maximintegrated.maxcamandroid.view.HorizontalStepperView
+        android:id="@+id/stepperView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:currentStep="first"
+        app:enableBackButton="false"
+        app:firstStepDescription="@string/input_params"
+        app:firstStepNumber="1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:secondStepDescription="@string/layer_config"
+        app:secondStepNumber="2"
+        app:stepperProgress="20"
+        app:thirdStepDescription="@string/output_params"
+        app:thirdStepNumber="3" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -34,8 +34,7 @@ buildscript {
             atsl                 : '1.2.0-beta01', // Android Testing Support Library
             espresso             : '3.2.0-beta01',
             grabner              : '1.4',
-            kotpref              : '2.2.0',
-            kotprefInitializer   : '2.2.0',
+            kotpref              : '2.11.0',
             room                 : '2.1.0-alpha03',
             navigation           : '1.0.0-alpha09',
             appIntro             : '6.0.0',
@@ -43,7 +42,8 @@ buildscript {
             batteryMeterView     : '2.0.0',
             roomPersistence      : '1.1.1',
             legacySupport        : '1.0.0',
-            coroutine            : '1.3.9'
+            coroutine            : '1.3.9',
+            gson                 : '2.8.6'
     ]
 
     ext.deps = [
@@ -71,13 +71,14 @@ buildscript {
             espresso                      : "androidx.test.espresso:espresso-core:${versions.espresso}",
             circleProgress                : "com.github.jakob-grabner:Circle-Progress-View:${versions.grabner}",
             kotpref                       : "com.chibatching.kotpref:kotpref:${versions.kotpref}",
-            kotprefInitializer            : "com.chibatching.kotpref:initializer:${versions.kotprefInitializer}",
+            kotprefInitializer            : "com.chibatching.kotpref:initializer:${versions.kotpref}",
             roomRuntime                   : "androidx.room:room-runtime:${versions.room}",
             roomCompiler                  : "androidx.room:room-compiler:${versions.room}",
             roomPersistence               : "android.arch.persistence.room:compiler:${versions.roomPersistence}",
             appIntro                      : "com.github.AppIntro:AppIntro:${versions.appIntro}",
             legacySupport                 : "androidx.legacy:legacy-support-v4:${versions.legacySupport}",
-            coroutine                     : "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.coroutine}"
+            coroutine                     : "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.coroutine}",
+            gson                          : "com.google.code.gson:gson:${versions.gson}",
     ]
 
     repositories {

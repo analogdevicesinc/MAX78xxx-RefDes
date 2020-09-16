@@ -8,11 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.observe
 import com.maximintegrated.communication.MaxCamViewModel
+import com.maximintegrated.maxcamandroid.MainViewModel
+import com.maximintegrated.maxcamandroid.MainViewModelFactory
 import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.view.CustomTreeItem
@@ -24,21 +25,14 @@ import com.unnamed.b.atv.model.TreeNode
 import com.unnamed.b.atv.view.AndroidTreeView
 import kotlinx.android.synthetic.main.fragment_diagnostics.*
 
-class DiagnosticsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
+class DiagnosticsFragment : Fragment() {
 
     companion object {
         fun newInstance() = DiagnosticsFragment()
     }
 
-    private val maxCamNativeLibrary = MaxCamNativeLibrary.getInstance(this)
-
-    private lateinit var diagnosticsViewModel: DiagnosticsViewModel
+    private lateinit var mainViewModel: MainViewModel
     private lateinit var maxCamViewModel: MaxCamViewModel
-
-
-    private val dataReceivedObserver = Observer<ByteArray> { data ->
-        diagnosticsViewModel.onBleDataReceived(data)
-    }
 
     private var previousTreeNode: TreeNode? = null
 
@@ -49,43 +43,40 @@ class DiagnosticsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
         return inflater.inflate(R.layout.fragment_diagnostics, container, false)
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        diagnosticsViewModel =
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mainViewModel =
             ViewModelProvider(
-                this,
-                DiagnosticsViewModelFactory(requireActivity().application, maxCamNativeLibrary)
-            ).get(DiagnosticsViewModel::class.java)
+                requireActivity(),
+                MainViewModelFactory(
+                    requireActivity().application,
+                    MaxCamNativeLibrary.getInstance()
+                )
+            ).get(MainViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
 
-        maxCamViewModel.mtuSize.observe(viewLifecycleOwner) {
-            diagnosticsViewModel.onMtuSizeChanged(it)
-        }
-
-        maxCamViewModel.receivedData.observeForever(dataReceivedObserver)
-
-        diagnosticsViewModel.selectedTreeItem.observe(viewLifecycleOwner) {
+        mainViewModel.selectedTreeItem.observe(viewLifecycleOwner) {
             loadImageTextView.text = it?.text ?: ""
         }
 
-        diagnosticsViewModel.treeItemList.observe(viewLifecycleOwner) {
+        mainViewModel.treeItemList.observe(viewLifecycleOwner) {
             updateTreeView(it)
         }
 
         getContentButton.setOnClickListener {
-            diagnosticsViewModel.onGetContentButtonClicked()
+            mainViewModel.onGetContentButtonClicked()
         }
 
         loadImageButton.setOnClickListener {
-            diagnosticsViewModel.onLoadImageButtonClicked()
+            mainViewModel.onLoadImageButtonClicked()
         }
 
         enterDemoButton.setOnClickListener {
-            diagnosticsViewModel.onEnterDemoButtonClicked()
+            mainViewModel.onEnterDemoButtonClicked()
         }
 
         captureImageButton.setOnClickListener {
-            diagnosticsViewModel.onCaptureImageButtonClicked()
+            mainViewModel.onCaptureImageButtonClicked()
         }
 
         sendImageButton.setOnClickListener {
@@ -98,7 +89,7 @@ class DiagnosticsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
         }
 
         sendTestBytesButton.setOnClickListener {
-            val array = ByteArray(30){
+            val array = ByteArray(30) {
                 (it + 1).toByte()
             }
             maxCamViewModel.sendData(array)
@@ -107,35 +98,18 @@ class DiagnosticsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
         updateTreeView(arrayListOf())
     }
 
-    override fun onDetach() {
-        super.onDetach()
-        maxCamViewModel.receivedData.removeObserver(dataReceivedObserver)
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
                 val result = CropImage.getActivityResult(data)
-                diagnosticsViewModel.onImageSelected(result.uri)
+                mainViewModel.onImageSelected(result.uri)
                 Toast.makeText(
                     requireContext(),
                     "Cropping successful, Sample: ",
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        }
-    }
-
-    override fun sendNotification(data: ByteArray?) {
-        data?.let {
-            maxCamViewModel.sendData(data)
-        }
-    }
-
-    override fun payloadReceived(payload: ByteArray?) {
-        payload?.let {
-            diagnosticsViewModel.onPayloadReceived(payload)
         }
     }
 
@@ -167,11 +141,11 @@ class DiagnosticsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
                 (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)
                 val item = value as CustomTreeItem
                 previousTreeNode = if (node == previousTreeNode) {
-                    diagnosticsViewModel.onTreeItemDeselected()
+                    mainViewModel.onTreeItemDeselected()
                     null
                 } else {
                     (node.viewHolder as TreeViewHolder).changeBackground(true)
-                    diagnosticsViewModel.onTreeItemSelected(item)
+                    mainViewModel.onTreeItemSelected(item)
                     node
                 }
             }
@@ -182,11 +156,11 @@ class DiagnosticsFragment : Fragment(), MaxCamNativeLibrary.JniListener {
                 (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)
                 val item = value as CustomTreeItem
                 previousTreeNode = if (node == previousTreeNode) {
-                    diagnosticsViewModel.onTreeItemDeselected()
+                    mainViewModel.onTreeItemDeselected()
                     null
                 } else {
                     (node.viewHolder as TreeViewHolder).changeBackground(true)
-                    diagnosticsViewModel.onTreeItemSelected(item)
+                    mainViewModel.onTreeItemSelected(item)
                     node
                 }
             }

@@ -9,6 +9,7 @@ import androidx.annotation.IdRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
 import com.maximintegrated.maxcamandroid.R
 
 inline fun Context.color(@ColorRes colorResId: Int) = ContextCompat.getColor(this, colorResId)
@@ -16,7 +17,7 @@ inline fun Context.color(@ColorRes colorResId: Int) = ContextCompat.getColor(thi
 inline fun Context.drawable(@DrawableRes drawableResId: Int) =
     ContextCompat.getDrawable(this, drawableResId)
 
-inline fun FragmentActivity.addFragment(fragment: Fragment, @IdRes containerId: Int = R.id.fragmentContainer) {
+inline fun FragmentActivity.addFragment(fragment: Fragment, @IdRes containerId: Int = R.id.fragmentContainer, backStackName: String? = null) {
     supportFragmentManager.beginTransaction()
         .setCustomAnimations(
             R.anim.bottom_sheet_slide_in,
@@ -25,11 +26,12 @@ inline fun FragmentActivity.addFragment(fragment: Fragment, @IdRes containerId: 
             R.anim.bottom_sheet_slide_out
         )
         .replace(containerId, fragment)
-        .addToBackStack(null)
+        .addToBackStack(backStackName)
         .commit()
 }
 
-inline fun FragmentActivity.replaceFragment(fragment: Fragment, @IdRes containerId: Int = R.id.fragmentContainer) {
+inline fun FragmentActivity.replaceFragment(fragment: Fragment, @IdRes containerId: Int = R.id.fragmentContainer, backStackName: String? = null) {
+    supportFragmentManager.popBackStack(backStackName, FragmentManager.POP_BACK_STACK_INCLUSIVE)
     supportFragmentManager.beginTransaction()
         .setCustomAnimations(
             R.anim.bottom_sheet_slide_in,
@@ -38,6 +40,7 @@ inline fun FragmentActivity.replaceFragment(fragment: Fragment, @IdRes container
             R.anim.bottom_sheet_slide_out
         )
         .replace(containerId, fragment)
+        .addToBackStack(backStackName)
         .commit()
 }
 

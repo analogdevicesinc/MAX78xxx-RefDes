@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".faceId.FaceIdDemoFragment">
+
+    <com.google.android.material.card.MaterialCardView
+        style="@style/SectionCardView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:paddingBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@id/stepperView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/selectionImageView"
+                    android:layout_width="0dp"
+                    android:layout_height="250dp"
+                    android:src="@drawable/face_id_demo"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true" />
+
+                <TextView
+                    android:id="@+id/demoTextView"
+                    style="@style/CardViewBoldTextView"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="30dp"
+                    android:text="@string/run_the_demo_and_evaluate_the_results"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/selectionImageView" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/selectImageButton"
+                    style="@style/MaximOutlinedButton"
+                    android:layout_marginStart="10dp"
+                    android:text="@string/select_image"
+                    app:layout_constraintBottom_toBottomOf="@id/demoImageView"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/demoImageView" />
+
+                <ImageView
+                    android:id="@+id/demoImageView"
+                    android:layout_width="90dp"
+                    android:layout_height="120dp"
+                    android:layout_marginTop="10dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/selectImageButton"
+                    app:layout_constraintTop_toBottomOf="@id/demoTextView"
+                    android:src="@drawable/ic_image"
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true"/>
+
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/getContentButton"
+                    style="@style/MaximOutlinedButton"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/get_content"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/demoImageView" />
+
+                <LinearLayout
+                    android:id="@+id/treeViewLinearLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHeight_min="50dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/getContentButton" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/runDemoButton"
+                    style="@style/MaximOutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:text="@string/run_demo"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/treeViewLinearLayout" />
+
+                <TextView
+                    android:id="@+id/demoResultTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="10dp"
+                    android:gravity="center"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="@id/runDemoButton"
+                    app:layout_constraintStart_toEndOf="@id/runDemoButton"
+                    app:layout_constraintTop_toTopOf="@id/runDemoButton"
+                    tools:text="Person Name" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/fileSystemViews"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:constraint_referenced_ids="getContentButton,treeViewLinearLayout" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/androidViews"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="visible"
+                    app:constraint_referenced_ids="selectImageButton,demoImageView" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+
+    <com.maximintegrated.maxcamandroid.view.HorizontalStepperView
+        android:id="@+id/stepperView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:currentStep="third"
+        app:firstStepDescription="@string/output_params"
+        app:firstStepNumber="3"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:nextButtonText="@string/done"
+        app:secondStepDescription="@string/update_device"
+        app:secondStepNumber="4"
+        app:stepperProgress="100"
+        app:thirdStepDescription="@string/demo"
+        app:thirdStepNumber="5" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

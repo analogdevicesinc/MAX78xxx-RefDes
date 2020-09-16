@@ -191,6 +191,9 @@ void PacketHelper_Receive(const uint16_t packetLen, const uint8_t *packet)
             // TODO handle retransmission
         } else if (Packet_ParseCommandPacketCommand(packet) == MAXCAM_SD_LS_RESPONSE) {
             uint32_t lsFileSize = *((uint32_t*)(payload));
+            if(PayloadReceived) {
+                PayloadReceived(4, payload);
+            }
             // TODO handle lsFileSize
         } else {
             // Error unknown command

@@ -86,4 +86,15 @@
         <!--<item name="android:divider">@android:drawable/divider_horizontal_bright</item>-->
     </style>
 
+    <style name="MaximCircleButton" parent="">
+        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_width">40dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:textColor">@color/color_on_primary</item>
+    </style>
+
 </resources>
