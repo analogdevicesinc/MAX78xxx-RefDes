@@ -119,6 +119,9 @@ include $(PERIPH_DRIVER_DIR)/periphdriver.mk
 # included before this one.
 include $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/$(COMPILER)/$(TARGET_LC).mk
 
+all:
+	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin
+
 # The rule to clean out all the build products.
 distclean: clean
 	$(MAKE) -C ${PERIPH_DRIVER_DIR} clean
