@@ -83,6 +83,7 @@ VPATH += ./src
 IPATH = .
 IPATH += ./TFT/resources
 IPATH += ./include
+IPATH += ./../include
 
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE
