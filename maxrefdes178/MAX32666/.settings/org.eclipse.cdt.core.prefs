@@ -1,0 +1,15 @@
+eclipse.preferences.version=1
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/ADAPTER/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/ADAPTER/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/ADAPTER/value=max32625_pico
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/BOARD/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/BOARD/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/BOARD/value=EvKit_V1
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/PROJECT/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/PROJECT/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/PROJECT/value=MAX32666
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/TARGET/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/TARGET/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/TARGET/value=MAX32665
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962/appendContributed=true
