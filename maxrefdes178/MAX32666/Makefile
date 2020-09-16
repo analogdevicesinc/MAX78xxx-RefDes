@@ -94,7 +94,11 @@ PROJ_CFLAGS+=-Werror
 #STARTUPFILE=start.S
 
 # Override the default optimization level using this variable
-#MXC_OPTIMIZE_CFLAGS=-O1
+ifdef RELEASE
+MXC_OPTIMIZE_CFLAGS=-Ofast
+else
+MXC_OPTIMIZE_CFLAGS=-Og
+endif
 
 # Point this variable to a linker file to override the default file
 # LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(TARGET_LC).ld

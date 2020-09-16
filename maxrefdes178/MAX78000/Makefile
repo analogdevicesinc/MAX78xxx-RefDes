@@ -72,6 +72,8 @@ SRCS += src/state_home.c
 SRCS += src/state_faceID.c
 SRCS += src/faceID.c
 SRCS += src/embedding_process.c
+SRCS += src/softmax.c
+
 
 # Where to find source files for this test
 VPATH=.
@@ -113,7 +115,11 @@ PROJ_CFLAGS+=-Werror
 #STARTUPFILE=start.S
 
 # Set MXC_OPTIMIZE to override the default optimization level
-MXC_OPTIMIZE_CFLAGS=-O0
+ifdef RELEASE
+MXC_OPTIMIZE_CFLAGS=-Ofast
+else
+MXC_OPTIMIZE_CFLAGS=-Og
+endif
 
 # Point this variable to a linker file to override the default file
 LINKER=$(TARGET_LC).ld
