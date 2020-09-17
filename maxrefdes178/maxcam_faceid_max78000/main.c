@@ -204,7 +204,7 @@ int main(void)
 	/* Touch screen controller busy signal */
 	mxc_gpio_cfg_t busy_pin = {MXC_GPIO0, MXC_GPIO_PIN_16, MXC_GPIO_FUNC_IN, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIOH};
 
-	printf("\n\nFaceID EvKit Demo v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+	printf("\n\nMAXCAM FaceID EvKit Demo v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
 
 	/* Enable cache */
 	MXC_ICC_Enable(MXC_ICC0);

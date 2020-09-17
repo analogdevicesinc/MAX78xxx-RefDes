@@ -61,7 +61,7 @@ int main(void)
 {
     int count = 0;
 
-    printf("MAX32666 Hello World! v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    printf("maxcam_faceid_max32666 Hello World! v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
 
     while (1) {
         LED_On(0);
