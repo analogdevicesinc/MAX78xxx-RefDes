@@ -63,6 +63,8 @@ CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 # Source files for this test (add path to VPATH below)
 SRCS  = ./src/main.c
 SRCS += ./src/pmic.c
+SRCS += ./src/qspi.c
+
 
 # Where to find source files for this test
 VPATH = ./src

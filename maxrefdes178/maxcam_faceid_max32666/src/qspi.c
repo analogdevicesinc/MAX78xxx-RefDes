@@ -37,16 +37,21 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <stdio.h>
-#include "tmr_utils.h"
-#include "pmic.h"
+#include <string.h>
+#include "spi.h"
+#include "dma.h"
 
-#include "qspi.h"
-#include "version.h"
+#include "definitions.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
+#define QSPI              SPI0
+#define QSPI_REGS         MXC_SPI17Y0
+#define QSPI_IRQ          SPI0_IRQn
+#define QSPI_SPEED        500000UL
+#define QSPI_RX_BUFF_LEN  (1024 * 10)
 
 
 //-----------------------------------------------------------------------------
@@ -57,6 +62,9 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
+static uint8_t       qspi_rx_buff[QSPI_RX_BUFF_LEN];
+static qspi_header_t qspi_header;
+static volatile int  qspi_flag;
 
 
 //-----------------------------------------------------------------------------
@@ -67,19 +75,89 @@
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-int main(void)
+void SPI0_IRQHandler(void)
 {
-    printf("maxcam_faceid_max32666 v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    SPI_Handler(QSPI);
+}
 
-    pmic_init();
+void qspi_callback(void *req, int error)
+{
+    qspi_flag = error;
+}
 
-    qspi_init();
+void qspi_init()
+{
+    sys_cfg_spi_t qspi_slave_cfg;
 
-    while (1) {
-//        pmic_led_green(0);
-//        TMR_Delay(MXC_TMR0, MSEC(500), 0);
-//        pmic_led_green(1);
-//        TMR_Delay(MXC_TMR0, MSEC(500), 0);
-        qspi_worker();
+    qspi_slave_cfg.map = MAP_A;
+    qspi_slave_cfg.ss0 = Enable;
+    qspi_slave_cfg.ss1 = Disable;
+    qspi_slave_cfg.ss2 = Disable;
+    qspi_slave_cfg.num_io = 4;
+    // Setup the interrupt
+    NVIC_EnableIRQ(QSPI_IRQ);
+
+    // Configure the peripheral
+    if (SPI_Init(QSPI, 0, QSPI_SPEED, qspi_slave_cfg) != 0) {
+        printf("Error configuring QSPI\n");
     }
+
+//    SPI_Enable(SPI);
+}
+
+void qspi_worker()
+{
+    spi_req_t qspi_req = {0};
+
+    memset(&qspi_header, 0, sizeof(qspi_header));
+    memset(qspi_rx_buff, 0, sizeof(qspi_rx_buff));
+
+    SPI_Clear_fifo(QSPI);
+
+    printf("Waiting for QSPI transaction\n");
+
+    qspi_req.tx_data = NULL;
+    qspi_req.rx_data = (uint8_t *) &qspi_header;
+    qspi_req.len = sizeof(qspi_header);
+    qspi_req.bits = 8;
+    qspi_req.width = SPI17Y_WIDTH_4;
+    qspi_req.ssel = 0;
+    qspi_req.deass = 0;
+    qspi_req.ssel_pol = SPI17Y_POL_LOW;
+    qspi_req.tx_num = 0;
+    qspi_req.rx_num = 0;
+    qspi_req.callback = qspi_callback;
+    qspi_flag = 1;
+    SPI_SlaveTransAsync(QSPI, &qspi_req);
+    while (qspi_flag == 1);
+
+    if (qspi_header.start_byte != QSPI_START_BYTE) {
+        printf("Invalid QSPI start byte 0x%02hhX\n", qspi_header.start_byte);
+    }
+
+    if ((qspi_header.data_len == 0) || (qspi_header.data_len > QSPI_RX_BUFF_LEN)) {
+        printf("Invalid QSPI data len %u\n", qspi_header.data_len);
+    }
+
+    qspi_req.tx_data = NULL;
+    qspi_req.rx_data = qspi_rx_buff;
+    qspi_req.len = qspi_header.data_len;
+    qspi_req.bits = 8;
+    qspi_req.width = SPI17Y_WIDTH_4;
+    qspi_req.ssel = 0;
+    qspi_req.deass = 0;
+    qspi_req.ssel_pol = SPI17Y_POL_LOW;
+    qspi_req.tx_num = 0;
+    qspi_req.rx_num = 0;
+    qspi_req.callback = qspi_callback;
+    qspi_flag = 1;
+    SPI_SlaveTransAsync(QSPI, &qspi_req);
+    while (qspi_flag == 1);
+
+    printf("QSPI transaction completed %u\n", qspi_req.rx_num);
+
+    for (unsigned int i = 0; i < qspi_req.rx_num; i++) {
+        printf("0x%02hhX ", qspi_rx_buff[i]);
+    }
+    printf("\n");
 }
