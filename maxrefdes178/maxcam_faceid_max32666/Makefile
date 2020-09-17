@@ -61,13 +61,14 @@ LIBS_DIR=./Libraries
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 # Source files for this test (add path to VPATH below)
-SRCS  = main.c
+SRCS  = ./src/main.c
+SRCS += ./src/pmic.c
 
 # Where to find source files for this test
-VPATH=.
+VPATH = ./src
 
 # Where to find header files for this test
-IPATH = .
+IPATH  = ./include
 IPATH += ./../common
 
 # Enable assertion checking for development
