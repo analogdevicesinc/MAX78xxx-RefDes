@@ -55,6 +55,7 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 void pmic_init();
+void pmic_worker();
 void pmic_ldo1();
 void pmic_buckboost();
 void pmic_turnoff_buck1();
@@ -64,5 +65,6 @@ void pmic_initialize_buck2();
 void pmic_led_red( uint8_t ledStatus );
 void pmic_led_green( uint8_t ledStatus );
 void pmic_led_blue( uint8_t ledStatus );
+void pmic_lcd_backlight(unsigned char onoff);
 
 #endif /* _PMIC_H_ */

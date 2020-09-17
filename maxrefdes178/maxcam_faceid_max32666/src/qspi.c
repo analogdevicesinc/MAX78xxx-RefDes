@@ -39,8 +39,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "spi.h"
-#include "dma.h"
 
+#include "qspi.h"
 #include "definitions.h"
 
 
