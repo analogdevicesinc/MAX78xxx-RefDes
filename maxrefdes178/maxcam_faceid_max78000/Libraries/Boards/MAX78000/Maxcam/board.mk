@@ -40,11 +40,14 @@ SRCS += board.c
 SRCS += stdio.c
 SRCS += led.c
 SRCS += pb.c
-SRCS += tft.c
-SRCS += touchscreen.c
 SRCS += camera.c
 SRCS += ov7692.c
+ifeq "$(SCCB_USE_I2C_PERIPHERAL)" "1"
+SRCS += sccb_i2c.c
+else
 SRCS += sccb.c
+endif
+
 
 # Where to find BSP source files
 VPATH += $(BOARD_DIR)/Source

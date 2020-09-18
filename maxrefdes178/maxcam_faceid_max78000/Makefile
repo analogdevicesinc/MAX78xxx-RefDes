@@ -51,7 +51,7 @@ COMPILER=GCC
 
 # Specify the board used
 ifeq "$(BOARD)" ""
-BOARD=EvKit_V1
+BOARD=Maxcam
 endif
 
 # This is the path to the CMSIS root directory
@@ -64,26 +64,20 @@ export CMSIS_ROOT
 
 
 # Source files for this test (add path to VPATH below)
-SRCS  = main.c
-SRCS += TFT/resources/all_imgs.c
+SRCS  = src/main.c
 SRCS += src/utils.c
-SRCS += src/state.c
-SRCS += src/state_home.c
-SRCS += src/state_faceID.c
 SRCS += src/faceID.c
 SRCS += src/embedding_process.c
-SRCS += src/softmax.c
-
 
 # Where to find source files for this test
 VPATH=.
-VPATH += ./TFT/resources
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
+VPATH += $(LIBS_DIR)/Common
 VPATH += ./src
 # Where to find header files for this test
 # Where to find header files for this test
 IPATH = .
-IPATH += ./TFT/resources
+IPATH += ./resources
 IPATH += ./include
 IPATH += ./../common
 
@@ -92,13 +86,9 @@ PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE
 
 PROJ_CFLAGS+=-DARM_MATH_CM4
 
-PROJ_CFLAGS+=-DROTATE_SCREEN=1
-
-PROJ_CFLAGS+=-DCONSOLE_BAUD=115200
-
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
-PROJ_CFLAGS+=-Werror
+#PROJ_CFLAGS+=-Werror
 
 # Specify the target revision to override default
 # "A2" in ASCII

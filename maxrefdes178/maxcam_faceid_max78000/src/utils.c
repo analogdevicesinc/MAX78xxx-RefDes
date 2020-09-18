@@ -32,17 +32,27 @@
 ******************************************************************************/
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include "mxc_device.h"
+#include "led.h"
 #include "board.h"
 #include "mxc_delay.h"
 #include "uart.h"
 #include "rtc.h"
 #include "utils.h"
 
+#pragma GCC optimize ("-O0")
+
+#define DEBUG_COMPORT	MXC_UART0
+
 /***************************** VARIABLES *************************************/
 
 
 /************************    PUBLIC FUNCTIONS  *******************************/
+void utils_delay_ms(uint32_t ms)
+{
+	MXC_Delay(ms * 1000UL);
+}
 
 uint32_t utils_get_time_ms(void)
 {
@@ -58,6 +68,26 @@ uint32_t utils_get_time_ms(void)
     return ms;
 }
 
+void utils_hexDump(const char *title, uint8_t *buf, uint32_t len)
+{
+	uint32_t i;
+
+	// Display the title
+	if (title) {
+		printf("%s", title);
+	}
+
+	// Display the buffer bytes
+	for( i = 0; i < len; i++ ) {
+		if ( !( i % 16 ) ) {
+			printf("\n");
+		}
+		printf("%02X ",buf[i]);
+	}
+
+	printf("\n");
+}
+
 static void utils_send_byte(mxc_uart_regs_t *uart, uint8_t value) {
 	while (MXC_UART_WriteCharacter(uart, value) == E_OVERFLOW) { }
 }
@@ -69,3 +99,59 @@ void utils_send_bytes(mxc_uart_regs_t *uart, uint8_t *ptr, int length) {
 		utils_send_byte(uart, ptr[i]);
 	}
 }
+
+int utils_send_img_to_pc(uint8_t *img, uint32_t imgLen, int w, int h, uint8_t *pixelformat)
+{
+	int len;
+
+	// Transmit the start token
+	len = 5;
+	utils_send_bytes(DEBUG_COMPORT, (uint8_t*)"*STR*", len);
+
+	// Transmit the width of the image
+	utils_send_byte(DEBUG_COMPORT, (w>>8) & 0xff); // high byte
+	utils_send_byte(DEBUG_COMPORT, (w>>0) & 0xff );// low byte
+	// Transmit the height of the image
+	utils_send_byte(DEBUG_COMPORT, (h>>8) & 0xff); // high byte
+	utils_send_byte(DEBUG_COMPORT, (h>>0) & 0xff );// low byte
+
+	// Transmit the pixel format of the image
+	len = strlen((char *)pixelformat);
+	utils_send_byte(DEBUG_COMPORT, len & 0xff);
+	utils_send_bytes(DEBUG_COMPORT, pixelformat, len);
+
+	// Transmit the image length in bytes
+	utils_send_byte(DEBUG_COMPORT, (imgLen>>24) & 0xff); // high byte
+	utils_send_byte(DEBUG_COMPORT, (imgLen>>16) & 0xff );// low byte
+	utils_send_byte(DEBUG_COMPORT, (imgLen>>8)  & 0xff );// low byte
+	utils_send_byte(DEBUG_COMPORT, (imgLen>>0)  & 0xff );// low byte
+
+	// Send the image pixel bytes
+	while (imgLen) {
+		len = imgLen;
+		utils_send_bytes(DEBUG_COMPORT, img, len);
+		img		  += len;
+		imgLen	  -= len;
+	}
+	return 0;
+}
+
+int utils_send_result_to_pc(uint8_t *result, uint32_t len)
+{
+	// Transmit the start token
+	len = 5;
+	utils_send_bytes(DEBUG_COMPORT, (uint8_t*)"*STR*", len);
+
+	// Transmit the length of the result
+	utils_send_byte(DEBUG_COMPORT, (len>>24) & 0xff); // high byte
+	utils_send_byte(DEBUG_COMPORT, (len>>16) & 0xff); //
+	utils_send_byte(DEBUG_COMPORT, (len>>8) & 0xff); //
+	utils_send_byte(DEBUG_COMPORT, (len>>0) & 0xff );// low byte
+	// Transmit the height of the image
+
+	// Send the image pixel bytes
+	utils_send_bytes(DEBUG_COMPORT, result, len);
+
+	return 0;
+}
+

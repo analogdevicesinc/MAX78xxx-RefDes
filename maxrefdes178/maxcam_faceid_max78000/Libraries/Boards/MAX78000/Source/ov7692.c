@@ -275,6 +275,34 @@ static int set_framesize(int width, int height)
     ret |= cambus_writeb(0xc9, input_factor_ptr[1]);
     ret |= cambus_writeb(0xca, input_factor_ptr[2]);
     ret |= cambus_writeb(0xcb, input_factor_ptr[3]);
+
+    // centre adjustment
+    ret |= cambus_writeb(0x11, 0x0);
+    ret |= cambus_writeb(0x51, 0x7f);
+    ret |= cambus_writeb(0x50, 0x99);
+    ret |= cambus_writeb(0x21, 0x23);
+    ret |= cambus_writeb(0x20, 0x0);
+
+
+    //output 240*240
+    ret |= cambus_writeb(0xcc, 0x0);
+    ret |= cambus_writeb(0xcd, 0xf0);
+    ret |= cambus_writeb(0xce, 0x0);
+    ret |= cambus_writeb(0xcf, 0xf0);
+    //input 480*480
+    ret |= cambus_writeb(0xc8, 0x01);
+    ret |= cambus_writeb(0xc9, 0xe0);
+    ret |= cambus_writeb(0xca, 0x01);
+    ret |= cambus_writeb(0xcb, 0xe0);
+
+    ret |= cambus_writeb(0x9, 0x10);
+    ret |= cambus_writeb(0x17, 0x55);
+    ret |= cambus_writeb(0x19, 0xc2);
+
+    ret |= cambus_writeb(0x9, 0x00);
+    ret |= cambus_writeb(0x17, 0x81);
+    ret |= cambus_writeb(0x19, 0x10);
+
     return ret;
 }
 

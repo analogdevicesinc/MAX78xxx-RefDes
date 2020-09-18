@@ -47,15 +47,15 @@
 
 /*****************************     VARIABLES *********************************/
 
-typedef	struct  __attribute__((packed)) sMeanDistance {
-		uint8_t subID;
-		uint8_t number;
-		int32_t distance;
+typedef struct  __attribute__((packed)) sMeanDistance {
+        uint8_t subID;
+        uint8_t number;
+        int32_t distance;
 }tsMeanDistance;
 
-typedef	struct  __attribute__((packed)) sMinDistance {
-		uint8_t subID;
-		int32_t distance;
+typedef struct  __attribute__((packed)) sMinDistance {
+        uint8_t subID;
+        int32_t distance;
 }tsMinDistance;
 
 

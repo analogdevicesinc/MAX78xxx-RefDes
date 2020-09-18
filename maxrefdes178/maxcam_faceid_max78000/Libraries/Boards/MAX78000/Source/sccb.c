@@ -32,17 +32,18 @@
 ******************************************************************************/
 #include <stdio.h>
 #include <stdint.h>
+#include "board.h"
 #include "sccb.h"
 #include "mxc_delay.h"
 #include "gpio.h"
 #include "mxc_device.h"
 
 // serial clock
-#define SCL_PORT    MXC_GPIO0
-#define SCL_PIN     MXC_GPIO_PIN_30
+#define SCL_PORT    SCCB_PORT
+#define SCL_PIN     SCCB_SCL_PIN
 // serial data
-#define SDA_PORT    MXC_GPIO0
-#define SDA_PIN     MXC_GPIO_PIN_31
+#define SDA_PORT    SCCB_PORT
+#define SDA_PIN     SCCB_SDA_PIN
 
 //
 #define GPIO_SET(port, mask)    (port)->out_set = mask

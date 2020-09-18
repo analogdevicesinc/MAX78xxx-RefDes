@@ -36,7 +36,6 @@
  * @brief   Board support package API.
  */
 
-
 #include <stdio.h>
 
 #ifndef _BOARD_H
@@ -57,17 +56,45 @@ extern "C" {
 #define LED_OFF         1       /// Inactive state of LEDs
 #define LED_ON          0       /// Active state of LEDs
 
-/**
- *  A reference to LED1 of the board.
- *  Can be used with the LED_On, LED_Off, and LED_Toggle functions.
- */
-#define LED1            0
-/**
- *  A reference to LED2 of the board.
- *  Can be used with the LED_On, LED_Off, and LED_Toggle functions.
- */
-#define LED2            1
 
+#define	SCCB_USE_I2C_PERIPHERAL	0
+#define	SCCB_I2C_INSTANCE 		MXC_I2C1
+
+
+
+// SCCB serial clock
+#ifndef SCCB_SCL_PORT
+#define SCCB_SCL_PORT    MXC_GPIO0
+#endif
+
+#ifndef SCCB_SCL_PIN
+#define SCCB_SCL_PIN     MXC_GPIO_PIN_16
+#endif
+
+// SCCB serial data
+#ifndef SCCB_SDA_PORT
+#define SCCB_SDA_PORT    MXC_GPIO0
+#endif
+
+#ifndef SCCB_SDA_PIN
+#define SCCB_SDA_PIN     MXC_GPIO_PIN_17
+#endif
+
+// SCCB serial port
+#ifndef SCCB_PORT
+#define SCCB_PORT    MXC_GPIO0
+#endif
+
+/**
+ *  References to LEDs on the board.
+ *  Can be used with the LED_On, LED_Off, and LED_Toggle functions.
+ */
+#define LED_RED         0
+#define LED_BLUE        1
+#define LED_GREEN       2
+#define LED1            LED_RED
+#define LED2            LED_GREEN
+#define LED3            LED_BLUE
 /**
  * \brief   Initialize the BSP and board interfaces.
  * \returns #E_NO_ERROR if everything is successful

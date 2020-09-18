@@ -44,7 +44,9 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define QSPI_START_BYTE   0xAA
+#define QSPI_START_BYTE     0xAA
+#define QSPI_COMMAND_IMAGE  0xEE
+#define QSPI_COMMAND_RESULT 0xBB
 
 
 //-----------------------------------------------------------------------------
@@ -52,7 +54,7 @@
 //-----------------------------------------------------------------------------
 typedef struct __attribute__((packed)) {
     uint8_t  start_byte;
-    uint16_t data_len;
+    uint32_t data_len;
     uint8_t  command;
 } qspi_header_t;
 
