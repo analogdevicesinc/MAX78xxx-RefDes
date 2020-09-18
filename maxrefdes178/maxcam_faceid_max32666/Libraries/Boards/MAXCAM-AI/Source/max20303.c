@@ -77,15 +77,29 @@ void MAX20303_initialize( uint8_t initialize_i2c ) {
 
 	}
 
+	// Turn off all PMIC LEDs at startup
+	MAX20303_led_red( LED_OUTPUT_OFF );
+	MAX20303_led_green( LED_OUTPUT_OFF );
+	MAX20303_led_blue( LED_OUTPUT_OFF );
+
 
 
 	// Configure LDO and Buck outputs
-    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+    TMR_Delay(MXC_TMR0, MSEC(1), 0);
 	MAX20303_setbuck1( BUCK_OUTPUT_ON );
-    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+    TMR_Delay(MXC_TMR0, MSEC(1), 0);
 	MAX20303_setbuck2( BUCK_OUTPUT_ON );
 
+
+	TMR_Delay(MXC_TMR0, MSEC(1), 0);
+	MAX20303_setboost( BOOST_OUTPUT_OFF, 0x10 );
+
+	// Enable this for LCD backlight
+	///TMR_Delay(MXC_TMR0, MSEC(10), 0);
+	///MAX20303_setboost( BOOST_OUTPUT_ON, 0x10 );
+
 }
+
 
 /**
  * @brief   Controls PMIC's RGB LED - Red Color. Before calling this function, PMIC should
@@ -134,12 +148,12 @@ void MAX20303_led_blue( uint8_t ledStatus ) {
  * @brief  Setup for LDO1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
  * LDO1 is configured as load-swittch. Before calling this function, PMIC should be initialized via
  * MAX20303_initialize() function
- * @param      Non-zero value configures LDO1 as load-switch but configures the state as "ON".
+ * @param    ldo1_onoff  Non-zero value configures LDO1 as load-switch but configures the state as "ON".
  * Value 0 still configures LDO1 as load-switch and configures the state as "OFF.
  /
  * @returns    This function has no return value
  */
-void MAX20303_ldo1( uint8_t ldo1_onoff )
+void MAX20303_setldo1( uint8_t ldo1_onoff )
 {
 
 	if ( ldo1_onoff == LDO_OUTPUT_OFF )
@@ -157,16 +171,16 @@ void MAX20303_ldo1( uint8_t ldo1_onoff )
 /**
  * @brief  Setup for Buck1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
  * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
- * @param      Non-zero value configures LDO1 as load-switch but configures the state as "ON".
+ * @param  buck1_onoff   Non-zero value configures Buck1 voltage as 1.8V but configures the state as "ON".
  * Value 0 still configures LDO1 as load-switch and configures the state as "OFF.
  /
  * @returns    This function has no return value
  */
 void MAX20303_setbuck1( uint8_t buck1_onoff)
 {
-    MAX20303_writeReg(REG_AP_DATOUT0, 0x7E);  //
-    MAX20303_writeReg(REG_AP_DATOUT1, 0x28);  // Buck1Vset = 0x28=40    ( (40x25mV) + 0.8V = 1.8V)
-    MAX20303_writeReg(REG_AP_DATOUT2, 0x1F);  // Buck1Iset = 0b1111>375mA,  Buck1IZCSet=0b01>20mA   Buck1 ISet and Zero Crossing Threshold
+    MAX20303_writeReg(REG_AP_DATOUT0, 0x7E);
+    MAX20303_writeReg(REG_AP_DATOUT1, 0x28);  	  // Buck1Vset = 0x28=40    ( (40x25mV) + 0.8V = 1.8V)
+    MAX20303_writeReg(REG_AP_DATOUT2, 0x1F);  	  // Buck1Iset = 0b1111>375mA,  Buck1IZCSet=0b01>20mA   Buck1 ISet and Zero Crossing Threshold
 
     if ( buck1_onoff == LDO_OUTPUT_OFF )
     	MAX20303_writeReg(REG_AP_DATOUT3, 0x00);  // Buck1En = 0   Buck1 disabled
@@ -180,18 +194,18 @@ void MAX20303_setbuck1( uint8_t buck1_onoff)
 /**
  * @brief  Setup for Buck2 of MAX20303 PMIC to enable or disable MAX78000 board 2.8V digital supply.
  * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
- * @param      Non-zero value configures LDO1 as load-switch but configures the state as "ON".
- * Value 0 still configures LDO1 as load-switch and configures the state as "OFF.
+ * @param  buck2_onoff    Non-zero value configures Buck2 voltage to 2.8V and sets the state as "ON".
+ * Value 0 still configures Buck2 voltage as 2.8V but configures the state as "OFF"
  /
  * @returns    This function has no return value
  */
-void MAX20303_setbuck2( uint8_t buck1_onoff)
+void MAX20303_setbuck2( uint8_t buck2_onoff)
 {
-    MAX20303_writeReg(REG_AP_DATOUT0, 0x7E);  //
-    MAX20303_writeReg(REG_AP_DATOUT1, 0x28);  // Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)
-    MAX20303_writeReg(REG_AP_DATOUT2, 0x2F);  // Buck2Iset = 0b1111>375mA,  Buck2IZCSet=0b10>30mA   Buck2 ISet and Zero Crossing Threshold
+    MAX20303_writeReg(REG_AP_DATOUT0, 0x7E);
+    MAX20303_writeReg(REG_AP_DATOUT1, 0x28);  	  // Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)
+    MAX20303_writeReg(REG_AP_DATOUT2, 0x2F);  	  // Buck2Iset = 0b1111>375mA,  Buck2IZCSet=0b10>30mA   Buck2 ISet and Zero Crossing Threshold
 
-    if ( buck1_onoff == LDO_OUTPUT_OFF )
+    if ( buck2_onoff == LDO_OUTPUT_OFF )
     	MAX20303_writeReg(REG_AP_DATOUT3, 0x00);  //Buck2En = 0   Buck2 disabled
     else
     	MAX20303_writeReg(REG_AP_DATOUT3, 0x01);  //Buck2En = 1   Buck2 enabled
@@ -199,6 +213,36 @@ void MAX20303_setbuck2( uint8_t buck1_onoff)
     MAX20303_writeReg(REG_AP_CMDOUT, APREG_BUCK2_CONFIG_WRITE);
 }
 
+
+/**
+ * @brief  Setup for Boost Converter of MAX20303 PMIC to enable or disable LCD backlight.
+ * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
+ * @param  boost_onoff   Non-zero value configures LDO1 as load-switch but configures the state as "ON".
+ * Value 0 still configures Boost voltage as 9.6V but configures the state as "OFF"
+ * @param  boost_output_level Sets the voltage output level of the boost converter. Please
+ * refer to MAX20303 PMIC datasheet for details.
+ *
+ * @returns    This function has no return value
+ */
+void MAX20303_setboost( uint8_t boost_onoff, uint8_t boost_output_level ) {
+
+
+	if ( boost_output_level > 0x16 )
+		 boost_output_level = 0x16;							   //  Prevent setting boost voltage above 10.5V due to specs limitation of the LCD
+
+	MAX20303_writeReg(REG_AP_DATOUT3, boost_output_level);	   //  BstVset = 0x0F=15  ( ( 15 * 250mV) + 5 = 8.75V)
+
+	if ( boost_onoff == BOOST_OUTPUT_OFF )
+		MAX20303_writeReg(REG_AP_DATOUT0, 0x00);			   //  Boost Disabled - BSTEn = 0x00
+	else
+		MAX20303_writeReg(REG_AP_DATOUT0, 0x01);			   //  Boost Enabled - BSTEn = 0x01
+
+	MAX20303_writeReg(REG_AP_DATOUT4, 0x03);				   //  BstSet 0x03 - not sure if this is writeable
+
+	MAX20303_writeReg(REG_AP_CMDOUT, APREG_BST_CONFIG_WRITE);  // = Bset_Config_Write
+
+
+}
 
 
 

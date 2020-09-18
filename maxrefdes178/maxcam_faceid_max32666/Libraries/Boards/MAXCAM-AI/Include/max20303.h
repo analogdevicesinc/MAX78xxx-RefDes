@@ -100,10 +100,13 @@
 
 
 void MAX20303_initialize( uint8_t initialize_i2c );
-void MAX20303_ldo1( uint8_t ldo1_onoff );
+void MAX20303_setldo1( uint8_t ldo1_onoff );
 void MAX20303_worker();
 void MAX20303_setbuck1( uint8_t buck1_onoff);
-void MAX20303_setbuck2( uint8_t buck1_onoff);
+void MAX20303_setbuck2( uint8_t buck2_onoff);
+void MAX20303_setboost( uint8_t boost_onoff, uint8_t boost_output_level );
 
-
+void MAX20303_led_red( uint8_t ledStatus );
+void MAX20303_led_green( uint8_t ledStatus );
+void MAX20303_led_blue( uint8_t ledStatus );
 #endif /* MAX20303_DRIVER_H */
