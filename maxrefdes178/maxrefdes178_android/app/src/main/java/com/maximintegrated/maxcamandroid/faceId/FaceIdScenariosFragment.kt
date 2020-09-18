@@ -1,7 +1,7 @@
 package com.maximintegrated.maxcamandroid.faceId
 
 
-import android.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -66,6 +66,7 @@ class FaceIdScenariosFragment : Fragment(), ScenarioListener {
                 else if (dy > 0 && newScenarioFab.isShown)
                     newScenarioFab.hide()
             }
+
         })
     }
 
@@ -77,6 +78,11 @@ class FaceIdScenariosFragment : Fragment(), ScenarioListener {
     override fun onSelectButtonClicked(scenario: Scenario) {
         requireActivity().addFragment(FaceIdUpdateDeviceFragment.newInstance())
         faceIdViewModel.onScenarioSelected(scenario)
+    }
+
+    override fun onDeleteButtonClicked(scenario: Scenario) {
+        faceIdViewModel.onScenarioDeleted(scenario)
+        newScenarioFab.show()
     }
 
     private fun showNewScenarioDialog() {

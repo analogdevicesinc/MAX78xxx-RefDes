@@ -103,6 +103,17 @@
             tools:text="Onboard LCD" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:text="@string/delete"
+            app:layout_constraintBottom_toBottomOf="@id/editButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/editButton" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/selectButton"
             style="@style/MaximOutlinedButton"
             android:layout_marginTop="10dp"

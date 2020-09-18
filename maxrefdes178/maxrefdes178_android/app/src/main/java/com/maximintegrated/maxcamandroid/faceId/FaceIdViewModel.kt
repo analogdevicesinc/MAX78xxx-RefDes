@@ -98,6 +98,13 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
         editScenario = true
     }
 
+    fun onScenarioDeleted(scenario: Scenario) {
+        getMaxCamScenarioFile(scenario.name + ".json").delete()
+        val list = (_scenarios.value ?: emptyList()).toMutableList()
+        list.remove(scenario)
+        _scenarios.value = list
+    }
+
     fun getConfigFiles() {
         viewModelScope.launch {
             _configFiles.value = internalGetConfigFiles()

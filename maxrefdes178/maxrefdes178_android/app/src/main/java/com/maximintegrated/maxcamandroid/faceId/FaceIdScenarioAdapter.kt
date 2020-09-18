@@ -1,5 +1,6 @@
 package com.maximintegrated.maxcamandroid.faceId
 
+import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
@@ -33,7 +34,7 @@ class FaceIdScenarioAdapter(private val listener: ScenarioListener) :
 }
 
 
-class ScenarioViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
+class ScenarioViewHolder(val parent: ViewGroup) : RecyclerView.ViewHolder(
     LayoutInflater.from(parent.context).inflate(
         R.layout.scenario_item, parent, false
     )
@@ -46,6 +47,7 @@ class ScenarioViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
     private val configTextView: TextView by lazy { itemView.configurationTextView }
     private val editButton: MaterialButton by lazy { itemView.editButton }
     private val selectButton: MaterialButton by lazy { itemView.selectButton }
+    private val deleteButton: MaterialButton by lazy { itemView.deleteButton }
 
     fun bind(scenario: Scenario, listener: ScenarioListener) {
         titleTextView.text = scenario.name
@@ -59,10 +61,28 @@ class ScenarioViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
         selectButton.setOnClickListener {
             listener.onSelectButtonClicked(scenario)
         }
+        deleteButton.setOnClickListener {
+            askUserForDeleteOperation(scenario, listener)
+        }
+    }
+
+    private fun askUserForDeleteOperation(scenario: Scenario, listener: ScenarioListener){
+        val context = parent.context
+        val alert = AlertDialog.Builder(context)
+        alert.setMessage(context.getString(R.string.are_you_sure_to_delete_it))
+        alert.setPositiveButton(context.getString(R.string.yes)){ dialog, _ ->
+            dialog.dismiss()
+            listener.onDeleteButtonClicked(scenario)
+        }
+        alert.setNegativeButton(context.getString(R.string.cancel)){ dialog, _ ->
+            dialog.dismiss()
+        }
+        alert.show()
     }
 }
 
 interface ScenarioListener {
     fun onEditButtonClicked(scenario: Scenario)
     fun onSelectButtonClicked(scenario: Scenario)
+    fun onDeleteButtonClicked(scenario: Scenario)
 }
