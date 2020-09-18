@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include "tmr_utils.h"
 
-#include "pmic.h"
+#include "max20303.h"
 #include "qspi.h"
 #include "lcd.h"
 #include "version.h"
@@ -72,12 +72,12 @@ int main(void)
 {
     printf("maxcam_faceid_max32666 v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
 
-    pmic_init();
+    MAX20303_initialize( 1 );
     qspi_init();
     lcd_init();
 
     while (1) {
-        pmic_worker();
+          MAX20303_worker();
 //        qspi_worker();
 //        lcd_worker();
     }

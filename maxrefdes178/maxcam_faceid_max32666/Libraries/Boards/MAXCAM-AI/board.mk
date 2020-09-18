@@ -48,7 +48,7 @@ SRCS += stdio.c
 SRCS += led.c
 SRCS += mx25.c
 SRCS += pb.c
-
+SRCS += max20303.c
 
 # Where to find BSP source files
 VPATH += $(BOARD_DIR)/Source
