@@ -69,7 +69,7 @@
  * @returns    #E_NO_ERROR if everything is successful,
  *             @ref MXC_Error_Codes if an error occurred
  */
-void MAX20303_initialize( uint8_t initialize_i2c );
+void MAX20303_initialize(uint8_t initialize_i2c);
 
 /**
  * @brief  Setup for LDO1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
@@ -80,7 +80,7 @@ void MAX20303_initialize( uint8_t initialize_i2c );
  /
  * @returns    This function has no return value
  */
-void MAX20303_setldo1( uint8_t ldo1_onoff );
+void MAX20303_setldo1(uint8_t ldo1_onoff);
 
 /**
  * @brief  Setup for Buck1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
@@ -90,7 +90,7 @@ void MAX20303_setldo1( uint8_t ldo1_onoff );
  /
  * @returns    This function has no return value
  */
-void MAX20303_setbuck1( uint8_t buck1_onoff);
+void MAX20303_setbuck1(uint8_t buck1_onoff);
 
 /**
  * @brief  Setup for Buck2 of MAX20303 PMIC to enable or disable MAX78000 board 2.8V digital supply.
@@ -100,7 +100,7 @@ void MAX20303_setbuck1( uint8_t buck1_onoff);
  /
  * @returns    This function has no return value
  */
-void MAX20303_setbuck2( uint8_t buck2_onoff);
+void MAX20303_setbuck2(uint8_t buck2_onoff);
 
 /**
  * @brief  Setup for Boost Converter of MAX20303 PMIC to enable or disable LCD backlight.
@@ -112,7 +112,7 @@ void MAX20303_setbuck2( uint8_t buck2_onoff);
  *
  * @returns    This function has no return value
  */
-void MAX20303_setboost( uint8_t boost_onoff, uint8_t boost_output_level );
+void MAX20303_setboost(uint8_t boost_onoff, uint8_t boost_output_level);
 
 /**
  * @brief   Controls PMIC's RGB LED - Red Color. Before calling this function, PMIC should
@@ -120,7 +120,7 @@ void MAX20303_setboost( uint8_t boost_onoff, uint8_t boost_output_level );
  * @param      ledStatus value 0 turns off the Red LED, non-zero value turns on the Red LED
  * @returns    This function has no return value
  */
-void MAX20303_led_red( uint8_t ledStatus );
+void MAX20303_led_red(uint8_t ledStatus);
 
 /**
  * @brief   Controls PMIC's RGB LED - Green Color. Before calling this function, PMIC should
@@ -128,7 +128,7 @@ void MAX20303_led_red( uint8_t ledStatus );
  * @param      ledStatus value 0 turns off the Green LED, non-zero value turns on the Red LED
  * @returns    This function has no return value
  */
-void MAX20303_led_green( uint8_t ledStatus );
+void MAX20303_led_green(uint8_t ledStatus);
 
 /**
  * @brief   Controls PMIC's RGB LED - Blue Color. Before calling this function, PMIC should
@@ -136,6 +136,6 @@ void MAX20303_led_green( uint8_t ledStatus );
  * @param      ledStatus value 0 turns off the Blue LED, non-zero value turns on the Red LED
  * @returns    This function has no return value
  */
-void MAX20303_led_blue( uint8_t ledStatus );
+void MAX20303_led_blue(uint8_t ledStatus);
 
 #endif /* _MAX20303_H_ */

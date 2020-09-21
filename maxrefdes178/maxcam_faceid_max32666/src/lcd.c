@@ -42,15 +42,15 @@
 #include "gpio.h"
 #include "tmr_utils.h"
 
+#include "max20303.h"
 #include "lcd.h"
 #include "lcd_data.h"
-#include "max20303.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define SPI               SPI1
+#define SPI_NAME          SPI1
 #define MXC_SPI           MXC_SPI1
 #define DMA_REQSEL_SPIRX  DMA_REQSEL_SPI1RX
 #define DMA_REQSEL_SPITX  DMA_REQSEL_SPI1TX
@@ -168,20 +168,22 @@ static void spi_init()
     NVIC_EnableIRQ(DMA1_IRQn);
 
     // Initialize SPI peripheral
-    sys_cfg_spi_t cfg = {MAP_A, Disable, Disable, Disable, 2};
-    SPI_Init(SPI, 0, SPI_SPEED, cfg);
+    sys_cfg_spi_t master_cfg = {0};
+    master_cfg.map = MAP_A;
+    master_cfg.ss0 = Disable;
+    master_cfg.ss1 = Disable;
+    master_cfg.ss2 = Disable;
+
+    SPI_Init(SPI_NAME, 0, SPI_SPEED, master_cfg);
     MXC_SPI->ctrl0 |= MXC_F_SPI17Y_CTRL0_MASTER; // Switch SPI to master mode, else the state of the SS pin could cause the SPI periph to appear 'BUSY';
 
     MXC_SPI->ss_time = (4 << MXC_F_SPI17Y_SS_TIME_PRE_POS) |
-                        (8 << MXC_F_SPI17Y_SS_TIME_POST_POS) |
-                        (16 << MXC_F_SPI17Y_SS_TIME_INACT_POS);
+            (8 << MXC_F_SPI17Y_SS_TIME_POST_POS) |
+            (16 << MXC_F_SPI17Y_SS_TIME_INACT_POS);
 }
 
 static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
 {
-    int deass = 0;
-    int quad = 0;
-
     int in_ch = -1;
     int out_ch = -1;
 
@@ -190,11 +192,11 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
 
     // Initialize the CTRL0 register
     MXC_SPI->ctrl0 = MXC_F_SPI17Y_CTRL0_MASTER |   // Enable master mode
-                          MXC_F_SPI17Y_CTRL0_EN;   // Enable the peripheral
+            MXC_F_SPI17Y_CTRL0_EN;   // Enable the peripheral
 
     // Initialize the CTRL1 register
     MXC_SPI->ctrl1 = 0;
-    if(out || quad) {
+    if(out) {
         // Set how many to characters to send, or when in quad mode how many characters to receive
         MXC_SPI->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
     }
@@ -205,28 +207,28 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
     }
 
     // Initialize the CTRL2 register
-    MXC_SPI->ctrl2 = (quad ? MXC_S_SPI17Y_CTRL2_DATA_WIDTH_QUAD : MXC_S_SPI17Y_CTRL2_DATA_WIDTH_MONO) |
-                      (8 << MXC_F_SPI17Y_CTRL2_NUMBITS_POS);
+    MXC_SPI->ctrl2 = (MXC_S_SPI17Y_CTRL2_DATA_WIDTH_MONO) |
+            (8 << MXC_F_SPI17Y_CTRL2_NUMBITS_POS);
 
     // Initialize the DMA register
     MXC_SPI->dma = 0;
     if(out) {
         MXC_SPI->dma |= MXC_F_SPI17Y_DMA_TX_DMA_EN |                   // Enable DMA for transmit
-                        MXC_F_SPI17Y_DMA_TX_FIFO_EN |                  // Enable the TX FIFO
-                       (31 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);    // Set the threshold of when to add more data to TX FIFO
+                MXC_F_SPI17Y_DMA_TX_FIFO_EN |                  // Enable the TX FIFO
+                (31 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);    // Set the threshold of when to add more data to TX FIFO
     }
     if(in) {
         MXC_SPI->dma |= MXC_F_SPI17Y_DMA_RX_DMA_EN |                   // Enable DMA for receive
-                        MXC_F_SPI17Y_DMA_RX_FIFO_EN |                  // Enable the RX FIFO
-                       (0 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);     // Set the threshold of when to read data from RX FIFO
+                MXC_F_SPI17Y_DMA_RX_FIFO_EN |                  // Enable the RX FIFO
+                (0 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);     // Set the threshold of when to read data from RX FIFO
     }
 
     // Prepare DMA for unloading RX FIFO.
     if(in) {
         in_ch = DMA_AcquireChannel();
         DMA_ConfigChannel(in_ch, DMA_PRIO_LOW, DMA_REQSEL_SPIRX, 0,
-                          DMA_TIMEOUT_4_CLK, DMA_PRESCALE_DISABLE,
-                          DMA_WIDTH_BYTE, 0, DMA_WIDTH_BYTE, 1, 1, 1, 0);
+                DMA_TIMEOUT_4_CLK, DMA_PRESCALE_DISABLE,
+                DMA_WIDTH_BYTE, 0, DMA_WIDTH_BYTE, 1, 1, 1, 0);
         DMA_SetCallback(in_ch, in_callback);
         DMA_EnableInterrupt(in_ch);
         DMA_SetSrcDstCnt(in_ch, 0, in, len);
@@ -241,8 +243,8 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
     if(out) {
         out_ch = DMA_AcquireChannel();
         DMA_ConfigChannel(out_ch, DMA_PRIO_LOW, DMA_REQSEL_SPITX, 0,
-                          DMA_TIMEOUT_4_CLK, DMA_PRESCALE_DISABLE,
-                          DMA_WIDTH_BYTE, 1, DMA_WIDTH_BYTE, 0, 1, 1, 0);
+                DMA_TIMEOUT_4_CLK, DMA_PRESCALE_DISABLE,
+                DMA_WIDTH_BYTE, 1, DMA_WIDTH_BYTE, 0, 1, 1, 0);
         DMA_SetCallback(out_ch, out_callback);
         DMA_EnableInterrupt(out_ch);
         DMA_SetSrcDstCnt(out_ch, out, 0, len);
@@ -275,11 +277,6 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
     //  the FIFOs.  We now need to wait for the SPI transaction to fully complete.
     if(MXC_SPI->ctrl0 & MXC_F_SPI17Y_CTRL0_EN) {
         while(MXC_SPI->stat & MXC_F_SPI17Y_STAT_BUSY);
-    }
-
-    // If the callee wanted SSEL deasserted at the end of the transaction, do that now.
-    if(deass) {
-        GPIO_OutSet(&ssel_pin);
     }
 }
 
@@ -433,20 +430,20 @@ static void lcd_logoUpdateRobert()
 
 void lcd_init()
 {
+    lcd_backlight(1);
+
+    GPIO_OutSet(&ssel_pin);
+    GPIO_Config(&ssel_pin);
+
     GPIO_OutSet(&lcd_dc_pin);
     GPIO_Config(&lcd_dc_pin);
 
     GPIO_OutSet(&lcd_reset_pin);
     GPIO_Config(&lcd_reset_pin);
 
-    GPIO_OutSet(&ssel_pin);
-    GPIO_Config(&ssel_pin);
+    lcd_reset();
 
     spi_init();
-
-    lcd_backlight(1);
-
-    lcd_reset();
 
     lcd_configure();
 }

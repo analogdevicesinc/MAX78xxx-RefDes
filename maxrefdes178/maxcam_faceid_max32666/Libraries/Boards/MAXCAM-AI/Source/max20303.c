@@ -155,103 +155,111 @@ static int MAX20303_writeReg(const uint8_t reg, const uint8_t value)
     return I2C_MasterWrite(PMIC_I2C, MAX20303_I2C_ADDR, cmdData, 2, 0);
 }
 
-void MAX20303_initialize( uint8_t initialize_i2c ) {
-    if ( initialize_i2c )
-    {
-        I2C_Shutdown( PMIC_I2C );
-        I2C_Init( PMIC_I2C, I2C_FAST_MODE, NULL);
-        NVIC_EnableIRQ( PMIC_I2C_IRQ );
+void MAX20303_initialize(uint8_t initialize_i2c) {
+    if (initialize_i2c) {
+        I2C_Shutdown(PMIC_I2C);
+        I2C_Init(PMIC_I2C, I2C_FAST_MODE, NULL);
+        NVIC_EnableIRQ(PMIC_I2C_IRQ);
     }
 
     // Turn off all PMIC LEDs at startup
-    MAX20303_led_red( MAX20303_LED_OUTPUT_OFF );
-    MAX20303_led_green( MAX20303_LED_OUTPUT_OFF );
-    MAX20303_led_blue( MAX20303_LED_OUTPUT_OFF );
+    MAX20303_led_red(MAX20303_LED_OUTPUT_OFF);
+    MAX20303_led_green(MAX20303_LED_OUTPUT_OFF);
+    MAX20303_led_blue(MAX20303_LED_OUTPUT_OFF);
 
     // Configure LDO and Buck outputs
-    TMR_Delay(MXC_TMR0, MSEC(1), 0);
-    MAX20303_setbuck1( MAX20303_BUCK_OUTPUT_ON );
-    TMR_Delay(MXC_TMR0, MSEC(1), 0);
-    MAX20303_setbuck2( MAX20303_BUCK_OUTPUT_ON );
+    MAX20303_setbuck1(MAX20303_BUCK_OUTPUT_ON);
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
 
-    TMR_Delay(MXC_TMR0, MSEC(1), 0);
+    MAX20303_setbuck2(MAX20303_BUCK_OUTPUT_ON);
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
     MAX20303_setboost( MAX20303_BOOST_OUTPUT_OFF, 0x10 );
 }
 
-void MAX20303_led_red( uint8_t ledStatus ) {
+void MAX20303_led_red(uint8_t ledStatus) {
 
-    if ( ledStatus == MAX20303_LED_OUTPUT_OFF )
+    if (ledStatus == MAX20303_LED_OUTPUT_OFF) {
         MAX20303_writeReg( MAX20303_REG_LED1_DIRECT, 0x01 );
-    else
+    }
+    else {
         MAX20303_writeReg( MAX20303_REG_LED1_DIRECT, 0x21 );
+    }
 }
 
 void MAX20303_led_green( uint8_t ledStatus ) {
 
-    if ( ledStatus == MAX20303_LED_OUTPUT_OFF )
+    if (ledStatus == MAX20303_LED_OUTPUT_OFF) {
         MAX20303_writeReg( MAX20303_REG_LED2_DIRECT, 0x01 );
-    else
+    } else {
         MAX20303_writeReg( MAX20303_REG_LED2_DIRECT, 0x21 );
+    }
 }
 
-void MAX20303_led_blue( uint8_t ledStatus ) {
+void MAX20303_led_blue(uint8_t ledStatus) {
 
-    if ( ledStatus == MAX20303_LED_OUTPUT_OFF )
+    if (ledStatus == MAX20303_LED_OUTPUT_OFF) {
         MAX20303_writeReg( MAX20303_REG_LED0_DIRECT, 0x01 );
-    else
+    } else {
         MAX20303_writeReg( MAX20303_REG_LED0_DIRECT, 0x21 );
+    }
 }
 
-void MAX20303_setldo1( uint8_t ldo1_onoff )
+void MAX20303_setldo1(uint8_t ldo1_onoff)
 {
-    if ( ldo1_onoff == MAX20303_LDO_OUTPUT_OFF )
+    if (ldo1_onoff == MAX20303_LDO_OUTPUT_OFF) {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x04);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Disabled
-    else
+    } else {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x05);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Enabled
+    }
 
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x34);      // LDO1Vset : 0x34 = 52.  ( 52 * 25mv) + 0.5V = 1.8V
     MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO1_CONFIG_WRITE);
 }
 
-void MAX20303_setbuck1( uint8_t buck1_onoff)
+void MAX20303_setbuck1(uint8_t buck1_onoff)
 {
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x7E);
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x28);  	  // Buck1Vset = 0x28=40    ( (40x25mV) + 0.8V = 1.8V)
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT2, 0x1F);  	  // Buck1Iset = 0b1111>375mA,  Buck1IZCSet=0b01>20mA   Buck1 ISet and Zero Crossing Threshold
 
-    if ( buck1_onoff == MAX20303_LDO_OUTPUT_OFF )
+    if (buck1_onoff == MAX20303_LDO_OUTPUT_OFF) {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, 0x00);  // Buck1En = 0   Buck1 disabled
-    else
+    } else {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, 0x01);  // Buck1En = 1   Buck1 enabled
+    }
 
     MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BUCK1_CONFIG_WRITE);
 }
 
-void MAX20303_setbuck2( uint8_t buck2_onoff)
+void MAX20303_setbuck2(uint8_t buck2_onoff)
 {
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x7E);
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x28);  	  // Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT2, 0x2F);  	  // Buck2Iset = 0b1111>375mA,  Buck2IZCSet=0b10>30mA   Buck2 ISet and Zero Crossing Threshold
 
-    if ( buck2_onoff == MAX20303_LDO_OUTPUT_OFF )
+    if (buck2_onoff == MAX20303_LDO_OUTPUT_OFF) {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, 0x00);  //Buck2En = 0   Buck2 disabled
-    else
+    } else {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, 0x01);  //Buck2En = 1   Buck2 enabled
+    }
 
     MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BUCK2_CONFIG_WRITE);
 }
 
-void MAX20303_setboost( uint8_t boost_onoff, uint8_t boost_output_level )
+void MAX20303_setboost(uint8_t boost_onoff, uint8_t boost_output_level)
 {
-    if ( boost_output_level > 0x16 )
+    if (boost_output_level > 0x16) {
         boost_output_level = 0x16;							   //  Prevent setting boost voltage above 10.5V due to specs limitation of the LCD
+    }
 
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, boost_output_level);	   //  BstVset = 0x0F=15  ( ( 15 * 250mV) + 5 = 8.75V)
 
-    if ( boost_onoff == MAX20303_BOOST_OUTPUT_OFF )
+    if (boost_onoff == MAX20303_BOOST_OUTPUT_OFF) {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x00);			   //  Boost Disabled - BSTEn = 0x00
-    else
+    } else {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x01);			   //  Boost Enabled - BSTEn = 0x01
+    }
 
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT4, 0x03);				   //  BstSet 0x03 - not sure if this is writeable
 
