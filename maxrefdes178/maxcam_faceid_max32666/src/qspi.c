@@ -48,8 +48,9 @@
 // Defines
 //-----------------------------------------------------------------------------
 #define QSPI              SPI0
-#define QSPI_REGS         MXC_SPI17Y0
-#define QSPI_IRQ          SPI0_IRQn
+#define QSPI_IRQ_HANDLER  SPI0_IRQHandler
+#define QSPI_REGS         MXC_SPI17Y_GET_SPI17Y(QSPI)
+#define QSPI_IRQ          MXC_SPI17Y_GET_IRQ(QSPI)
 #define QSPI_SPEED        500000UL
 #define QSPI_RX_BUFF_LEN  (1024 * 10)
 
@@ -64,7 +65,8 @@
 //-----------------------------------------------------------------------------
 static uint8_t       qspi_rx_buff[QSPI_RX_BUFF_LEN];
 static qspi_header_t qspi_header;
-static volatile int  qspi_flag;
+static volatile int  qspi_header_flag;
+static volatile int  qspi_data_flag;
 
 
 //-----------------------------------------------------------------------------
@@ -75,14 +77,19 @@ static volatile int  qspi_flag;
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void SPI0_IRQHandler(void)
+void QSPI_IRQ_HANDLER(void)
 {
     SPI_Handler(QSPI);
 }
 
-void qspi_callback(void *req, int error)
+void qspi_haeder_callback(void *req, int error)
 {
-    qspi_flag = error;
+    qspi_header_flag = error;
+}
+
+void qspi_data_callback(void *req, int error)
+{
+    qspi_data_flag = error;
 }
 
 void qspi_init()
@@ -126,10 +133,10 @@ void qspi_worker()
     qspi_req.ssel_pol = SPI17Y_POL_LOW;
     qspi_req.tx_num = 0;
     qspi_req.rx_num = 0;
-    qspi_req.callback = qspi_callback;
-    qspi_flag = 1;
+    qspi_req.callback = qspi_haeder_callback;
+    qspi_header_flag = 1;
     SPI_SlaveTransAsync(QSPI, &qspi_req);
-    while (qspi_flag == 1);
+    while (qspi_header_flag == 1);
 
     if (qspi_header.start_byte != QSPI_START_BYTE) {
         printf("Invalid QSPI start byte 0x%02hhX\n", qspi_header.start_byte);
@@ -149,10 +156,10 @@ void qspi_worker()
     qspi_req.ssel_pol = SPI17Y_POL_LOW;
     qspi_req.tx_num = 0;
     qspi_req.rx_num = 0;
-    qspi_req.callback = qspi_callback;
-    qspi_flag = 1;
+    qspi_req.callback = qspi_data_callback;
+    qspi_data_flag = 1;
     SPI_SlaveTransAsync(QSPI, &qspi_req);
-    while (qspi_flag == 1);
+    while (qspi_data_flag == 1);
 
     printf("QSPI transaction completed %u\n", qspi_req.rx_num);
 

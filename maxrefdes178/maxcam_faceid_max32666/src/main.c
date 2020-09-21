@@ -70,15 +70,18 @@
 //-----------------------------------------------------------------------------
 int main(void)
 {
-    printf("maxcam_faceid_max32666 v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    printf("\n\nmaxcam_faceid_max32666 v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
 
-    MAX20303_initialize( 1 );
-    qspi_init();
+    printf("init started\n");
+
+    MAX20303_initialize(1);
+//    qspi_init();
     lcd_init();
 
+    printf("init completed\n");
+
     while (1) {
-          MAX20303_worker();
 //        qspi_worker();
-//        lcd_worker();
+        lcd_worker();
     }
 }

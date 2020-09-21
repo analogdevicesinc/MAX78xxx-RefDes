@@ -1,112 +1,141 @@
-#ifndef MAX20303_DRIVER
-#define MAX20303_DRIVER
+/*******************************************************************************
+* Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+*
+* This software is protected by copyright laws of the United States and
+* of foreign countries. This material may also be protected by patent laws
+* and technology transfer regulations of the United States and of foreign
+* countries. This software is furnished under a license agreement and/or a
+* nondisclosure agreement and may only be used or reproduced in accordance
+* with the terms of those agreements. Dissemination of this information to
+* any party or parties not specified in the license agreement and/or
+* nondisclosure agreement is expressly prohibited.
+*
+* The above copyright notice and this permission notice shall be included
+* in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+* IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+* OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*
+* Except as contained in this notice, the name of Maxim Integrated
+* Products, Inc. shall not be used except as stated in the Maxim Integrated
+* Products, Inc. Branding Policy.
+*
+* The mere transfer of this software does not imply any licenses
+* of trade secrets, proprietary technology, copyrights, patents,
+* trademarks, maskwork rights, or any other form of intellectual
+* property whatsoever. Maxim Integrated Products, Inc. retains all
+* ownership rights.
+*******************************************************************************
+* @file   max20303.h
+* @brief  TODO
+*/
 
-#define MAX20303_ADDR 0x50
-#define HARDWARE_ID 0x02
+#ifndef _MAX20303_H_
+#define _MAX20303_H_
 
-#define LDO_OUTPUT_ON			1
-#define LDO_OUTPUT_OFF			0
-
-#define BUCK_OUTPUT_ON			1
-#define BUCK_OUTPUT_OFF			0
-
-#define BOOST_OUTPUT_ON			1
-#define BOOST_OUTPUT_OFF		0
-
-#define LED_OUTPUT_ON			1
-#define LED_OUTPUT_OFF			0
-
-// Registers
-#define REG_HARDWARE_ID         0x00     // HardwareID Register
-#define REG_FIRMWARE_REV        0x01     // FirmwareID Register
-#define REG_INT0                0x03     // Int0 Register
-#define REG_INT1                0x04     // Int1 Register
-#define REG_INT2                0x05     // Int2 Register
-#define REG_STATUS0             0x06     // Status Register 0
-#define REG_STATUS1             0x07     // Status Register 1
-#define REG_STATUS2             0x08     // Status Register 2
-#define REG_STATUS3             0x09     // Status Register 2
-#define REG_SYSTEM_ERROR        0x0B     // SystemError Register
-#define REG_INT_MASK0           0x0C     // IntMask0 Register
-#define REG_INT_MASK1           0x0D     // IntMask1 Register
-#define REG_INT_MASK2           0x0E     // IntMask1 Register
-#define REG_AP_DATOUT0          0x0F     // APDataOut0 Register
-#define REG_AP_DATOUT1          0x10     // APDataOut1 Register
-#define REG_AP_DATOUT2          0x11     // APDataOut2 Register
-#define REG_AP_DATOUT3          0x12     // APDataOut3 Register
-#define REG_AP_DATOUT4          0x13     // APDataOut4 Register
-#define REG_AP_DATOUT5          0x14     // APDataOut5 Register
-#define REG_AP_DATOUT6          0x15     // APDataOut6 Register
-#define REG_AP_CMDOUT           0x17     // APCmdOut Register
-#define REG_AP_RESPONSE         0x18     // APResponse Register
-#define REG_AP_DATAIN0          0x19
-#define REG_AP_DATAIN1          0x1A
-#define REG_AP_DATAIN2          0x1B
-#define REG_AP_DATAIN3          0x1C
-#define REG_AP_DATAIN4          0x1D
-#define REG_AP_DATAIN5          0x1E
-#define REG_LDO_DIRECT          0x20
-#define REG_MPC_DIRECTWRITE     0x21
-#define REG_MPC_DIRECTRED       0x22
-#define REG_LED_STEP_DIRECT     0x2C
-#define REG_LED0_DIRECT         0x2D
-#define REG_LED1_DIRECT         0x2E
-#define REG_LED2_DIRECT         0x2F
-#define REG_LDO1_CONFIG_WRITE   0x40
-#define REG_LDO1_CONFIG_READ    0x41
-#define REG_LDO2_CONFIG_WRITE   0x42
-#define REG_LDO2_CONFIG_READ    0x43
-
-#define	APREG_GPIO_CONFIG_WRITE					0x01
-#define	APREG_GPIO_CONFIG_READ					0x02
-#define	APREG_GPIO_CONTROL_WRITE				0x03
-#define	APREG_GPIO_CONTROL_READ					0x04
-
-#define	APREG_MPC_CONFIG_WRITE					0x06
-#define	APREG_MPC_CONFIG_READ					0x07
-#define	APREG_INPUTCURRENT_CONFIG_WRITE			0x10
-#define	APREG_INPUTCURRENT_CONFIG_READ			0x11
-#define	APREG_THERMALSHUTDOWN_CONFIG_READ		0x12
-#define	APREG_CHARHER_CONFIG_WRITE				0x14
-#define	APREG_CHARHER_CONFIG_READ				0x15
-#define APREG_CHARGERTHERMALLIMITS_CONFIG_WRITE	0x16
-#define APREG_CHARGERTHERMALLIMITS_CONFIG_READ	0x17
-
-#define	APREG_BST_CONFIG_WRITE					0x30
-#define	APREG_BST_CONFIG_READ					0x31
-#define APREG_BUCK1_CONFIG_WRITE				0x35
-#define	APREG_BUCK1_CONFIG_READ					0x36
-#define APREG_BUCK1_DVSCONFIG_WRITE				0x37
-#define APREG_BUCK2_CONFIG_WRITE				0x3A
-#define APREG_BUCK2_CONFIG_READ					0x3B
-#define APREG_BUCK2_DVSCONFIG_WRITE				0x3C
-#define APREG_LDO1_CONFIG_WRITE					0x40
-#define APREG_LDO1_CONFIG_READ					0x41
-#define APREG_LDO2_CONFIG_WRITE					0x42
-#define APREG_LDO2_CONFIG_READ					0x43
-#define APREG_CHARGEPUMP_CONFIG_WRITE			0x46
-#define APREG_CHARGEPUMP_CONFIG_READ			0x47
-#define APREG_SFOUT_CONFIG_WRITE				0x48
-#define APREG_SFOUT_CONFIG_READ					0x49
-
-#define APREG_BBST_CONFIG_WRITE					0x70
-#define APREG_BBST_CONFIG_READ					0x71
-
-#define APREG_POWEROFF							0x80
-#define APREG_SOFTRESET							0x81
-#define APREG_HARDRESET							0x82
-#define APREG_STAYON							0x83
-#define APREG_POWEROFF_COMMAND_DELAY			0x84
+//-----------------------------------------------------------------------------
+// Includes
+//-----------------------------------------------------------------------------
 
 
+//-----------------------------------------------------------------------------
+// Defines
+//-----------------------------------------------------------------------------
+#define MAX20303_LDO_OUTPUT_ON           1
+#define MAX20303_LDO_OUTPUT_OFF          0
+
+#define MAX20303_BUCK_OUTPUT_ON          1
+#define MAX20303_BUCK_OUTPUT_OFF         0
+
+#define MAX20303_BOOST_OUTPUT_ON         1
+#define MAX20303_BOOST_OUTPUT_OFF        0
+
+#define MAX20303_LED_OUTPUT_ON           1
+#define MAX20303_LED_OUTPUT_OFF          0
+
+
+//-----------------------------------------------------------------------------
+// Function declarations
+//-----------------------------------------------------------------------------
+
+/**
+ * @brief   Initializes the I2C peripheral for PMIC communication if needed
+ * @param      initialize_i2c is determines whether the I2C peripheral to be initialized or not
+ * @returns    #E_NO_ERROR if everything is successful,
+ *             @ref MXC_Error_Codes if an error occurred
+ */
 void MAX20303_initialize( uint8_t initialize_i2c );
+
+/**
+ * @brief  Setup for LDO1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
+ * LDO1 is configured as load-swittch. Before calling this function, PMIC should be initialized via
+ * MAX20303_initialize() function
+ * @param    ldo1_onoff  Non-zero value configures LDO1 as load-switch but configures the state as "ON".
+ * Value 0 still configures LDO1 as load-switch and configures the state as "OFF.
+ /
+ * @returns    This function has no return value
+ */
 void MAX20303_setldo1( uint8_t ldo1_onoff );
-void MAX20303_worker();
+
+/**
+ * @brief  Setup for Buck1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
+ * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
+ * @param  buck1_onoff   Non-zero value configures Buck1 voltage as 1.8V but configures the state as "ON".
+ * Value 0 still configures LDO1 as load-switch and configures the state as "OFF.
+ /
+ * @returns    This function has no return value
+ */
 void MAX20303_setbuck1( uint8_t buck1_onoff);
+
+/**
+ * @brief  Setup for Buck2 of MAX20303 PMIC to enable or disable MAX78000 board 2.8V digital supply.
+ * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
+ * @param  buck2_onoff    Non-zero value configures Buck2 voltage to 2.8V and sets the state as "ON".
+ * Value 0 still configures Buck2 voltage as 2.8V but configures the state as "OFF"
+ /
+ * @returns    This function has no return value
+ */
 void MAX20303_setbuck2( uint8_t buck2_onoff);
+
+/**
+ * @brief  Setup for Boost Converter of MAX20303 PMIC to enable or disable LCD backlight.
+ * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
+ * @param  boost_onoff   Non-zero value configures LDO1 as load-switch but configures the state as "ON".
+ * Value 0 still configures Boost voltage as 9.6V but configures the state as "OFF"
+ * @param  boost_output_level Sets the voltage output level of the boost converter. Please
+ * refer to MAX20303 PMIC datasheet for details.
+ *
+ * @returns    This function has no return value
+ */
 void MAX20303_setboost( uint8_t boost_onoff, uint8_t boost_output_level );
 
+/**
+ * @brief   Controls PMIC's RGB LED - Red Color. Before calling this function, PMIC should
+ * be initialized via MAX20303_initialize() function
+ * @param      ledStatus value 0 turns off the Red LED, non-zero value turns on the Red LED
+ * @returns    This function has no return value
+ */
 void MAX20303_led_red( uint8_t ledStatus );
+
+/**
+ * @brief   Controls PMIC's RGB LED - Green Color. Before calling this function, PMIC should
+ * be initialized via MAX20303_initialize() function
+ * @param      ledStatus value 0 turns off the Green LED, non-zero value turns on the Red LED
+ * @returns    This function has no return value
+ */
 void MAX20303_led_green( uint8_t ledStatus );
+
+/**
+ * @brief   Controls PMIC's RGB LED - Blue Color. Before calling this function, PMIC should
+ * be initialized via MAX20303_initialize() function
+ * @param      ledStatus value 0 turns off the Blue LED, non-zero value turns on the Red LED
+ * @returns    This function has no return value
+ */
 void MAX20303_led_blue( uint8_t ledStatus );
-#endif /* MAX20303_DRIVER_H */
+
+#endif /* _MAX20303_H_ */
