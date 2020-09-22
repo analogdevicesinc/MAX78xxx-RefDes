@@ -219,8 +219,8 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     // Boost converter	set to 9.6V and enable when needed
 
 
-    MAX20303_setldo1(MAX20303_LDO_OUTPUT_ON);
-    MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
+
+
 
 
     // Configure LDO and Buck outputs
@@ -231,6 +231,20 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
 
     MAX20303_setboost( MAX20303_BOOST_OUTPUT_OFF, 0x10 );
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
+    MAX20303_setldo1(MAX20303_LDO_OUTPUT_ON);
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+    MAX20303_setldo1(MAX20303_LDO_OUTPUT_ON);
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
+    MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+    MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+    MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
 
     return E_NO_ERROR;
 }
@@ -266,9 +280,9 @@ void MAX20303_led_blue(uint8_t ledStatus) {
 void MAX20303_setldo1(uint8_t ldo1_onoff)
 {
     if (ldo1_onoff == MAX20303_LDO_OUTPUT_OFF) {
-        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x04);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Disabled
+        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x1C);  // LDO1Md:1 Load-switch mode.  LDO1En:00   Disabled
     } else {
-        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x05);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Enabled
+        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x1D);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Enabled
     }
 
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x34);      // LDO1Vset : 0x34 = 52.  ( 52 * 25mv) + 0.5V = 1.8V
@@ -279,15 +293,14 @@ void MAX20303_setldo2(uint8_t ldo1_onoff)
 {
 
     if ( ldo1_onoff == MAX20303_LDO_OUTPUT_OFF )
-        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x04);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Disabled
+        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x18);  // LDO2Md:0 LDO mode.  LDO2En:00   Disabled
     else
-        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x05);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Enabled
+        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x19);  // LDO2Md:0 LDO mode.  LDO2En:01   Enabled
 
 
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x18);      // LDO2Vset : 0x18 = 24.  ( 24 * 100mv) + 0.9V = 3.3V
 
     MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO2_CONFIG_WRITE);
-
 }
 
 
