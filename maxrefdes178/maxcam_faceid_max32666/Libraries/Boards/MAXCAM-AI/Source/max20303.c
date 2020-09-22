@@ -180,6 +180,9 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
         NVIC_EnableIRQ(PMIC_I2C_IRQ);
     }
 
+    MXC_GPIO0->ds  |= 1 << 6;
+    MXC_GPIO0->ds1 |= 1 << 7;
+
     // Turn off all PMIC LEDs at startup
     MAX20303_led_red(MAX20303_LED_OUTPUT_OFF);
     MAX20303_led_green(MAX20303_LED_OUTPUT_OFF);

@@ -46,6 +46,7 @@
 #include "lcd.h"
 #include "lcd_data.h"
 #include "fonts.h"
+#include "faceid_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -153,6 +154,9 @@ static const gpio_cfg_t lcd_reset_pin  = {PORT_1, PIN_15 , GPIO_FUNC_OUT, GPIO_P
 static const gpio_cfg_t ssel_pin       = {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
 static volatile int rx_dma_complete  = 1;
 static volatile int tx_dma_complete = 1;
+
+extern uint8_t qspi_image_buff[IMAGE_SIZE];
+extern char resultString[RESULT_MAX_SIZE];
 
 
 //-----------------------------------------------------------------------------
@@ -566,22 +570,32 @@ int lcd_init()
 
     lcd_configure();
 
+    lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
+
     return E_NO_ERROR;
 }
 
-void lcd_worker()
+void lcd_worker(int rtrn)
 {
-    while(1) {
-        lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
-        lcd_writeString(15, 200, "MAXIM", Font_16x26, RED, WHITE);
-        TMR_Delay(MXC_TMR0, MSEC(1000), 0);
+//    while(1) {
+//        lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
+//        TMR_Delay(MXC_TMR0, MSEC(1000), 0);
+//        lcd_drawImage(0, 0, 240, 240, image_data_robert);
+//        TMR_Delay(MXC_TMR0, MSEC(1000), 0);
+//    }
 
-        lcd_drawImage(0, 0, 240, 240, image_data_robert);
-        lcd_writeString(15, 200, "Robert", Font_16x26, BLUE, WHITE);
-        TMR_Delay(MXC_TMR0, MSEC(1000), 0);
-
-        lcd_drawImage(0, 0, 240, 240, image_data_bosphorus);
-        lcd_writeString(15, 200, "Bosphorus", Font_16x26, BLACK, WHITE);
-        TMR_Delay(MXC_TMR0, MSEC(1000), 0);
+    switch(rtrn)
+    {
+        case IMAGE_RECEIVED:
+            lcd_drawImage(0, 0, 240, 240, qspi_image_buff);
+            break;
+        case RESULT_RECEIVED:
+            lcd_writeString(15, 200, resultString, Font_16x26, BLUE, WHITE);
+            break;
+        default:
+            break;
     }
+
+
+
 }

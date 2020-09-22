@@ -41,18 +41,16 @@
 #include "spi.h"
 
 #include "qspi.h"
-#include "definitions.h"
+
+#include "../../common/faceid_definitions.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
 #define QSPI              SPI0
-#define QSPI_IRQ_HANDLER  SPI0_IRQHandler
-#define QSPI_REGS         MXC_SPI17Y_GET_SPI17Y(QSPI)
-#define QSPI_IRQ          MXC_SPI17Y_GET_IRQ(QSPI)
-#define QSPI_SPEED        500000UL
-#define QSPI_RX_BUFF_LEN  (1024 * 10)
+#define QSPI_REGS         MXC_SPI17Y0
+#define QSPI_IRQ          SPI0_IRQn
 
 
 //-----------------------------------------------------------------------------
@@ -63,10 +61,12 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static uint8_t       qspi_rx_buff[QSPI_RX_BUFF_LEN];
+uint8_t       qspi_image_buff[IMAGE_SIZE];
+char          resultString[RESULT_MAX_SIZE];
 static qspi_header_t qspi_header;
-static volatile int  qspi_header_flag;
-static volatile int  qspi_data_flag;
+static volatile int  qspi_flag;
+
+gpio_cfg_t ai85_image_cs = {PORT_0, PIN_8, GPIO_FUNC_OUT, GPIO_PAD_NONE};
 
 
 //-----------------------------------------------------------------------------
@@ -77,26 +77,21 @@ static volatile int  qspi_data_flag;
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void QSPI_IRQ_HANDLER(void)
+void SPI0_IRQHandler(void)
 {
     SPI_Handler(QSPI);
 }
 
-void qspi_haeder_callback(void *req, int error)
+void qspi_callback(void *req, int error)
 {
-    qspi_header_flag = error;
-}
-
-void qspi_data_callback(void *req, int error)
-{
-    qspi_data_flag = error;
+    qspi_flag = error;
 }
 
 void qspi_init()
 {
     sys_cfg_spi_t qspi_slave_cfg;
 
-    qspi_slave_cfg.map = MAP_A;
+    qspi_slave_cfg.map = MAP_B;
     qspi_slave_cfg.ss0 = Enable;
     qspi_slave_cfg.ss1 = Disable;
     qspi_slave_cfg.ss2 = Disable;
@@ -104,20 +99,24 @@ void qspi_init()
     // Setup the interrupt
     NVIC_EnableIRQ(QSPI_IRQ);
 
+    GPIO_Config(&ai85_image_cs);
+    GPIO_OutClr(&ai85_image_cs);
+
+    SPI_Shutdown(QSPI);
+
     // Configure the peripheral
     if (SPI_Init(QSPI, 0, QSPI_SPEED, qspi_slave_cfg) != 0) {
         printf("Error configuring QSPI\n");
     }
 
-//    SPI_Enable(SPI);
+//    SPI_Enable(QSPI);
 }
 
-void qspi_worker()
+int qspi_worker(void)
 {
     spi_req_t qspi_req = {0};
 
-    memset(&qspi_header, 0, sizeof(qspi_header));
-    memset(qspi_rx_buff, 0, sizeof(qspi_rx_buff));
+    memset(&qspi_header, 0, sizeof(qspi_header_t));
 
     SPI_Clear_fifo(QSPI);
 
@@ -125,7 +124,7 @@ void qspi_worker()
 
     qspi_req.tx_data = NULL;
     qspi_req.rx_data = (uint8_t *) &qspi_header;
-    qspi_req.len = sizeof(qspi_header);
+    qspi_req.len = sizeof(qspi_header_t);
     qspi_req.bits = 8;
     qspi_req.width = SPI17Y_WIDTH_4;
     qspi_req.ssel = 0;
@@ -133,22 +132,38 @@ void qspi_worker()
     qspi_req.ssel_pol = SPI17Y_POL_LOW;
     qspi_req.tx_num = 0;
     qspi_req.rx_num = 0;
-    qspi_req.callback = qspi_haeder_callback;
-    qspi_header_flag = 1;
+    qspi_req.callback = qspi_callback;
+    qspi_flag = 1;
     SPI_SlaveTransAsync(QSPI, &qspi_req);
-    while (qspi_header_flag == 1);
+    while (qspi_flag == 1);
 
-    if (qspi_header.start_byte != QSPI_START_BYTE) {
-        printf("Invalid QSPI start byte 0x%02hhX\n", qspi_header.start_byte);
+    if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
+        printf("Invalid QSPI start byte 0x%08hhX\n", qspi_header.start_symbol);
+        return E_BAD_STATE;
     }
 
-    if ((qspi_header.data_len == 0) || (qspi_header.data_len > QSPI_RX_BUFF_LEN)) {
+    if ((qspi_header.data_len == 0) || (qspi_header.data_len > IMAGE_SIZE)) {
         printf("Invalid QSPI data len %u\n", qspi_header.data_len);
+        return E_BAD_PARAM;
     }
+
+    switch (qspi_header.command)
+    {
+        case QSPI_COMMAND_IMAGE:
+            goto ImageReceive;
+            break;
+        case QSPI_COMMAND_RESULT:
+            goto ResultReceive;
+            break;
+        default :
+            return E_COMM_ERR;
+    }
+
+    ImageReceive:
 
     qspi_req.tx_data = NULL;
-    qspi_req.rx_data = qspi_rx_buff;
-    qspi_req.len = qspi_header.data_len;
+    qspi_req.rx_data = (void *)qspi_image_buff;
+    qspi_req.len = qspi_header.data_len/2;
     qspi_req.bits = 8;
     qspi_req.width = SPI17Y_WIDTH_4;
     qspi_req.ssel = 0;
@@ -156,15 +171,53 @@ void qspi_worker()
     qspi_req.ssel_pol = SPI17Y_POL_LOW;
     qspi_req.tx_num = 0;
     qspi_req.rx_num = 0;
-    qspi_req.callback = qspi_data_callback;
-    qspi_data_flag = 1;
+    qspi_req.callback = qspi_callback;
+    qspi_flag = 1;
     SPI_SlaveTransAsync(QSPI, &qspi_req);
-    while (qspi_data_flag == 1);
+    while (qspi_flag == 1);
+
+    qspi_req.tx_data = NULL;
+    qspi_req.rx_data = (void *)&(qspi_image_buff[qspi_header.data_len/2]);
+    qspi_req.len = qspi_header.data_len - qspi_header.data_len/2;
+    qspi_req.bits = 8;
+    qspi_req.width = SPI17Y_WIDTH_4;
+    qspi_req.ssel = 0;
+    qspi_req.deass = 0;
+    qspi_req.ssel_pol = SPI17Y_POL_LOW;
+    qspi_req.tx_num = 0;
+    qspi_req.rx_num = 0;
+    qspi_req.callback = qspi_callback;
+    qspi_flag = 1;
+    SPI_SlaveTransAsync(QSPI, &qspi_req);
+    while (qspi_flag == 1);
+
+    printf("QSPI transaction completed %u\n", qspi_req.rx_num*2);
+
+    return IMAGE_RECEIVED;
+
+    ResultReceive:
+
+    memset(resultString, 0, sizeof(resultString));
+
+    qspi_req.tx_data = NULL;
+    qspi_req.rx_data = (void *)resultString;
+    qspi_req.len = qspi_header.data_len/2;
+    qspi_req.bits = 8;
+    qspi_req.width = SPI17Y_WIDTH_4;
+    qspi_req.ssel = 0;
+    qspi_req.deass = 0;
+    qspi_req.ssel_pol = SPI17Y_POL_LOW;
+    qspi_req.tx_num = 0;
+    qspi_req.rx_num = 0;
+    qspi_req.callback = qspi_callback;
+    qspi_flag = 1;
+    SPI_SlaveTransAsync(QSPI, &qspi_req);
+    while (qspi_flag == 1);
 
     printf("QSPI transaction completed %u\n", qspi_req.rx_num);
 
-    for (unsigned int i = 0; i < qspi_req.rx_num; i++) {
-        printf("0x%02hhX ", qspi_rx_buff[i]);
-    }
-    printf("\n");
+    printf("Result : %s\n", resultString);
+
+    return RESULT_RECEIVED;
+
 }

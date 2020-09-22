@@ -90,8 +90,16 @@ int main(void)
 
     MAX20303_led_green(MAX20303_LED_OUTPUT_ON);
 
+    uint8_t counter = 0;
+
+    int qspi_return;
+
     while (1) {
-//        qspi_worker();
-        lcd_worker();
+        qspi_return = qspi_worker();
+        if (qspi_return > E_NO_ERROR) {
+            lcd_worker(qspi_return);
+        }
+        MAX20303_led_blue(counter%2);
+        counter++;
     }
 }

@@ -55,7 +55,7 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 void qspi_init();
-void qspi_worker();
+int qspi_worker(void);
 
 
 #endif /* _QSPI_H_ */

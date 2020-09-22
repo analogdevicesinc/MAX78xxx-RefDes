@@ -55,7 +55,7 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int lcd_init();
-void lcd_worker();
+void lcd_worker(int rtrn);
 
 
 #endif /* _LCD_H_ */

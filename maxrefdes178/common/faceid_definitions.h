@@ -44,19 +44,29 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define QSPI_START_BYTE     0xAA
+#define QSPI_SPEED          10000000UL
+#define QSPI_START_SYMBOL   0xAABBCCDD
 #define QSPI_COMMAND_IMAGE  0xEE
 #define QSPI_COMMAND_RESULT 0xBB
+
+#define IMAGE_SIZE          (240*240*2)
+#define RESULT_MAX_SIZE     32
+
 
 
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
 typedef struct __attribute__((packed)) {
-    uint8_t  start_byte;
+    uint32_t  start_symbol;
     uint32_t data_len;
     uint8_t  command;
 } qspi_header_t;
+
+typedef enum {
+    IMAGE_RECEIVED = 1,
+    RESULT_RECEIVED,
+}teQspiReturn;
 
 
 //-----------------------------------------------------------------------------

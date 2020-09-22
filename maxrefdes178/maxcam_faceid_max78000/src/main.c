@@ -53,12 +53,12 @@
 #include "gpio.h"
 #include "spi.h"
 
+#include "../../common/faceid_definitions.h"
 #include "embedding_process.h"
 #include "utils.h"
 #include "AI85_Debug.h"
 #include "faceID.h"
 #include "weights.h"
-#include "definitions.h"
 
 #define IMAGE_XRES  240
 #define IMAGE_YRES  240
@@ -228,6 +228,8 @@ void DMA1_IRQHandler(void)
     DMA_FLAG = 1;
 }
 
+mxc_gpio_cfg_t gpio_cs;
+
 int main(void)
 {
     int ret = 0;
@@ -243,6 +245,13 @@ int main(void)
     gpio_out.func = MXC_GPIO_FUNC_OUT;
     MXC_GPIO_Config(&gpio_out);
     MXC_GPIO_OutClr(gpio_out.port, gpio_out.mask);
+
+    gpio_cs.port = MXC_GPIO0;
+    gpio_cs.mask = MXC_GPIO_PIN_4;
+    gpio_cs.pad = MXC_GPIO_PAD_NONE;
+    gpio_cs.func = MXC_GPIO_FUNC_OUT;
+    MXC_GPIO_Config(&gpio_cs);
+    GPIO_SET(gpio_cs);
 
     gpio_flash.port = MXC_GPIO0;
     gpio_flash.mask = MXC_GPIO_PIN_19;
@@ -278,12 +287,12 @@ int main(void)
     spi_pins.mosi = TRUE;
     spi_pins.sdio2 = TRUE;
     spi_pins.sdio3 = TRUE;
-    spi_pins.ss0 = TRUE;
+    spi_pins.ss0 = FALSE;
     spi_pins.ss1 = FALSE;
     spi_pins.ss2 = FALSE;
 
     // Configure the peripheral
-    if (MXC_SPI_Init(MXC_SPI0, 1, 0, 1, 0, 500000, spi_pins) != E_NO_ERROR) {
+    if (MXC_SPI_Init(MXC_SPI0, 1, 0, 0, 0, QSPI_SPEED, spi_pins) != E_NO_ERROR) {
         PR_ERROR("SPI INITIALIZATION ERROR");
     }
 
@@ -339,7 +348,7 @@ static void run_demo(void)
 {
     GPIO_SET(gpio_flash);
     camera_start_capture_image();
-
+    uint32_t run_count = 0;
 #define PRINT_TIME 1
 #if (PRINT_TIME==1)
     /* Get current time */
@@ -357,7 +366,15 @@ static void run_demo(void)
 #endif
             process_img();
 
-            //run_cnn();
+//            run_cnn(0, 0);
+//            if ((run_count % 2) == 0){
+//                run_cnn(-10, -10);
+//                run_cnn(10, 10);
+//            } else {
+//                run_cnn(-10, 10);
+//                run_cnn(10, -10);
+//            }
+//            run_count++;
 
 #if (PRINT_TIME==1)
 
@@ -441,7 +458,7 @@ static void process_img(void)
 
     PR_INFO("Screen print time : %d", utils_get_time_ms() - pass_time);
 
-    utils_send_img_to_pc(raw, imgLen, w, h, (uint8_t*)"RGB565");
+//    utils_send_img_to_pc(raw, imgLen, w, h, (uint8_t*)"RGB565");
 
     send_image_to_me14(raw, imgLen);
 }
@@ -474,10 +491,10 @@ static void run_cnn(int x_offset, int y_offset)
     pass_time = utils_get_time_ms();
 
     data =  raw + ((IMAGE_H - (HEIGHT))/2)*IMAGE_W*BYTE_PER_PIXEL;
-    for (int i = 0; i<HEIGHT+y_offset; i++) {
+    for (int i = y_offset; i<HEIGHT+y_offset; i++) {
         data =  raw + (((IMAGE_H - HEIGHT)/2)+i)*IMAGE_W*BYTE_PER_PIXEL;
         data += ((IMAGE_W - WIDTH)/2)*BYTE_PER_PIXEL;
-        for(int j =0; j< WIDTH+x_offset; j++) {
+        for(int j =x_offset; j< WIDTH+x_offset; j++) {
             uint8_t ur,ug,ub;
             int8_t r,g,b;
             uint32_t number;
@@ -545,9 +562,13 @@ static void run_cnn(int x_offset, int y_offset)
                 }
             }
 
-            if(decision != prev_decision){
-                send_result_to_me14(name, strlen(name));
+//            if(decision != prev_decision){
+            if (strlen(name) == 0) {
+                name = "Maxcam-AI";
             }
+                send_result_to_me14(name, strlen(name));
+//                printf("Result : %s", name);
+//            }
         }
 
 }
@@ -558,7 +579,7 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
 
     qspi_header_t header;
 
-    header.start_byte = QSPI_START_BYTE;
+    header.start_symbol = QSPI_START_SYMBOL;
     header.data_len = len;
     header.command = QSPI_COMMAND_IMAGE;
     //SPI Request
@@ -567,22 +588,43 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
     req.rxData = NULL;
     req.txLen = sizeof(qspi_header_t);
     req.rxLen = 0;
-    req.ssIdx = 1;
-    req.ssDeassert = 1;
+    req.ssIdx = 0;
+    req.ssDeassert = 0;
     req.txCnt = 0;
     req.rxCnt = 0;
     req.completeCB = NULL;
 
+    GPIO_CLR(gpio_cs);
+
     MXC_SPI_MasterTransaction(&req);
+
+    GPIO_SET(gpio_cs);
 
     MXC_Delay(100); //100usec delay
 
     //SPI Request
     req.txData = image;
-    req.txLen = len;
+    req.txLen = len/2;
+    req.txCnt = 0;
+
+    GPIO_CLR(gpio_cs);
+
+    MXC_SPI_MasterTransaction(&req);
+
+    GPIO_SET(gpio_cs);
+
+    MXC_Delay(100); //100usec delay
+
+    GPIO_CLR(gpio_cs);
+
+    //SPI Request
+    req.txData = (image+(len/2));
+    req.txLen = len - len/2;
     req.txCnt = 0;
 
     MXC_SPI_MasterTransaction(&req);
+
+    GPIO_SET(gpio_cs);
 }
 
 static void send_result_to_me14(char *result, uint32_t len)
@@ -591,7 +633,7 @@ static void send_result_to_me14(char *result, uint32_t len)
 
     qspi_header_t header;
 
-    header.start_byte = QSPI_START_BYTE;
+    header.start_symbol = QSPI_START_SYMBOL;
     header.data_len = len;
     header.command = QSPI_COMMAND_RESULT;
 
