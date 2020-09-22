@@ -69,24 +69,36 @@
  * @returns    #E_NO_ERROR if everything is successful,
  *             @ref MXC_Error_Codes if an error occurred
  */
-void MAX20303_initialize(uint8_t initialize_i2c);
+int MAX20303_initialize(uint8_t initialize_i2c);
 
 /**
  * @brief  Setup for LDO1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
- * LDO1 is configured as load-swittch. Before calling this function, PMIC should be initialized via
+ * LDO1 is configured as load-switch. Before calling this function, PMIC should be initialized via
  * MAX20303_initialize() function
  * @param    ldo1_onoff  Non-zero value configures LDO1 as load-switch but configures the state as "ON".
- * Value 0 still configures LDO1 as load-switch and configures the state as "OFF.
+ * Value 0 still configures LDO1 as load-switch and sets the state as "OFF.
  /
  * @returns    This function has no return value
  */
 void MAX20303_setldo1(uint8_t ldo1_onoff);
 
+
+/**
+ * @brief  Setup for LDO2 of MAX20303 PMIC to enable or disable MAX78000 board 3.3V digital supply.
+ * LDO2 is configured as an LDO. Before calling this function, PMIC should be initialized via
+ * MAX20303_initialize() function
+ * @param    ldo2_onoff  Non-zero value configures LDO1 as load-switch but configures the state as "ON".
+ * Value 0 still configures LDO2 as an LDO and sets the state as "OFF.
+ /
+ * @returns    This function has no return value
+ */
+void MAX20303_setldo2(uint8_t ldo2_onoff);
+
 /**
  * @brief  Setup for Buck1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
  * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
  * @param  buck1_onoff   Non-zero value configures Buck1 voltage as 1.8V but configures the state as "ON".
- * Value 0 still configures LDO1 as load-switch and configures the state as "OFF.
+ * Value 0 still configures LDO1 as load-switch and sets the state as "OFF.
  /
  * @returns    This function has no return value
  */
@@ -96,7 +108,7 @@ void MAX20303_setbuck1(uint8_t buck1_onoff);
  * @brief  Setup for Buck2 of MAX20303 PMIC to enable or disable MAX78000 board 2.8V digital supply.
  * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
  * @param  buck2_onoff    Non-zero value configures Buck2 voltage to 2.8V and sets the state as "ON".
- * Value 0 still configures Buck2 voltage as 2.8V but configures the state as "OFF"
+ * Value 0 still configures Buck2 voltage as 2.8V but sets the state as "OFF"
  /
  * @returns    This function has no return value
  */

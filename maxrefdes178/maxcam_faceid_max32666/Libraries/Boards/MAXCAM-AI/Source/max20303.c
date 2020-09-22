@@ -137,7 +137,7 @@
 // Local function declarations
 //-----------------------------------------------------------------------------
 static int MAX20303_writeReg(const uint8_t reg, const uint8_t value);
-
+//static int MAX20303_readReg(const uint8_t reg, uint8_t * buf);
 
 //-----------------------------------------------------------------------------
 // Function definitions
@@ -155,8 +155,29 @@ static int MAX20303_writeReg(const uint8_t reg, const uint8_t value)
     return I2C_MasterWrite(PMIC_I2C, MAX20303_I2C_ADDR, cmdData, 2, 0);
 }
 
-void MAX20303_initialize(uint8_t initialize_i2c) {
-    if (initialize_i2c) {
+
+/*TODO: implement read register*/
+/**
+ * @brief   Read a single PMIC register. Before calling this function, PMIC should
+ * be initialized via MAX20303_initialize() function
+ * @param      reg is the address of MAX20303 register
+ * @param      value is the register value to be read
+ * @returns    This function has no return value.
+ *//*
+static int MAX20303_readReg(const uint8_t reg, uint8_t * buf)
+{
+    const uint8_t cmdData[1] = {reg};
+
+
+}*/
+
+
+int MAX20303_initialize(uint8_t initialize_i2c) {
+
+/*    int err;
+	uint8_t hardwareID;*/
+
+	if (initialize_i2c) {
         I2C_Shutdown(PMIC_I2C);
         I2C_Init(PMIC_I2C, I2C_FAST_MODE, NULL);
         NVIC_EnableIRQ(PMIC_I2C_IRQ);
@@ -167,6 +188,41 @@ void MAX20303_initialize(uint8_t initialize_i2c) {
     MAX20303_led_green(MAX20303_LED_OUTPUT_OFF);
     MAX20303_led_blue(MAX20303_LED_OUTPUT_OFF);
 
+/*
+ * TODO : implement I2C read reg
+    if ((err = MAX20303_readReg( MAX20303_HARDWARE_ID , &hardwareID )) != E_NO_ERROR ) {
+
+    	printf("\r\nError: %d \r\n", err );
+    	return err;
+    }
+
+
+    if ( hardwareID != MAX20303_HARDWARE_ID ) {
+
+    	printf("\r\nHardware ID: %x", hardwareID );
+    	return E_NOT_SUPPORTED;
+    }
+*/
+    // MAX20303J : Default configuration must modified for normal mode of operation
+    // At Power-Up :
+    // LOD1				is disabled , configured as LDO; Vout = 1.2V
+    // LDO2				is disabled , configured as LDO; Vout = 3.2V
+    // Buck1 converter	is enabled	, set to 1.8V
+    // Buck2 converter	is disabled , set to 0.9V
+    // Boost converter	is disabled , set to 20V
+
+    // After Power-Up :
+    // LDO1				configure as load-switch
+    // LDO2				configure as LDO; Vout = 3.3V
+    // Buck1 converter	set to 1.8V and enable
+    // Buck2 converter	set to 2.8V and enable
+    // Boost converter	set to 9.6V and enable when needed
+
+
+    MAX20303_setldo1(MAX20303_LDO_OUTPUT_ON);
+    MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
+
+
     // Configure LDO and Buck outputs
     MAX20303_setbuck1(MAX20303_BUCK_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
@@ -175,6 +231,8 @@ void MAX20303_initialize(uint8_t initialize_i2c) {
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
 
     MAX20303_setboost( MAX20303_BOOST_OUTPUT_OFF, 0x10 );
+
+    return E_NO_ERROR;
 }
 
 void MAX20303_led_red(uint8_t ledStatus) {
@@ -217,11 +275,27 @@ void MAX20303_setldo1(uint8_t ldo1_onoff)
     MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO1_CONFIG_WRITE);
 }
 
+void MAX20303_setldo2(uint8_t ldo1_onoff)
+{
+
+    if ( ldo1_onoff == MAX20303_LDO_OUTPUT_OFF )
+        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x04);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Disabled
+    else
+        MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x05);  // LDO1Md:1 Load-switch mode.  LDO1En:01   Enabled
+
+
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x18);      // LDO2Vset : 0x18 = 24.  ( 24 * 100mv) + 0.9V = 3.3V
+
+    MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO2_CONFIG_WRITE);
+
+}
+
+
 void MAX20303_setbuck1(uint8_t buck1_onoff)
 {
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x7E);
-    MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x28);  	  // Buck1Vset = 0x28=40    ( (40x25mV) + 0.8V = 1.8V)
-    MAX20303_writeReg(MAX20303_REG_AP_DATOUT2, 0x1F);  	  // Buck1Iset = 0b1111>375mA,  Buck1IZCSet=0b01>20mA   Buck1 ISet and Zero Crossing Threshold
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x28);	// Buck1Vset = 0x28=40    ( (40x25mV) + 0.8V = 1.8V)
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT2, 0x1F);	// Buck1Iset = 0b1111>375mA,  Buck1IZCSet=0b01>20mA   Buck1 ISet and Zero Crossing Threshold
 
     if (buck1_onoff == MAX20303_LDO_OUTPUT_OFF) {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, 0x00);  // Buck1En = 0   Buck1 disabled
@@ -234,9 +308,9 @@ void MAX20303_setbuck1(uint8_t buck1_onoff)
 
 void MAX20303_setbuck2(uint8_t buck2_onoff)
 {
-    MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x7E);
-    MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x28);  	  // Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)
-    MAX20303_writeReg(MAX20303_REG_AP_DATOUT2, 0x2F);  	  // Buck2Iset = 0b1111>375mA,  Buck2IZCSet=0b10>30mA   Buck2 ISet and Zero Crossing Threshold
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x7E);	// Enable active discharge and FET scaling
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x28);	// Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT2, 0x2F);	// Buck2Iset = 0b1111>375mA,  Buck2IZCSet=0b10>30mA   Buck2 ISet and Zero Crossing Threshold
 
     if (buck2_onoff == MAX20303_LDO_OUTPUT_OFF) {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, 0x00);  //Buck2En = 0   Buck2 disabled

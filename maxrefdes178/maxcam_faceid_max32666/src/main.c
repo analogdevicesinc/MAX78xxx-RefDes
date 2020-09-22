@@ -74,14 +74,25 @@ int main(void)
 
     printf("init started\n");
 
-    MAX20303_initialize(1);
+    if ( MAX20303_initialize(1) == E_NO_ERROR )
+        MAX20303_led_green(1);
+    else
+        MAX20303_led_red(1);
+
+
     qspi_init();
     lcd_init();
 
     printf("init completed\n");
 
+
+
+
     while (1) {
 //        qspi_worker();
         lcd_worker();
+
+
+
     }
 }
