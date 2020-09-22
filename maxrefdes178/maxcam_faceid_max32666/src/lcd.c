@@ -95,11 +95,24 @@
 #define ST7789_RDID3   0xDC
 #define ST7789_RDID4   0xDD
 
-#define ST7789_TFTWIDTH     240
-#define ST7789_TFTHEIGHT    240
+#define ST7789_ROTATION 2
 
-#define ST7789_240x240_XSTART 0
-#define ST7789_240x240_YSTART 0
+#define ST7789_WIDTH 240
+#define ST7789_HEIGHT 240
+
+#if ST7789_ROTATION == 0
+    #define X_SHIFT 0
+    #define Y_SHIFT 80
+#elif ST7789_ROTATION == 1
+    #define X_SHIFT 80
+    #define Y_SHIFT 0
+#elif ST7789_ROTATION == 2
+    #define X_SHIFT 0
+    #define Y_SHIFT 0
+#elif ST7789_ROTATION == 3
+    #define X_SHIFT 0
+    #define Y_SHIFT 0
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -114,8 +127,8 @@
 static const gpio_cfg_t lcd_dc_pin     = {PORT_1, PIN_14  , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
 static const gpio_cfg_t lcd_reset_pin  = {PORT_1, PIN_15 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
 static const gpio_cfg_t ssel_pin       = {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
-static volatile int in_dma_complete  = 1;
-static volatile int out_dma_complete = 1;
+static volatile int rx_dma_complete  = 1;
+static volatile int tx_dma_complete = 1;
 
 
 //-----------------------------------------------------------------------------
@@ -124,11 +137,11 @@ static volatile int out_dma_complete = 1;
 static void lcd_reset();
 static void lcd_backlight(unsigned char onoff);
 static void lcd_sendCommand(uint8_t command);
-static void lcd_sendData(uint8_t data);
+static void lcd_sendSmallData(uint8_t data);
+static void lcd_sendData(uint8_t *data, uint32_t dataLen);
 static void lcd_configure();
-static void lcd_setAddrWindow(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1);
-static void lcd_logoUpdateMaxim();
-static void lcd_logoUpdateRobert();
+static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+static void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data);
 static void spi_init();
 static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len);
 
@@ -149,15 +162,15 @@ void DMA1_IRQHandler()
 }
 
 // A callback function that will be called when the RX DMA completes.
-void in_callback(int ch, int reason)
+void spi_rxCallback(int ch, int reason)
 {
-    in_dma_complete = 1;
+    rx_dma_complete = 1;
 }
 
 // A callback function that will be called when the TX DMA completes.
-void out_callback(int ch, int reason)
+void spi_txCallback(int ch, int reason)
 {
-    out_dma_complete = 1;
+    tx_dma_complete = 1;
 }
 
 static void spi_init()
@@ -187,8 +200,8 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
     int in_ch = -1;
     int out_ch = -1;
 
-    // Assert SSEL
-    GPIO_OutClr(&ssel_pin);
+    // Clear DMA fifo
+    MXC_SPI->dma |= MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR | MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR;
 
     // Initialize the CTRL0 register
     MXC_SPI->ctrl0 = MXC_F_SPI17Y_CTRL0_MASTER |   // Enable master mode
@@ -229,14 +242,14 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
         DMA_ConfigChannel(in_ch, DMA_PRIO_LOW, DMA_REQSEL_SPIRX, 0,
                 DMA_TIMEOUT_4_CLK, DMA_PRESCALE_DISABLE,
                 DMA_WIDTH_BYTE, 0, DMA_WIDTH_BYTE, 1, 1, 1, 0);
-        DMA_SetCallback(in_ch, in_callback);
+        DMA_SetCallback(in_ch, spi_rxCallback);
         DMA_EnableInterrupt(in_ch);
         DMA_SetSrcDstCnt(in_ch, 0, in, len);
-        in_dma_complete = 0;
+        rx_dma_complete = 0;
         DMA_Start(in_ch);
     }
     else {
-        in_dma_complete = 1;    // Not using the RX DMA, mark it as completed.
+        rx_dma_complete = 1;    // Not using the RX DMA, mark it as completed.
     }
 
     // Prepare DMA to fill TX FIFO.
@@ -245,14 +258,14 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
         DMA_ConfigChannel(out_ch, DMA_PRIO_LOW, DMA_REQSEL_SPITX, 0,
                 DMA_TIMEOUT_4_CLK, DMA_PRESCALE_DISABLE,
                 DMA_WIDTH_BYTE, 1, DMA_WIDTH_BYTE, 0, 1, 1, 0);
-        DMA_SetCallback(out_ch, out_callback);
+        DMA_SetCallback(out_ch, spi_txCallback);
         DMA_EnableInterrupt(out_ch);
         DMA_SetSrcDstCnt(out_ch, out, 0, len);
-        out_dma_complete = 0;
+        tx_dma_complete = 0;
         DMA_Start(out_ch);
     }
     else {
-        out_dma_complete = 1;    // Not using the TX DMA, mark it as completed.
+        tx_dma_complete = 1;    // Not using the TX DMA, mark it as completed.
     }
 
     // Start the SPI transaction
@@ -264,7 +277,7 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
     // callbacks will be triggered when the DMA completes
     // so the application knows its time to do more work.
     // For this simple example, we'll just block here.
-    while(!in_dma_complete || !out_dma_complete);
+    while(!rx_dma_complete || !tx_dma_complete);
 
     if(in) {
         DMA_ReleaseChannel(in_ch);
@@ -282,25 +295,28 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
 
 static void lcd_sendCommand(uint8_t command)
 {
-    uint8_t cmd_buffer[1];
     GPIO_OutClr(&lcd_dc_pin);
-    cmd_buffer[0] = command;
-    spi_sendPacket(cmd_buffer, NULL, 1);
+    spi_sendPacket(&command, NULL, 1);
 }
 
-static void lcd_sendData(uint8_t data)
+static void lcd_sendSmallData(uint8_t data)
 {
-    uint8_t cmd_buffer[1];
     GPIO_OutSet(&lcd_dc_pin);
-    cmd_buffer[0] = data;
-    spi_sendPacket(cmd_buffer, NULL, 1);
+    spi_sendPacket(&data, NULL, 1);
+}
+
+static void lcd_sendData(uint8_t *data, uint32_t dataLen)
+{
+    GPIO_OutSet(&lcd_dc_pin);
+    spi_sendPacket(data, NULL, dataLen);
 }
 
 static void lcd_reset()
 {
     GPIO_OutClr(&lcd_reset_pin);
-    TMR_Delay(MXC_TMR0, MSEC(15), 0);  // Keep Reset at low for 15ms
+    TMR_Delay(MXC_TMR0, MSEC(25), 0);
     GPIO_OutSet(&lcd_reset_pin);
+    TMR_Delay(MXC_TMR0, MSEC(15), 0);
 }
 
 static void lcd_backlight(unsigned char onoff)
@@ -314,117 +330,117 @@ static void lcd_backlight(unsigned char onoff)
 
 static void lcd_configure()
 {
-    unsigned int i, j;
-    unsigned int numArgs;
-    unsigned int ms;
-    unsigned char numberOfInitCommands;
-    unsigned char index = 0;
+    GPIO_OutClr(&ssel_pin);
 
-    static const unsigned char cmd_240x240[] = {                         // Initialization commands for 7789 screens
-        10,                                     // 9 commands in list:
+    lcd_sendCommand(ST7789_COLMOD);     //  Set color mode
+    lcd_sendSmallData(0x55);            //  RGB565 (16bit)
 
-        ST7789_SWRESET,   ST_CMD_DELAY,         // 1: Software reset, no args, w/delay
-        150,                                    // 150 ms delay
-
-        ST7789_SLPOUT ,   ST_CMD_DELAY,         // 2: Out of sleep mode, no args, w/delay
-        255,                                    // 255 = 500 ms delay
-
-        ST7789_COLMOD , 1+ST_CMD_DELAY,         // 3: Set color mode, 1 arg + delay:
-        0x55,                                   // 16-bit color
-        10,                                     // 10 ms delay
-
-        ST7789_MADCTL , 1,                      // 4: Memory access ctrl (directions), 1 arg:
-        0x01,                                   // Row addr/col addr, bottom to top refresh
-
-        ST7789_CASET  , 4,                      // 5: Column addr set, 4 args, no delay:
-        0x00, ST7789_240x240_XSTART,            // XSTART = 0
-        (ST7789_TFTWIDTH+ST7789_240x240_XSTART) >> 8,
-        (ST7789_TFTWIDTH+ST7789_240x240_XSTART) & 0xFF,   // XEND = 240
-
-        ST7789_RASET  , 4,                      // 6: Row addr set, 4 args, no delay:
-
-        0x00, ST7789_240x240_YSTART,            // YSTART = 0
-        (ST7789_TFTHEIGHT+ST7789_240x240_YSTART) >> 8,
-        (ST7789_TFTHEIGHT+ST7789_240x240_YSTART) & 0xFF,    // YEND = 240
-
-        ST7789_INVON ,   ST_CMD_DELAY,          // 7: Inversion ON
-        10,
-
-        ST7789_NORON  ,   ST_CMD_DELAY,         // 8: Normal display on, no args, w/delay
-        10,                                     // 10 ms delay
-
-        ST7789_DISPON ,   ST_CMD_DELAY,         // 9: Main screen turn on, no args, w/delay
-        255
-    };
-
-    numberOfInitCommands = cmd_240x240[ index ] - 2;
-
-    for ( i = 0; i < numberOfInitCommands; i++ )
+    lcd_sendCommand(0xB2);              //  Porch control
     {
-        index++;
-        lcd_sendCommand( cmd_240x240[ index ] );
-        index++;
-        numArgs = cmd_240x240[ index ];
-        ms      = numArgs & ST_CMD_DELAY;
-        numArgs = cmd_240x240[ index ] & 0x7f;
-
-        if (numArgs) {
-            for ( j = 0 ; j < numArgs ; j++ )
-            {
-                index++;
-                lcd_sendData( cmd_240x240[ index ] );
-            }
-        }
-        if (ms) {
-            index++;
-            TMR_Delay(MXC_TMR0, MSEC(  cmd_240x240[ index ] ), 0);  // Wait for 120ms
-        }
-        GPIO_OutSet(&ssel_pin);
+        uint8_t data[] = {0x0C, 0x0C, 0x00, 0x33, 0x33};
+        lcd_sendData(data, sizeof(data));
     }
 
-    lcd_sendCommand( 0x13 );     // NORON
-    lcd_sendCommand( 0x21 );     // Inversion ON
-    lcd_sendCommand( 0x29 );     // Display ON
+    lcd_sendCommand(ST7789_MADCTL);    //  Display Rotation
+#if ST7789_ROTATION == 0
+    lcd_sendSmallData(ST7789_MADCTL_MX | ST7789_MADCTL_MY | ST7789_MADCTL_RGB);
+#elif ST7789_ROTATION == 1
+    lcd_sendSmallData(ST7789_MADCTL_MY | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
+#elif ST7789_ROTATION == 2
+    lcd_sendSmallData(ST7789_MADCTL_RGB);
+#elif ST7789_ROTATION == 3
+    lcd_sendSmallData(ST7789_MADCTL_MX | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
+#endif
+
+    /* Internal LCD Voltage generator settings */
+    lcd_sendCommand(0XB7);             //  Gate Control
+    lcd_sendSmallData(0x35);           //  Default value
+
+    lcd_sendCommand(0xBB);             //  VCOM setting
+    lcd_sendSmallData(0x19);           //  0.725v (default 0.75v for 0x20)
+
+    lcd_sendCommand(0xC0);             //  LCMCTRL
+    lcd_sendSmallData(0x2C);           //  Default value
+
+    lcd_sendCommand(0xC2);             //  VDV and VRH command Enable
+    lcd_sendSmallData(0x01);           //  Default value
+
+    lcd_sendCommand(0xC3);             //  VRH set
+    lcd_sendSmallData(0x12);           //  +-4.45v (defalut +-4.1v for 0x0B)
+
+    lcd_sendCommand(0xC4);             //  VDV set
+    lcd_sendSmallData(0x20);           //  Default value
+
+    lcd_sendCommand(0xC6);             //  Frame rate control in normal mode
+    lcd_sendSmallData(0x0F);           //  Default value (60HZ)
+
+    lcd_sendCommand(0xD0);             //  Power control
+    lcd_sendSmallData(0xA4);           //  Default value
+    lcd_sendSmallData(0xA1);           //  Default value
+
+    lcd_sendCommand(0xE0);
+    {
+        uint8_t data[] = {0xD0, 0x04, 0x0D, 0x11, 0x13, 0x2B, 0x3F, 0x54, 0x4C, 0x18, 0x0D, 0x0B, 0x1F, 0x23};
+        lcd_sendData(data, sizeof(data));
+    }
+
+    lcd_sendCommand(0xE1);
+    {
+        uint8_t data[] = {0xD0, 0x04, 0x0C, 0x11, 0x13, 0x2C, 0x3F, 0x44, 0x51, 0x2F, 0x1F, 0x1F, 0x20, 0x23};
+        lcd_sendData(data, sizeof(data));
+    }
+
+    lcd_sendCommand(ST7789_INVON);     //  Inversion ON
+
+    lcd_sendCommand(ST7789_SLPOUT);    //  Out of sleep mode
+
+    lcd_sendCommand(ST7789_NORON);     //  Normal Display on
+
+    lcd_sendCommand(ST7789_DISPON);    //  Main screen turned on
+
+    GPIO_OutSet(&ssel_pin);
 }
 
-static void lcd_setAddrWindow(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1)
+static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-    unsigned short xs = x0 + ST7789_240x240_XSTART, xe = x1 + ST7789_240x240_XSTART;
-    unsigned short ys = y0 + ST7789_240x240_YSTART, ye = y1 + ST7789_240x240_YSTART;
+    uint16_t x_start = x0 + X_SHIFT, x_end = x1 + X_SHIFT;
+    uint16_t y_start = y0 + Y_SHIFT, y_end = y1 + Y_SHIFT;
 
+    GPIO_OutClr(&ssel_pin);
     lcd_sendCommand(ST7789_CASET);
-    lcd_sendData(xs >> 8);
-    lcd_sendData(xs & 0xFF);
-    lcd_sendData(xe >> 8);
-    lcd_sendData(xe & 0xFF);
-    GPIO_OutSet(&ssel_pin);
+    {
+        uint8_t data[] = {x_start >> 8, x_start & 0xFF, x_end >> 8, x_end & 0xFF};
+        lcd_sendData(data, sizeof(data));
+    }
 
     lcd_sendCommand(ST7789_RASET);
-    lcd_sendData(ys >> 8);
-    lcd_sendData(ys & 0xFF);
-    lcd_sendData(ye >> 8);
-    lcd_sendData(ye & 0xFF);
-    GPIO_OutSet(&ssel_pin);
+    {
+        uint8_t data[] = {y_start >> 8, y_start & 0xFF, y_end >> 8, y_end & 0xFF};
+        lcd_sendData(data, sizeof(data));
+    }
 
     lcd_sendCommand(ST7789_RAMWR);
     GPIO_OutSet(&ssel_pin);
 }
 
-static void lcd_logoUpdateMaxim()
+static void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
 {
-    lcd_setAddrWindow(0, 0, 240, 240);
-    GPIO_OutSet(&lcd_dc_pin);
-    spi_sendPacket( (uint8_t *) image_data_rsz_maxim_logo, NULL, 240*240);
-    spi_sendPacket( ((uint8_t *) image_data_rsz_maxim_logo) + 57600, NULL, 240*240);
-    GPIO_OutSet(&ssel_pin);
-}
+    uint32_t chunk_size;
+    uint32_t buff_size = 2 * w * h;
+    uint8_t *buff = data;
 
-static void lcd_logoUpdateRobert()
-{
-    lcd_setAddrWindow(0, 0, 240, 240);
+    lcd_setAddrWindow(x, y, x + w - 1, y + h - 1);
+
     GPIO_OutSet(&lcd_dc_pin);
-    spi_sendPacket( (uint8_t *) image_data_robert, NULL, 240*240);
-    spi_sendPacket( ((uint8_t *) image_data_robert) + 57600, NULL, 240*240);
+    GPIO_OutClr(&ssel_pin);
+
+    while (buff_size > 0) {
+        chunk_size = buff_size > 57600 ? 57600 : buff_size;
+        spi_sendPacket(buff, NULL, chunk_size);
+        buff += chunk_size;
+        buff_size -= chunk_size;
+    }
+
     GPIO_OutSet(&ssel_pin);
 }
 
@@ -451,9 +467,9 @@ void lcd_init()
 void lcd_worker()
 {
     while(1) {
-        lcd_logoUpdateMaxim();
+        lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
         TMR_Delay(MXC_TMR0, MSEC(1000), 0);
-        lcd_logoUpdateRobert();
+        lcd_drawImage(0, 0, 240, 240, image_data_robert);
         TMR_Delay(MXC_TMR0, MSEC(1000), 0);
     }
 }
