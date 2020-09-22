@@ -82,7 +82,6 @@ int MAX20303_initialize(uint8_t initialize_i2c);
  */
 void MAX20303_setldo1(uint8_t ldo1_onoff);
 
-
 /**
  * @brief  Setup for LDO2 of MAX20303 PMIC to enable or disable MAX78000 board 3.3V digital supply.
  * LDO2 is configured as an LDO. Before calling this function, PMIC should be initialized via

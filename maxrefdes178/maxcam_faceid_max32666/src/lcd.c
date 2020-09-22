@@ -45,6 +45,7 @@
 #include "max20303.h"
 #include "lcd.h"
 #include "lcd_data.h"
+#include "fonts.h"
 
 
 //-----------------------------------------------------------------------------
@@ -115,6 +116,29 @@
 #endif
 
 
+#define WHITE 0xFFFF
+#define BLACK 0x0000
+#define BLUE 0x001F
+#define RED 0xF800
+#define MAGENTA 0xF81F
+#define GREEN 0x07E0
+#define CYAN 0x7FFF
+#define YELLOW 0xFFE0
+#define GRAY 0X8430
+#define BRED 0XF81F
+#define GRED 0XFFE0
+#define GBLUE 0X07FF
+#define BROWN 0XBC40
+#define BRRED 0XFC07
+#define DARKBLUE 0X01CF
+#define LIGHTBLUE 0X7D7C
+#define GRAYBLUE 0X5458
+#define LIGHTGREEN 0X841F
+#define LGRAY 0XC618
+#define LGRAYBLUE 0XA651
+#define LBBLUE 0X2B12
+
+
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
@@ -142,6 +166,8 @@ static void lcd_sendData(uint8_t *data, uint32_t dataLen);
 static void lcd_configure();
 static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 static void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data);
+static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor);
+static void lcd_writeString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor);
 static void spi_init();
 static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len);
 
@@ -401,6 +427,11 @@ static void lcd_configure()
     GPIO_OutSet(&ssel_pin);
 }
 
+/**
+ * @brief Set address of DisplayWindow
+ * @param xi&yi -> coordinates of window
+ * @return none
+ */
 static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
     uint16_t x_start = x0 + X_SHIFT, x_end = x1 + X_SHIFT;
@@ -423,6 +454,13 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
     GPIO_OutSet(&ssel_pin);
 }
 
+/**
+ * @brief Draw an Image on the screen
+ * @param x&y -> start point of the Image
+ * @param w&h -> width & height of the Image to Draw
+ * @param data -> pointer of the Image array
+ * @return none
+ */
 static void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
 {
     uint32_t chunk_size;
@@ -444,7 +482,72 @@ static void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_
     GPIO_OutSet(&ssel_pin);
 }
 
-void lcd_init()
+/**
+ * @brief Write a char
+ * @param  x&y -> cursor of the start point.
+ * @param ch -> char to write
+ * @param font -> fontstyle of the string
+ * @param color -> color of the char
+ * @param bgcolor -> background color of the char
+ * @return  none
+ */
+static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor)
+{
+    uint32_t i, b, j;
+
+    lcd_setAddrWindow(x, y, x + font.width - 1, y + font.height - 1);
+
+    GPIO_OutClr(&ssel_pin);
+
+    for (i = 0; i < font.height; i++) {
+        b = font.data[(ch - 32) * font.height + i];
+        for (j = 0; j < font.width; j++) {
+            if ((b << j) & 0x8000) {
+                uint8_t data[] = {color >> 8, color & 0xFF};
+                lcd_sendData(data, sizeof(data));
+            }
+            else {
+                uint8_t data[] = {bgcolor >> 8, bgcolor & 0xFF};
+                lcd_sendData(data, sizeof(data));
+            }
+        }
+    }
+
+    GPIO_OutSet(&ssel_pin);
+}
+
+/**
+ * @brief Write a string
+ * @param  x&y -> cursor of the start point.
+ * @param str -> string to write
+ * @param font -> fontstyle of the string
+ * @param color -> color of the string
+ * @param bgcolor -> background color of the string
+ * @return  none
+ */
+static void lcd_writeString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
+{
+    while (*str) {
+        if (x + font.width >= ST7789_WIDTH) {
+            x = 0;
+            y += font.height;
+            if (y + font.height >= ST7789_HEIGHT) {
+                break;
+            }
+
+            if (*str == ' ') {
+                // skip spaces in the beginning of the new line
+                str++;
+                continue;
+            }
+        }
+        lcd_writeChar(x, y, *str, font, color, bgcolor);
+        x += font.width;
+        str++;
+    }
+}
+
+int lcd_init()
 {
     lcd_backlight(1);
 
@@ -462,14 +565,23 @@ void lcd_init()
     spi_init();
 
     lcd_configure();
+
+    return E_NO_ERROR;
 }
 
 void lcd_worker()
 {
     while(1) {
         lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
+        lcd_writeString(15, 200, "MAXIM", Font_16x26, RED, WHITE);
         TMR_Delay(MXC_TMR0, MSEC(1000), 0);
+
         lcd_drawImage(0, 0, 240, 240, image_data_robert);
+        lcd_writeString(15, 200, "Robert", Font_16x26, BLUE, WHITE);
+        TMR_Delay(MXC_TMR0, MSEC(1000), 0);
+
+        lcd_drawImage(0, 0, 240, 240, image_data_bosphorus);
+        lcd_writeString(15, 200, "Bosphorus", Font_16x26, BLACK, WHITE);
         TMR_Delay(MXC_TMR0, MSEC(1000), 0);
     }
 }

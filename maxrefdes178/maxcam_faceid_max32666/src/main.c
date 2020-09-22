@@ -74,25 +74,24 @@ int main(void)
 
     printf("init started\n");
 
-    if ( MAX20303_initialize(1) == E_NO_ERROR )
-        MAX20303_led_green(1);
-    else
-        MAX20303_led_red(1);
-
+    if (MAX20303_initialize(1) != E_NO_ERROR) {
+        printf("pmic init failed\n");
+        while(1);
+    }
 
     qspi_init();
-    lcd_init();
+
+    if (lcd_init() != E_NO_ERROR) {
+        printf("lcd init failed\n");
+        while(1);
+    }
 
     printf("init completed\n");
 
-
-
+    MAX20303_led_green(MAX20303_LED_OUTPUT_ON);
 
     while (1) {
 //        qspi_worker();
         lcd_worker();
-
-
-
     }
 }

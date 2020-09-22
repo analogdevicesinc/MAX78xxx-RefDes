@@ -155,7 +155,6 @@ static int MAX20303_writeReg(const uint8_t reg, const uint8_t value)
     return I2C_MasterWrite(PMIC_I2C, MAX20303_I2C_ADDR, cmdData, 2, 0);
 }
 
-
 /*TODO: implement read register*/
 /**
  * @brief   Read a single PMIC register. Before calling this function, PMIC should
@@ -168,9 +167,7 @@ static int MAX20303_readReg(const uint8_t reg, uint8_t * buf)
 {
     const uint8_t cmdData[1] = {reg};
 
-
 }*/
-
 
 int MAX20303_initialize(uint8_t initialize_i2c) {
 
@@ -196,7 +193,6 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     	return err;
     }
 
-
     if ( hardwareID != MAX20303_HARDWARE_ID ) {
 
     	printf("\r\nHardware ID: %x", hardwareID );
@@ -217,11 +213,6 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     // Buck1 converter	set to 1.8V and enable
     // Buck2 converter	set to 2.8V and enable
     // Boost converter	set to 9.6V and enable when needed
-
-
-
-
-
 
     // Configure LDO and Buck outputs
     MAX20303_setbuck1(MAX20303_BUCK_OUTPUT_ON);
@@ -244,7 +235,6 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
     MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
-
 
     return E_NO_ERROR;
 }
@@ -291,18 +281,15 @@ void MAX20303_setldo1(uint8_t ldo1_onoff)
 
 void MAX20303_setldo2(uint8_t ldo1_onoff)
 {
-
-    if ( ldo1_onoff == MAX20303_LDO_OUTPUT_OFF )
+    if (ldo1_onoff == MAX20303_LDO_OUTPUT_OFF) {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x18);  // LDO2Md:0 LDO mode.  LDO2En:00   Disabled
-    else
+    } else {
         MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x19);  // LDO2Md:0 LDO mode.  LDO2En:01   Enabled
-
+    }
 
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x18);      // LDO2Vset : 0x18 = 24.  ( 24 * 100mv) + 0.9V = 3.3V
-
     MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO2_CONFIG_WRITE);
 }
-
 
 void MAX20303_setbuck1(uint8_t buck1_onoff)
 {
@@ -349,6 +336,5 @@ void MAX20303_setboost(uint8_t boost_onoff, uint8_t boost_output_level)
     }
 
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT4, 0x03);				   //  BstSet 0x03 - not sure if this is writeable
-
     MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BST_CONFIG_WRITE);  // = Bset_Config_Write
 }

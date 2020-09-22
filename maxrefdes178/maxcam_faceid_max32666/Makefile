@@ -64,6 +64,7 @@ CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 SRCS  = ./src/main.c
 SRCS += ./src/qspi.c
 SRCS += ./src/lcd.c
+SRCS += ./src/fonts.c
 
 
 # Where to find source files for this test
