@@ -155,12 +155,9 @@ int main(void)
                         resultColor = RED;
                     } else if(strcmp(resultString, "Adjust Face") == 0) {
                         resultColor = BLUE;
-                    } else if (strcmp(resultString, "Maxcam-AI") == 0) {
-                        resultColor = YELLOW;
                     } else {
                         resultColor = GREEN;
                     }
-                    rgb_setString(20, 210, resultString, Font_16x26, resultColor);
                     break;
                 default:
                     break;

@@ -631,13 +631,13 @@ static void run_cnn(int x_offset, int y_offset)
                 }
             }
 
-//            if(decision != prev_decision){
-            if (strlen(name) == 0) {
-                name = "Maxcam-AI";
+            if(decision != prev_decision){
+                if (strlen(name) == 0) {
+                    name = " ";
+                }
+                send_result_to_me14(name, strlen(name));
+                PR_DEBUG("Result : %s\n", name);
             }
-            send_result_to_me14(name, strlen(name));
-            PR_DEBUG("Result : %s\n", name);
-//            }
         }
 
 }
