@@ -53,7 +53,7 @@
 #include "gpio.h"
 #include "spi.h"
 
-#include "../../common/faceid_definitions.h"
+#include "faceid_definitions.h"
 #include "embedding_process.h"
 #include "utils.h"
 #include "AI85_Debug.h"
@@ -70,6 +70,8 @@
 #define IMAGE_W         240
 #define BYTE_PER_PIXEL  2
 #define FRAME_COLOR     0x535A
+
+#define PRINT_TIME 0
 
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
@@ -346,7 +348,7 @@ int main(void)
 
     // Obtain the I2C slave address of the camera.
     slaveAddress = camera_get_slave_address();
-    PR_VERBOSE("Camera I2C slave address is 0x%02hhX", slaveAddress);
+    PR_INFO("Camera I2C slave address is 0x%02hhX", slaveAddress);
 
     // Obtain the product ID of the camera.
     ret = camera_get_product_id(&id);
@@ -354,7 +356,7 @@ int main(void)
         PR_ERROR("Error returned from reading camera product id. Error : %d", ret);
         fail();
     }
-    PR_VERBOSE("Camera Product ID is 0x%04hhX", id);
+    PR_INFO("Camera Product ID is 0x%04hhX", id);
 
     // Obtain the manufacture ID of the camera.
     ret = camera_get_manufacture_id(&id);
@@ -362,7 +364,7 @@ int main(void)
         PR_ERROR("Error returned from reading camera manufacture id. Error : %d", ret);
         return -1;
     }
-    PR_VERBOSE("Camera Manufacture ID is 0x%04hhX", id);
+    PR_INFO("Camera Manufacture ID is 0x%04hhX", id);
 
     // set camera registers with default values
     for (int i = 0; (camera_settings[i][0] != 0xee); i++) {
@@ -404,7 +406,6 @@ static void run_demo(void)
 {
     camera_start_capture_image();
     uint32_t run_count = 0;
-#define PRINT_TIME 1
 #if (PRINT_TIME==1)
     /* Get current time */
     uint32_t process_time = utils_get_time_ms();
@@ -464,9 +465,10 @@ static void process_img(void)
 
     uint16_t *image = (uint16_t*)raw;   // 2bytes per pixel RGB565
 
+#if (PRINT_TIME==1)
     uint32_t pass_time = 0;
-
     pass_time = utils_get_time_ms();
+#endif
 
     // left line
     image+=((IMAGE_H - (HEIGHT+2*THICKNESS))/2)*IMAGE_W;
@@ -502,14 +504,13 @@ static void process_img(void)
         image+=((IMAGE_W - (WIDTH+2*THICKNESS))/2);
     }
 
+#if (PRINT_TIME==1)
     PR_INFO("Frame drawing time : %d", utils_get_time_ms() - pass_time);
-
-#define X_START 45
-#define Y_START 30
 
     pass_time = utils_get_time_ms();
 
     PR_INFO("Screen print time : %d", utils_get_time_ms() - pass_time);
+#endif
 
 //    utils_send_img_to_pc(raw, imgLen, w, h, (uint8_t*)"RGB565");
 
@@ -527,24 +528,24 @@ static void run_cnn(int x_offset, int y_offset)
     uint32_t  imgLen;
     uint32_t  w, h;
 
-    /* Get current time */
-    uint32_t pass_time = 0;
-
-
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &imgLen, &w, &h);
 
-    pass_time = utils_get_time_ms();
+#if (PRINT_TIME==1)
+    /* Get current time */
+    uint32_t pass_time = utils_get_time_ms();
+#endif
 
     cnn_load();
 
     cnn_start();
 
-    PR_INFO("CNN initialization time : %d", utils_get_time_ms() - pass_time);
-
     uint8_t * data = raw;
 
+#if (PRINT_TIME==1)
+    PR_INFO("CNN initialization time : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
+#endif
 
 //    int counter = 0;
 
@@ -580,25 +581,29 @@ static void run_cnn(int x_offset, int y_offset)
 
 //    utils_send_img_to_pc(raw, 120*160*3, 120, 160, (uint8_t*)"RGB888");
 
+#if (PRINT_TIME==1)
     PR_INFO("CNN load data time : %d", utils_get_time_ms() - pass_time);
-
     pass_time = utils_get_time_ms();
-
+#endif
     cnn_wait();
 
+#if (PRINT_TIME==1)
     PR_INFO("CNN wait time : %d", utils_get_time_ms() - pass_time);
-
     pass_time = utils_get_time_ms();
+#endif
 
     cnn_unload((uint8_t*)(raw));
 
+#if (PRINT_TIME==1)
     PR_INFO("CNN unload time : %d", utils_get_time_ms() - pass_time);
-
     pass_time = utils_get_time_ms();
+#endif
 
     int pResult = calculate_minDistance((uint8_t*)(raw));
 
+#if (PRINT_TIME==1)
     PR_INFO("Embedding time : %d", utils_get_time_ms() - pass_time);
+#endif
 
     if ( pResult == 0 ) {
             char *name;
@@ -631,7 +636,7 @@ static void run_cnn(int x_offset, int y_offset)
                 name = "Maxcam-AI";
             }
             send_result_to_me14(name, strlen(name));
-            PR_INFO("Result : %s\n", name);
+            PR_DEBUG("Result : %s\n", name);
 //            }
         }
 

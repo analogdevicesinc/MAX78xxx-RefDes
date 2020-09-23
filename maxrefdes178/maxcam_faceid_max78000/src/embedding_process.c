@@ -40,8 +40,11 @@
 #include "board.h"
 #include "embedding_process.h"
 #include "embeddings.h"
+#include "AI85_Debug.h"
+
 
 /*******************************      DEFINES      ***************************/
+#define S_MODULE_NAME   "embedding"
 
 static const uint8_t embeddings[] = EMBEDDINGS;
 
@@ -238,11 +241,10 @@ int calculate_minDistance(const uint8_t *embedding)
     }
     ++closestSubIdBufIdx;
     
-    printf("Results:\n");
-    printf("1. : %d, distance: %d\n", pMinDistance[0].subID, pMinDistance[0].distance);
-    printf("2. : %d, distance: %d\n", pMinDistance[1].subID, pMinDistance[1].distance);
-    printf("3. : %d, distance: %d\n", pMinDistance[2].subID, pMinDistance[2].distance);
-    printf("\n");
+    PR_DEBUG("Results:");
+    PR_DEBUG("1. : %d, distance: %d", pMinDistance[0].subID, pMinDistance[0].distance);
+    PR_DEBUG("2. : %d, distance: %d", pMinDistance[1].subID, pMinDistance[1].distance);
+    PR_DEBUG("3. : %d, distance: %d", pMinDistance[2].subID, pMinDistance[2].distance);
     
 //    printf("\t");
 //    for(int i=0; i<closest_sub_buffer_size; ++i){

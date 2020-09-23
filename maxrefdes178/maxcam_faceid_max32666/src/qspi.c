@@ -119,7 +119,7 @@ int qspi_worker(void)
 
     SPI_Clear_fifo(QSPI);
 
-    printf("Waiting for QSPI transaction\n");
+//    printf("Waiting for QSPI transaction\n");
 
     qspi_req.tx_data = NULL;
     qspi_req.rx_data = (uint8_t *) &qspi_header;
@@ -158,7 +158,7 @@ int qspi_worker(void)
             return E_COMM_ERR;
     }
 
-    ImageReceive:
+ImageReceive:
 
     qspi_req.tx_data = NULL;
     qspi_req.rx_data = (void *)qspi_image_buff;
@@ -190,11 +190,11 @@ int qspi_worker(void)
     SPI_SlaveTransAsync(QSPI, &qspi_req);
     while (qspi_flag == 1);
 
-    printf("QSPI transaction completed %u\n", qspi_req.rx_num*2);
+//    printf("QSPI transaction completed %u\n", qspi_req.rx_num*2);
 
     return IMAGE_RECEIVED;
 
-    ResultReceive:
+ResultReceive:
 
     memset(resultString, 0, sizeof(resultString));
 
@@ -213,9 +213,7 @@ int qspi_worker(void)
     SPI_SlaveTransAsync(QSPI, &qspi_req);
     while (qspi_flag == 1);
 
-    printf("QSPI transaction completed %u\n", qspi_req.rx_num);
-
-    printf("Result : %s\n", resultString);
+//    printf("QSPI transaction completed %u %s\n", qspi_req.rx_num, resultString);
 
     return RESULT_RECEIVED;
 
