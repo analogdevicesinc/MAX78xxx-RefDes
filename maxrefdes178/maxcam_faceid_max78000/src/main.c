@@ -54,6 +54,7 @@
 #include "spi.h"
 
 #include "faceid_definitions.h"
+#include "version.h"
 #include "embedding_process.h"
 #include "utils.h"
 #include "AI85_Debug.h"
@@ -243,7 +244,7 @@ int main(void)
     int slaveAddress;
     int id;
 
-    PR_INFO("FaceID Electronica Demo");
+    PR_INFO("FaceID Electronica Demo v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     mxc_gpio_cfg_t gpio_camera;
 
     // Enable camera
