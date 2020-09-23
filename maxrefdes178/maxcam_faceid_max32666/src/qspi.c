@@ -200,7 +200,7 @@ int qspi_worker(void)
 
     qspi_req.tx_data = NULL;
     qspi_req.rx_data = (void *)resultString;
-    qspi_req.len = qspi_header.data_len/2;
+    qspi_req.len = qspi_header.data_len;
     qspi_req.bits = 8;
     qspi_req.width = SPI17Y_WIDTH_4;
     qspi_req.ssel = 0;

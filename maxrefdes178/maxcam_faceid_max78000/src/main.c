@@ -74,11 +74,12 @@
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
+static void fail(void);
 static void process_img(void);
-//static void run_cnn(int x_offset, int y_offset);
+static void run_cnn(int x_offset, int y_offset);
 static void run_demo(void);
 static void send_image_to_me14(uint8_t *image, uint32_t len);
-//static void send_result_to_me14(char *result, uint32_t len);
+static void send_result_to_me14(char *result, uint32_t len);
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -207,8 +208,8 @@ static const uint8_t camera_settings[][2] = {
 
 volatile uint8_t DMA_FLAG = 0;
 
-//static int8_t prev_decision = -2;
-//static int8_t decision = -2;
+static int8_t prev_decision = -2;
+static int8_t decision = -2;
 
 mxc_gpio_cfg_t gpio_flash;
 
@@ -230,6 +231,10 @@ void DMA1_IRQHandler(void)
 
 mxc_gpio_cfg_t gpio_cs;
 
+mxc_gpio_cfg_t gpio_red;
+mxc_gpio_cfg_t gpio_green;
+mxc_gpio_cfg_t gpio_blue;
+
 int main(void)
 {
     int ret = 0;
@@ -237,14 +242,40 @@ int main(void)
     int id;
 
     PR_INFO("FaceID Electronica Demo");
-    mxc_gpio_cfg_t gpio_out;
+    mxc_gpio_cfg_t gpio_camera;
 
-    gpio_out.port = MXC_GPIO0;
-    gpio_out.mask = MXC_GPIO_PIN_3;
-    gpio_out.pad = MXC_GPIO_PAD_NONE;
-    gpio_out.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_out);
-    MXC_GPIO_OutClr(gpio_out.port, gpio_out.mask);
+    // Enable camera
+    gpio_camera.port = MXC_GPIO0;
+    gpio_camera.mask = MXC_GPIO_PIN_3;
+    gpio_camera.pad = MXC_GPIO_PAD_NONE;
+    gpio_camera.func = MXC_GPIO_FUNC_OUT;
+    MXC_GPIO_Config(&gpio_camera);
+    GPIO_CLR(gpio_camera);
+
+
+    // Configure LEDs
+    gpio_red.port = MXC_GPIO2;
+    gpio_red.mask = MXC_GPIO_PIN_0;
+    gpio_red.pad = MXC_GPIO_PAD_NONE;
+    gpio_red.func = MXC_GPIO_FUNC_OUT;
+    MXC_GPIO_Config(&gpio_red);
+    GPIO_SET(gpio_red);
+
+    gpio_green.port = MXC_GPIO2;
+    gpio_green.mask = MXC_GPIO_PIN_1;
+    gpio_green.pad = MXC_GPIO_PAD_NONE;
+    gpio_green.func = MXC_GPIO_FUNC_OUT;
+    MXC_GPIO_Config(&gpio_green);
+    GPIO_SET(gpio_green);
+
+    gpio_blue.port = MXC_GPIO2;
+    gpio_blue.mask = MXC_GPIO_PIN_2;
+    gpio_blue.pad = MXC_GPIO_PAD_NONE;
+    gpio_blue.func = MXC_GPIO_FUNC_OUT;
+    MXC_GPIO_Config(&gpio_blue);
+    GPIO_SET(gpio_blue);
+
+    MXC_Delay(500*1000);
 
     gpio_cs.port = MXC_GPIO0;
     gpio_cs.mask = MXC_GPIO_PIN_4;
@@ -268,12 +299,12 @@ int main(void)
 
     if (initCNN() < 0 ) {
         PR_ERROR("Could not initialize the CNN accelerator");
-        return -1;
+        fail();
     }
 
     if (init_database() < 0 ) {
         PR_ERROR("Could not initialize the database");
-        return -1;
+        fail();
     }
 
     /* Initialize RTC */
@@ -293,39 +324,45 @@ int main(void)
 
     // Configure the peripheral
     if (MXC_SPI_Init(MXC_SPI0, 1, 0, 0, 0, QSPI_SPEED, spi_pins) != E_NO_ERROR) {
-        PR_ERROR("SPI INITIALIZATION ERROR");
+        PR_ERROR("SPI Initialization failed!");
+        fail();
     }
 
     if (MXC_SPI_SetDataSize(MXC_SPI0, 8) != E_NO_ERROR) {
-        PR_ERROR("SPI SET DATASIZE ERROR");
+        PR_ERROR("SPI Set data size failed!");
+        fail();
     }
 
     if (MXC_SPI_SetWidth(MXC_SPI0, SPI_WIDTH_QUAD) != E_NO_ERROR) {
-        printf("SPI SET WIDTH ERROR");
+        PR_ERROR("SPI Set width failed!");
+        fail();
     }
 
     // Initialize the camera driver.
-    camera_init();
+    if (camera_init() != E_NO_ERROR) {
+        PR_ERROR("Camera init failed!");
+        fail();
+    }
 
     // Obtain the I2C slave address of the camera.
     slaveAddress = camera_get_slave_address();
-    printf("Camera I2C slave address is %02x\n", slaveAddress);
+    PR_VERBOSE("Camera I2C slave address is 0x%02hhX", slaveAddress);
 
     // Obtain the product ID of the camera.
     ret = camera_get_product_id(&id);
     if (ret != STATUS_OK) {
-        PR_ERROR("Error returned from reading camera id. Error %d\n", ret);
-        return -1;
+        PR_ERROR("Error returned from reading camera product id. Error : %d", ret);
+        fail();
     }
-    printf("Camera Product ID is %04x\n", id);
+    PR_VERBOSE("Camera Product ID is 0x%04hhX", id);
 
     // Obtain the manufacture ID of the camera.
     ret = camera_get_manufacture_id(&id);
     if (ret != STATUS_OK) {
-        PR_ERROR("Error returned from reading camera id. Error %d\n", ret);
+        PR_ERROR("Error returned from reading camera manufacture id. Error : %d", ret);
         return -1;
     }
-    printf("Camera Manufacture ID is %04x\n", id);
+    PR_VERBOSE("Camera Manufacture ID is 0x%04hhX", id);
 
     // set camera registers with default values
     for (int i = 0; (camera_settings[i][0] != 0xee); i++) {
@@ -335,20 +372,38 @@ int main(void)
     // Setup the camera image dimensions, pixel format and data acquiring details.
     ret = camera_setup(IMAGE_XRES, IMAGE_YRES, PIXFORMAT_RGB565, FIFO_FOUR_BYTE, USE_DMA);
     if (ret != STATUS_OK) {
-        printf("Error returned from setting up camera. Error %d\n", ret);
-        return -1;
+        PR_ERROR("Error returned from setting up camera. Error : %d", ret);
+        fail();
     }
+
+    // Successfully initialize the program
+    PR_INFO("Program initialized successfully");
+    GPIO_CLR(gpio_red);
+    GPIO_CLR(gpio_blue);
+    GPIO_SET(gpio_green);
+
+    MXC_Delay(500*1000);
+
+    GPIO_CLR(gpio_green);
+    GPIO_SET(gpio_blue);
 
     run_demo();
 
     return 0;
 }
 
+static void fail(void)
+{
+    GPIO_SET(gpio_red);
+    GPIO_CLR(gpio_green);
+    GPIO_CLR(gpio_blue);
+    while(1);
+}
+
 static void run_demo(void)
 {
-    GPIO_SET(gpio_flash);
     camera_start_capture_image();
-//    uint32_t run_count = 0;
+    uint32_t run_count = 0;
 #define PRINT_TIME 1
 #if (PRINT_TIME==1)
     /* Get current time */
@@ -358,28 +413,26 @@ static void run_demo(void)
 
     while (1) { //Capture image and run CNN
 
-        /* Check pressed touch screen key */
-        if (camera_is_image_rcv()) {
+        if (camera_is_image_rcv()) { // Check whether image is ready
 
 #if (PRINT_TIME==1)
             process_time = utils_get_time_ms();
 #endif
             process_img();
 
-//            run_cnn(0, 0);
-//            if ((run_count % 2) == 0){
-//                run_cnn(-10, -10);
-//                run_cnn(10, 10);
-//            } else {
-//                run_cnn(-10, 10);
-//                run_cnn(10, -10);
-//            }
-//            run_count++;
+            run_cnn(0, 0);
+            if ((run_count % 2) == 0){
+                run_cnn(-10, -10);
+                run_cnn(10, 10);
+            } else {
+                run_cnn(-10, 10);
+                run_cnn(10, -10);
+            }
+            run_count++;
 
 #if (PRINT_TIME==1)
-
-            printf("\n\n\n");
             PR_INFO("Process Time Total : %dms", utils_get_time_ms()-process_time);
+            printf("\n\n\n");
 #endif
 
             camera_start_capture_image();
@@ -460,118 +513,129 @@ static void process_img(void)
 
 //    utils_send_img_to_pc(raw, imgLen, w, h, (uint8_t*)"RGB565");
 
+    GPIO_SET(gpio_blue);
     send_image_to_me14(raw, imgLen);
+    GPIO_CLR(gpio_blue);
+
 }
 
 
 
-//static void run_cnn(int x_offset, int y_offset)
-//{
-//    uint8_t   *raw;
-//    uint32_t  imgLen;
-//    uint32_t  w, h;
-//
-//    /* Get current time */
-//    uint32_t pass_time = 0;
-//
-//
-//    // Get the details of the image from the camera driver.
-//    camera_get_image(&raw, &imgLen, &w, &h);
-//
-//    pass_time = utils_get_time_ms();
-//
-//    cnn_load();
-//
-//    cnn_start();
-//
-//    PR_INFO("CNN initialization time : %d", utils_get_time_ms() - pass_time);
-//
-//    uint8_t * data = raw;
-//
-//    pass_time = utils_get_time_ms();
-//
-//    data =  raw + ((IMAGE_H - (HEIGHT))/2)*IMAGE_W*BYTE_PER_PIXEL;
-//    for (int i = y_offset; i<HEIGHT+y_offset; i++) {
-//        data =  raw + (((IMAGE_H - HEIGHT)/2)+i)*IMAGE_W*BYTE_PER_PIXEL;
-//        data += ((IMAGE_W - WIDTH)/2)*BYTE_PER_PIXEL;
-//        for(int j =x_offset; j< WIDTH+x_offset; j++) {
-//            uint8_t ur,ug,ub;
-//            int8_t r,g,b;
-//            uint32_t number;
-//
-//            ub = (uint8_t)(data[j*BYTE_PER_PIXEL*+1]<<3);
-//            ug = (uint8_t)((data[j*BYTE_PER_PIXEL]<<5) | ((data[j*BYTE_PER_PIXEL+1]&0xE0)>>3));
-//            ur = (uint8_t)(data[j*BYTE_PER_PIXEL]&0xF8);
-//
-//            b = ub - 128;
-//            g = ug - 128;
-//            r = ur - 128;
-//
-//            // Loading data into the CNN fifo
-//            while (((*((volatile uint32_t *) 0x50000004) & 1)) != 0); // Wait for FIFO 0
-//
-//            number = 0x00FFFFFF & ((((uint8_t)b)<<16) | (((uint8_t)g)<<8) | ((uint8_t)r));
-//
-//            *((volatile uint32_t *) 0x50000008) = number; // Write FIFO 0
-//        }
-//    }
-//
-//    PR_INFO("CNN load data time : %d", utils_get_time_ms() - pass_time);
-//
-//    pass_time = utils_get_time_ms();
-//
-//    cnn_wait();
-//
-//    PR_INFO("CNN wait time : %d", utils_get_time_ms() - pass_time);
-//
-//    pass_time = utils_get_time_ms();
-//
-//    cnn_unload((uint8_t*)(raw));
-//
-//    PR_INFO("CNN unload time : %d", utils_get_time_ms() - pass_time);
-//
-//    pass_time = utils_get_time_ms();
-//
-//    int pResult = calculate_minDistance((uint8_t*)(raw));
-//
-//    PR_INFO("Embedding time : %d", utils_get_time_ms() - pass_time);
-//
-//    if ( pResult == 0 ) {
-//            char *name;
-//
-//            uint8_t *counter;
-//            uint8_t counter_len;
-//            get_min_dist_counter(&counter, &counter_len);
-//
-//            name = "";
-//            prev_decision = decision;
-//            decision = -3;
-//            for(uint8_t id=0; id<counter_len; ++id){
-//                if (counter[id] >= (closest_sub_buffer_size-4)){
-//                    name = get_subject(id);
-//                    decision = id;
-//                    break;
-//                } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
-//                    name = "Adjust Face";
-//                    decision = -2;
-//                    break;
-//                } else if (counter[id] > 4){
-//                    name = "Unknown";
-//                    decision = -1;
-//                    break;
-//                }
+static void run_cnn(int x_offset, int y_offset)
+{
+    uint8_t   *raw;
+    uint32_t  imgLen;
+    uint32_t  w, h;
+
+    /* Get current time */
+    uint32_t pass_time = 0;
+
+
+    // Get the details of the image from the camera driver.
+    camera_get_image(&raw, &imgLen, &w, &h);
+
+    pass_time = utils_get_time_ms();
+
+    cnn_load();
+
+    cnn_start();
+
+    PR_INFO("CNN initialization time : %d", utils_get_time_ms() - pass_time);
+
+    uint8_t * data = raw;
+
+    pass_time = utils_get_time_ms();
+
+//    int counter = 0;
+
+    data =  raw + ((IMAGE_H - (HEIGHT))/2)*IMAGE_W*BYTE_PER_PIXEL;
+    for (int i = y_offset; i<HEIGHT+y_offset; i++) {
+        data =  raw + (((IMAGE_H - HEIGHT)/2)+i)*IMAGE_W*BYTE_PER_PIXEL;
+        data += ((IMAGE_W - WIDTH)/2)*BYTE_PER_PIXEL;
+        for(int j =x_offset; j< WIDTH+x_offset; j++) {
+            uint8_t ur,ug,ub;
+            int8_t r,g,b;
+            uint32_t number;
+
+            ub = (uint8_t)(data[j*BYTE_PER_PIXEL+1]<<3);
+            ug = (uint8_t)((data[j*BYTE_PER_PIXEL]<<5) | ((data[j*BYTE_PER_PIXEL+1]&0xE0)>>3));
+            ur = (uint8_t)(data[j*BYTE_PER_PIXEL]&0xF8);
+
+//            raw[counter++] = ur;
+//            raw[counter++] = ug;
+//            raw[counter++] = ub;
+
+            b = ub - 128;
+            g = ug - 128;
+            r = ur - 128;
+
+            // Loading data into the CNN fifo
+            while (((*((volatile uint32_t *) 0x50000004) & 1)) != 0); // Wait for FIFO 0
+
+            number = 0x00FFFFFF & ((((uint8_t)b)<<16) | (((uint8_t)g)<<8) | ((uint8_t)r));
+
+            *((volatile uint32_t *) 0x50000008) = number; // Write FIFO 0
+        }
+    }
+
+//    utils_send_img_to_pc(raw, 120*160*3, 120, 160, (uint8_t*)"RGB888");
+
+    PR_INFO("CNN load data time : %d", utils_get_time_ms() - pass_time);
+
+    pass_time = utils_get_time_ms();
+
+    cnn_wait();
+
+    PR_INFO("CNN wait time : %d", utils_get_time_ms() - pass_time);
+
+    pass_time = utils_get_time_ms();
+
+    cnn_unload((uint8_t*)(raw));
+
+    PR_INFO("CNN unload time : %d", utils_get_time_ms() - pass_time);
+
+    pass_time = utils_get_time_ms();
+
+    int pResult = calculate_minDistance((uint8_t*)(raw));
+
+    PR_INFO("Embedding time : %d", utils_get_time_ms() - pass_time);
+
+    if ( pResult == 0 ) {
+            char *name;
+
+            uint8_t *counter;
+            uint8_t counter_len;
+            get_min_dist_counter(&counter, &counter_len);
+
+            name = "";
+            prev_decision = decision;
+            decision = -3;
+            for(uint8_t id=0; id<counter_len; ++id){
+                if (counter[id] >= (closest_sub_buffer_size-4)){
+                    name = get_subject(id);
+                    decision = id;
+                    break;
+                } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
+                    name = "Adjust Face";
+                    decision = -2;
+                    break;
+                } else if (counter[id] > 4){
+                    name = "Unknown";
+                    decision = -1;
+                    break;
+                }
+            }
+
+//            if(decision != prev_decision){
+            if (strlen(name) == 0) {
+                name = "Maxcam-AI";
+            }
+            send_result_to_me14(name, strlen(name));
+            PR_INFO("Result : %s\n", name);
 //            }
-//
-////            if(decision != prev_decision){
-//            if (strlen(name) == 0) {
-//                name = "Maxcam-AI";
-//            }
-//                send_result_to_me14(name, strlen(name));
-////                printf("Result : %s", name);
-////            }
-//        }
-//
-//}
+        }
+
+}
 
 static void send_image_to_me14(uint8_t *image, uint32_t len)
 {
@@ -627,36 +691,44 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
     GPIO_SET(gpio_cs);
 }
 
-//static void send_result_to_me14(char *result, uint32_t len)
-//{
-//    mxc_spi_req_t req;
-//
-//    qspi_header_t header;
-//
-//    header.start_symbol = QSPI_START_SYMBOL;
-//    header.data_len = len;
-//    header.command = QSPI_COMMAND_RESULT;
-//
-//    //SPI Request
-//    req.spi = MXC_SPI0;
-//    req.txData = (uint8_t *)&header;
-//    req.rxData = NULL;
-//    req.txLen = sizeof(qspi_header_t);
-//    req.rxLen = 0;
-//    req.ssIdx = 1;
-//    req.ssDeassert = 1;
-//    req.txCnt = 0;
-//    req.rxCnt = 0;
-//    req.completeCB = NULL;
-//
-//    MXC_SPI_MasterTransaction(&req);
-//
-//    MXC_Delay(100); //100usec delay
-//
-//    //SPI Request
-//    req.txData = (uint8_t *)result;
-//    req.txLen = len;
-//    req.txCnt = 0;
-//
-//    MXC_SPI_MasterTransaction(&req);
-//}
+static void send_result_to_me14(char *result, uint32_t len)
+{
+    mxc_spi_req_t req;
+
+    qspi_header_t header;
+
+    header.start_symbol = QSPI_START_SYMBOL;
+    header.data_len = len;
+    header.command = QSPI_COMMAND_RESULT;
+
+    //SPI Request
+    req.spi = MXC_SPI0;
+    req.txData = (uint8_t *)&header;
+    req.rxData = NULL;
+    req.txLen = sizeof(qspi_header_t);
+    req.rxLen = 0;
+    req.ssIdx = 1;
+    req.ssDeassert = 1;
+    req.txCnt = 0;
+    req.rxCnt = 0;
+    req.completeCB = NULL;
+
+    GPIO_CLR(gpio_cs);
+
+    MXC_SPI_MasterTransaction(&req);
+
+    GPIO_SET(gpio_cs);
+
+    MXC_Delay(100); //100usec delay
+
+    //SPI Request
+    req.txData = (uint8_t *)result;
+    req.txLen = len;
+    req.txCnt = 0;
+
+    GPIO_CLR(gpio_cs);
+
+    MXC_SPI_MasterTransaction(&req);
+
+    GPIO_SET(gpio_cs);
+}

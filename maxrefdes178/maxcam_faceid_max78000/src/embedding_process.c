@@ -244,16 +244,16 @@ int calculate_minDistance(const uint8_t *embedding)
     printf("3. : %d, distance: %d\n", pMinDistance[2].subID, pMinDistance[2].distance);
     printf("\n");
     
-    printf("\t");
-    for(int i=0; i<closest_sub_buffer_size; ++i){
-        printf("%d, ", pClosestSubId[i]);
-    }
-    printf("\nIdx: %d, Buffer Idx: %d\n", closestSubIdBufIdx, bufferIdx);
-    
-    for(int i=0; i<pDatabaseInfo->numberOfSubjects; ++i){
-        printf("\tId %d: %d\n", i, pMinDistanceCounter[i]);
-    }
-    printf("\n\n");
+//    printf("\t");
+//    for(int i=0; i<closest_sub_buffer_size; ++i){
+//        printf("%d, ", pClosestSubId[i]);
+//    }
+//    printf("\nIdx: %d, Buffer Idx: %d\n", closestSubIdBufIdx, bufferIdx);
+//
+//    for(int i=0; i<pDatabaseInfo->numberOfSubjects; ++i){
+//        printf("\tId %d: %d\n", i, pMinDistanceCounter[i]);
+//    }
+//    printf("\n\n");
 
     return (closestSubIdBufIdx % 3);
 }

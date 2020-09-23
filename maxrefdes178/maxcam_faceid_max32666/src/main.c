@@ -109,7 +109,7 @@ int main(void)
                     lcd_drawImage(0, 0, 240, 240, qspi_image_buff);
                     break;
                 case RESULT_RECEIVED:
-                    lcd_writeString(15, 200, resultString, Font_16x26, BLUE, WHITE);
+                    lcd_writeString(20, 210, resultString, Font_16x26, BLUE, WHITE);
                     break;
                 default:
                     break;
