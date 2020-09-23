@@ -37,6 +37,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <stdio.h>
+#include <string.h>
 #include "tmr_utils.h"
 
 #include "max20303.h"
@@ -60,16 +61,56 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
+uint16_t resultColor;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static void rgb_setChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color);
+static void rgb_setString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
+static void rgb_setChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color)
+{
+    uint32_t i, b, j;
+
+    for (i = 0; i < font.height; i++) {
+        b = font.data[(ch - 32) * font.height + i];
+        for (j = 0; j < font.width; j++) {
+            if ((b << j) & 0x8000) {
+                qspi_image_buff[(((i+y)*240) + (j+x))*2] = color >> 8;
+                qspi_image_buff[(((i+y)*240) + (j+x))*2 + 1] = color & 0xFF;
+            }
+        }
+    }
+}
+
+static void rgb_setString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color)
+{
+    while (*str) {
+        if (x + font.width >= 240) {
+            x = 0;
+            y += font.height;
+            if (y + font.height >= 240) {
+                break;
+            }
+
+            if (*str == ' ') {
+                // skip spaces in the beginning of the new line
+                str++;
+                continue;
+            }
+        }
+        rgb_setChar(x, y, *str, font, color);
+        x += font.width;
+        str++;
+    }
+}
+
 int main(void)
 {
     uint8_t counter = 0;
@@ -106,10 +147,20 @@ int main(void)
             switch(qspi_return)
             {
                 case IMAGE_RECEIVED:
+                    rgb_setString(20, 210, resultString, Font_16x26, resultColor);
                     lcd_drawImage(0, 0, 240, 240, qspi_image_buff);
                     break;
                 case RESULT_RECEIVED:
-                    lcd_writeString(20, 210, resultString, Font_16x26, BLUE, WHITE);
+                    if (strcmp(resultString, "Unknown") == 0) {
+                        resultColor = RED;
+                    } else if(strcmp(resultString, "Adjust Face") == 0) {
+                        resultColor = BLUE;
+                    } else if (strcmp(resultString, "Maxcam-AI") == 0) {
+                        resultColor = YELLOW;
+                    } else {
+                        resultColor = GREEN;
+                    }
+                    rgb_setString(20, 210, resultString, Font_16x26, resultColor);
                     break;
                 default:
                     break;
