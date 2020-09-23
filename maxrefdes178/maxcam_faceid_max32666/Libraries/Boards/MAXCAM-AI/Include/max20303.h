@@ -55,6 +55,9 @@
 #define MAX20303_BOOST_OUTPUT_ON         1
 #define MAX20303_BOOST_OUTPUT_OFF        0
 
+#define MAX20303_BUCKBOOST_OUTPUT_ON     1
+#define MAX20303_BUCKBOOST_OUTPUT_OFF    0
+
 #define MAX20303_LED_OUTPUT_ON           1
 #define MAX20303_LED_OUTPUT_OFF          0
 
@@ -116,7 +119,7 @@ void MAX20303_setbuck2(uint8_t buck2_onoff);
 /**
  * @brief  Setup for Boost Converter of MAX20303 PMIC to enable or disable LCD backlight.
  * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
- * @param  boost_onoff   Non-zero value configures LDO1 as load-switch but configures the state as "ON".
+ * @param  boost_onoff   Non-zero value enables boost converter
  * Value 0 still configures Boost voltage as 9.6V but configures the state as "OFF"
  * @param  boost_output_level Sets the voltage output level of the boost converter. Please
  * refer to MAX20303 PMIC datasheet for details.
@@ -124,6 +127,16 @@ void MAX20303_setbuck2(uint8_t buck2_onoff);
  * @returns    This function has no return value
  */
 void MAX20303_setboost(uint8_t boost_onoff, uint8_t boost_output_level);
+
+
+/**
+ * @brief  Setup for BuckBoost Converter of MAX20303 PMIC.
+ * Before calling this function, PMIC should be initialized via MAX20303_initialize() function
+ * @param  buckboost_onoff   Non-zero value enables buck-boost converter
+ *
+ * @returns    This function has no return value
+ */
+void MAX20303_setbuckboost(uint8_t buckboost_onoff);
 
 /**
  * @brief   Controls PMIC's RGB LED - Red Color. Before calling this function, PMIC should

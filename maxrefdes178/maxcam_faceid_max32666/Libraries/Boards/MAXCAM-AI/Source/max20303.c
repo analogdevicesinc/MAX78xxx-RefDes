@@ -218,8 +218,13 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     // Boost converter	set to 9.6V and enable when needed
 
     // Configure LDO and Buck outputs
+    MAX20303_setbuck2(MAX20303_BUCK_OUTPUT_OFF);
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
+
     MAX20303_setbuck1(MAX20303_BUCK_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
 
     MAX20303_setbuck2(MAX20303_BUCK_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
@@ -238,6 +243,11 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
     MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
+    // Power On MAX78000 Board
+    MAX20303_setbuck2(MAX20303_BUCK_OUTPUT_ON);
+    TMR_Delay(MXC_TMR0, MSEC(500), 0);
+
 
     return E_NO_ERROR;
 }
@@ -323,6 +333,23 @@ void MAX20303_setbuck2(uint8_t buck2_onoff)
 
     MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BUCK2_CONFIG_WRITE);
 }
+
+void MAX20303_setbuckboost(uint8_t buckboost_onoff)
+{
+
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x00 );				   //  Reserved. Set to 0x00
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x07 );				   //  BBstIset : 350mAa Max
+    MAX20303_writeReg(MAX20303_REG_AP_DATOUT2, 0x19 );				   //  BBstVset = 0x19=25  ( ( 25 * 100mV) + 2.5V = 5.00V)
+
+    if (buckboost_onoff == MAX20303_BUCKBOOST_OUTPUT_OFF) {
+        MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, 0x78);			   //  BuckBoost Disabled - BSTEn = 0x00
+    } else {
+        MAX20303_writeReg(MAX20303_REG_AP_DATOUT3, 0x79);			   //  BuckBoost Enabled - BSTEn = 0x01
+    }
+
+    MAX20303_writeReg(MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BBST_CONFIG_WRITE);  // = Bset_Config_Write
+}
+
 
 void MAX20303_setboost(uint8_t boost_onoff, uint8_t boost_output_level)
 {
