@@ -62,7 +62,6 @@ CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 export CMSIS_ROOT
 
 
-
 # Source files for this test (add path to VPATH below)
 SRCS  = src/main.c
 SRCS += src/utils.c
@@ -88,7 +87,7 @@ PROJ_CFLAGS+=-DARM_MATH_CM4
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
-#PROJ_CFLAGS+=-Werror
+PROJ_CFLAGS+=-Werror
 
 # Specify the target revision to override default
 # "A2" in ASCII

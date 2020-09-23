@@ -75,10 +75,10 @@
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
 static void process_img(void);
-static void run_cnn(int x_offset, int y_offset);
+//static void run_cnn(int x_offset, int y_offset);
 static void run_demo(void);
 static void send_image_to_me14(uint8_t *image, uint32_t len);
-static void send_result_to_me14(char *result, uint32_t len);
+//static void send_result_to_me14(char *result, uint32_t len);
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -207,8 +207,8 @@ static const uint8_t camera_settings[][2] = {
 
 volatile uint8_t DMA_FLAG = 0;
 
-static int8_t prev_decision = -2;
-static int8_t decision = -2;
+//static int8_t prev_decision = -2;
+//static int8_t decision = -2;
 
 mxc_gpio_cfg_t gpio_flash;
 
@@ -348,7 +348,7 @@ static void run_demo(void)
 {
     GPIO_SET(gpio_flash);
     camera_start_capture_image();
-    uint32_t run_count = 0;
+//    uint32_t run_count = 0;
 #define PRINT_TIME 1
 #if (PRINT_TIME==1)
     /* Get current time */
@@ -465,113 +465,113 @@ static void process_img(void)
 
 
 
-static void run_cnn(int x_offset, int y_offset)
-{
-    uint8_t   *raw;
-    uint32_t  imgLen;
-    uint32_t  w, h;
-
-    /* Get current time */
-    uint32_t pass_time = 0;
-
-
-    // Get the details of the image from the camera driver.
-    camera_get_image(&raw, &imgLen, &w, &h);
-
-    pass_time = utils_get_time_ms();
-
-    cnn_load();
-
-    cnn_start();
-
-    PR_INFO("CNN initialization time : %d", utils_get_time_ms() - pass_time);
-
-    uint8_t * data = raw;
-
-    pass_time = utils_get_time_ms();
-
-    data =  raw + ((IMAGE_H - (HEIGHT))/2)*IMAGE_W*BYTE_PER_PIXEL;
-    for (int i = y_offset; i<HEIGHT+y_offset; i++) {
-        data =  raw + (((IMAGE_H - HEIGHT)/2)+i)*IMAGE_W*BYTE_PER_PIXEL;
-        data += ((IMAGE_W - WIDTH)/2)*BYTE_PER_PIXEL;
-        for(int j =x_offset; j< WIDTH+x_offset; j++) {
-            uint8_t ur,ug,ub;
-            int8_t r,g,b;
-            uint32_t number;
-
-            ub = (uint8_t)(data[j*BYTE_PER_PIXEL*+1]<<3);
-            ug = (uint8_t)((data[j*BYTE_PER_PIXEL]<<5) | ((data[j*BYTE_PER_PIXEL+1]&0xE0)>>3));
-            ur = (uint8_t)(data[j*BYTE_PER_PIXEL]&0xF8);
-
-            b = ub - 128;
-            g = ug - 128;
-            r = ur - 128;
-
-            // Loading data into the CNN fifo
-            while (((*((volatile uint32_t *) 0x50000004) & 1)) != 0); // Wait for FIFO 0
-
-            number = 0x00FFFFFF & ((((uint8_t)b)<<16) | (((uint8_t)g)<<8) | ((uint8_t)r));
-
-            *((volatile uint32_t *) 0x50000008) = number; // Write FIFO 0
-        }
-    }
-
-    PR_INFO("CNN load data time : %d", utils_get_time_ms() - pass_time);
-
-    pass_time = utils_get_time_ms();
-
-    cnn_wait();
-
-    PR_INFO("CNN wait time : %d", utils_get_time_ms() - pass_time);
-
-    pass_time = utils_get_time_ms();
-
-    cnn_unload((uint8_t*)(raw));
-
-    PR_INFO("CNN unload time : %d", utils_get_time_ms() - pass_time);
-
-    pass_time = utils_get_time_ms();
-
-    int pResult = calculate_minDistance((uint8_t*)(raw));
-
-    PR_INFO("Embedding time : %d", utils_get_time_ms() - pass_time);
-
-    if ( pResult == 0 ) {
-            char *name;
-
-            uint8_t *counter;
-            uint8_t counter_len;
-            get_min_dist_counter(&counter, &counter_len);
-
-            name = "";
-            prev_decision = decision;
-            decision = -3;
-            for(uint8_t id=0; id<counter_len; ++id){
-                if (counter[id] >= (closest_sub_buffer_size-4)){
-                    name = get_subject(id);
-                    decision = id;
-                    break;
-                } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
-                    name = "Adjust Face";
-                    decision = -2;
-                    break;
-                } else if (counter[id] > 4){
-                    name = "Unknown";
-                    decision = -1;
-                    break;
-                }
-            }
-
-//            if(decision != prev_decision){
-            if (strlen(name) == 0) {
-                name = "Maxcam-AI";
-            }
-                send_result_to_me14(name, strlen(name));
-//                printf("Result : %s", name);
+//static void run_cnn(int x_offset, int y_offset)
+//{
+//    uint8_t   *raw;
+//    uint32_t  imgLen;
+//    uint32_t  w, h;
+//
+//    /* Get current time */
+//    uint32_t pass_time = 0;
+//
+//
+//    // Get the details of the image from the camera driver.
+//    camera_get_image(&raw, &imgLen, &w, &h);
+//
+//    pass_time = utils_get_time_ms();
+//
+//    cnn_load();
+//
+//    cnn_start();
+//
+//    PR_INFO("CNN initialization time : %d", utils_get_time_ms() - pass_time);
+//
+//    uint8_t * data = raw;
+//
+//    pass_time = utils_get_time_ms();
+//
+//    data =  raw + ((IMAGE_H - (HEIGHT))/2)*IMAGE_W*BYTE_PER_PIXEL;
+//    for (int i = y_offset; i<HEIGHT+y_offset; i++) {
+//        data =  raw + (((IMAGE_H - HEIGHT)/2)+i)*IMAGE_W*BYTE_PER_PIXEL;
+//        data += ((IMAGE_W - WIDTH)/2)*BYTE_PER_PIXEL;
+//        for(int j =x_offset; j< WIDTH+x_offset; j++) {
+//            uint8_t ur,ug,ub;
+//            int8_t r,g,b;
+//            uint32_t number;
+//
+//            ub = (uint8_t)(data[j*BYTE_PER_PIXEL*+1]<<3);
+//            ug = (uint8_t)((data[j*BYTE_PER_PIXEL]<<5) | ((data[j*BYTE_PER_PIXEL+1]&0xE0)>>3));
+//            ur = (uint8_t)(data[j*BYTE_PER_PIXEL]&0xF8);
+//
+//            b = ub - 128;
+//            g = ug - 128;
+//            r = ur - 128;
+//
+//            // Loading data into the CNN fifo
+//            while (((*((volatile uint32_t *) 0x50000004) & 1)) != 0); // Wait for FIFO 0
+//
+//            number = 0x00FFFFFF & ((((uint8_t)b)<<16) | (((uint8_t)g)<<8) | ((uint8_t)r));
+//
+//            *((volatile uint32_t *) 0x50000008) = number; // Write FIFO 0
+//        }
+//    }
+//
+//    PR_INFO("CNN load data time : %d", utils_get_time_ms() - pass_time);
+//
+//    pass_time = utils_get_time_ms();
+//
+//    cnn_wait();
+//
+//    PR_INFO("CNN wait time : %d", utils_get_time_ms() - pass_time);
+//
+//    pass_time = utils_get_time_ms();
+//
+//    cnn_unload((uint8_t*)(raw));
+//
+//    PR_INFO("CNN unload time : %d", utils_get_time_ms() - pass_time);
+//
+//    pass_time = utils_get_time_ms();
+//
+//    int pResult = calculate_minDistance((uint8_t*)(raw));
+//
+//    PR_INFO("Embedding time : %d", utils_get_time_ms() - pass_time);
+//
+//    if ( pResult == 0 ) {
+//            char *name;
+//
+//            uint8_t *counter;
+//            uint8_t counter_len;
+//            get_min_dist_counter(&counter, &counter_len);
+//
+//            name = "";
+//            prev_decision = decision;
+//            decision = -3;
+//            for(uint8_t id=0; id<counter_len; ++id){
+//                if (counter[id] >= (closest_sub_buffer_size-4)){
+//                    name = get_subject(id);
+//                    decision = id;
+//                    break;
+//                } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
+//                    name = "Adjust Face";
+//                    decision = -2;
+//                    break;
+//                } else if (counter[id] > 4){
+//                    name = "Unknown";
+//                    decision = -1;
+//                    break;
+//                }
 //            }
-        }
-
-}
+//
+////            if(decision != prev_decision){
+//            if (strlen(name) == 0) {
+//                name = "Maxcam-AI";
+//            }
+//                send_result_to_me14(name, strlen(name));
+////                printf("Result : %s", name);
+////            }
+//        }
+//
+//}
 
 static void send_image_to_me14(uint8_t *image, uint32_t len)
 {
@@ -627,36 +627,36 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
     GPIO_SET(gpio_cs);
 }
 
-static void send_result_to_me14(char *result, uint32_t len)
-{
-    mxc_spi_req_t req;
-
-    qspi_header_t header;
-
-    header.start_symbol = QSPI_START_SYMBOL;
-    header.data_len = len;
-    header.command = QSPI_COMMAND_RESULT;
-
-    //SPI Request
-    req.spi = MXC_SPI0;
-    req.txData = (uint8_t *)&header;
-    req.rxData = NULL;
-    req.txLen = sizeof(qspi_header_t);
-    req.rxLen = 0;
-    req.ssIdx = 1;
-    req.ssDeassert = 1;
-    req.txCnt = 0;
-    req.rxCnt = 0;
-    req.completeCB = NULL;
-
-    MXC_SPI_MasterTransaction(&req);
-
-    MXC_Delay(100); //100usec delay
-
-    //SPI Request
-    req.txData = (uint8_t *)result;
-    req.txLen = len;
-    req.txCnt = 0;
-
-    MXC_SPI_MasterTransaction(&req);
-}
+//static void send_result_to_me14(char *result, uint32_t len)
+//{
+//    mxc_spi_req_t req;
+//
+//    qspi_header_t header;
+//
+//    header.start_symbol = QSPI_START_SYMBOL;
+//    header.data_len = len;
+//    header.command = QSPI_COMMAND_RESULT;
+//
+//    //SPI Request
+//    req.spi = MXC_SPI0;
+//    req.txData = (uint8_t *)&header;
+//    req.rxData = NULL;
+//    req.txLen = sizeof(qspi_header_t);
+//    req.rxLen = 0;
+//    req.ssIdx = 1;
+//    req.ssDeassert = 1;
+//    req.txCnt = 0;
+//    req.rxCnt = 0;
+//    req.completeCB = NULL;
+//
+//    MXC_SPI_MasterTransaction(&req);
+//
+//    MXC_Delay(100); //100usec delay
+//
+//    //SPI Request
+//    req.txData = (uint8_t *)result;
+//    req.txLen = len;
+//    req.txCnt = 0;
+//
+//    MXC_SPI_MasterTransaction(&req);
+//}

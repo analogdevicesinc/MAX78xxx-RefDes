@@ -44,9 +44,6 @@
 
 #include "max20303.h"
 #include "lcd.h"
-#include "lcd_data.h"
-#include "fonts.h"
-#include "faceid_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -97,10 +94,10 @@
 #define ST7789_RDID3   0xDC
 #define ST7789_RDID4   0xDD
 
-#define ST7789_ROTATION 2
-
 #define ST7789_WIDTH 240
 #define ST7789_HEIGHT 240
+
+#define ST7789_ROTATION 2
 
 #if ST7789_ROTATION == 0
     #define X_SHIFT 0
@@ -115,29 +112,6 @@
     #define X_SHIFT 0
     #define Y_SHIFT 0
 #endif
-
-
-#define WHITE 0xFFFF
-#define BLACK 0x0000
-#define BLUE 0x001F
-#define RED 0xF800
-#define MAGENTA 0xF81F
-#define GREEN 0x07E0
-#define CYAN 0x7FFF
-#define YELLOW 0xFFE0
-#define GRAY 0X8430
-#define BRED 0XF81F
-#define GRED 0XFFE0
-#define GBLUE 0X07FF
-#define BROWN 0XBC40
-#define BRRED 0XFC07
-#define DARKBLUE 0X01CF
-#define LIGHTBLUE 0X7D7C
-#define GRAYBLUE 0X5458
-#define LIGHTGREEN 0X841F
-#define LGRAY 0XC618
-#define LGRAYBLUE 0XA651
-#define LBBLUE 0X2B12
 
 
 //-----------------------------------------------------------------------------
@@ -155,9 +129,6 @@ static const gpio_cfg_t ssel_pin       = {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_P
 static volatile int rx_dma_complete  = 1;
 static volatile int tx_dma_complete = 1;
 
-extern uint8_t qspi_image_buff[IMAGE_SIZE];
-extern char resultString[RESULT_MAX_SIZE];
-
 
 //-----------------------------------------------------------------------------
 // Local function declarations
@@ -169,9 +140,7 @@ static void lcd_sendSmallData(uint8_t data);
 static void lcd_sendData(uint8_t *data, uint32_t dataLen);
 static void lcd_configure();
 static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-static void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data);
 static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor);
-static void lcd_writeString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor);
 static void spi_init();
 static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len);
 
@@ -465,7 +434,7 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
  * @param data -> pointer of the Image array
  * @return none
  */
-static void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
+void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
 {
     uint32_t chunk_size;
     uint32_t buff_size = 2 * w * h;
@@ -529,7 +498,7 @@ static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_
  * @param bgcolor -> background color of the string
  * @return  none
  */
-static void lcd_writeString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
+void lcd_writeString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
 {
     while (*str) {
         if (x + font.width >= ST7789_WIDTH) {
@@ -570,32 +539,6 @@ int lcd_init()
 
     lcd_configure();
 
-    lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
-
     return E_NO_ERROR;
 }
 
-void lcd_worker(int rtrn)
-{
-//    while(1) {
-//        lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
-//        TMR_Delay(MXC_TMR0, MSEC(1000), 0);
-//        lcd_drawImage(0, 0, 240, 240, image_data_robert);
-//        TMR_Delay(MXC_TMR0, MSEC(1000), 0);
-//    }
-
-    switch(rtrn)
-    {
-        case IMAGE_RECEIVED:
-            lcd_drawImage(0, 0, 240, 240, qspi_image_buff);
-            break;
-        case RESULT_RECEIVED:
-            lcd_writeString(15, 200, resultString, Font_16x26, BLUE, WHITE);
-            break;
-        default:
-            break;
-    }
-
-
-
-}

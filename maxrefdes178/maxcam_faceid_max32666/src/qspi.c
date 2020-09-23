@@ -41,8 +41,7 @@
 #include "spi.h"
 
 #include "qspi.h"
-
-#include "../../common/faceid_definitions.h"
+#include "faceid_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -87,7 +86,7 @@ void qspi_callback(void *req, int error)
     qspi_flag = error;
 }
 
-void qspi_init()
+int qspi_init()
 {
     sys_cfg_spi_t qspi_slave_cfg;
 
@@ -109,7 +108,7 @@ void qspi_init()
         printf("Error configuring QSPI\n");
     }
 
-//    SPI_Enable(QSPI);
+    return E_NO_ERROR;
 }
 
 int qspi_worker(void)

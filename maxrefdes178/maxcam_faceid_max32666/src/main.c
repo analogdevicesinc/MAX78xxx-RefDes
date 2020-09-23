@@ -42,6 +42,8 @@
 #include "max20303.h"
 #include "qspi.h"
 #include "lcd.h"
+#include "lcd_data.h"
+#include "faceid_definitions.h"
 #include "version.h"
 
 
@@ -70,6 +72,9 @@
 //-----------------------------------------------------------------------------
 int main(void)
 {
+    uint8_t counter = 0;
+    int qspi_return = 0;
+
     printf("\n\nmaxcam_faceid_max32666 v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
 
     printf("init started\n");
@@ -79,7 +84,10 @@ int main(void)
         while(1);
     }
 
-    qspi_init();
+    if (qspi_init(1) != E_NO_ERROR) {
+        printf("qspi init failed\n");
+        while(1);
+    }
 
     if (lcd_init() != E_NO_ERROR) {
         printf("lcd init failed\n");
@@ -90,14 +98,22 @@ int main(void)
 
     MAX20303_led_green(MAX20303_LED_OUTPUT_ON);
 
-    uint8_t counter = 0;
-
-    int qspi_return;
+    lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
 
     while (1) {
         qspi_return = qspi_worker();
         if (qspi_return > E_NO_ERROR) {
-            lcd_worker(qspi_return);
+            switch(qspi_return)
+            {
+                case IMAGE_RECEIVED:
+                    lcd_drawImage(0, 0, 240, 240, qspi_image_buff);
+                    break;
+                case RESULT_RECEIVED:
+                    lcd_writeString(15, 200, resultString, Font_16x26, BLUE, WHITE);
+                    break;
+                default:
+                    break;
+            }
         }
         MAX20303_led_blue(counter%2);
         counter++;
