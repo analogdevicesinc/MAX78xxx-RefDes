@@ -84,7 +84,7 @@ static void run_cnn(int x_offset, int y_offset);
 static void run_demo(void);
 static void send_image_to_me14(uint8_t *image, uint32_t len);
 static void send_result_to_me14(char *result, uint32_t len);
-static void draw_farame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color);
+static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color);
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -284,33 +284,11 @@ int main(void)
 
     MXC_Delay(500*1000);
 
-
     gpio_flash.port = MXC_GPIO0;
     gpio_flash.mask = MXC_GPIO_PIN_19;
     gpio_flash.pad = MXC_GPIO_PAD_PULL_DOWN;
     gpio_flash.func = MXC_GPIO_FUNC_OUT;
     MXC_GPIO_Config(&gpio_flash);
-
-
-    GPIO_SET(gpio_red);
-    GPIO_SET(gpio_green);
-    GPIO_SET(gpio_blue);
-    while(1) {
-
-    	GPIO_CLR(gpio_flash);
-        GPIO_CLR(gpio_green);
-        GPIO_CLR(gpio_blue);
-    	MXC_Delay(5000);
-    	GPIO_SET(gpio_flash);
-        GPIO_SET(gpio_green);
-        GPIO_SET(gpio_blue);
-        MXC_Delay(5000);
-
-        PR_INFO("*");
-    }
-
-
-
 
     gpio_cs.port = MXC_GPIO0;
     gpio_cs.mask = MXC_GPIO_PIN_4;
@@ -318,12 +296,6 @@ int main(void)
     gpio_cs.func = MXC_GPIO_FUNC_OUT;
     MXC_GPIO_Config(&gpio_cs);
     GPIO_SET(gpio_cs);
-
-    gpio_flash.port = MXC_GPIO0;
-    gpio_flash.mask = MXC_GPIO_PIN_19;
-    gpio_flash.pad = MXC_GPIO_PAD_NONE;
-    gpio_flash.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_flash);
 
     /* Enable cache */
     MXC_ICC_Enable(MXC_ICC0);
@@ -497,8 +469,8 @@ static void process_img(void)
     pass_time = utils_get_time_ms();
 #endif
 
-draw_farame(56, 36, 128, 168, 2, FRAME_COLOR_DARK);
-draw_farame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
+draw_frame(56, 36, 128, 168, 2, FRAME_COLOR_DARK);
+draw_frame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
 
 #if (PRINT_TIME==1)
     PR_INFO("Frame drawing time : %d", utils_get_time_ms() - pass_time);
@@ -517,7 +489,7 @@ draw_farame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
 
 }
 
-static void draw_farame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color)
+static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color)
 {
     uint8_t   *raw;
     uint32_t  imgLen;
