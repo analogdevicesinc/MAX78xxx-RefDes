@@ -128,7 +128,7 @@ int main(void)
 
     /* Switch USB-TYpe-C Debug Connection to MAX78000-Image */
     const uint8_t cmdData[1] = {0xff};
-    return I2C_MasterWrite(MXC_I2C0_BUS0, 0xd8, cmdData, 1, 0);
+    I2C_MasterWrite(MXC_I2C0_BUS0, 0xd8, cmdData, 1, 0);
 
 
 
