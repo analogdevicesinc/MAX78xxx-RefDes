@@ -70,7 +70,8 @@
 #define IMAGE_H         240
 #define IMAGE_W         240
 #define BYTE_PER_PIXEL  2
-#define FRAME_COLOR     0x535A
+#define FRAME_COLOR_DARK    0x535A
+#define FRAME_COLOR_LIGHT   0xFFFF
 
 #define PRINT_TIME 0
 
@@ -83,6 +84,7 @@ static void run_cnn(int x_offset, int y_offset);
 static void run_demo(void);
 static void send_image_to_me14(uint8_t *image, uint32_t len);
 static void send_result_to_me14(char *result, uint32_t len);
+static void draw_farame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color);
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -490,50 +492,13 @@ static void process_img(void)
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &imgLen, &w, &h);
 
-    // Send the image through the UART to the console.
-    // A python program will read from the console and write to an image file.
-//  utils_send_img_to_pc(raw, imgLen, w, h, camera_get_pixel_format());
-
-    uint16_t *image = (uint16_t*)raw;   // 2bytes per pixel RGB565
-
 #if (PRINT_TIME==1)
     uint32_t pass_time = 0;
     pass_time = utils_get_time_ms();
 #endif
 
-    // left line
-    image+=((IMAGE_H - (HEIGHT+2*THICKNESS))/2)*IMAGE_W;
-    for (int i = 0; i<THICKNESS; i++) {
-        image+=((IMAGE_W - (WIDTH+2*THICKNESS))/2);
-        for(int j=0; j< WIDTH+2*THICKNESS; j++) {
-            *(image++) = FRAME_COLOR; //color
-        }
-        image+=((IMAGE_W - (WIDTH+2*THICKNESS))/2);
-    }
-
-    //right line
-    image = ((uint16_t*)raw) + (((IMAGE_H - (HEIGHT+2*THICKNESS))/2) + HEIGHT + THICKNESS )*IMAGE_W;
-    for (int i = 0; i<THICKNESS; i++) {
-        image+=((IMAGE_W - (WIDTH+2*THICKNESS))/2);
-        for(int j =0; j< WIDTH+2*THICKNESS; j++) {
-            *(image++) = FRAME_COLOR; //color
-        }
-        image+=((IMAGE_W - (WIDTH+2*THICKNESS))/2);
-    }
-
-    //top + bottom lines
-    image = ((uint16_t*)raw) + ((IMAGE_H - (HEIGHT+2*THICKNESS))/2)*IMAGE_W;
-    for (int i = 0; i<HEIGHT+2*THICKNESS; i++) {
-        image+=((IMAGE_W - (WIDTH+2*THICKNESS))/2);
-        for(int j =0; j< THICKNESS; j++) {
-            *(image++) = FRAME_COLOR; //color
-        }
-        image+=WIDTH;
-        for(int j =0; j< THICKNESS; j++) {
-            *(image++) = FRAME_COLOR; //color
-        }
-        image+=((IMAGE_W - (WIDTH+2*THICKNESS))/2);
-    }
+draw_farame(56, 36, 128, 168, 2, FRAME_COLOR_DARK);
+draw_farame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
 
 #if (PRINT_TIME==1)
     PR_INFO("Frame drawing time : %d", utils_get_time_ms() - pass_time);
@@ -542,12 +507,61 @@ static void process_img(void)
 
     PR_INFO("Screen print time : %d", utils_get_time_ms() - pass_time);
 #endif
-
+// Send the image through the UART to the console.
+// A python program will read from the console and write to an image file.
 //    utils_send_img_to_pc(raw, imgLen, w, h, (uint8_t*)"RGB565");
 
     GPIO_SET(gpio_blue);
     send_image_to_me14(raw, imgLen);
     GPIO_CLR(gpio_blue);
+
+}
+
+static void draw_farame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color)
+{
+    uint8_t   *raw;
+    uint32_t  imgLen;
+    uint32_t  w, h;
+
+    // Get the details of the image from the camera driver.
+    camera_get_image(&raw, &imgLen, &w, &h);
+
+    uint16_t *image = (uint16_t*)raw;   // 2bytes per pixel RGB565
+
+//draw_farame(56, 36, 128, 168, 4, FRAME_COLOR_DARK);
+    // top line
+    image+=y*w;    
+    for (int i = 0; i<thickness; i++) {
+        image+= x;
+        for(int j=0; j< width; j++) {
+            *(image++) = color; //color
+        }
+        image+=w-(width+x);
+    }
+
+    //bottom line
+    image=((uint16_t*)raw) + (y+height-thickness)*w; 
+    for (int i = 0; i<thickness; i++) {
+        image+= x;
+        for(int j=0; j< width; j++) {
+            *(image++) = color; //color
+        }
+        image+=w-(width+x);
+    }
+
+    //right + left lines
+    image = ((uint16_t*)raw) + y*w;
+    for (int i = 0; i<height; i++) {
+        image+=x;
+        for(int j =0; j< thickness; j++) {
+            *(image++) = color; //color
+        }
+        image+=width-2*thickness;
+        for(int j =0; j< thickness; j++) {
+            *(image++) = color; //color
+        }
+        image+=w-(width+x);
+    }
 
 }
 
