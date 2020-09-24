@@ -49,9 +49,10 @@
 #define QSPI_COMMAND_IMAGE  0xEE
 #define QSPI_COMMAND_RESULT 0xBB
 
-#define IMAGE_SIZE          (240*240*2)
+#define LCD_WIDTH           240
+#define LCD_HEIGHT          240
+#define IMAGE_SIZE          (LCD_WIDTH*LCD_HEIGHT*2)
 #define RESULT_MAX_SIZE     32
-
 
 
 //-----------------------------------------------------------------------------

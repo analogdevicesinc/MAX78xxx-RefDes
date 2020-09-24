@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "tmr_utils.h"
+#include "i2c.h"
 
 #include "max20303.h"
 #include "qspi.h"
@@ -47,7 +48,6 @@
 #include "faceid_definitions.h"
 #include "version.h"
 
-#include "i2c.h"
 
 //-----------------------------------------------------------------------------
 // Defines
@@ -62,64 +62,26 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-uint16_t resultColor;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static void rgb_setChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color);
-static void rgb_setString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color);
+
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-static void rgb_setChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color)
-{
-    uint32_t i, b, j;
-
-    for (i = 0; i < font.height; i++) {
-        b = font.data[(ch - 32) * font.height + i];
-        for (j = 0; j < font.width; j++) {
-            if ((b << j) & 0x8000) {
-                qspi_image_buff[(((i+y)*240) + (j+x))*2] = color >> 8;
-                qspi_image_buff[(((i+y)*240) + (j+x))*2 + 1] = color & 0xFF;
-            }
-        }
-    }
-}
-
-static void rgb_setString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color)
-{
-    while (*str) {
-        if (x + font.width >= 240) {
-            x = 0;
-            y += font.height;
-            if (y + font.height >= 240) {
-                break;
-            }
-
-            if (*str == ' ') {
-                // skip spaces in the beginning of the new line
-                str++;
-                continue;
-            }
-        }
-        rgb_setChar(x, y, *str, font, color);
-        x += font.width;
-        str++;
-    }
-}
-
 int main(void)
 {
-    uint8_t counter = 0;
     int qspi_return = 0;
+    uint16_t resultColor = 0;
+    char version[10] = {0};
+    uint8_t cmdData[1] = {0};
 
-    printf("\n\nmaxcam_faceid_max32666 v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-
-    printf("init started\n");
+    snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    printf("\n\nmaxcam_faceid_max32666 %s\n", version);
 
     if (MAX20303_initialize(1) != E_NO_ERROR) {
         printf("pmic init failed\n");
@@ -127,10 +89,10 @@ int main(void)
     }
 
     /* Switch USB-TYpe-C Debug Connection to MAX78000-Image */
-    const uint8_t cmdData[1] = {0xff};
-    I2C_MasterWrite(MXC_I2C0_BUS0, 0xd8, cmdData, 1, 0);
-
-
+    cmdData[0] = 0xff;
+    if (I2C_MasterWrite(MXC_I2C0_BUS0, 0xd8, cmdData, 1, 0) ) {
+        printf("MAX78000 select failed\n");
+    }
 
     if (qspi_init(1) != E_NO_ERROR) {
         printf("qspi init failed\n");
@@ -146,7 +108,9 @@ int main(void)
 
     MAX20303_led_green(MAX20303_LED_OUTPUT_ON);
 
-    lcd_drawImage(0, 0, 240, 240, image_data_rsz_maxim_logo);
+    // Print logo and version
+    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, image_data_rsz_maxim_logo);
+    lcd_writeStringWithBG(60, 210, version, Font_16x26, RED, WHITE);
 
     while (1) {
         qspi_return = qspi_worker();
@@ -154,14 +118,16 @@ int main(void)
             switch(qspi_return)
             {
                 case IMAGE_RECEIVED:
-                    rgb_setString(20, 210, resultString, Font_16x26, resultColor);
-                    lcd_drawImage(0, 0, 240, 240, qspi_image_buff);
+                    if (strcmp(resultString, "nothing")) {
+                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, resultString, Font_16x26, resultColor, qspi_image_buff);
+                    }
+                    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, qspi_image_buff);
                     break;
                 case RESULT_RECEIVED:
                     if (strcmp(resultString, "Unknown") == 0) {
                         resultColor = RED;
                     } else if(strcmp(resultString, "Adjust Face") == 0) {
-                        resultColor = BLUE;
+                        resultColor = YELLOW;
                     } else {
                         resultColor = GREEN;
                     }
@@ -170,7 +136,5 @@ int main(void)
                     break;
             }
         }
-        MAX20303_led_blue(counter%2);
-        counter++;
     }
 }

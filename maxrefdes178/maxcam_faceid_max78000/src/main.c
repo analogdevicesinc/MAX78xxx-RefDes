@@ -651,40 +651,34 @@ static void run_cnn(int x_offset, int y_offset)
 #endif
 
     if ( pResult == 0 ) {
-            char *name;
+        char name[RESULT_MAX_SIZE] = "nothing";
+        uint8_t *counter;
+        uint8_t counter_len;
+        get_min_dist_counter(&counter, &counter_len);
 
-            uint8_t *counter;
-            uint8_t counter_len;
-            get_min_dist_counter(&counter, &counter_len);
-
-            name = "";
-            prev_decision = decision;
-            decision = -3;
-            for(uint8_t id=0; id<counter_len; ++id){
-                if (counter[id] >= (closest_sub_buffer_size-4)){
-                    name = get_subject(id);
-                    decision = id;
-                    break;
-                } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
-                    name = "Adjust Face";
-                    decision = -2;
-                    break;
-                } else if (counter[id] > 4){
-                    name = "Unknown";
-                    decision = -1;
-                    break;
-                }
-            }
-
-            if(decision != prev_decision){
-                if (strlen(name) == 0) {
-                    name = " ";
-                }
-                send_result_to_me14(name, strlen(name));
-                PR_DEBUG("Result : %s\n", name);
+        prev_decision = decision;
+        decision = -3;
+        for(uint8_t id=0; id<counter_len; ++id){
+            if (counter[id] >= (closest_sub_buffer_size-4)){
+                strncpy(name, get_subject(id), sizeof(name) - 1);
+                decision = id;
+                break;
+            } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
+                strncpy(name, "Adjust Face", sizeof(name) - 1);
+                decision = -2;
+                break;
+            } else if (counter[id] > 4){
+                strncpy(name, "Unknown", sizeof(name) - 1);
+                decision = -1;
+                break;
             }
         }
 
+        if(decision != prev_decision){
+            send_result_to_me14(name, strlen(name));
+            PR_DEBUG("Result : %s\n", name);
+        }
+    }
 }
 
 static void send_image_to_me14(uint8_t *image, uint32_t len)

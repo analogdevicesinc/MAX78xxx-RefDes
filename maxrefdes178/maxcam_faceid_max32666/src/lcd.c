@@ -44,6 +44,7 @@
 
 #include "max20303.h"
 #include "lcd.h"
+#include "faceid_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -93,9 +94,6 @@
 #define ST7789_RDID2   0xDB
 #define ST7789_RDID3   0xDC
 #define ST7789_RDID4   0xDD
-
-#define ST7789_WIDTH 240
-#define ST7789_HEIGHT 240
 
 #define ST7789_ROTATION 2
 
@@ -498,13 +496,13 @@ static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_
  * @param bgcolor -> background color of the string
  * @return  none
  */
-void lcd_writeString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
+void lcd_writeStringWithBG(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
 {
     while (*str) {
-        if (x + font.width >= ST7789_WIDTH) {
+        if (x + font.width >= LCD_WIDTH) {
             x = 0;
             y += font.height;
-            if (y + font.height >= ST7789_HEIGHT) {
+            if (y + font.height >= LCD_HEIGHT) {
                 break;
             }
 
