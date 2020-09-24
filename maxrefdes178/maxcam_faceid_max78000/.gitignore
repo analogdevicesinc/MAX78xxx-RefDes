@@ -62,3 +62,6 @@ local.properties
 # Build directories
 build
 
+# Flashing scripts
+*.sh
+

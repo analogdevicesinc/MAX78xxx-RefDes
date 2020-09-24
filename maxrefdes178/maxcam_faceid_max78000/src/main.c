@@ -73,10 +73,12 @@
 #define FRAME_COLOR_DARK    0x535A
 #define FRAME_COLOR_LIGHT   0xFFFF
 
-#define PRINT_TIME 0
+#define PRINT_TIME 1
 
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
+
+uint8_t embedding_result[512];
 
 static void fail(void);
 static void process_img(void);
@@ -407,6 +409,10 @@ static void fail(void)
     while(1);
 }
 
+#if (PRINT_TIME==1)
+    uint32_t timer_counter = 0;
+#endif
+
 static void run_demo(void)
 {
     camera_start_capture_image();
@@ -422,10 +428,9 @@ static void run_demo(void)
         if (camera_is_image_rcv()) { // Check whether image is ready
 
 #if (PRINT_TIME==1)
+            
             process_time = utils_get_time_ms();
 #endif
-            process_img();
-
             run_cnn(0, 0);
             if ((run_count % 2) == 0){
                 run_cnn(-10, -10);
@@ -436,17 +441,21 @@ static void run_demo(void)
             }
             run_count++;
 
+            process_img();
+
+
+
 #if (PRINT_TIME==1)
-            PR_INFO("Process Time Total : %dms", utils_get_time_ms()-process_time);
-            printf("\n\n\n");
+            PR_TIMER("Process Time Total : %dms", utils_get_time_ms()-process_time);
 #endif
 
             camera_start_capture_image();
 
 #if (PRINT_TIME==1)
-            PR_INFO("Capture Time : %dms", process_time - total_time);
-            PR_INFO("Total Time : %dms", utils_get_time_ms()-total_time);
+            PR_TIMER("Capture Time : %dms", process_time - total_time);
+            PR_TIMER("Total Time : %dms\n\n\n", utils_get_time_ms()-total_time);
             total_time = utils_get_time_ms();
+            timer_counter++;
 #endif
 
         }
@@ -473,11 +482,8 @@ draw_frame(56, 36, 128, 168, 2, FRAME_COLOR_DARK);
 draw_frame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
 
 #if (PRINT_TIME==1)
-    PR_INFO("Frame drawing time : %d", utils_get_time_ms() - pass_time);
-
+    PR_TIMER("Frame drawing duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
-
-    PR_INFO("Screen print time : %d", utils_get_time_ms() - pass_time);
 #endif
 // Send the image through the UART to the console.
 // A python program will read from the console and write to an image file.
@@ -486,7 +492,9 @@ draw_frame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
     GPIO_SET(gpio_blue);
     send_image_to_me14(raw, imgLen);
     GPIO_CLR(gpio_blue);
-
+#if (PRINT_TIME==1)
+    PR_TIMER("QSPI transfer duration : %d", utils_get_time_ms() - pass_time);
+#endif
 }
 
 static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color)
@@ -500,7 +508,6 @@ static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint
 
     uint16_t *image = (uint16_t*)raw;   // 2bytes per pixel RGB565
 
-//draw_farame(56, 36, 128, 168, 4, FRAME_COLOR_DARK);
     // top line
     image+=y*w;    
     for (int i = 0; i<thickness; i++) {
@@ -537,8 +544,6 @@ static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint
 
 }
 
-
-
 static void run_cnn(int x_offset, int y_offset)
 {
     uint8_t   *raw;
@@ -549,7 +554,6 @@ static void run_cnn(int x_offset, int y_offset)
     camera_get_image(&raw, &imgLen, &w, &h);
 
 #if (PRINT_TIME==1)
-    /* Get current time */
     uint32_t pass_time = utils_get_time_ms();
 #endif
 
@@ -560,7 +564,7 @@ static void run_cnn(int x_offset, int y_offset)
     uint8_t * data = raw;
 
 #if (PRINT_TIME==1)
-    PR_INFO("CNN initialization time : %d", utils_get_time_ms() - pass_time);
+    PR_TIMER("CNN initialization duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
 
@@ -599,27 +603,27 @@ static void run_cnn(int x_offset, int y_offset)
 //    utils_send_img_to_pc(raw, 120*160*3, 120, 160, (uint8_t*)"RGB888");
 
 #if (PRINT_TIME==1)
-    PR_INFO("CNN load data time : %d", utils_get_time_ms() - pass_time);
+    PR_TIMER("CNN load data duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
     cnn_wait();
 
 #if (PRINT_TIME==1)
-    PR_INFO("CNN wait time : %d", utils_get_time_ms() - pass_time);
+    PR_TIMER("CNN wait duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
 
-    cnn_unload((uint8_t*)(raw));
+    cnn_unload(embedding_result);
 
 #if (PRINT_TIME==1)
-    PR_INFO("CNN unload time : %d", utils_get_time_ms() - pass_time);
+    PR_TIMER("CNN unload duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
 
-    int pResult = calculate_minDistance((uint8_t*)(raw));
+    int pResult = calculate_minDistance(embedding_result);
 
 #if (PRINT_TIME==1)
-    PR_INFO("Embedding time : %d", utils_get_time_ms() - pass_time);
+    PR_TIMER("Embedding calculation duration : %d", utils_get_time_ms() - pass_time);
 #endif
 
     if ( pResult == 0 ) {
