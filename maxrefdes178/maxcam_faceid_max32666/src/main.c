@@ -47,6 +47,7 @@
 #include "faceid_definitions.h"
 #include "version.h"
 
+#include "i2c.h"
 
 //-----------------------------------------------------------------------------
 // Defines
@@ -124,6 +125,12 @@ int main(void)
         printf("pmic init failed\n");
         while(1);
     }
+
+    /* Switch USB-TYpe-C Debug Connection to MAX78000-Image */
+    const uint8_t cmdData[1] = {0xff};
+    return I2C_MasterWrite(MXC_I2C0_BUS0, 0xd8, cmdData, 1, 0);
+
+
 
     if (qspi_init(1) != E_NO_ERROR) {
         printf("qspi init failed\n");
