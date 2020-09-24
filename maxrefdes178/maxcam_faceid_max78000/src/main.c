@@ -247,6 +247,8 @@ int main(void)
     PR_INFO("FaceID Electronica Demo v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     mxc_gpio_cfg_t gpio_camera;
 
+
+
     // Enable camera
     gpio_camera.port = MXC_GPIO0;
     gpio_camera.mask = MXC_GPIO_PIN_3;
@@ -279,6 +281,34 @@ int main(void)
     GPIO_SET(gpio_blue);
 
     MXC_Delay(500*1000);
+
+
+    gpio_flash.port = MXC_GPIO0;
+    gpio_flash.mask = MXC_GPIO_PIN_19;
+    gpio_flash.pad = MXC_GPIO_PAD_PULL_DOWN;
+    gpio_flash.func = MXC_GPIO_FUNC_OUT;
+    MXC_GPIO_Config(&gpio_flash);
+
+
+    GPIO_SET(gpio_red);
+    GPIO_SET(gpio_green);
+    GPIO_SET(gpio_blue);
+    while(1) {
+
+    	GPIO_CLR(gpio_flash);
+        GPIO_CLR(gpio_green);
+        GPIO_CLR(gpio_blue);
+    	MXC_Delay(5000);
+    	GPIO_SET(gpio_flash);
+        GPIO_SET(gpio_green);
+        GPIO_SET(gpio_blue);
+        MXC_Delay(5000);
+
+        PR_INFO("*");
+    }
+
+
+
 
     gpio_cs.port = MXC_GPIO0;
     gpio_cs.mask = MXC_GPIO_PIN_4;
