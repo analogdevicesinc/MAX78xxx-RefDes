@@ -44,13 +44,17 @@
 /***** Includes *****/
 #include <stdio.h>
 #include <stdint.h>
+#include "mxc_delay.h"
 
 #include "AI85_Debug.h"
 #include "version.h"
 
 int main(void)
 {
-    PR_INFO("nmaxcam_electronica_max78000_audio v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    PR_INFO("\nmaxcam_electronica_max78000_audio v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
    
-    while(1);
+    while(1) {
+        PR_INFO("audio");
+        MXC_Delay(1000*1000);
+    }
 }
