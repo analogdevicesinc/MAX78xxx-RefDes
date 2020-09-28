@@ -81,7 +81,7 @@ int main(void)
     uint8_t cmdData[1] = {0};
 
     snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    printf("\n\nmaxcam_faceid_max32666 %s\n", version);
+    printf("\n\nmaxcam_electronica_max32666 %s\n", version);
 
     if (MAX20303_initialize(1) != E_NO_ERROR) {
         printf("pmic init failed\n");

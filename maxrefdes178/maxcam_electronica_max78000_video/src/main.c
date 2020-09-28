@@ -248,10 +248,8 @@ int main(void)
     int slaveAddress;
     int id;
 
-    PR_INFO("FaceID Electronica Demo v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    PR_INFO("nmaxcam_electronica_max78000_video v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     mxc_gpio_cfg_t gpio_camera;
-
-
 
     // Enable camera
     gpio_camera.port = MXC_GPIO0;
