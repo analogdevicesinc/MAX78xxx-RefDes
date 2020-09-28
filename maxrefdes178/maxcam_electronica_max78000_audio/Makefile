@@ -34,7 +34,7 @@
 
 # This is the name of the build output file
 ifeq "$(PROJECT)" ""
-PROJECT=maxcam_electronica_max78000_video
+PROJECT=maxcam_electronica_max78000_audio
 endif
 
 # Specify the target processor
