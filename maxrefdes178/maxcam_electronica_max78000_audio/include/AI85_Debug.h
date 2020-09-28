@@ -44,7 +44,6 @@
 #define PR_INFO(fmt, args...)   if(1) printf("I[%-10s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )  ///< TODO
 #define PR_WARN(fmt, args...)   if(1) printf("W[%-10s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )  ///< TODO
 #define PR_ERROR(fmt, args...)    if(1) printf("E[%-10s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )  ///< TODO
-#define PR_TIMER(fmt, args...)    if(timer_counter%10==0) printf("E[%-10s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )  ///< TODO
 
 
 #endif /* MAXCAM_DEBUG_H_ */
