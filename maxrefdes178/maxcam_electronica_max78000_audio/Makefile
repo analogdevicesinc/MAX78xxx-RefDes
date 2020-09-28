@@ -64,9 +64,6 @@ export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
 SRCS  = src/main.c
-SRCS += src/utils.c
-SRCS += src/faceID.c
-SRCS += src/embedding_process.c
 
 # Where to find source files for this test
 VPATH=.
