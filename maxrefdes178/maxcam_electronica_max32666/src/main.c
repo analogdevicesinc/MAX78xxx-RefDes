@@ -88,7 +88,7 @@ int main(void)
         while(1);
     }
 
-    /* Switch USB-TYpe-C Debug Connection to MAX78000-Image */
+    /* Switch USB-TYpe-C Debug Connection to MAX78000-Video */
     cmdData[0] = 0xff;
     if (I2C_MasterWrite(MXC_I2C0_BUS0, 0xd8, cmdData, 1, 0) ) {
         printf("MAX78000 select failed\n");
@@ -131,6 +131,8 @@ int main(void)
                     } else {
                         resultColor = GREEN;
                     }
+                    break;
+                case PENDING:
                     break;
                 default:
                     break;

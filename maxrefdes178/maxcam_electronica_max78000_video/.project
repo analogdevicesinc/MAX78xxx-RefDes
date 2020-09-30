@@ -3,7 +3,6 @@
 	<name>maxcam_electronica_max78000_video</name>
 	<comment></comment>
 	<projects>
-		<project>maxcam_electronica_max78000_video</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

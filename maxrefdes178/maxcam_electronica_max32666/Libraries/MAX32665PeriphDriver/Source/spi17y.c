@@ -255,7 +255,7 @@ int SPI17Y_TransSetup(mxc_spi17y_regs_t *spi, spi17y_req_t *req, int master)
     
     if (req->rx_data != NULL) {
         // The TX_NUM field is used for both RX and TX length when in 4-wire mode.
-        if(req->width == SPI17Y_WIDTH_4) {
+        if(req->width == SPI17Y_WIDTH_1) {
             MXC_SETFIELD(spi->ctrl1, MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR,
                         req->len << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
         } else {

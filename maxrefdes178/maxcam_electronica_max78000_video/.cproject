@@ -40,14 +40,18 @@
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash.1529750846" name="Create flash image" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash" value="true" valueType="boolean"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize.667765305" name="Print size" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize" value="true" valueType="boolean"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.786533016" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
-							<builder arguments="ECLIPSE=1 -j ${NUMBER_OF_PROCESSORS}" autoBuildTarget="all" buildPath="${workspace_loc:/maxcam_electronica_max78000_video}" cleanBuildTarget="clean" command="make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="ilg.gnuarmeclipse.managedbuild.cross.builder.592880777" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="false" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
+							<builder arguments="ECLIPSE=1 -j ${NUMBER_OF_PROCESSORS}" autoBuildTarget="all" buildPath="${workspace_loc:/maxcam_electronica_max78000_video}" cleanBuildTarget="clean" command="make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="ilg.gnuarmeclipse.managedbuild.cross.builder.592880777" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="false" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
+								</outputEntries>
+							</builder>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1648672385" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.1969112665" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.90884905" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/CMSIS/Device/Maxim/MAX78000/Include"/>
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/Boards/MAX78000/Include"/>
 									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/PeriphDrivers/Include/MAX78000"/>
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/Boards/MAX78000/EvKit_V1/Include"/>
+									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/Boards/MAX78000/Include"/>
+									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/Boards/MAX78000/Maxcam/Include"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.507854261" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -85,9 +89,7 @@
 					</sourceEntries>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
-				<externalSettings containerId="maxcam_electronica_max78000_video;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962.609278404" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier"/>
-			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962.609278404">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962.609278404" moduleId="org.eclipse.cdt.core.settings" name="Release">
@@ -184,7 +186,6 @@
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/maxcam_electronica_max78000_video"/>
 		</configuration>
-		<configuration configurationName="Release"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
