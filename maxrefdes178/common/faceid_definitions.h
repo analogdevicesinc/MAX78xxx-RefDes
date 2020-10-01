@@ -44,7 +44,7 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define QSPI_SPEED          500000UL
+#define QSPI_SPEED          10000000UL
 #define QSPI_START_SYMBOL   0xAABBCCDD
 #define QSPI_COMMAND_IMAGE  0xEE
 #define QSPI_COMMAND_RESULT 0xBB

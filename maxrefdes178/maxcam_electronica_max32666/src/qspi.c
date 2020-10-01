@@ -66,6 +66,8 @@ char resultString[RESULT_MAX_SIZE];
 static volatile int qspi_video_int_flag;
 static volatile int qspi_audio_int_flag;
 static const gpio_cfg_t ai85_video_int = {PORT_0, PIN_30, GPIO_FUNC_IN, GPIO_PAD_PULL_UP};
+static const gpio_cfg_t ai85_video_cs = {PORT_0, PIN_8, GPIO_FUNC_OUT, GPIO_PAD_NONE};
+static const gpio_cfg_t ai85_audio_cs = {PORT_0, PIN_14, GPIO_FUNC_OUT, GPIO_PAD_NONE};
 static const gpio_cfg_t ai85_audio_int = {PORT_1, PIN_13, GPIO_FUNC_IN, GPIO_PAD_PULL_UP};
 
 
@@ -96,8 +98,14 @@ int qspi_init()
 {
     sys_cfg_spi_t qspi_master_cfg;
 
+    GPIO_OutSet(&ai85_video_cs);
+    GPIO_Config(&ai85_video_cs);
+
+    GPIO_OutSet(&ai85_audio_cs);
+    GPIO_Config(&ai85_audio_cs);
+
     qspi_master_cfg.map = MAP_B;
-    qspi_master_cfg.ss0 = Enable;
+    qspi_master_cfg.ss0 = Disable;
     qspi_master_cfg.ss1 = Disable;
     qspi_master_cfg.ss2 = Disable;
     qspi_master_cfg.num_io = 4;
@@ -130,26 +138,26 @@ int qspi_worker(void)
 {
     if (qspi_video_int_flag) {
         qspi_video_int_flag = 0;
-
-        qspi_header_t qspi_header = {0};
         spi_req_t qspi_req = {0};
-
-        SPI_Clear_fifo(QSPI);
+        qspi_header_t qspi_header = {0};
 
         printf("Start QSPI transaction\n");
 
+        GPIO_OutClr(&ai85_video_cs);
+        TMR_Delay(MXC_TMR0, USEC(5), 0);
         qspi_req.tx_data = NULL;
         qspi_req.rx_data = (uint8_t *) &qspi_header;
         qspi_req.len = sizeof(qspi_header_t);
         qspi_req.bits = 8;
         qspi_req.width = SPI17Y_WIDTH_4;
         qspi_req.ssel = 0;
-        qspi_req.deass = 1;
+        qspi_req.deass = 0;
         qspi_req.ssel_pol = SPI17Y_POL_LOW;
         qspi_req.tx_num = 0;
         qspi_req.rx_num = 0;
         qspi_req.callback = NULL;
         SPI_MasterTrans(QSPI, &qspi_req);
+        GPIO_OutSet(&ai85_video_cs);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
             printf("Invalid QSPI start byte 0x%08hhX\n", qspi_header.start_symbol);
@@ -163,32 +171,40 @@ int qspi_worker(void)
 
         if (qspi_header.command == QSPI_COMMAND_IMAGE) {
             TMR_Delay(MXC_TMR0, USEC(100), 0);
+
+            GPIO_OutClr(&ai85_video_cs);
+            TMR_Delay(MXC_TMR0, USEC(5), 0);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)qspi_image_buff;
             qspi_req.len = qspi_header.data_len/2;
             qspi_req.bits = 8;
             qspi_req.width = SPI17Y_WIDTH_4;
             qspi_req.ssel = 0;
-            qspi_req.deass = 1;
+            qspi_req.deass = 0;
             qspi_req.ssel_pol = SPI17Y_POL_LOW;
             qspi_req.tx_num = 0;
             qspi_req.rx_num = 0;
             qspi_req.callback = NULL;
             SPI_MasterTrans(QSPI, &qspi_req);
+            GPIO_OutSet(&ai85_video_cs);
 
             TMR_Delay(MXC_TMR0, USEC(100), 0);
+
+            GPIO_OutClr(&ai85_video_cs);
+            TMR_Delay(MXC_TMR0, USEC(5), 0);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)&(qspi_image_buff[qspi_header.data_len/2]);
             qspi_req.len = qspi_header.data_len - qspi_header.data_len/2;
             qspi_req.bits = 8;
             qspi_req.width = SPI17Y_WIDTH_4;
             qspi_req.ssel = 0;
-            qspi_req.deass = 1;
+            qspi_req.deass = 0;
             qspi_req.ssel_pol = SPI17Y_POL_LOW;
             qspi_req.tx_num = 0;
             qspi_req.rx_num = 0;
             qspi_req.callback = NULL;
             SPI_MasterTrans(QSPI, &qspi_req);
+            GPIO_OutSet(&ai85_video_cs);
 
             printf("QSPI transaction completed %u\n", qspi_req.rx_num*2);
 
@@ -197,18 +213,22 @@ int qspi_worker(void)
             memset(resultString, 0, sizeof(resultString));
 
             TMR_Delay(MXC_TMR0, USEC(100), 0);
+
+            GPIO_OutClr(&ai85_video_cs);
+            TMR_Delay(MXC_TMR0, USEC(5), 0);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)resultString;
             qspi_req.len = qspi_header.data_len;
             qspi_req.bits = 8;
             qspi_req.width = SPI17Y_WIDTH_4;
             qspi_req.ssel = 0;
-            qspi_req.deass = 1;
+            qspi_req.deass = 0;
             qspi_req.ssel_pol = SPI17Y_POL_LOW;
             qspi_req.tx_num = 0;
             qspi_req.rx_num = 0;
             qspi_req.callback = NULL;
             SPI_MasterTrans(QSPI, &qspi_req);
+            GPIO_OutSet(&ai85_video_cs);
 
             printf("QSPI transaction completed %u %s\n", qspi_req.rx_num, resultString);
 

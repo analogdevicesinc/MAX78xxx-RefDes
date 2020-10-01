@@ -78,6 +78,9 @@
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
+#define QSPI             MXC_SPI0
+#define QSPI_IRQ         SPI0_IRQn
+
 uint8_t embedding_result[512];
 
 static void fail(void);
@@ -220,11 +223,6 @@ static int8_t decision = -2;
 
 mxc_gpio_cfg_t gpio_flash;
 
-void SPI0_IRQHandler(void)
-{
-    MXC_SPI_AsyncHandler(MXC_SPI0);
-}
-
 void DMA0_IRQHandler(void)
 {
     MXC_DMA_Handler();
@@ -236,7 +234,7 @@ void DMA1_IRQHandler(void)
     DMA_FLAG = 1;
 }
 
-mxc_gpio_cfg_t gpio_cs;
+mxc_gpio_cfg_t gpio_int;
 
 mxc_gpio_cfg_t gpio_red;
 mxc_gpio_cfg_t gpio_green;
@@ -290,12 +288,12 @@ int main(void)
     gpio_flash.func = MXC_GPIO_FUNC_OUT;
     MXC_GPIO_Config(&gpio_flash);
 
-    gpio_cs.port = MXC_GPIO0;
-    gpio_cs.mask = MXC_GPIO_PIN_4;
-    gpio_cs.pad = MXC_GPIO_PAD_NONE;
-    gpio_cs.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_cs);
-    GPIO_SET(gpio_cs);
+    gpio_int.port = MXC_GPIO0;
+    gpio_int.mask = MXC_GPIO_PIN_12;
+    gpio_int.pad = MXC_GPIO_PAD_NONE;
+    gpio_int.func = MXC_GPIO_FUNC_OUT;
+    GPIO_SET(gpio_int);
+    MXC_GPIO_Config(&gpio_int);
 
     /* Enable cache */
     MXC_ICC_Enable(MXC_ICC0);
@@ -325,25 +323,25 @@ int main(void)
     spi_pins.mosi = TRUE;
     spi_pins.sdio2 = TRUE;
     spi_pins.sdio3 = TRUE;
-    spi_pins.ss0 = FALSE;
+    spi_pins.ss0 = TRUE;
     spi_pins.ss1 = FALSE;
     spi_pins.ss2 = FALSE;
 
     // Configure the peripheral
-    if (MXC_SPI_Init(MXC_SPI0, 1, 0, 0, 0, QSPI_SPEED, spi_pins) != E_NO_ERROR) {
+    if (MXC_SPI_Init(QSPI, 0, 1, 0, 0, QSPI_SPEED, spi_pins) != E_NO_ERROR) {
         PR_ERROR("SPI Initialization failed!");
         fail();
     }
 
-    if (MXC_SPI_SetDataSize(MXC_SPI0, 8) != E_NO_ERROR) {
-        PR_ERROR("SPI Set data size failed!");
-        fail();
-    }
+    // Set data size
+    MXC_SETFIELD(QSPI->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, 8 << MXC_F_SPI_CTRL2_NUMBITS_POS);
 
-    if (MXC_SPI_SetWidth(MXC_SPI0, SPI_WIDTH_QUAD) != E_NO_ERROR) {
-        PR_ERROR("SPI Set width failed!");
-        fail();
-    }
+    // Set width
+    QSPI->ctrl2 &= ~(MXC_F_SPI_CTRL2_THREE_WIRE | MXC_F_SPI_CTRL2_DATA_WIDTH);
+    QSPI->ctrl2 |= MXC_S_SPI_CTRL2_DATA_WIDTH_QUAD;
+
+    // Setup the slave select
+    MXC_SETFIELD(QSPI->ctrl0, MXC_F_SPI_CTRL0_SS_ACTIVE, ((1 << 0) << MXC_F_SPI_CTRL0_SS_ACTIVE_POS));
 
     // Initialize the camera driver.
     if (camera_init() != E_NO_ERROR) {
@@ -664,8 +662,9 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
     header.start_symbol = QSPI_START_SYMBOL;
     header.data_len = len;
     header.command = QSPI_COMMAND_IMAGE;
+
     //SPI Request
-    req.spi = MXC_SPI0;
+    req.spi = QSPI;
     req.txData = (uint8_t *)&header;
     req.rxData = NULL;
     req.txLen = sizeof(qspi_header_t);
@@ -676,37 +675,31 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
     req.rxCnt = 0;
     req.completeCB = NULL;
 
-    GPIO_CLR(gpio_cs);
+    PR_INFO("Waiting for SPI transaction");
 
-    MXC_SPI_MasterTransaction(&req);
+    // Send interrupt to master
+    GPIO_CLR(gpio_int);
+    GPIO_SET(gpio_int);
 
-    GPIO_SET(gpio_cs);
+    MXC_SPI_SlaveTransaction(&req);
 
-    MXC_Delay(100); //100usec delay
+//    PR_INFO("SPI transaction completed");
 
     //SPI Request
     req.txData = image;
     req.txLen = len/2;
     req.txCnt = 0;
 
-    GPIO_CLR(gpio_cs);
-
-    MXC_SPI_MasterTransaction(&req);
-
-    GPIO_SET(gpio_cs);
-
-    MXC_Delay(100); //100usec delay
-
-    GPIO_CLR(gpio_cs);
+    MXC_SPI_SlaveTransaction(&req);
 
     //SPI Request
     req.txData = (image+(len/2));
     req.txLen = len - len/2;
     req.txCnt = 0;
 
-    MXC_SPI_MasterTransaction(&req);
+    MXC_SPI_SlaveTransaction(&req);
 
-    GPIO_SET(gpio_cs);
+    PR_INFO("SPI transaction completed");
 }
 
 static void send_result_to_me14(char *result, uint32_t len)
@@ -720,33 +713,31 @@ static void send_result_to_me14(char *result, uint32_t len)
     header.command = QSPI_COMMAND_RESULT;
 
     //SPI Request
-    req.spi = MXC_SPI0;
+    req.spi = QSPI;
     req.txData = (uint8_t *)&header;
     req.rxData = NULL;
     req.txLen = sizeof(qspi_header_t);
     req.rxLen = 0;
-    req.ssIdx = 1;
-    req.ssDeassert = 1;
+    req.ssIdx = 0;
+    req.ssDeassert = 0;
     req.txCnt = 0;
     req.rxCnt = 0;
     req.completeCB = NULL;
 
-    GPIO_CLR(gpio_cs);
+    PR_INFO("Waiting for SPI transaction");
 
-    MXC_SPI_MasterTransaction(&req);
+    // Send interrupt to master
+    GPIO_CLR(gpio_int);
+    GPIO_SET(gpio_int);
 
-    GPIO_SET(gpio_cs);
-
-    MXC_Delay(100); //100usec delay
+    MXC_SPI_SlaveTransaction(&req);
 
     //SPI Request
     req.txData = (uint8_t *)result;
     req.txLen = len;
     req.txCnt = 0;
 
-    GPIO_CLR(gpio_cs);
+    MXC_SPI_SlaveTransaction(&req);
 
-    MXC_SPI_MasterTransaction(&req);
-
-    GPIO_SET(gpio_cs);
+    PR_INFO("SPI transaction completed");
 }
