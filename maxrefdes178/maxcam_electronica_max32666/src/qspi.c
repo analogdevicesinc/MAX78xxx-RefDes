@@ -141,10 +141,8 @@ int qspi_worker(void)
         spi_req_t qspi_req = {0};
         qspi_header_t qspi_header = {0};
 
-        printf("Start QSPI transaction\n");
-
         GPIO_OutClr(&ai85_video_cs);
-        TMR_Delay(MXC_TMR0, USEC(5), 0);
+//        TMR_Delay(MXC_TMR0, USEC(5), 0);
         qspi_req.tx_data = NULL;
         qspi_req.rx_data = (uint8_t *) &qspi_header;
         qspi_req.len = sizeof(qspi_header_t);
@@ -169,14 +167,14 @@ int qspi_worker(void)
             return E_BAD_PARAM;
         }
 
-        if (qspi_header.command == QSPI_COMMAND_IMAGE) {
-            TMR_Delay(MXC_TMR0, USEC(100), 0);
+        TMR_Delay(MXC_TMR0, USEC(50), 0);
 
+        if (qspi_header.command == QSPI_COMMAND_IMAGE) {
             GPIO_OutClr(&ai85_video_cs);
-            TMR_Delay(MXC_TMR0, USEC(5), 0);
+//            TMR_Delay(MXC_TMR0, USEC(5), 0);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)qspi_image_buff;
-            qspi_req.len = qspi_header.data_len/2;
+            qspi_req.len = qspi_header.data_len;
             qspi_req.bits = 8;
             qspi_req.width = SPI17Y_WIDTH_4;
             qspi_req.ssel = 0;
@@ -188,34 +186,14 @@ int qspi_worker(void)
             SPI_MasterTrans(QSPI, &qspi_req);
             GPIO_OutSet(&ai85_video_cs);
 
-            TMR_Delay(MXC_TMR0, USEC(100), 0);
-
-            GPIO_OutClr(&ai85_video_cs);
-            TMR_Delay(MXC_TMR0, USEC(5), 0);
-            qspi_req.tx_data = NULL;
-            qspi_req.rx_data = (void *)&(qspi_image_buff[qspi_header.data_len/2]);
-            qspi_req.len = qspi_header.data_len - qspi_header.data_len/2;
-            qspi_req.bits = 8;
-            qspi_req.width = SPI17Y_WIDTH_4;
-            qspi_req.ssel = 0;
-            qspi_req.deass = 0;
-            qspi_req.ssel_pol = SPI17Y_POL_LOW;
-            qspi_req.tx_num = 0;
-            qspi_req.rx_num = 0;
-            qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI, &qspi_req);
-            GPIO_OutSet(&ai85_video_cs);
-
-            printf("QSPI transaction completed %u\n", qspi_req.rx_num*2);
+            printf("QSPI video data transaction completed %u\n", qspi_req.rx_num);
 
             return IMAGE_RECEIVED;
         } else if (qspi_header.command == QSPI_COMMAND_RESULT) {
             memset(resultString, 0, sizeof(resultString));
 
-            TMR_Delay(MXC_TMR0, USEC(100), 0);
-
             GPIO_OutClr(&ai85_video_cs);
-            TMR_Delay(MXC_TMR0, USEC(5), 0);
+//            TMR_Delay(MXC_TMR0, USEC(5), 0);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)resultString;
             qspi_req.len = qspi_header.data_len;
@@ -230,7 +208,7 @@ int qspi_worker(void)
             SPI_MasterTrans(QSPI, &qspi_req);
             GPIO_OutSet(&ai85_video_cs);
 
-            printf("QSPI transaction completed %u %s\n", qspi_req.rx_num, resultString);
+            printf("QSPI video result transaction completed %u %s\n", qspi_req.rx_num, resultString);
 
             return RESULT_RECEIVED;
         }
@@ -238,7 +216,32 @@ int qspi_worker(void)
 
     if (qspi_audio_int_flag) {
         qspi_audio_int_flag = 0;
-        // TODO
+
+        spi_req_t qspi_req = {0};
+        qspi_header_t qspi_header = {0};
+
+        GPIO_OutClr(&ai85_audio_cs);
+//        TMR_Delay(MXC_TMR0, USEC(5), 0);
+        qspi_req.tx_data = NULL;
+        qspi_req.rx_data = (uint8_t *) &qspi_header;
+        qspi_req.len = sizeof(qspi_header_t);
+        qspi_req.bits = 8;
+        qspi_req.width = SPI17Y_WIDTH_4;
+        qspi_req.ssel = 0;
+        qspi_req.deass = 0;
+        qspi_req.ssel_pol = SPI17Y_POL_LOW;
+        qspi_req.tx_num = 0;
+        qspi_req.rx_num = 0;
+        qspi_req.callback = NULL;
+        SPI_MasterTrans(QSPI, &qspi_req);
+        GPIO_OutSet(&ai85_audio_cs);
+
+        if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
+            printf("Invalid QSPI start byte 0x%08hhX\n", qspi_header.start_symbol);
+            return E_BAD_STATE;
+        }
+
+        printf("QSPI audio transaction completed %u\n", qspi_req.rx_num);
     }
 
     return PENDING;

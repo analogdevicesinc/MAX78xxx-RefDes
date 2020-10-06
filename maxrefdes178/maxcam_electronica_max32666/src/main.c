@@ -94,6 +94,10 @@ int main(void)
         printf("MAX78000 select failed\n");
     }
 
+    // Set PORT1 and PORT2 rail to VDDIO
+    MXC_GPIO0->vssel =  0x00;
+    MXC_GPIO1->vssel =  0x00;
+
     if (qspi_init(1) != E_NO_ERROR) {
         printf("qspi init failed\n");
         while(1);
