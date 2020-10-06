@@ -63,9 +63,9 @@ export CMSIS_ROOT
 
 
 # Source files for this test (add path to VPATH below)
-SRCS  = src/main.c
-SRCS += src/cnn.c
-SRCS += src/hpf.c
+SRCS  = main.c
+SRCS += softmax.c
+SRCS += cnn.c
 
 # Where to find source files for this test
 VPATH=.
@@ -75,7 +75,6 @@ VPATH += ./src
 # Where to find header files for this test
 # Where to find header files for this test
 IPATH = .
-IPATH += ./resources
 IPATH += ./include
 IPATH += ./../common
 IPATH += $(LIBS_DIR)/Common
@@ -111,8 +110,8 @@ MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
 # Point this variable to a linker file to override the default file
-LINKER=$(TARGET_LC).ld
-LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+#LINKER=$(TARGET_LC).ld
+#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
 
 ################################################################################
 # Include external library makefiles here

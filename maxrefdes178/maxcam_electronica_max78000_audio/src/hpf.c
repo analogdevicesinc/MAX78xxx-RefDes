@@ -80,6 +80,9 @@ INT16 HPF(INT16 input)
 	INT16 output;
 	INT32 tmp;
 
+//	x = input << 8;	// shift by 8 if i/p = 8 bits
+//	x = input<<6;	// shift by 6 if i/p = 10 bits  OLD
+//	x = input<<5;	// shift by 6 if i/p = 10 bits  NEW
 	x=input;
 
 	tmp = (R * Prev_y);
