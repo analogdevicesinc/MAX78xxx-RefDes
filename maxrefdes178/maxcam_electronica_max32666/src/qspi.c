@@ -114,6 +114,7 @@ int qspi_init()
 
     // Configure the peripheral
     if (SPI_Init(QSPI, 0, QSPI_SPEED, qspi_master_cfg) != 0) {
+
         printf("Error configuring QSPI\n");
     }
 
@@ -142,7 +143,6 @@ int qspi_worker(void)
         qspi_header_t qspi_header = {0};
 
         GPIO_OutClr(&ai85_video_cs);
-//        TMR_Delay(MXC_TMR0, USEC(5), 0);
         qspi_req.tx_data = NULL;
         qspi_req.rx_data = (uint8_t *) &qspi_header;
         qspi_req.len = sizeof(qspi_header_t);
@@ -167,14 +167,13 @@ int qspi_worker(void)
             return E_BAD_PARAM;
         }
 
-        TMR_Delay(MXC_TMR0, USEC(50), 0);
+        TMR_Delay(MXC_TMR0, USEC(5), 0);
 
         if (qspi_header.command == QSPI_COMMAND_IMAGE) {
             GPIO_OutClr(&ai85_video_cs);
-//            TMR_Delay(MXC_TMR0, USEC(5), 0);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)qspi_image_buff;
-            qspi_req.len = qspi_header.data_len;
+            qspi_req.len = qspi_header.data_len / 2;
             qspi_req.bits = 8;
             qspi_req.width = SPI17Y_WIDTH_4;
             qspi_req.ssel = 0;
@@ -186,14 +185,30 @@ int qspi_worker(void)
             SPI_MasterTrans(QSPI, &qspi_req);
             GPIO_OutSet(&ai85_video_cs);
 
-            printf("QSPI video data transaction completed %u\n", qspi_req.rx_num);
+            TMR_Delay(MXC_TMR0, USEC(5), 0);
+
+            GPIO_OutClr(&ai85_video_cs);
+            qspi_req.tx_data = NULL;
+            qspi_req.rx_data = (void *)&(qspi_image_buff[qspi_header.data_len/2]);
+            qspi_req.len = qspi_header.data_len / 2;
+            qspi_req.bits = 8;
+            qspi_req.width = SPI17Y_WIDTH_4;
+            qspi_req.ssel = 0;
+            qspi_req.deass = 0;
+            qspi_req.ssel_pol = SPI17Y_POL_LOW;
+            qspi_req.tx_num = 0;
+            qspi_req.rx_num = 0;
+            qspi_req.callback = NULL;
+            SPI_MasterTrans(QSPI, &qspi_req);
+            GPIO_OutSet(&ai85_video_cs);
+
+            printf("QSPI video data transaction completed %u\n", qspi_req.rx_num * 2);
 
             return IMAGE_RECEIVED;
         } else if (qspi_header.command == QSPI_COMMAND_RESULT) {
             memset(resultString, 0, sizeof(resultString));
 
             GPIO_OutClr(&ai85_video_cs);
-//            TMR_Delay(MXC_TMR0, USEC(5), 0);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)resultString;
             qspi_req.len = qspi_header.data_len;
@@ -221,7 +236,6 @@ int qspi_worker(void)
         qspi_header_t qspi_header = {0};
 
         GPIO_OutClr(&ai85_audio_cs);
-//        TMR_Delay(MXC_TMR0, USEC(5), 0);
         qspi_req.tx_data = NULL;
         qspi_req.rx_data = (uint8_t *) &qspi_header;
         qspi_req.len = sizeof(qspi_header_t);

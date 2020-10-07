@@ -405,10 +405,10 @@ void MXC_DMA_RevA_Handler()
         if (CHECK_HANDLE(i)) {
             if (MXC_DMA->intfl & (0x1 << i)) {
                 if (dma_resource[i].cb != NULL) {
-                    dma_resource[i].cb(i, E_NO_ERROR);
+                    dma_resource[i].cb (i, dma_resource[i].regs->status);
                 }
                 
-                MXC_DMA_ChannelClearFlags(i, MXC_DMA_RevA_ChannelGetFlags(i));
+                MXC_DMA_ChannelClearFlags(i, dma_resource[i].regs->status);
                 break;
             }
         }

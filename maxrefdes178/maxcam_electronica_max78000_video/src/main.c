@@ -73,13 +73,13 @@
 #define FRAME_COLOR_DARK    0x535A
 #define FRAME_COLOR_LIGHT   0xFFFF
 
-#define PRINT_TIME 1
+#define PRINT_TIME 0
 
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
 #define QSPI             MXC_SPI0
-#define QSPI_IRQ         SPI0_IRQn
+#define QSPI_TIMEOUT_CNT 10000000
 
 uint8_t embedding_result[512];
 
@@ -216,10 +216,9 @@ static const uint8_t camera_settings[][2] = {
 
 // *****************************************************************************
 
-volatile uint8_t DMA_FLAG = 0;
-
 static int8_t prev_decision = -2;
 static int8_t decision = -2;
+static volatile uint8_t DMA_DONE_FLAG = 0;
 
 mxc_gpio_cfg_t gpio_flash;
 
@@ -231,10 +230,36 @@ void DMA0_IRQHandler(void)
 void DMA1_IRQHandler(void)
 {
     MXC_DMA_Handler();
-    DMA_FLAG = 1;
 }
 
-mxc_gpio_cfg_t gpio_int;
+void DMA2_IRQHandler(void)
+{
+    MXC_DMA_Handler();
+}
+
+void DMA3_IRQHandler(void)
+{
+    int ch = 3;
+    if (MXC_DMA->intfl & (0x1 << ch)) {
+        if (MXC_DMA->ch[ch].status & (MXC_F_DMA_STATUS_TO_IF | MXC_F_DMA_STATUS_BUS_ERR)) {
+            PR_ERROR("dma error %d", MXC_DMA->ch[ch].status);
+        }
+
+        if (MXC_DMA->ch[ch].cnt) {
+            PR_ERROR("dma is not empty %d", MXC_DMA->ch[ch].cnt);
+        }
+
+        // Stop DMA
+        MXC_DMA->ch[ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
+
+        DMA_DONE_FLAG = 1;
+
+        // Clear flags
+        MXC_DMA->ch[ch].status |= (MXC_DMA->ch[ch].status & 0x5F);
+    }
+}
+
+mxc_gpio_cfg_t qspi_int;
 
 mxc_gpio_cfg_t gpio_red;
 mxc_gpio_cfg_t gpio_green;
@@ -256,7 +281,6 @@ int main(void)
     gpio_camera.func = MXC_GPIO_FUNC_OUT;
     MXC_GPIO_Config(&gpio_camera);
     GPIO_CLR(gpio_camera);
-
 
     // Configure LEDs
     gpio_red.port = MXC_GPIO2;
@@ -288,12 +312,12 @@ int main(void)
     gpio_flash.func = MXC_GPIO_FUNC_OUT;
     MXC_GPIO_Config(&gpio_flash);
 
-    gpio_int.port = MXC_GPIO0;
-    gpio_int.mask = MXC_GPIO_PIN_12;
-    gpio_int.pad = MXC_GPIO_PAD_NONE;
-    gpio_int.func = MXC_GPIO_FUNC_OUT;
-    GPIO_SET(gpio_int);
-    MXC_GPIO_Config(&gpio_int);
+    qspi_int.port = MXC_GPIO0;
+    qspi_int.mask = MXC_GPIO_PIN_12;
+    qspi_int.pad = MXC_GPIO_PAD_NONE;
+    qspi_int.func = MXC_GPIO_FUNC_OUT;
+    GPIO_SET(qspi_int);
+    MXC_GPIO_Config(&qspi_int);
 
     /* Enable cache */
     MXC_ICC_Enable(MXC_ICC0);
@@ -316,32 +340,31 @@ int main(void)
     MXC_RTC_Init(0, 0);
     MXC_RTC_Start();
 
-    mxc_spi_pins_t spi_pins;
+    mxc_spi_pins_t qspi_pins;
+    qspi_pins.clock = TRUE;
+    qspi_pins.miso = TRUE;
+    qspi_pins.mosi = TRUE;
+    qspi_pins.sdio2 = TRUE;
+    qspi_pins.sdio3 = TRUE;
+    qspi_pins.ss0 = TRUE;
+    qspi_pins.ss1 = FALSE;
+    qspi_pins.ss2 = FALSE;
 
-    spi_pins.clock = TRUE;
-    spi_pins.miso = TRUE;
-    spi_pins.mosi = TRUE;
-    spi_pins.sdio2 = TRUE;
-    spi_pins.sdio3 = TRUE;
-    spi_pins.ss0 = TRUE;
-    spi_pins.ss1 = FALSE;
-    spi_pins.ss2 = FALSE;
-
-    // Configure the peripheral
-    if (MXC_SPI_Init(QSPI, 0, 1, 0, 0, QSPI_SPEED, spi_pins) != E_NO_ERROR) {
-        PR_ERROR("SPI Initialization failed!");
-        fail();
+    if (MXC_SPI_Init(QSPI, 0, 1, 0, 0, QSPI_SPEED, qspi_pins) != E_NO_ERROR) {
+        PR_ERROR("SPI INITIALIZATION ERROR");
     }
 
     // Set data size
     MXC_SETFIELD(QSPI->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, 8 << MXC_F_SPI_CTRL2_NUMBITS_POS);
 
-    // Set width
-    QSPI->ctrl2 &= ~(MXC_F_SPI_CTRL2_THREE_WIRE | MXC_F_SPI_CTRL2_DATA_WIDTH);
-    QSPI->ctrl2 |= MXC_S_SPI_CTRL2_DATA_WIDTH_QUAD;
+    if (MXC_SPI_SetWidth(QSPI, SPI_WIDTH_QUAD) != E_NO_ERROR) {
+        PR_ERROR("SPI SET WIDTH ERROR");
+    }
 
-    // Setup the slave select
-    MXC_SETFIELD(QSPI->ctrl0, MXC_F_SPI_CTRL0_SS_ACTIVE, ((1 << 0) << MXC_F_SPI_CTRL0_SS_ACTIVE_POS));
+//    NVIC_EnableIRQ(DMA0_IRQn);
+//    NVIC_EnableIRQ(DMA1_IRQn);
+//    NVIC_EnableIRQ(DMA2_IRQn);
+    NVIC_EnableIRQ(DMA3_IRQn);
 
     // Initialize the camera driver.
     if (camera_init() != E_NO_ERROR) {
@@ -392,6 +415,12 @@ int main(void)
     GPIO_CLR(gpio_green);
     GPIO_SET(gpio_blue);
 
+//    char name[RESULT_MAX_SIZE] = "nothing";
+//    while (1) {
+//        send_result_to_me14(name, strlen(name));
+//        MXC_Delay(1000*1000);
+//    }
+
     run_demo();
 
     return 0;
@@ -424,7 +453,7 @@ static void run_demo(void)
         if (camera_is_image_rcv()) { // Check whether image is ready
 
 #if (PRINT_TIME==1)
-            
+
             process_time = utils_get_time_ms();
 #endif
             run_cnn(0, 0);
@@ -505,7 +534,7 @@ static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint
     uint16_t *image = (uint16_t*)raw;   // 2bytes per pixel RGB565
 
     // top line
-    image+=y*w;    
+    image+=y*w;
     for (int i = 0; i<thickness; i++) {
         image+= x;
         for(int j=0; j< width; j++) {
@@ -515,7 +544,7 @@ static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint
     }
 
     //bottom line
-    image=((uint16_t*)raw) + (y+height-thickness)*w; 
+    image=((uint16_t*)raw) + (y+height-thickness)*w;
     for (int i = 0; i<thickness; i++) {
         image+= x;
         for(int j=0; j< width; j++) {
@@ -653,91 +682,122 @@ static void run_cnn(int x_offset, int y_offset)
     }
 }
 
+void DMACallback(int ch, int status)
+{
+    if (status & (MXC_F_DMA_STATUS_TO_IF | MXC_F_DMA_STATUS_BUS_ERR)) {
+        PR_ERROR("dma error %d", status);
+    }
+
+    if (MXC_DMA->ch[ch].cnt) {
+        PR_ERROR("dma is not empty %d", MXC_DMA->ch[ch].cnt);
+    }
+
+    // Stop DMA
+    MXC_DMA->ch[ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
+
+    // Release channel
+    MXC_DMA_ReleaseChannel(ch);
+
+    DMA_DONE_FLAG = 1;
+}
+
+int QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
+{
+    uint8_t ch = 3;
+
+    // Setup SPI
+    QSPI->ctrl1 &= ~(MXC_F_SPI_CTRL1_RX_NUM_CHAR);
+    QSPI->dma &= ~(MXC_F_SPI_DMA_RX_FIFO_EN);
+    MXC_SETFIELD(QSPI->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, txLen << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS);
+    QSPI->dma |= MXC_F_SPI_DMA_TX_FIFO_EN;
+    // Flush SPI DMA fifo
+    QSPI->dma |= (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
+    QSPI->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
+    // Clear master done flag
+    QSPI->intfl = MXC_F_SPI_INTFL_MST_DONE;
+
+    // Set SPI DMA Threshold
+    MXC_SPI_SetTXThreshold(QSPI, 4);
+    MXC_SPI_SetRXThreshold(QSPI, 0);
+
+    // Setup DMA
+//    MXC_DMA_Init();
+
+    DMA_DONE_FLAG = 0;
+
+    MXC_DMA->ch[ch].ctrl =
+        ((1 ? MXC_F_DMA_CTRL_SRCINC : 0)   |
+         (0 ? MXC_F_DMA_CTRL_DSTINC : 0)   |
+         (MXC_DMA_REQUEST_SPI0TX) |
+         (MXC_DMA_WIDTH_WORD << MXC_F_DMA_CTRL_SRCWD_POS) |
+         (MXC_DMA_WIDTH_WORD << MXC_F_DMA_CTRL_DSTWD_POS));
+
+    MXC_DMA->ch[ch].src = (unsigned int) txData;
+    MXC_DMA->ch[ch].dst = 0;
+    MXC_DMA->ch[ch].cnt = txLen;
+
+    // Enable int
+    MXC_DMA->inten |= (1 << ch);
+
+    // Clear int flags
+    MXC_DMA->ch[ch].status |= (MXC_DMA->ch[ch].status & 0x5F);
+
+    // Start DMA
+    MXC_DMA->ch[ch].ctrl |= MXC_F_DMA_CTRL_EN;
+
+    MXC_DMA->ch[ch].ctrl |= MXC_F_DMA_CTRL_CTZ_IE;
+
+    QSPI->dma |= (MXC_F_SPI_DMA_DMA_TX_EN | MXC_F_SPI_DMA_DMA_RX_EN);
+
+    return E_NO_ERROR;
+}
+
 static void send_image_to_me14(uint8_t *image, uint32_t len)
 {
-    mxc_spi_req_t req;
-
     qspi_header_t header;
-
     header.start_symbol = QSPI_START_SYMBOL;
     header.data_len = len;
     header.command = QSPI_COMMAND_IMAGE;
 
-    //SPI Request
-    req.spi = QSPI;
-    req.txData = (uint8_t *)&header;
-    req.rxData = NULL;
-    req.txLen = sizeof(qspi_header_t);
-    req.rxLen = 0;
-    req.ssIdx = 0;
-    req.ssDeassert = 0;
-    req.txCnt = 0;
-    req.rxCnt = 0;
-    req.completeCB = NULL;
+    PR_INFO("Waiting for SPI image transaction");
 
-    PR_INFO("Waiting for SPI transaction");
+    QSPI_SlaveTransDMA((uint8_t*) &header, sizeof(qspi_header_t));
 
     // Send interrupt to master
-    GPIO_CLR(gpio_int);
-    GPIO_SET(gpio_int);
+    GPIO_CLR(qspi_int);
+    GPIO_SET(qspi_int);
 
-    MXC_SPI_SlaveTransaction(&req);
+    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
 
-//    PR_INFO("SPI transaction completed");
+    QSPI_SlaveTransDMA(image, len/2);
 
-    //SPI Request
-    req.txData = image;
-    req.txLen = len/2;
-    req.txCnt = 0;
+    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
 
-    MXC_SPI_SlaveTransaction(&req);
+    QSPI_SlaveTransDMA(image+(len/2), len/2);
 
-    //SPI Request
-    req.txData = (image+(len/2));
-    req.txLen = len - len/2;
-    req.txCnt = 0;
+    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
 
-    MXC_SPI_SlaveTransaction(&req);
-
-    PR_INFO("SPI transaction completed");
+    PR_INFO("SPI transaction image completed");
 }
 
 static void send_result_to_me14(char *result, uint32_t len)
 {
-    mxc_spi_req_t req;
-
     qspi_header_t header;
-
     header.start_symbol = QSPI_START_SYMBOL;
     header.data_len = len;
     header.command = QSPI_COMMAND_RESULT;
 
-    //SPI Request
-    req.spi = QSPI;
-    req.txData = (uint8_t *)&header;
-    req.rxData = NULL;
-    req.txLen = sizeof(qspi_header_t);
-    req.rxLen = 0;
-    req.ssIdx = 0;
-    req.ssDeassert = 0;
-    req.txCnt = 0;
-    req.rxCnt = 0;
-    req.completeCB = NULL;
+    PR_INFO("Waiting for SPI result transaction");
 
-    PR_INFO("Waiting for SPI transaction");
+    QSPI_SlaveTransDMA((uint8_t*) &header, sizeof(qspi_header_t));
 
     // Send interrupt to master
-    GPIO_CLR(gpio_int);
-    GPIO_SET(gpio_int);
+    GPIO_CLR(qspi_int);
+    GPIO_SET(qspi_int);
 
-    MXC_SPI_SlaveTransaction(&req);
+    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
 
-    //SPI Request
-    req.txData = (uint8_t *)result;
-    req.txLen = len;
-    req.txCnt = 0;
+    QSPI_SlaveTransDMA((uint8_t *)result, len);
 
-    MXC_SPI_SlaveTransaction(&req);
-
-    PR_INFO("SPI transaction completed");
+    PR_INFO("SPI transaction result completed");
 }
