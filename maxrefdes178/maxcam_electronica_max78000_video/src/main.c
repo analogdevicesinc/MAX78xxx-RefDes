@@ -259,10 +259,16 @@ void DMA_CHANNEL_QSPI_IRQ_HAND(void)
         // Stop DMA
         MXC_DMA->ch[ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
 
-        DMA_DONE_FLAG = 1;
-
-        // Clear flags
+        // Clear DMA int flags
         MXC_DMA->ch[ch].status |= (MXC_DMA->ch[ch].status & 0x5F);
+
+        // Stop SPI
+        QSPI->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
+
+        // Disable SPI DMA, flush FIFO
+        QSPI->dma = (MXC_F_SPI_DMA_TX_FLUSH) | (MXC_F_SPI_DMA_RX_FLUSH);
+
+        DMA_DONE_FLAG = 1;
     }
 }
 
@@ -304,8 +310,6 @@ int main(void)
     gpio_blue.func = MXC_GPIO_FUNC_OUT;
     MXC_GPIO_Config(&gpio_blue);
     GPIO_SET(gpio_blue);
-
-//    MXC_Delay(500*1000);
 
     gpio_flash.port = MXC_GPIO0;
     gpio_flash.mask = MXC_GPIO_PIN_19;
@@ -412,8 +416,6 @@ int main(void)
     GPIO_CLR(gpio_red);
     GPIO_CLR(gpio_blue);
     GPIO_SET(gpio_green);
-
-//    MXC_Delay(500*1000);
 
     GPIO_CLR(gpio_green);
     GPIO_SET(gpio_blue);
@@ -700,9 +702,6 @@ static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
     MXC_SETFIELD(QSPI->dma, MXC_F_SPI_DMA_TX_THD_VAL, 4 << MXC_F_SPI_DMA_TX_THD_VAL_POS);
     MXC_SETFIELD(QSPI->dma, MXC_F_SPI_DMA_RX_THD_VAL, 0 << MXC_F_SPI_DMA_RX_THD_VAL_POS);
 
-    // Enable SPI
-    QSPI->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
-
     // Setup DMA
     DMA_DONE_FLAG = 0;
     MXC_DMA->ch[ch].src = (unsigned int) txData;
@@ -724,6 +723,9 @@ static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
     MXC_DMA->inten |= (1 << ch);
 
     // Enable SPI
+    QSPI->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
+
+    // Enable SPI DMA
     QSPI->dma |= (MXC_F_SPI_DMA_DMA_TX_EN | MXC_F_SPI_DMA_DMA_RX_EN);
 }
 
@@ -750,7 +752,7 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
 
     QSPI_SlaveTransDMA(image+(len/2), len/2);
 
-//    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
+    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
 
     PR_INFO("image tx completed");
 }

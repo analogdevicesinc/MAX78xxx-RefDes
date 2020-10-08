@@ -165,10 +165,16 @@ void DMA_CHANNEL_QSPI_IRQ_HAND(void)
         // Stop DMA
         MXC_DMA->ch[ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
 
-        DMA_DONE_FLAG = 1;
-
-        // Clear flags
+        // Clear DMA int flags
         MXC_DMA->ch[ch].status |= (MXC_DMA->ch[ch].status & 0x5F);
+
+        // Stop SPI
+        QSPI->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
+
+        // Disable SPI DMA, flush FIFO
+        QSPI->dma = (MXC_F_SPI_DMA_TX_FLUSH) | (MXC_F_SPI_DMA_RX_FLUSH);
+
+        DMA_DONE_FLAG = 1;
     }
 }
 
@@ -478,7 +484,7 @@ int main(void)
                         probability);
 
                 if (ret) {
-                    send_result_to_me14((char *)keywords[out_class], strlen(keywords[out_class]));
+                    send_result_to_me14((char *)keywords[out_class], sizeof(keywords[out_class]));
                 }
 
                 printf("\n----------------------------------------- \n");
@@ -797,9 +803,6 @@ static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
     MXC_SETFIELD(QSPI->dma, MXC_F_SPI_DMA_TX_THD_VAL, 4 << MXC_F_SPI_DMA_TX_THD_VAL_POS);
     MXC_SETFIELD(QSPI->dma, MXC_F_SPI_DMA_RX_THD_VAL, 0 << MXC_F_SPI_DMA_RX_THD_VAL_POS);
 
-    // Enable SPI
-    QSPI->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
-
     // Setup DMA
     DMA_DONE_FLAG = 0;
     MXC_DMA->ch[ch].src = (unsigned int) txData;
@@ -821,6 +824,9 @@ static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
     MXC_DMA->inten |= (1 << ch);
 
     // Enable SPI
+    QSPI->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
+
+    // Enable SPI DMA
     QSPI->dma |= (MXC_F_SPI_DMA_DMA_TX_EN | MXC_F_SPI_DMA_DMA_RX_EN);
 }
 
@@ -839,7 +845,7 @@ static void send_result_to_me14(char *result, uint32_t len)
     GPIO_CLR(qspi_int);
     GPIO_SET(qspi_int);
 
-    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
+    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i;);
 
     QSPI_SlaveTransDMA((uint8_t *)result, len);
 
