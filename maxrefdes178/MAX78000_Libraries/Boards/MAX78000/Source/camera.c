@@ -179,7 +179,7 @@ int camera_init(void)
     
     // initialize XCLK for camera
     MXC_PT_Init(MXC_PT_CLK_DIV1);
-    MXC_PT_SqrWaveConfig(0, CAMERA_FREQ);
+    MXC_PT_SqrWaveConfig(0, CAMERA_FREQ * 2);
     MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
     MXC_GPIO_SetVSSEL(gpio_cfg_pt0.port, MXC_GPIO_VSSEL_VDDIOH, gpio_cfg_pt0.mask);
     // Camera requires a delay after starting its input clock.
