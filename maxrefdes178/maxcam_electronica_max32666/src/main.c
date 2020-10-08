@@ -118,25 +118,26 @@ int main(void)
 
     while (1) {
         qspi_return = qspi_worker();
-        if (qspi_return > E_NO_ERROR) {
+        if (qspi_return > QSPI_TYPE_NO_DATA) {
             switch(qspi_return)
             {
-                case IMAGE_RECEIVED:
-                    if (strcmp(resultString, "nothing")) {
-                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, resultString, Font_16x26, resultColor, qspi_image_buff);
+                case QSPI_TYPE_RESPONSE_VIDEO_DATA:
+                    if (strcmp(video_result_string, "nothing")) {
+                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, video_result_string, Font_16x26, resultColor, qspi_image_buff);
                     }
                     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, qspi_image_buff);
                     break;
-                case RESULT_RECEIVED:
-                    if (strcmp(resultString, "Unknown") == 0) {
+                case QSPI_TYPE_RESPONSE_VIDEO_RESULT:
+                    if (strcmp(video_result_string, "Unknown") == 0) {
                         resultColor = RED;
-                    } else if(strcmp(resultString, "Adjust Face") == 0) {
+                    } else if(strcmp(video_result_string, "Adjust Face") == 0) {
                         resultColor = YELLOW;
                     } else {
                         resultColor = GREEN;
                     }
                     break;
-                case PENDING:
+                case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
+                    lcd_writeStringWithBG(10, 10, audio_result_string, Font_16x26, BLACK, GREEN);
                     break;
                 default:
                     break;

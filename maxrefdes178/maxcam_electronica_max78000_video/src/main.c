@@ -96,6 +96,7 @@ static void fail(void);
 static void process_img(void);
 static void run_cnn(int x_offset, int y_offset);
 static void run_demo(void);
+static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen);
 static void send_image_to_me14(uint8_t *image, uint32_t len);
 static void send_result_to_me14(char *result, uint32_t len);
 static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color);
@@ -678,7 +679,7 @@ static void run_cnn(int x_offset, int y_offset)
     }
 }
 
-int QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
+static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
 {
     uint8_t ch = DMA_CHANNEL_QSPI;
 
@@ -724,8 +725,6 @@ int QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
 
     // Enable SPI
     QSPI->dma |= (MXC_F_SPI_DMA_DMA_TX_EN | MXC_F_SPI_DMA_DMA_RX_EN);
-
-    return E_NO_ERROR;
 }
 
 static void send_image_to_me14(uint8_t *image, uint32_t len)
@@ -733,9 +732,9 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
     qspi_header_t header;
     header.start_symbol = QSPI_START_SYMBOL;
     header.data_len = len;
-    header.command = QSPI_COMMAND_IMAGE;
+    header.data_type = QSPI_TYPE_RESPONSE_VIDEO_DATA;
 
-//    PR_INFO("Waiting for SPI image transaction");
+    PR_INFO("image tx start");
 
     QSPI_SlaveTransDMA((uint8_t*) &header, sizeof(qspi_header_t));
 
@@ -753,7 +752,7 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
 
 //    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
 
-//    PR_INFO("SPI transaction image completed");
+    PR_INFO("image tx completed");
 }
 
 static void send_result_to_me14(char *result, uint32_t len)
@@ -761,9 +760,9 @@ static void send_result_to_me14(char *result, uint32_t len)
     qspi_header_t header;
     header.start_symbol = QSPI_START_SYMBOL;
     header.data_len = len;
-    header.command = QSPI_COMMAND_RESULT;
+    header.data_type = QSPI_TYPE_RESPONSE_VIDEO_RESULT;
 
-//    PR_INFO("Waiting for SPI result transaction");
+    PR_INFO("result tx start");
 
     QSPI_SlaveTransDMA((uint8_t*) &header, sizeof(qspi_header_t));
 
@@ -777,5 +776,5 @@ static void send_result_to_me14(char *result, uint32_t len)
 
     for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
 
-//    PR_INFO("SPI transaction result completed");
+    PR_INFO("result tx completed");
 }

@@ -56,8 +56,8 @@
 // Global variables
 //-----------------------------------------------------------------------------
 extern uint8_t qspi_image_buff[IMAGE_SIZE];
-extern char resultString[RESULT_MAX_SIZE];
-
+extern char video_result_string[RESULT_MAX_SIZE];
+extern char audio_result_string[RESULT_MAX_SIZE];
 
 //-----------------------------------------------------------------------------
 // Function declarations

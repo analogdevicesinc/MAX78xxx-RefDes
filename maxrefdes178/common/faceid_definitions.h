@@ -44,10 +44,8 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define QSPI_SPEED          10000000UL
-#define QSPI_START_SYMBOL   0xAABBCCDD
-#define QSPI_COMMAND_IMAGE  0xEE
-#define QSPI_COMMAND_RESULT 0xBB
+#define QSPI_SPEED                10000000UL
+#define QSPI_START_SYMBOL         0xAABBCCDD
 
 #define LCD_WIDTH           240
 #define LCD_HEIGHT          240
@@ -58,17 +56,18 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
-typedef struct __attribute__((packed)) {
-    uint32_t  start_symbol;
-    uint32_t data_len;
-    uint8_t  command;
-} qspi_header_t;
-
 typedef enum {
-    IMAGE_RECEIVED = 1,
-    RESULT_RECEIVED,
-    PENDING,
-}teQspiReturn;
+    QSPI_TYPE_NO_DATA = 0,
+    QSPI_TYPE_RESPONSE_VIDEO_DATA ,
+    QSPI_TYPE_RESPONSE_VIDEO_RESULT,
+    QSPI_TYPE_RESPONSE_AUDIO_RESULT
+} teQspiDataType;
+
+typedef struct __attribute__((packed)) {
+    uint32_t start_symbol;
+    uint32_t data_len;
+    uint8_t data_type;
+} qspi_header_t;
 
 
 //-----------------------------------------------------------------------------

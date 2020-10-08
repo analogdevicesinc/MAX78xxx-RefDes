@@ -376,3 +376,11 @@ void fonts_putSubtitle(uint16_t w, uint16_t h, const char *str, FontDef font, ui
 
     fonts_putString(x, y, LCD_WIDTH, LCD_HEIGHT, str, font, color, 0, 0, buff);
 }
+
+void fonts_putToptitle(uint16_t w, uint16_t h, const char *str, FontDef font, uint16_t color, uint8_t *buff)
+{
+    uint16_t x = (w - (font.width * strlen(str))) / 2;
+    uint16_t y = 3;
+
+    fonts_putString(x, y, LCD_WIDTH, LCD_HEIGHT, str, font, color, 0, 0, buff);
+}

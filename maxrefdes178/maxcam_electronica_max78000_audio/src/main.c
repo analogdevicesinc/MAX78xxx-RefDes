@@ -90,6 +90,17 @@
 #define PREAMBLE_SIZE				30*CHUNK// how many samples before beginning of a keyword to include
 #define INFERENCE_THRESHOLD   		49 		// min probability (0-100) to accept an inference
 
+/* Peripherals */
+#define QSPI             MXC_SPI0
+#define QSPI_TIMEOUT_CNT 100000000
+
+#define DMA_CHANNEL_QSPI            1
+#define DMA_CHANNEL_QSPI_IRQ        DMA1_IRQn
+#define DMA_CHANNEL_QSPI_IRQ_HAND   DMA1_IRQHandler
+
+#define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
+#define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
+
 /* **** Globals **** */
 extern uint32_t cnn_time;
 static int32_t ml_data[NUM_OUTPUTS];
@@ -102,6 +113,8 @@ uint16_t thresholdLow = THRESHOLD_LOW;
 
 volatile uint8_t i2s_flag = 0;
 int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
+static volatile uint8_t DMA_DONE_FLAG = 0;
+mxc_gpio_cfg_t qspi_int;
 
 /* **** Constants **** */
 typedef enum _mic_processing_state {
@@ -111,7 +124,7 @@ typedef enum _mic_processing_state {
 } mic_processing_state;
 
 /* Set of detected words */
-const char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
+char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
         "GO", "YES", "NO", "ON", "OFF", "ONE", "TWO", "THREE", "FOUR", "FIVE",
         "SIX", "SEVEN", "EIGHT", "NINE", "ZERO", "Unknown" };
 
@@ -132,9 +145,32 @@ uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
 void I2SInit();
 void HPF_init(void);
 int16_t HPF(int16_t input);
+static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen);
+static void send_result_to_me14(char *result, uint32_t len);
 
 
 /* **************************************************************************** */
+void DMA_CHANNEL_QSPI_IRQ_HAND(void)
+{
+    int ch = DMA_CHANNEL_QSPI;
+    if (MXC_DMA->intfl & (0x1 << ch)) {
+        if (MXC_DMA->ch[ch].status & (MXC_F_DMA_STATUS_TO_IF | MXC_F_DMA_STATUS_BUS_ERR)) {
+            PR_ERROR("dma error %d", MXC_DMA->ch[ch].status);
+        }
+
+        if (MXC_DMA->ch[ch].cnt) {
+            PR_ERROR("dma is not empty %d", MXC_DMA->ch[ch].cnt);
+        }
+
+        // Stop DMA
+        MXC_DMA->ch[ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
+
+        DMA_DONE_FLAG = 1;
+
+        // Clear flags
+        MXC_DMA->ch[ch].status |= (MXC_DMA->ch[ch].status & 0x5F);
+    }
+}
 
 int main(void)
 {
@@ -171,6 +207,13 @@ int main(void)
     MXC_GCR->pclkdiv |= MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1; // CNN clock: 100 MHz div 2
     MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN); // Enable CNN clock
 
+    qspi_int.port = MXC_GPIO0;
+    qspi_int.mask = MXC_GPIO_PIN_12;
+    qspi_int.pad = MXC_GPIO_PAD_NONE;
+    qspi_int.func = MXC_GPIO_FUNC_OUT;
+    GPIO_SET(qspi_int);
+    MXC_GPIO_Config(&qspi_int);
+
     /* Configure P2.5, turn on the CNN Boost */
     mxc_gpio_cfg_t gpio_cnn_boost;
     gpio_cnn_boost.port = MXC_GPIO2;
@@ -201,6 +244,33 @@ int main(void)
     printf("pPreambleCircBuffer: %d\n", sizeof(pPreambleCircBuffer));
     printf("pAI85Buffer: %d\n", sizeof(pAI85Buffer));
 
+    mxc_spi_pins_t qspi_pins;
+    qspi_pins.clock = TRUE;
+    qspi_pins.miso = TRUE;
+    qspi_pins.mosi = TRUE;
+    qspi_pins.sdio2 = TRUE;
+    qspi_pins.sdio3 = TRUE;
+    qspi_pins.ss0 = TRUE;
+    qspi_pins.ss1 = FALSE;
+    qspi_pins.ss2 = FALSE;
+
+    if (MXC_SPI_Init(QSPI, 0, 1, 0, 0, QSPI_SPEED, qspi_pins) != E_NO_ERROR) {
+        PR_ERROR("SPI INITIALIZATION ERROR");
+    }
+
+    // Set data size
+    MXC_SETFIELD(QSPI->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, 8 << MXC_F_SPI_CTRL2_NUMBITS_POS);
+
+    if (MXC_SPI_SetWidth(QSPI, SPI_WIDTH_QUAD) != E_NO_ERROR) {
+        PR_ERROR("SPI SET WIDTH ERROR");
+    }
+
+    if (MXC_DMA_Init() != E_NO_ERROR) {
+        PR_ERROR("DMA INIT ERROR");
+    }
+
+    NVIC_EnableIRQ(DMA_CHANNEL_QSPI_IRQ);
+
     /* load kernels */
     printf("\n*** CNN Kernel load ***\n");
     if (!cnn_load_kernel()) {
@@ -214,6 +284,7 @@ int main(void)
     I2SInit();
 
     printf("\n*** READY ***\n");
+
     /* Read samples */
     while (1) {
         /* Read from Mic driver to get CHUNK worth of samples, otherwise next sample*/
@@ -403,8 +474,12 @@ int main(void)
                 if (!ret)
                     printf("LOW CONFIDENCE!: ");
 
-                printf("Detected word: %s (%0.1f%%)", keywords[out_class],
+                printf("Detected word: %s (%0.1f%%)\n", keywords[out_class],
                         probability);
+
+                if (ret) {
+                    send_result_to_me14((char *)keywords[out_class], strlen(keywords[out_class]));
+                }
 
                 printf("\n----------------------------------------- \n");
 
@@ -700,3 +775,75 @@ int16_t HPF(int16_t input) {
 }
 
 /************************************************************************************/
+
+static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
+{
+    uint8_t ch = DMA_CHANNEL_QSPI;
+
+    // Setup SPI
+    // Number of characters to receive in RX FIFO
+    QSPI->ctrl1 &= ~(MXC_F_SPI_CTRL1_RX_NUM_CHAR);
+
+    // Number of characters to transmit from TX FIFO.
+    MXC_SETFIELD(QSPI->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, txLen << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS);
+
+    // TX FIFO Enabled, clear TX and RX FIFO
+    QSPI->dma = ((MXC_F_SPI_DMA_TX_FIFO_EN) |
+                 (MXC_F_SPI_DMA_TX_FLUSH) |
+                 (MXC_F_SPI_DMA_RX_FLUSH));
+
+
+    // Set SPI DMA TX and RX Thresholds
+    MXC_SETFIELD(QSPI->dma, MXC_F_SPI_DMA_TX_THD_VAL, 4 << MXC_F_SPI_DMA_TX_THD_VAL_POS);
+    MXC_SETFIELD(QSPI->dma, MXC_F_SPI_DMA_RX_THD_VAL, 0 << MXC_F_SPI_DMA_RX_THD_VAL_POS);
+
+    // Enable SPI
+    QSPI->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
+
+    // Setup DMA
+    DMA_DONE_FLAG = 0;
+    MXC_DMA->ch[ch].src = (unsigned int) txData;
+    MXC_DMA->ch[ch].dst = 0;
+    MXC_DMA->ch[ch].cnt = txLen;
+
+    // Clear DMA int flags
+    MXC_DMA->ch[ch].status |= (MXC_DMA->ch[ch].status & 0x5F);
+
+    // Enable SRC increment, set request, set source and destination width, enable channel, Count-To-Zero int enable
+    MXC_DMA->ch[ch].ctrl = ((MXC_F_DMA_CTRL_SRCINC) |
+                            (MXC_S_DMA_CTRL_REQUEST_SPI0TX) |
+                            (MXC_V_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_SRCWD_POS) |
+                            (MXC_V_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_DSTWD_POS) |
+                            (MXC_F_DMA_CTRL_EN) |
+                            (MXC_F_DMA_CTRL_CTZ_IE));
+
+    // Enable DMA int
+    MXC_DMA->inten |= (1 << ch);
+
+    // Enable SPI
+    QSPI->dma |= (MXC_F_SPI_DMA_DMA_TX_EN | MXC_F_SPI_DMA_DMA_RX_EN);
+}
+
+static void send_result_to_me14(char *result, uint32_t len)
+{
+    qspi_header_t header;
+    header.start_symbol = QSPI_START_SYMBOL;
+    header.data_len = len;
+    header.data_type = QSPI_TYPE_RESPONSE_AUDIO_RESULT;
+
+    PR_INFO("result tx start");
+
+    QSPI_SlaveTransDMA((uint8_t*) &header, sizeof(qspi_header_t));
+
+    // Send interrupt to master
+    GPIO_CLR(qspi_int);
+    GPIO_SET(qspi_int);
+
+    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
+
+    QSPI_SlaveTransDMA((uint8_t *)result, len);
+
+//    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
+
+    PR_INFO("result tx completed");
+}

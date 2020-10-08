@@ -56,5 +56,6 @@ extern const FontDef Font_16x26;
 //-----------------------------------------------------------------------------
 void fonts_putString(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char *str, FontDef font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff);
 void fonts_putSubtitle(uint16_t w, uint16_t h, const char *str, FontDef font, uint16_t color, uint8_t *buff);
+void fonts_putToptitle(uint16_t w, uint16_t h, const char *str, FontDef font, uint16_t color, uint8_t *buff);
 
 #endif /* _FONT_H_ */
