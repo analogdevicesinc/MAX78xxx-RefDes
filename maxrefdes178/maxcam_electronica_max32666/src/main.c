@@ -116,6 +116,7 @@ int main(void)
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, image_data_rsz_maxim_logo);
     lcd_writeStringWithBG(60, 210, version, Font_16x26, RED, WHITE);
 
+    int audio_result_print_cnt = 0;
     while (1) {
         qspi_return = qspi_worker();
         if (qspi_return > QSPI_TYPE_NO_DATA) {
@@ -124,6 +125,10 @@ int main(void)
                 case QSPI_TYPE_RESPONSE_VIDEO_DATA:
                     if (strcmp(video_result_string, "nothing")) {
                         fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, video_result_string, Font_16x26, resultColor, qspi_image_buff);
+                    }
+                    if (audio_result_print_cnt) {
+                        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, audio_result_string, Font_16x26, BLACK, qspi_image_buff);
+                        audio_result_print_cnt--;
                     }
                     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, qspi_image_buff);
                     break;
@@ -137,7 +142,7 @@ int main(void)
                     }
                     break;
                 case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
-                    lcd_writeStringWithBG(10, 10, audio_result_string, Font_16x26, BLACK, GREEN);
+                    audio_result_print_cnt = 10;
                     break;
                 default:
                     break;
