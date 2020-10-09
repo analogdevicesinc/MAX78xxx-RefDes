@@ -7,7 +7,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.maximintegrated.maxcamandroid.exts.getMaxCamScenarioFile
+import com.maximintegrated.maxcamandroid.utils.getMaxCamConfigFolder
+import com.maximintegrated.maxcamandroid.utils.getMaxCamScenarioFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -114,7 +115,7 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
     private suspend fun internalGetConfigFiles(): List<Pair<File, String>> {
         return withContext(Dispatchers.IO) {
             val list: ArrayList<Pair<File, String>> = arrayListOf()
-            val directory = File(Environment.getExternalStorageDirectory(), CONFIG_FOLDER_NAME)
+            val directory = getMaxCamConfigFolder()
             if (!directory.exists()) {
                 directory.mkdirs()
             }

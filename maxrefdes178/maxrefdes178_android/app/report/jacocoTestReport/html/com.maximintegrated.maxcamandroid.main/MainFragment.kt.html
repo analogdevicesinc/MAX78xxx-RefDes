@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainFragment.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.maximintegrated.maxcamandroid.main</a> &gt; <span class="el_source">MainFragment.kt</span></div><h1>MainFragment.kt</h1><pre class="source lang-java linenums">package com.maximintegrated.maxcamandroid.main
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
+import com.maximintegrated.communication.MaxCamViewModel
+import com.maximintegrated.maxcamandroid.MainActivity
+import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.diagnostics.DiagnosticsFragment
+import com.maximintegrated.maxcamandroid.exts.addFragment
+import com.maximintegrated.maxcamandroid.faceId.FaceIdScenariosFragment
+import com.maximintegrated.maxcamandroid.fileOperations.FileOperationsFragment
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_main.*
+import timber.log.Timber
+
+<span class="fc" id="L22">class MainFragment : Fragment(), LandingPage {</span>
+
+    private lateinit var maxCamViewModel: MaxCamViewModel
+
+    companion object {
+        fun newInstance(): MainFragment {
+<span class="fc" id="L28">            return MainFragment()</span>
+        }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+<span class="fc" id="L37">        return inflater.inflate(R.layout.fragment_main, container, false)</span>
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+<span class="fc" id="L41">        super.onViewCreated(view, savedInstanceState)</span>
+<span class="pc bpc" id="L42" title="1 of 6 branches missed.">        (requireActivity() as? MainActivity)?.mainFab?.isVisible = true</span>
+<span class="fc" id="L43">        maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)</span>
+
+<span class="fc" id="L45">        fileOperationsButton.setOnClickListener {</span>
+<span class="fc" id="L46">            requireActivity().addFragment(FileOperationsFragment.newInstance())</span>
+<span class="fc" id="L47">        }</span>
+
+<span class="fc" id="L49">        diagnosticsButton.setOnClickListener {</span>
+<span class="fc" id="L50">            requireActivity().addFragment(DiagnosticsFragment.newInstance())</span>
+<span class="fc" id="L51">        }</span>
+
+<span class="fc" id="L53">        faceIdButton.setOnClickListener {</span>
+<span class="fc" id="L54">            requireActivity().addFragment(FaceIdScenariosFragment.newInstance())</span>
+<span class="fc" id="L55">        }</span>
+<span class="fc" id="L56">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.maximintegrated.maxcamandroid.MainViewModel
 import com.maximintegrated.maxcamandroid.MainViewModelFactory
+import com.maximintegrated.maxcamandroid.MaxCamApplication
 import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
@@ -45,7 +46,7 @@ class FaceIdUpdateDeviceFragment : Fragment() {
                 requireActivity(),
                 MainViewModelFactory(
                     requireActivity().application,
-                    MaxCamNativeLibrary.getInstance()
+                    (requireActivity().application as MaxCamApplication).maxCamNativeLibrary
                 )
             ).get(MainViewModel::class.java)
         initializeViews()

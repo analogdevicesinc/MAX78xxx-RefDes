@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainViewModel.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.maximintegrated.maxcamandroid</a> &gt; <span class="el_source">MainViewModel.kt</span></div><h1>MainViewModel.kt</h1><pre class="source lang-java linenums">package com.maximintegrated.maxcamandroid
+
+import android.app.Application
+import android.graphics.Bitmap
+import android.net.Uri
+import android.provider.MediaStore
+import android.provider.OpenableColumns
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.*
+import com.maximintegrated.maxcamandroid.utils.concatenate
+import com.maximintegrated.maxcamandroid.utils.toHexToString
+import com.maximintegrated.maxcamandroid.utils.toInt
+import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
+import com.maximintegrated.maxcamandroid.view.CustomTreeItem
+import com.maximintegrated.maxcamandroid.view.TreeNodeType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+
+<span class="fc" id="L24">class MainViewModel(</span>
+    private val app: Application,
+    private val maxCamNativeLibrary: IMaxCamNativeLibrary
+<span class="fc" id="L27">) : AndroidViewModel(app) {</span>
+
+    private var numberOfBytesSent = 0
+
+<span class="fc" id="L31">    var payload: ByteArray? = null</span>
+        private set
+
+<span class="fc" id="L34">    private val _selectedFileName = MutableLiveData&lt;String&gt;()</span>
+<span class="fc" id="L35">    val selectedFileName: LiveData&lt;String&gt; = _selectedFileName</span>
+
+    private var selectedFile: File? = null
+
+<span class="fc" id="L39">    private val _fileSendOperation = MutableLiveData&lt;OperationState&gt;(OperationState.NONE)</span>
+<span class="fc" id="L40">    val fileSendOperation: LiveData&lt;OperationState&gt; = _fileSendOperation</span>
+
+<span class="fc" id="L42">    private val _fileGetOperation = MutableLiveData&lt;OperationState&gt;(OperationState.NONE)</span>
+<span class="fc" id="L43">    val fileGetOperation: LiveData&lt;OperationState&gt; = _fileGetOperation</span>
+
+<span class="fc" id="L45">    private val _treeItemList = MutableLiveData&lt;ArrayList&lt;CustomTreeItem&gt;&gt;()</span>
+<span class="fc" id="L46">    val treeItemList: LiveData&lt;ArrayList&lt;CustomTreeItem&gt;&gt; = _treeItemList</span>
+
+<span class="fc" id="L48">    private val _selectedTreeItem = MutableLiveData&lt;CustomTreeItem?&gt;(null)</span>
+<span class="fc" id="L49">    val selectedTreeItem: LiveData&lt;CustomTreeItem?&gt; = _selectedTreeItem</span>
+
+<span class="fc" id="L51">    var latestReceivedTreeItem: CustomTreeItem? = null</span>
+        private set
+
+    private var fileWriter: FileWriter? = null
+
+<span class="fc" id="L56">    private var lastOperation = Operations.NONE</span>
+
+    private var lsFileSize = 0
+
+<span class="fc" id="L60">    private val _demoBitmap = MutableLiveData&lt;Bitmap?&gt;()</span>
+<span class="pc" id="L61">    val demoBitmap: LiveData&lt;Bitmap?&gt; = _demoBitmap</span>
+
+    fun onBleDataReceived(data: ByteArray) {
+<span class="fc" id="L64">        maxCamNativeLibrary.bleDataReceived(data)</span>
+<span class="fc" id="L65">    }</span>
+
+    fun onMtuSizeChanged(mtu: Int) {
+<span class="fc" id="L68">        maxCamNativeLibrary.setMtu(mtu)</span>
+<span class="fc" id="L69">    }</span>
+
+    fun onFileSelected(uri: Uri?) {
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        Timber.d(&quot;selected file uri: ${uri?.toString()}&quot;)</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        uri?.let {</span>
+<span class="fc" id="L74">            app.contentResolver.query(it, null, null, null, null)</span>
+<span class="pc bfc" id="L75" title="All 2 branches covered.">        }?.use { cursor -&gt;</span>
+<span class="fc" id="L76">            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)</span>
+<span class="fc" id="L77">            cursor.moveToFirst()</span>
+<span class="fc" id="L78">            _selectedFileName.value = cursor.getString(nameIndex)</span>
+<span class="fc" id="L79">            println(&quot;Selected File Name: ${_selectedFileName.value}&quot;)</span>
+<span class="fc" id="L80">            viewModelScope.launch {</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                selectedFile = getFileFromUri(uri)</span>
+<span class="fc" id="L82">            }</span>
+        }
+<span class="fc" id="L84">    }</span>
+
+    private suspend fun getFileFromUri(uri: Uri): File? {
+<span class="fc" id="L87">        return withContext(Dispatchers.IO) {</span>
+<span class="fc" id="L88">            val outputDir = app.cacheDir</span>
+<span class="fc" id="L89">            val outputFile = File.createTempFile(&quot;fileToBeSent&quot;, &quot;bin&quot;, outputDir)</span>
+<span class="fc" id="L90">            val fos = FileOutputStream(outputFile)</span>
+<span class="fc" id="L91">            val inputStream = app.contentResolver.openInputStream(uri)</span>
+<span class="fc" id="L92">            val buffer = ByteArray(1024)</span>
+<span class="pc bpc" id="L93" title="2 of 4 branches missed.">            var len = inputStream?.read(buffer) ?: -1</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            while (len != -1) {</span>
+<span class="fc" id="L95">                fos.write(buffer, 0, len)</span>
+<span class="pc bpc" id="L96" title="2 of 4 branches missed.">                len = inputStream?.read(buffer) ?: -1</span>
+            }
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">            inputStream?.close()</span>
+<span class="fc" id="L99">            fos.close()</span>
+<span class="fc" id="L100">            outputFile</span>
+        }
+    }
+
+    @VisibleForTesting
+    fun onFileSelected(file: File?) {
+<span class="fc" id="L106">        selectedFile = file</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        _selectedFileName.value = file?.name</span>
+<span class="fc" id="L108">    }</span>
+
+    fun onFileSendButtonClicked() {
+<span class="pc bpc" id="L111" title="1 of 4 branches missed.">        if (selectedFile != null &amp;&amp; selectedFileName.value != null) {</span>
+<span class="fc" id="L112">            numberOfBytesSent = 0</span>
+<span class="fc" id="L113">            _fileSendOperation.value = OperationState.PROGRESS</span>
+<span class="fc" id="L114">            val data = selectedFile!!.readBytes()</span>
+<span class="fc" id="L115">            lastOperation = Operations.SEND_FILE</span>
+<span class="fc" id="L116">            maxCamNativeLibrary.sendFile(selectedFileName.value, data)</span>
+        }
+<span class="fc" id="L118">    }</span>
+
+    fun onFileSendProgress(byteSent: Int) {
+<span class="fc" id="L121">        numberOfBytesSent += byteSent</span>
+<span class="fc bfc" id="L122" title="All 4 branches covered.">        if (selectedFile != null &amp;&amp; selectedFile!!.length() &lt;= numberOfBytesSent) {</span>
+<span class="fc" id="L123">            _fileSendOperation.value = OperationState.SUCCESS</span>
+        }
+<span class="fc" id="L125">    }</span>
+
+    fun onFileSendCompleted(state: OperationState) {
+<span class="fc" id="L128">        _fileSendOperation.value = state</span>
+<span class="fc" id="L129">    }</span>
+
+    fun onGetContentButtonClicked() {
+<span class="fc" id="L132">        resetPayload()</span>
+<span class="fc" id="L133">        lastOperation = Operations.GET_DIRECTORY</span>
+<span class="fc" id="L134">        maxCamNativeLibrary.getDirectoryRequest()</span>
+<span class="fc" id="L135">    }</span>
+
+    @ExperimentalUnsignedTypes
+    fun onPayloadReceived(data: ByteArray) {
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        payload = if (payload != null) {</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">            payload?.concatenate(data)</span>
+        } else {
+<span class="fc" id="L142">            data</span>
+        }
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (lastOperation == Operations.GET_DIRECTORY) {</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            lsFileSize = payload?.toInt() ?: 0</span>
+<span class="fc" id="L146">            getLsFile()</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        } else if (lastOperation == Operations.GET_LS) {</span>
+<span class="pc bpc" id="L148" title="1 of 4 branches missed.">            if (payload?.size == lsFileSize) {</span>
+<span class="fc" id="L149">                val str = payload!!.toHexToString()</span>
+<span class="fc" id="L150">                updateTreeItemList(str)</span>
+            }
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        } else if (lastOperation == Operations.GET_FILE) {</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">            fileWriter?.write(data)</span>
+<span class="pc bpc" id="L154" title="3 of 6 branches missed.">            if (payload?.size == _selectedTreeItem.value?.size) {</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">                fileWriter?.close()</span>
+<span class="fc" id="L156">                fileWriter = null</span>
+<span class="fc" id="L157">                _fileGetOperation.value = OperationState.SUCCESS</span>
+            }
+        }
+<span class="fc" id="L160">    }</span>
+
+    private fun resetPayload() {
+<span class="fc" id="L163">        payload = null</span>
+<span class="fc" id="L164">    }</span>
+
+    private fun getLsFile() {
+<span class="fc" id="L167">        _selectedTreeItem.value = null</span>
+<span class="fc" id="L168">        latestReceivedTreeItem = null</span>
+<span class="fc" id="L169">        resetPayload()</span>
+<span class="fc" id="L170">        lastOperation = Operations.GET_LS</span>
+<span class="fc" id="L171">        maxCamNativeLibrary.getFile(&quot;lsFile.set&quot;)</span>
+<span class="fc" id="L172">    }</span>
+
+    fun onGetFileButtonClicked() {
+<span class="fc" id="L175">        resetPayload()</span>
+<span class="fc" id="L176">        lastOperation = Operations.GET_FILE</span>
+<span class="fc" id="L177">        latestReceivedTreeItem = _selectedTreeItem.value</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (latestReceivedTreeItem != null) {</span>
+<span class="fc" id="L179">            val fileName = latestReceivedTreeItem!!.text</span>
+<span class="fc" id="L180">            val size = latestReceivedTreeItem!!.size</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">            fileWriter?.close()</span>
+<span class="fc" id="L182">            fileWriter = FileWriter.open(fileName)</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">            if (size == 0) {</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">                fileWriter?.close()</span>
+<span class="fc" id="L185">                fileWriter = null</span>
+            } else {
+<span class="fc" id="L187">                maxCamNativeLibrary.getFile(fileName)</span>
+<span class="fc" id="L188">                _fileGetOperation.value = OperationState.PROGRESS</span>
+<span class="fc" id="L189">            }</span>
+        } else {
+<span class="fc" id="L191">            _fileGetOperation.value = OperationState.NONE</span>
+        }
+<span class="fc" id="L193">    }</span>
+
+    fun onGetFileCompleted() {
+<span class="fc" id="L196">        _fileGetOperation.value = OperationState.NONE</span>
+<span class="fc" id="L197">    }</span>
+
+    private fun updateTreeItemList(str: String) {
+<span class="fc" id="L200">        Timber.d(&quot;updateTreeItemList: $str&quot;)</span>
+<span class="fc" id="L201">        val fileAndSizes = str.split(&quot;\n&quot;)</span>
+<span class="fc" id="L202">        val deviceFiles: ArrayList&lt;CustomTreeItem&gt; = arrayListOf()</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        for (fileAndSize in fileAndSizes) {</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">            if (fileAndSize.startsWith(&quot;System Volume Information&quot;)) continue</span>
+<span class="fc" id="L205">            val dotIndex = fileAndSize.lastIndexOf('.')</span>
+<span class="fc" id="L206">            val spaceIndex = fileAndSize.lastIndexOf(' ')</span>
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">            if (spaceIndex == -1) continue</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">            val fileNameWithExtension = fileAndSize.substring(0, spaceIndex)</span>
+<span class="pc bpc" id="L209" title="2 of 4 branches missed.">            val fileSize = fileAndSize.substring(spaceIndex + 1).toIntOrNull() ?: 0</span>
+<span class="fc" id="L210">            var extension = &quot;&quot;</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">            if (dotIndex != -1) {</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">                extension = fileNameWithExtension.substring(dotIndex + 1)</span>
+            }
+<span class="pc bpc" id="L214" title="1 of 5 branches missed.">            val fileType = when (extension.toLowerCase()) {</span>
+<span class="fc" id="L215">                &quot;txt&quot; -&gt; TreeNodeType.FILE_TEXT</span>
+<span class="fc" id="L216">                &quot;jpg&quot;, &quot;jpeg&quot;, &quot;png&quot; -&gt; TreeNodeType.FILE_IMAGE</span>
+<span class="fc" id="L217">                else -&gt; TreeNodeType.UNKOWN_TYPE</span>
+            }
+<span class="fc" id="L219">            val item = CustomTreeItem(fileType, fileNameWithExtension, fileSize)</span>
+<span class="fc" id="L220">            deviceFiles.add(item)</span>
+        }
+<span class="fc" id="L222">        _treeItemList.value = deviceFiles</span>
+<span class="fc" id="L223">    }</span>
+
+    fun onTreeItemSelected(item: CustomTreeItem) {
+<span class="fc" id="L226">        _selectedTreeItem.value = item</span>
+<span class="fc" id="L227">    }</span>
+
+    fun onTreeItemDeselected() {
+<span class="fc" id="L230">        _selectedTreeItem.value = null</span>
+<span class="fc" id="L231">    }</span>
+
+    fun onLoadImageButtonClicked() {
+<span class="pc bpc" id="L234" title="2 of 4 branches missed.">        _selectedTreeItem.value?.text?.let {</span>
+<span class="fc" id="L235">            lastOperation = Operations.LOAD_IMAGE</span>
+<span class="fc" id="L236">            maxCamNativeLibrary.loadImage(it)</span>
+<span class="fc" id="L237">        }</span>
+<span class="fc" id="L238">    }</span>
+
+    fun onEnterDemoButtonClicked() {
+<span class="fc" id="L241">        lastOperation = Operations.ENTER_DEMO</span>
+<span class="fc" id="L242">        maxCamNativeLibrary.enterDemo()</span>
+<span class="fc" id="L243">    }</span>
+
+    fun onCaptureImageButtonClicked() {
+<span class="fc" id="L246">        lastOperation = Operations.CAPTURE_IMAGE</span>
+<span class="fc" id="L247">        maxCamNativeLibrary.captureImage(0)</span>
+<span class="fc" id="L248">    }</span>
+
+    fun onImageSelected(uri: Uri) {
+<span class="fc" id="L251">        try {</span>
+            //val source = ImageDecoder.createSource(app.contentResolver, uri)
+            //val bitmap = ImageDecoder.decodeBitmap(source)
+<span class="fc" id="L254">            val bitmap = MediaStore.Images.Media.getBitmap(app.contentResolver, uri)</span>
+            //bitmap.config = Bitmap.Config.ARGB_8888
+<span class="fc" id="L256">            val stream = ByteArrayOutputStream()</span>
+<span class="fc" id="L257">            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)</span>
+<span class="fc" id="L258">            val bytes = stream.toByteArray()</span>
+<span class="fc" id="L259">            val timestamp = System.currentTimeMillis()</span>
+<span class="fc" id="L260">            lastOperation = Operations.SEND_IMAGE</span>
+<span class="fc" id="L261">            maxCamNativeLibrary.sendImage(&quot;Android_$timestamp.img&quot;, bytes)</span>
+<span class="nc" id="L262">        } catch (e: Exception) {</span>
+<span class="nc" id="L263">            e.printStackTrace()</span>
+        }
+<span class="fc" id="L265">    }</span>
+
+    fun onUpdateDeviceButtonClicked() {
+
+<span class="fc" id="L269">    }</span>
+
+    fun onRunDemoButtonClicked() {
+
+<span class="fc" id="L273">    }</span>
+
+    fun onDemoImageSelected(uri: Uri?) {
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        if (uri == null) {</span>
+<span class="nc" id="L277">            _demoBitmap.value = null</span>
+        } else {
+<span class="nc" id="L279">            try {</span>
+<span class="nc" id="L280">                val bitmap = MediaStore.Images.Media.getBitmap(app.contentResolver, uri)</span>
+<span class="nc" id="L281">                _demoBitmap.value = bitmap</span>
+<span class="nc" id="L282">            } catch (e: Exception) {</span>
+<span class="nc" id="L283">                e.printStackTrace()</span>
+            }
+        }
+<span class="nc" id="L286">    }</span>
+}
+
+@Suppress(&quot;UNCHECKED_CAST&quot;)
+<span class="fc" id="L290">class MainViewModelFactory(</span>
+    private val mApplication: Application,
+    private val library: IMaxCamNativeLibrary
+) :
+    ViewModelProvider.Factory {
+
+    override fun &lt;T : ViewModel&gt; create(modelClass: Class&lt;T&gt;): T {
+<span class="fc" id="L297">        return MainViewModel(mApplication, library) as T</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

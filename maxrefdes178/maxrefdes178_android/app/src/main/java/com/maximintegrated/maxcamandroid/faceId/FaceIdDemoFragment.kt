@@ -14,11 +14,11 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.observe
 import com.maximintegrated.maxcamandroid.MainViewModel
 import com.maximintegrated.maxcamandroid.MainViewModelFactory
+import com.maximintegrated.maxcamandroid.MaxCamApplication
 import com.maximintegrated.maxcamandroid.R
-import com.maximintegrated.maxcamandroid.exts.ROOT_FRAGMENT
+import com.maximintegrated.maxcamandroid.utils.ROOT_FRAGMENT
 import com.maximintegrated.maxcamandroid.exts.replaceFragment
 import com.maximintegrated.maxcamandroid.main.MainFragment
-import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.view.CustomTreeItem
 import com.maximintegrated.maxcamandroid.view.TreeNodeType
 import com.maximintegrated.maxcamandroid.view.TreeViewHolder
@@ -59,7 +59,7 @@ class FaceIdDemoFragment : Fragment() {
                 requireActivity(),
                 MainViewModelFactory(
                     requireActivity().application,
-                    MaxCamNativeLibrary.getInstance()
+                    (requireActivity().application as MaxCamApplication).maxCamNativeLibrary
                 )
             ).get(MainViewModel::class.java)
 

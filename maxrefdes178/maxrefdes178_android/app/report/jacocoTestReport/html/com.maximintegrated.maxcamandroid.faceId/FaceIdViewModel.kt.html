@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FaceIdViewModel.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.maximintegrated.maxcamandroid.faceId</a> &gt; <span class="el_source">FaceIdViewModel.kt</span></div><h1>FaceIdViewModel.kt</h1><pre class="source lang-java linenums">package com.maximintegrated.maxcamandroid.faceId
+
+import android.app.Application
+import android.os.Environment
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
+import com.maximintegrated.maxcamandroid.utils.getMaxCamConfigFolder
+import com.maximintegrated.maxcamandroid.utils.getMaxCamScenarioFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+
+<span class="fc" id="L17">class FaceIdViewModel(app: Application) : AndroidViewModel(app) {</span>
+
+    companion object {
+        const val SCENARIO_FOLDER_NAME = &quot;/MAXCAM/Scenarios&quot;
+        const val CONFIG_FOLDER_NAME = &quot;/MAXCAM/Configs&quot;
+    }
+
+<span class="fc" id="L24">    private val _scenarios = MutableLiveData&lt;List&lt;Scenario&gt;&gt;(emptyList())</span>
+    val scenarios: LiveData&lt;List&lt;Scenario&gt;&gt;
+<span class="fc" id="L26">        get() = _scenarios</span>
+
+<span class="pc" id="L28">    var selectedScenario: Scenario? = null</span>
+
+<span class="fc" id="L30">    private val gson = Gson()</span>
+
+<span class="fc" id="L32">    private val _configFiles = MutableLiveData&lt;List&lt;Pair&lt;File, String&gt;&gt;&gt;(emptyList())</span>
+    val configFiles: LiveData&lt;List&lt;Pair&lt;File, String&gt;&gt;&gt;
+<span class="nc" id="L34">        get() = _configFiles</span>
+
+    fun getScenarioList() {
+<span class="fc" id="L37">        viewModelScope.launch {</span>
+<span class="fc" id="L38">            _scenarios.value = internalGetScenarioList()</span>
+<span class="fc" id="L39">        }</span>
+<span class="fc" id="L40">    }</span>
+
+<span class="fc" id="L42">    var editScenario = false</span>
+        private set
+
+    private suspend fun internalGetScenarioList(): List&lt;Scenario&gt; {
+<span class="fc" id="L46">        return withContext(Dispatchers.IO) {</span>
+<span class="fc" id="L47">            val list: ArrayList&lt;Scenario&gt; = arrayListOf()</span>
+<span class="fc" id="L48">            val directory = File(Environment.getExternalStorageDirectory(), SCENARIO_FOLDER_NAME)</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (!directory.exists()) {</span>
+<span class="fc" id="L50">                directory.mkdirs()</span>
+            }
+<span class="pc bpc" id="L52" title="2 of 4 branches missed.">            val files = directory.listFiles()?.toList() ?: emptyList()</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            for (file in files) {</span>
+<span class="fc" id="L54">                val json = file.readText()</span>
+<span class="fc" id="L55">                val scenario = gson.fromJson&lt;Scenario&gt;(json, Scenario::class.java)</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">                if (scenario != null) {</span>
+<span class="fc" id="L57">                    scenario.name = file.nameWithoutExtension</span>
+<span class="fc" id="L58">                    list.add(scenario)</span>
+                }
+            }
+<span class="fc" id="L61">            list</span>
+        }
+    }
+
+    fun addNewScenario(scenarioName: String) {
+<span class="fc" id="L66">        val scenario = Scenario(scenarioName)</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        val list = _scenarios.value?.toMutableList()</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        list?.add(scenario)</span>
+<span class="fc" id="L69">        _scenarios.value = list</span>
+<span class="fc" id="L70">        onScenarioSelected(scenario)</span>
+<span class="fc" id="L71">        saveScenario()</span>
+<span class="fc" id="L72">    }</span>
+
+    fun saveScenario() {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        selectedScenario?.let {</span>
+<span class="fc" id="L76">            viewModelScope.launch {</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">                internalSaveScenario(it)</span>
+<span class="fc" id="L78">            }</span>
+        }
+<span class="fc" id="L80">    }</span>
+
+
+    private suspend fun internalSaveScenario(scenario: Scenario) {
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        withContext(Dispatchers.IO) {</span>
+<span class="fc" id="L85">            val json = gson.toJson(scenario)</span>
+<span class="fc" id="L86">            val file = getMaxCamScenarioFile(scenario.name + &quot;.json&quot;)</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">            file.parentFile?.mkdirs()</span>
+<span class="fc" id="L88">            file.writeText(json)</span>
+<span class="fc" id="L89">        }</span>
+<span class="nc" id="L90">    }</span>
+
+    fun onScenarioSelected(scenario: Scenario) {
+<span class="fc" id="L93">        selectedScenario = scenario</span>
+<span class="fc" id="L94">        editScenario = false</span>
+<span class="fc" id="L95">    }</span>
+
+    fun onScenarioSelectedWithEditOption(scenario: Scenario) {
+<span class="fc" id="L98">        selectedScenario = scenario</span>
+<span class="fc" id="L99">        editScenario = true</span>
+<span class="fc" id="L100">    }</span>
+
+    fun onScenarioDeleted(scenario: Scenario) {
+<span class="fc" id="L103">        getMaxCamScenarioFile(scenario.name + &quot;.json&quot;).delete()</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        val list = (_scenarios.value ?: emptyList()).toMutableList()</span>
+<span class="fc" id="L105">        list.remove(scenario)</span>
+<span class="fc" id="L106">        _scenarios.value = list</span>
+<span class="fc" id="L107">    }</span>
+
+    fun getConfigFiles() {
+<span class="nc" id="L110">        viewModelScope.launch {</span>
+<span class="nc" id="L111">            _configFiles.value = internalGetConfigFiles()</span>
+<span class="nc" id="L112">        }</span>
+<span class="nc" id="L113">    }</span>
+
+    private suspend fun internalGetConfigFiles(): List&lt;Pair&lt;File, String&gt;&gt; {
+<span class="nc" id="L116">        return withContext(Dispatchers.IO) {</span>
+<span class="nc" id="L117">            val list: ArrayList&lt;Pair&lt;File, String&gt;&gt; = arrayListOf()</span>
+<span class="nc" id="L118">            val directory = getMaxCamConfigFolder()</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            if (!directory.exists()) {</span>
+<span class="nc" id="L120">                directory.mkdirs()</span>
+            }
+<span class="nc bnc" id="L122" title="All 4 branches missed.">            val files = directory.listFiles()?.toList() ?: emptyList()</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            for (file in files) {</span>
+<span class="nc" id="L124">                val text = file.readText()</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                if (text != &quot;&quot;) {</span>
+<span class="nc" id="L126">                    list.add(Pair(file, text))</span>
+                }
+            }
+<span class="nc" id="L129">            list</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

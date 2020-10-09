@@ -1,12 +1,10 @@
-package com.maximintegrated.maxcamandroid.exts
+package com.maximintegrated.maxcamandroid.utils
 
 import android.os.Environment
 import com.maximintegrated.maxcamandroid.FileWriter
 import com.maximintegrated.maxcamandroid.faceId.FaceIdViewModel
-import timber.log.Timber
 import java.io.File
 import java.util.concurrent.Executors
-import kotlin.experimental.and
 
 const val ROOT_FRAGMENT = "ROOT_FRAGMENT"
 
@@ -65,16 +63,6 @@ fun String.fromHexStringToMeaningfulAscii(): String {
     return sb.toString()
 }
 
-fun ByteArray.toSpecialFormat(): String {
-    val sb = StringBuilder()
-    val hexString = toHexString()
-    val ascii = hexString.fromHexStringToString()
-    for (i in ascii.indices) {
-        sb.append("${ascii[i]}(${hexString.substring(2 * i, 2 * i + 2)}) ")
-    }
-    return sb.toString()
-}
-
 private val IO_EXECUTOR = Executors.newSingleThreadExecutor()
 
 /**
@@ -98,9 +86,6 @@ fun getMaxCamScenarioFile(fileName: String): File {
     )
 }
 
-fun getMaxCamConfigFile(fileName: String): File {
-    return File(
-        Environment.getExternalStorageDirectory().toString() + FaceIdViewModel.CONFIG_FOLDER_NAME,
-        fileName
-    )
+fun getMaxCamConfigFolder(): File {
+    return File(Environment.getExternalStorageDirectory(), FaceIdViewModel.CONFIG_FOLDER_NAME)
 }

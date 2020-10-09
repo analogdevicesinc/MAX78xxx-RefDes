@@ -158,14 +158,14 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_setMtu(
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getMaxMtu(JNIEnv *env,
-                                                                                   jclass clazz) {
+                                                                                   jobject thiz) {
     return MAXCAM_BLE_MAX_MTU_SIZE;
 }
 
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getVersion(JNIEnv *env,
-                                                                                    jclass clazz) {
+                                                                                    jobject thiz) {
     char version[64];
     Packet_GetVersion(version);
     return env->NewStringUTF(version);

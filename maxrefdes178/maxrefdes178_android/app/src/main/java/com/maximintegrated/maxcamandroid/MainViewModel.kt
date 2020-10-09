@@ -2,14 +2,15 @@ package com.maximintegrated.maxcamandroid
 
 import android.app.Application
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
+import android.provider.MediaStore
 import android.provider.OpenableColumns
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.*
-import com.maximintegrated.maxcamandroid.exts.concatenate
-import com.maximintegrated.maxcamandroid.exts.toHexToString
-import com.maximintegrated.maxcamandroid.exts.toInt
-import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
+import com.maximintegrated.maxcamandroid.utils.concatenate
+import com.maximintegrated.maxcamandroid.utils.toHexToString
+import com.maximintegrated.maxcamandroid.utils.toInt
+import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.view.CustomTreeItem
 import com.maximintegrated.maxcamandroid.view.TreeNodeType
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,7 @@ import java.io.FileOutputStream
 
 class MainViewModel(
     private val app: Application,
-    private val maxCamNativeLibrary: MaxCamNativeLibrary
+    private val maxCamNativeLibrary: IMaxCamNativeLibrary
 ) : AndroidViewModel(app) {
 
     private var numberOfBytesSent = 0
@@ -31,26 +32,21 @@ class MainViewModel(
         private set
 
     private val _selectedFileName = MutableLiveData<String>()
-    val selectedFileName: LiveData<String>
-        get() = _selectedFileName
+    val selectedFileName: LiveData<String> = _selectedFileName
 
     private var selectedFile: File? = null
 
     private val _fileSendOperation = MutableLiveData<OperationState>(OperationState.NONE)
-    val fileSendOperation: LiveData<OperationState>
-        get() = _fileSendOperation
+    val fileSendOperation: LiveData<OperationState> = _fileSendOperation
 
     private val _fileGetOperation = MutableLiveData<OperationState>(OperationState.NONE)
-    val fileGetOperation: LiveData<OperationState>
-        get() = _fileGetOperation
+    val fileGetOperation: LiveData<OperationState> = _fileGetOperation
 
     private val _treeItemList = MutableLiveData<ArrayList<CustomTreeItem>>()
-    val treeItemList: LiveData<ArrayList<CustomTreeItem>>
-        get() = _treeItemList
+    val treeItemList: LiveData<ArrayList<CustomTreeItem>> = _treeItemList
 
     private val _selectedTreeItem = MutableLiveData<CustomTreeItem?>(null)
-    val selectedTreeItem: LiveData<CustomTreeItem?>
-        get() = _selectedTreeItem
+    val selectedTreeItem: LiveData<CustomTreeItem?> = _selectedTreeItem
 
     var latestReceivedTreeItem: CustomTreeItem? = null
         private set
@@ -62,8 +58,7 @@ class MainViewModel(
     private var lsFileSize = 0
 
     private val _demoBitmap = MutableLiveData<Bitmap?>()
-    val demoBitmap: LiveData<Bitmap?>
-        get() = _demoBitmap
+    val demoBitmap: LiveData<Bitmap?> = _demoBitmap
 
     fun onBleDataReceived(data: ByteArray) {
         maxCamNativeLibrary.bleDataReceived(data)
@@ -74,13 +69,14 @@ class MainViewModel(
     }
 
     fun onFileSelected(uri: Uri?) {
+        Timber.d("selected file uri: ${uri?.toString()}")
         uri?.let {
             app.contentResolver.query(it, null, null, null, null)
         }?.use { cursor ->
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             cursor.moveToFirst()
             _selectedFileName.value = cursor.getString(nameIndex)
-            Timber.d("Selected File Name: ${_selectedFileName.value}")
+            println("Selected File Name: ${_selectedFileName.value}")
             viewModelScope.launch {
                 selectedFile = getFileFromUri(uri)
             }
@@ -103,6 +99,12 @@ class MainViewModel(
             fos.close()
             outputFile
         }
+    }
+
+    @VisibleForTesting
+    fun onFileSelected(file: File?) {
+        selectedFile = file
+        _selectedFileName.value = file?.name
     }
 
     fun onFileSendButtonClicked() {
@@ -176,9 +178,7 @@ class MainViewModel(
         if (latestReceivedTreeItem != null) {
             val fileName = latestReceivedTreeItem!!.text
             val size = latestReceivedTreeItem!!.size
-            if (fileWriter != null) {
-                fileWriter?.close()
-            }
+            fileWriter?.close()
             fileWriter = FileWriter.open(fileName)
             if (size == 0) {
                 fileWriter?.close()
@@ -249,8 +249,9 @@ class MainViewModel(
 
     fun onImageSelected(uri: Uri) {
         try {
-            val source = ImageDecoder.createSource(app.contentResolver, uri)
-            val bitmap = ImageDecoder.decodeBitmap(source)
+            //val source = ImageDecoder.createSource(app.contentResolver, uri)
+            //val bitmap = ImageDecoder.decodeBitmap(source)
+            val bitmap = MediaStore.Images.Media.getBitmap(app.contentResolver, uri)
             //bitmap.config = Bitmap.Config.ARGB_8888
             val stream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
@@ -271,12 +272,16 @@ class MainViewModel(
 
     }
 
-    fun onDemoImageSelected(uri: Uri) {
-        try {
-            val source = ImageDecoder.createSource(app.contentResolver, uri)
-            _demoBitmap.value = ImageDecoder.decodeBitmap(source)
-        } catch (e: Exception) {
-            e.printStackTrace()
+    fun onDemoImageSelected(uri: Uri?) {
+        if (uri == null) {
+            _demoBitmap.value = null
+        } else {
+            try {
+                val bitmap = MediaStore.Images.Media.getBitmap(app.contentResolver, uri)
+                _demoBitmap.value = bitmap
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }
@@ -284,7 +289,7 @@ class MainViewModel(
 @Suppress("UNCHECKED_CAST")
 class MainViewModelFactory(
     private val mApplication: Application,
-    private val library: MaxCamNativeLibrary
+    private val library: IMaxCamNativeLibrary
 ) :
     ViewModelProvider.Factory {
 

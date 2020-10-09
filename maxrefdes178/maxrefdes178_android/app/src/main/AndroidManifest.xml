@@ -14,8 +14,7 @@
         android:roundIcon="@mipmap/ic_maxim_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Maxim"
-        tools:ignore="GoogleAppIndexingWarning"
-        android:requestLegacyExternalStorage="true">
+        tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait">

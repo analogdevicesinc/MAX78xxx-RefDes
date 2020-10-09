@@ -14,6 +14,7 @@ import androidx.lifecycle.observe
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.MainViewModel
 import com.maximintegrated.maxcamandroid.MainViewModelFactory
+import com.maximintegrated.maxcamandroid.MaxCamApplication
 import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.view.CustomTreeItem
@@ -34,6 +35,9 @@ class DiagnosticsFragment : Fragment() {
     private lateinit var mainViewModel: MainViewModel
     private lateinit var maxCamViewModel: MaxCamViewModel
 
+    lateinit var rootNode: TreeNode
+        private set
+
     private var previousTreeNode: TreeNode? = null
 
     override fun onCreateView(
@@ -50,7 +54,7 @@ class DiagnosticsFragment : Fragment() {
                 requireActivity(),
                 MainViewModelFactory(
                     requireActivity().application,
-                    MaxCamNativeLibrary.getInstance()
+                    (requireActivity().application as MaxCamApplication).maxCamNativeLibrary
                 )
             ).get(MainViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
@@ -106,7 +110,7 @@ class DiagnosticsFragment : Fragment() {
                 mainViewModel.onImageSelected(result.uri)
                 Toast.makeText(
                     requireContext(),
-                    "Cropping successful, Sample: ",
+                    "Cropping successful!",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -116,7 +120,7 @@ class DiagnosticsFragment : Fragment() {
     private fun updateTreeView(list: ArrayList<CustomTreeItem>) {
         diagnosticsTreeViewLinearLayout.removeAllViews()
         previousTreeNode = null
-        val rootNode = TreeNode.root()
+        rootNode = TreeNode.root()
         var sdCardTitle = "ME14 - SD STORAGE"
         if (list.isEmpty()) {
             sdCardTitle += "(Not ready!)"
@@ -151,22 +155,8 @@ class DiagnosticsFragment : Fragment() {
             }
 
         }
-        treeView.setDefaultNodeLongClickListener { node, value ->
-            if (node.isLeaf) {
-                (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)
-                val item = value as CustomTreeItem
-                previousTreeNode = if (node == previousTreeNode) {
-                    mainViewModel.onTreeItemDeselected()
-                    null
-                } else {
-                    (node.viewHolder as TreeViewHolder).changeBackground(true)
-                    mainViewModel.onTreeItemSelected(item)
-                    node
-                }
-            }
-            return@setDefaultNodeLongClickListener true
-        }
         diagnosticsTreeViewLinearLayout.addView(treeView.view)
+        treeView.expandAll()
     }
 
 }

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DiagnosticsFragment.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.maximintegrated.maxcamandroid.diagnostics</a> &gt; <span class="el_source">DiagnosticsFragment.kt</span></div><h1>DiagnosticsFragment.kt</h1><pre class="source lang-java linenums">package com.maximintegrated.maxcamandroid.diagnostics
+
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.observe
+import com.maximintegrated.communication.MaxCamViewModel
+import com.maximintegrated.maxcamandroid.MainViewModel
+import com.maximintegrated.maxcamandroid.MainViewModelFactory
+import com.maximintegrated.maxcamandroid.MaxCamApplication
+import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
+import com.maximintegrated.maxcamandroid.view.CustomTreeItem
+import com.maximintegrated.maxcamandroid.view.TreeNodeType
+import com.maximintegrated.maxcamandroid.view.TreeViewHolder
+import com.theartofdev.edmodo.cropper.CropImage
+import com.theartofdev.edmodo.cropper.CropImageView
+import com.unnamed.b.atv.model.TreeNode
+import com.unnamed.b.atv.view.AndroidTreeView
+import kotlinx.android.synthetic.main.fragment_diagnostics.*
+
+<span class="fc" id="L29">class DiagnosticsFragment : Fragment() {</span>
+
+    companion object {
+<span class="fc" id="L32">        fun newInstance() = DiagnosticsFragment()</span>
+    }
+
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var maxCamViewModel: MaxCamViewModel
+
+<span class="fc" id="L38">    lateinit var rootNode: TreeNode</span>
+        private set
+
+    private var previousTreeNode: TreeNode? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+<span class="fc" id="L47">        return inflater.inflate(R.layout.fragment_diagnostics, container, false)</span>
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+<span class="fc" id="L51">        super.onViewCreated(view, savedInstanceState)</span>
+        mainViewModel =
+<span class="fc" id="L53">            ViewModelProvider(</span>
+<span class="fc" id="L54">                requireActivity(),</span>
+<span class="fc" id="L55">                MainViewModelFactory(</span>
+<span class="fc" id="L56">                    requireActivity().application,</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">                    (requireActivity().application as MaxCamApplication).maxCamNativeLibrary</span>
+                )
+<span class="fc" id="L59">            ).get(MainViewModel::class.java)</span>
+<span class="fc" id="L60">        maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)</span>
+
+<span class="fc" id="L62">        mainViewModel.selectedTreeItem.observe(viewLifecycleOwner) {</span>
+            loadImageTextView.text = it?.text ?: &quot;&quot;
+        }
+
+<span class="fc" id="L66">        mainViewModel.treeItemList.observe(viewLifecycleOwner) {</span>
+            updateTreeView(it)
+        }
+
+<span class="fc" id="L70">        getContentButton.setOnClickListener {</span>
+<span class="fc" id="L71">            mainViewModel.onGetContentButtonClicked()</span>
+<span class="fc" id="L72">        }</span>
+
+<span class="fc" id="L74">        loadImageButton.setOnClickListener {</span>
+<span class="fc" id="L75">            mainViewModel.onLoadImageButtonClicked()</span>
+<span class="fc" id="L76">        }</span>
+
+<span class="fc" id="L78">        enterDemoButton.setOnClickListener {</span>
+<span class="fc" id="L79">            mainViewModel.onEnterDemoButtonClicked()</span>
+<span class="fc" id="L80">        }</span>
+
+<span class="fc" id="L82">        captureImageButton.setOnClickListener {</span>
+<span class="fc" id="L83">            mainViewModel.onCaptureImageButtonClicked()</span>
+<span class="fc" id="L84">        }</span>
+
+<span class="fc" id="L86">        sendImageButton.setOnClickListener {</span>
+<span class="fc" id="L87">            CropImage.activity()</span>
+<span class="fc" id="L88">                .setGuidelines(CropImageView.Guidelines.ON)</span>
+<span class="fc" id="L89">                .setAspectRatio(3, 4)</span>
+<span class="fc" id="L90">                .setMinCropWindowSize(120, 160)</span>
+<span class="fc" id="L91">                .setRequestedSize(120, 160)</span>
+<span class="fc" id="L92">                .start(requireContext(), this)</span>
+<span class="fc" id="L93">        }</span>
+
+<span class="fc" id="L95">        sendTestBytesButton.setOnClickListener {</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            val array = ByteArray(30) {</span>
+<span class="fc" id="L97">                (it + 1).toByte()</span>
+            }
+<span class="fc" id="L99">            maxCamViewModel.sendData(array)</span>
+<span class="fc" id="L100">        }</span>
+
+<span class="fc" id="L102">        updateTreeView(arrayListOf())</span>
+<span class="fc" id="L103">    }</span>
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+<span class="fc" id="L106">        super.onActivityResult(requestCode, resultCode, data)</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {</span>
+<span class="pc bpc" id="L108" title="2 of 4 branches missed.">            if (resultCode == Activity.RESULT_OK &amp;&amp; data != null) {</span>
+<span class="fc" id="L109">                val result = CropImage.getActivityResult(data)</span>
+<span class="fc" id="L110">                mainViewModel.onImageSelected(result.uri)</span>
+<span class="fc" id="L111">                Toast.makeText(</span>
+<span class="fc" id="L112">                    requireContext(),</span>
+<span class="fc" id="L113">                    &quot;Cropping successful!&quot;,</span>
+<span class="fc" id="L114">                    Toast.LENGTH_SHORT</span>
+<span class="fc" id="L115">                ).show()</span>
+            }
+        }
+<span class="fc" id="L118">    }</span>
+
+    private fun updateTreeView(list: ArrayList&lt;CustomTreeItem&gt;) {
+<span class="fc" id="L121">        diagnosticsTreeViewLinearLayout.removeAllViews()</span>
+<span class="fc" id="L122">        previousTreeNode = null</span>
+<span class="fc" id="L123">        rootNode = TreeNode.root()</span>
+<span class="fc" id="L124">        var sdCardTitle = &quot;ME14 - SD STORAGE&quot;</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (list.isEmpty()) {</span>
+<span class="fc" id="L126">            sdCardTitle += &quot;(Not ready!)&quot;</span>
+        }
+<span class="fc" id="L128">        val sdCard =</span>
+<span class="fc" id="L129">            TreeNode(CustomTreeItem(TreeNodeType.SD_STORAGE, sdCardTitle, 0)).setViewHolder(</span>
+<span class="fc" id="L130">                TreeViewHolder(requireContext())</span>
+            )
+
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        for (item in list) {</span>
+<span class="fc" id="L134">            val node = TreeNode(item).setViewHolder(TreeViewHolder(requireContext()))</span>
+<span class="fc" id="L135">            sdCard.addChild(node)</span>
+        }
+
+<span class="fc" id="L138">        rootNode.addChild(sdCard)</span>
+<span class="fc" id="L139">        val treeView = AndroidTreeView(requireContext(), rootNode)</span>
+<span class="fc" id="L140">        treeView.setDefaultAnimation(true)</span>
+<span class="fc" id="L141">        treeView.setDefaultContainerStyle(R.style.TreeNodeStyleCustom)</span>
+<span class="fc" id="L142">        treeView.setDefaultViewHolder(TreeViewHolder::class.java)</span>
+<span class="fc" id="L143">        treeView.setDefaultNodeClickListener { node, value -&gt;</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">            if (node.isLeaf) {</span>
+<span class="fc bfc" id="L145" title="All 6 branches covered.">                (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">                val item = value as CustomTreeItem</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">                previousTreeNode = if (node == previousTreeNode) {</span>
+<span class="fc" id="L148">                    mainViewModel.onTreeItemDeselected()</span>
+<span class="fc" id="L149">                    null</span>
+                } else {
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">                    (node.viewHolder as TreeViewHolder).changeBackground(true)</span>
+<span class="fc" id="L152">                    mainViewModel.onTreeItemSelected(item)</span>
+<span class="fc" id="L153">                    node</span>
+                }
+            }
+
+<span class="fc" id="L157">        }</span>
+<span class="fc" id="L158">        diagnosticsTreeViewLinearLayout.addView(treeView.view)</span>
+<span class="fc" id="L159">        treeView.expandAll()</span>
+<span class="fc" id="L160">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

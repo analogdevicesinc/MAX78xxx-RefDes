@@ -1,6 +1,6 @@
 package com.maximintegrated.maxcamandroid.nativeLibrary;
 
-public class MaxCamNativeLibrary {
+public class MaxCamNativeLibrary implements IMaxCamNativeLibrary {
 
     static {
         System.loadLibrary("native-lib");
@@ -8,65 +8,64 @@ public class MaxCamNativeLibrary {
 
     private JniListener jniListener;
 
-    //NOTE: Do not use it
-    private MaxCamNativeLibrary() {
+    public MaxCamNativeLibrary() {
         initialize();
     }
 
-    private static MaxCamNativeLibrary INSTANCE = null;
-
-    synchronized public static MaxCamNativeLibrary getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new MaxCamNativeLibrary();
-        }
-        return INSTANCE;
-    }
-
+    @Override
     public void setJniListener(JniListener listener) {
         jniListener = listener;
     }
 
     private native void initialize();
 
+    @Override
     public native void setMtu(int mtu);
 
-    public native static int getMaxMtu();
+    @Override
+    public native int getMaxMtu();
 
-    public native static String getVersion();
+    @Override
+    public native String getVersion();
 
+    @Override
     public native void sendFile(String fileName, byte[] data);
 
+    @Override
     public native void bleDataReceived(byte[] data);
 
+    @Override
     public native void getDirectoryRequest();
 
+    @Override
     public native void getFile(String fileName);
 
+    @Override
     public native void bleReset();
 
+    @Override
     public native void enterDemo();
 
+    @Override
     public native void captureImage(int fileLength);
 
+    @Override
     public native void loadImage(String filename);
 
+    @Override
     public native void sendImage(String filename, byte[] content);
 
+    @Override
     public void sendNotification(byte[] data) {
         if (jniListener != null) {
             jniListener.sendNotification(data);
         }
     }
 
+    @Override
     public void payloadReceived(byte[] payload) {
         if (jniListener != null) {
             jniListener.payloadReceived(payload);
         }
-    }
-
-    public interface JniListener {
-        void sendNotification(byte[] data);
-
-        void payloadReceived(byte[] payload);
     }
 }

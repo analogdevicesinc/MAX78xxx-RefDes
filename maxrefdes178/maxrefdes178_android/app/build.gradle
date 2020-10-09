@@ -3,6 +3,63 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'org.jetbrains.kotlin.android.extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'jacoco'
+
+def androidExclusion = [
+        'android/**/*.*',
+        '**/databinding/**/*.*',
+        '**/android/databinding/*Binding.*',
+        '**/BR.*',
+        '**/R.*',
+        '**/R$*.*',
+        '**/BuildConfig.*',
+        '**/Manifest*.*',
+        '**/*_MembersInjector.*',
+        '**/Dagger*Component.*',
+        '**/Dagger*Component$Builder.*',
+        '**/*Module_*Factory.*',
+        //'**/*Fragment*.*',
+        '**/*Activity*.*',
+        '**/*Adapter*.*',
+        '**/*ViewPager*.*',
+        //'**/*ViewHolder*.*',
+        '**/*Module*.*',
+        '**/Lambda$*.class',
+        '**/Lambda.class',
+        '**/*Lambda.class',
+        '**/*Lambda*.class',
+        '**/Lambda*.*',
+        '**/*Builder.*',
+        '**/*Component*.*',
+        '**/com/maximintegrated/maxcamandroid/exts/**/*',
+]
+
+jacoco {
+    toolVersion config.jacocoVersion
+    reportsDir = file("report")
+}
+
+// run ./gradlew clean createDebugCoverageReport jacocoTestReport
+
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
+
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports"
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+
+    def debugTree = fileTree(dir: "${buildDir}/tmp/kotlin-classes/debug", excludes: androidExclusion)
+    def mainSrc = "$project.projectDir/src/main/java"
+
+    sourceDirectories.from = files([mainSrc])
+    classDirectories.from = files([debugTree])
+    executionData.from = fileTree(dir: project.buildDir, includes: [
+            '**/*.exec', '**/*.ec'
+    ])
+}
 
 android {
     compileSdkVersion config.compileSdk
@@ -24,6 +81,10 @@ android {
         }
     }
     buildTypes {
+        debug {
+            minifyEnabled false
+            testCoverageEnabled true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -46,6 +107,21 @@ android {
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
+        }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/AL2.0'
+        exclude 'META-INF/LGPL2.1'
+    }
+
+    // Always show the result of every unit test when running via command line, even if it passes.
+    testOptions {
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
         }
     }
 }
@@ -79,18 +155,29 @@ dependencies {
     implementation deps.bluetoothStateView
     implementation deps.batteryMeterView
 
-    implementation deps.circleProgress
-
     implementation deps.legacySupport
     testImplementation deps.junit
     androidTestImplementation deps.atsl
     androidTestImplementation deps.espresso
+    androidTestImplementation deps.espressoIntents
+    androidTestImplementation deps.extJunit
+    testImplementation deps.extJunitKtx
+    testImplementation deps.hamcrest
+    testImplementation deps.testCoreKtx
+    testImplementation deps.robolectric
+    testImplementation deps.archCoreTesting
+    testImplementation deps.coroutineTest
+    androidTestImplementation deps.junit
+    androidTestImplementation deps.coroutineTest
+    debugImplementation deps.fragmentTest
+    implementation deps.testCore
+    androidTestImplementation deps.espressoContrib
+
 
     implementation deps.roomRuntime
     annotationProcessor deps.roomCompiler
     kapt deps.roomPersistence
 
-    implementation deps.appIntro
     implementation deps.coroutine
     implementation 'com.github.bmelnychuk:atv:1.2.9'
     api 'com.theartofdev.edmodo:android-image-cropper:2.8.0'

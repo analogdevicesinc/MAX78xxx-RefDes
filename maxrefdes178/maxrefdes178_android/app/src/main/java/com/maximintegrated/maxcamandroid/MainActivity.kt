@@ -12,26 +12,26 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.observe
 import com.maximintegrated.bluetooth.devicelist.OnBluetoothDeviceClickListener
 import com.maximintegrated.communication.MaxCamViewModel
-import com.maximintegrated.maxcamandroid.exts.ROOT_FRAGMENT
+import com.maximintegrated.maxcamandroid.utils.ROOT_FRAGMENT
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.exts.getCurrentFragment
 import com.maximintegrated.maxcamandroid.main.LandingPage
 import com.maximintegrated.maxcamandroid.main.MainFragment
-import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
+import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.view.BleConnectionInfo
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_layout.*
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
-    MaxCamNativeLibrary.JniListener {
+    IMaxCamNativeLibrary.JniListener {
 
     private var bluetoothDevice: BluetoothDevice? = null
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var maxCamViewModel: MaxCamViewModel
 
-    private val maxCamNativeLibrary = MaxCamNativeLibrary.getInstance()
+    private lateinit var maxCamNativeLibrary: IMaxCamNativeLibrary
 
     companion object {
         private const val KEY_BLUETOOTH_DEVICE =
@@ -56,10 +56,11 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         supportActionBar!!.hide()
+        maxCamNativeLibrary = (application as MaxCamApplication).maxCamNativeLibrary
         maxCamNativeLibrary.setJniListener(this)
         appVersion.text = getString(R.string.app_version, BuildConfig.VERSION_NAME)
         bluetoothDevice = intent.getParcelableExtra(KEY_BLUETOOTH_DEVICE)
-        val text = "${bluetoothDevice?.name} - ${MaxCamNativeLibrary.getVersion()}"
+        val text = "${bluetoothDevice?.name} - ${maxCamNativeLibrary.version}"
         firmwareVersion.text = text
         addFragment(fragment = MainFragment.newInstance(), backStackName = ROOT_FRAGMENT)
         mainViewModel =
@@ -69,7 +70,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
             ).get(MainViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(this).get(MaxCamViewModel::class.java)
         bluetoothDevice?.let {
-            maxCamViewModel.connect(it, MaxCamNativeLibrary.getMaxMtu())
+            maxCamViewModel.connect(it, maxCamNativeLibrary.maxMtu)
         }
         maxCamViewModel.connectionState
             .observe(this) { connectionState ->
@@ -110,6 +111,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
     }
 
     override fun onDestroy() {
+        maxCamNativeLibrary.setJniListener(null)
         maxCamViewModel.receivedData.removeObserver(dataReceivedObserver)
         super.onDestroy()
     }
@@ -125,6 +127,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         }
     }
 
+    @ExperimentalUnsignedTypes
     override fun payloadReceived(payload: ByteArray?) {
         payload?.let {
             mainViewModel.onPayloadReceived(payload)

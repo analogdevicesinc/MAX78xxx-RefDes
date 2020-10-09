@@ -1,7 +1,6 @@
 package com.maximintegrated.maxcamandroid
-import android.os.Environment
-import com.maximintegrated.maxcamandroid.exts.getMaxCamFile
-import com.maximintegrated.maxcamandroid.exts.ioThread
+import com.maximintegrated.maxcamandroid.utils.getMaxCamFile
+import com.maximintegrated.maxcamandroid.utils.ioThread
 import java.io.File
 import java.util.concurrent.LinkedBlockingDeque
 
@@ -59,7 +58,10 @@ class FileWriter private constructor(fileName: String) {
                     file.delete()
                 } else if (packetLossOccurred) {
                     listener?.onCompleted(false)
-                    val renamedFile = File(file.parentFile, File.separator + file.nameWithoutExtension + "!!!PacketLoss!!!." + file.extension)
+                    val renamedFile = File(
+                        file.parentFile,
+                        File.separator + file.nameWithoutExtension + "!!!PacketLoss!!!." + file.extension
+                    )
                     file.renameTo(renamedFile)
                 } else {
                     listener?.onCompleted(true)

@@ -19,11 +19,10 @@ import androidx.lifecycle.observe
 import com.google.android.material.snackbar.Snackbar
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.*
-import com.maximintegrated.maxcamandroid.exts.fromHexStringToMeaningfulAscii
-import com.maximintegrated.maxcamandroid.exts.getMaxCamFile
-import com.maximintegrated.maxcamandroid.exts.toHexString
-import com.maximintegrated.maxcamandroid.exts.toHexToString
-import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
+import com.maximintegrated.maxcamandroid.utils.fromHexStringToMeaningfulAscii
+import com.maximintegrated.maxcamandroid.utils.getMaxCamFile
+import com.maximintegrated.maxcamandroid.utils.toHexString
+import com.maximintegrated.maxcamandroid.utils.toHexToString
 import com.maximintegrated.maxcamandroid.view.CustomTreeItem
 import com.maximintegrated.maxcamandroid.view.TreeNodeType
 import com.maximintegrated.maxcamandroid.view.TreeViewHolder
@@ -43,14 +42,17 @@ class FileOperationsFragment : Fragment() {
     private lateinit var mainViewModel: MainViewModel
     private lateinit var maxCamViewModel: MaxCamViewModel
 
+    lateinit var rootNode: TreeNode
+        private set
+
+    private var previousTreeNode: TreeNode? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_file_operations, container, false)
     }
-
-    private var previousTreeNode: TreeNode? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -59,7 +61,7 @@ class FileOperationsFragment : Fragment() {
                 requireActivity(),
                 MainViewModelFactory(
                     requireActivity().application,
-                    MaxCamNativeLibrary.getInstance()
+                    (requireActivity().application as MaxCamApplication).maxCamNativeLibrary
                 )
             ).get(MainViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
@@ -140,7 +142,8 @@ class FileOperationsFragment : Fragment() {
                         Snackbar.LENGTH_SHORT
                     )
                         .setAction("Open") {
-                            val file = getMaxCamFile(item.text)
+                            val file =
+                                getMaxCamFile(item.text)
                             if (file.exists()) {
                                 val intent = Intent(Intent.ACTION_VIEW)
                                 val uri = FileProvider.getUriForFile(
@@ -193,7 +196,7 @@ class FileOperationsFragment : Fragment() {
     private fun updateTreeView(list: ArrayList<CustomTreeItem>) {
         contentTreeViewLinearLayout.removeAllViews()
         previousTreeNode = null
-        val rootNode = TreeNode.root()
+        rootNode = TreeNode.root()
         var sdCardTitle = "ME14 - SD STORAGE"
         if (list.isEmpty()) {
             sdCardTitle += "(Not ready!)"
@@ -228,22 +231,8 @@ class FileOperationsFragment : Fragment() {
             }
 
         }
-        treeView.setDefaultNodeLongClickListener { node, value ->
-            if (node.isLeaf) {
-                (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)
-                val item = value as CustomTreeItem
-                previousTreeNode = if (node == previousTreeNode) {
-                    mainViewModel.onTreeItemDeselected()
-                    null
-                } else {
-                    (node.viewHolder as TreeViewHolder).changeBackground(true)
-                    mainViewModel.onTreeItemSelected(item)
-                    node
-                }
-            }
-            return@setDefaultNodeLongClickListener true
-        }
         contentTreeViewLinearLayout.addView(treeView.view)
+        treeView.expandAll()
     }
 
     private fun updateFileContentTextView(text: String) {
@@ -281,7 +270,6 @@ class FileOperationsFragment : Fragment() {
         contentDisplayImageView.isVisible = true
         contentDisplayTextView.isVisible = false
         val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
-        Timber.d("bitmap w*h = ${bitmap.width} x ${bitmap.height}")
         contentDisplayImageView.setImageBitmap(bitmap)
     }
 }

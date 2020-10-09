@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileOperationsFragment.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.maximintegrated.maxcamandroid.fileOperations</a> &gt; <span class="el_source">FileOperationsFragment.kt</span></div><h1>FileOperationsFragment.kt</h1><pre class="source lang-java linenums">package com.maximintegrated.maxcamandroid.fileOperations
+
+import android.app.Activity
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import androidx.core.text.bold
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.observe
+import com.google.android.material.snackbar.Snackbar
+import com.maximintegrated.communication.MaxCamViewModel
+import com.maximintegrated.maxcamandroid.*
+import com.maximintegrated.maxcamandroid.utils.fromHexStringToMeaningfulAscii
+import com.maximintegrated.maxcamandroid.utils.getMaxCamFile
+import com.maximintegrated.maxcamandroid.utils.toHexString
+import com.maximintegrated.maxcamandroid.utils.toHexToString
+import com.maximintegrated.maxcamandroid.view.CustomTreeItem
+import com.maximintegrated.maxcamandroid.view.TreeNodeType
+import com.maximintegrated.maxcamandroid.view.TreeViewHolder
+import com.unnamed.b.atv.model.TreeNode
+import com.unnamed.b.atv.view.AndroidTreeView
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_file_operations.*
+import timber.log.Timber
+
+<span class="fc" id="L35">class FileOperationsFragment : Fragment() {</span>
+
+    companion object {
+        private const val PICK_FILE_RESULT_CODE = 143
+<span class="fc" id="L39">        fun newInstance() = FileOperationsFragment()</span>
+    }
+
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var maxCamViewModel: MaxCamViewModel
+
+<span class="fc" id="L45">    lateinit var rootNode: TreeNode</span>
+        private set
+
+    private var previousTreeNode: TreeNode? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+<span class="fc" id="L54">        return inflater.inflate(R.layout.fragment_file_operations, container, false)</span>
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+<span class="fc" id="L58">        super.onViewCreated(view, savedInstanceState)</span>
+        mainViewModel =
+<span class="fc" id="L60">            ViewModelProvider(</span>
+<span class="fc" id="L61">                requireActivity(),</span>
+<span class="fc" id="L62">                MainViewModelFactory(</span>
+<span class="fc" id="L63">                    requireActivity().application,</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">                    (requireActivity().application as MaxCamApplication).maxCamNativeLibrary</span>
+                )
+<span class="fc" id="L66">            ).get(MainViewModel::class.java)</span>
+<span class="fc" id="L67">        maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)</span>
+
+<span class="fc" id="L69">        maxCamViewModel.writeStatus.observe(viewLifecycleOwner) {</span>
+            val byteSent = it.first
+            val totalSize = it.second
+            Timber.d(&quot;byteSent $byteSent  totalSize $totalSize&quot;)
+            if (byteSent == -1) {
+                Toast.makeText(
+                    requireContext(),
+                    &quot;Error occurred while sending data.&quot;,
+                    Toast.LENGTH_SHORT
+                ).show()
+                if(mainViewModel.fileSendOperation.value == OperationState.PROGRESS){
+                    mainViewModel.onFileSendCompleted(OperationState.FAIL)
+                }
+            } else if (byteSent &gt; 0) {
+                if(mainViewModel.fileSendOperation.value == OperationState.PROGRESS){
+                    mainViewModel.onFileSendProgress(byteSent)
+                }
+            }
+        }
+
+<span class="fc" id="L89">        mainViewModel.selectedFileName.observe(viewLifecycleOwner) {</span>
+            sendFileSelectedTextView.text = it
+        }
+
+<span class="fc" id="L93">        mainViewModel.fileSendOperation.observe(viewLifecycleOwner) {</span>
+            (requireActivity() as MainActivity).progressBar.isVisible =
+                it == OperationState.PROGRESS
+            if (it == OperationState.SUCCESS) {
+                Toast.makeText(requireContext(), &quot;File is sent successfully&quot;, Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
+<span class="fc" id="L102">        mainViewModel.selectedTreeItem.observe(viewLifecycleOwner) {</span>
+            getFileTextView.text = it?.text ?: &quot;&quot;
+        }
+
+<span class="fc" id="L106">        mainViewModel.treeItemList.observe(viewLifecycleOwner) {</span>
+            updateTreeView(it)
+        }
+
+<span class="fc" id="L110">        mainViewModel.fileGetOperation.observe(viewLifecycleOwner) {</span>
+            (requireActivity() as MainActivity).progressBar.isVisible =
+                it == OperationState.PROGRESS
+            getFileButton.isEnabled = it != OperationState.PROGRESS
+            if (it == OperationState.SUCCESS) {
+                mainViewModel.onGetFileCompleted()
+                mainViewModel.latestReceivedTreeItem?.let { item -&gt;
+                    val dotIndex = item.text.lastIndexOf('.')
+                    val intentType: String
+                    when (item.text.substring(dotIndex + 1)) {
+                        &quot;jpg&quot;, &quot;jpeg&quot;, &quot;png&quot; -&gt; {
+                            mainViewModel.payload?.let { payload -&gt;
+                                updateFileContentImageView(payload)
+                            }
+                            intentType = &quot;image/*&quot;
+                        }
+                        &quot;txt&quot;, &quot;set&quot; -&gt; {
+                            mainViewModel.payload?.let { payload -&gt;
+                                updateFileContentTextView(payload.toHexToString())
+                            }
+                            intentType = &quot;text/plain&quot;
+                        }
+                        else -&gt; {
+                            mainViewModel.payload?.let { payload -&gt;
+                                updateFileContentTextView(payload)
+                            }
+                            intentType = &quot;text/plain&quot;
+                        }
+                    }
+                    Snackbar.make(
+                        view,
+                        item.text + &quot; received.&quot;,
+                        Snackbar.LENGTH_SHORT
+                    )
+                        .setAction(&quot;Open&quot;) {
+<span class="fc" id="L145">                            val file =</span>
+<span class="fc" id="L146">                                getMaxCamFile(item.text)</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">                            if (file.exists()) {</span>
+<span class="fc" id="L148">                                val intent = Intent(Intent.ACTION_VIEW)</span>
+<span class="fc" id="L149">                                val uri = FileProvider.getUriForFile(</span>
+<span class="fc" id="L150">                                    requireContext(),</span>
+<span class="fc" id="L151">                                    &quot;com.maximintegrated.maxcamandroid.fileprovider&quot;,</span>
+<span class="fc" id="L152">                                    file</span>
+                                )
+<span class="fc" id="L154">                                intent.setDataAndType(uri, intentType)</span>
+<span class="fc" id="L155">                                intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION</span>
+<span class="fc" id="L156">                                startActivity(intent)</span>
+                            }
+<span class="fc" id="L158">                        }</span>
+                        .show()
+                }
+            }
+        }
+
+<span class="fc" id="L164">        selectFileButton.setOnClickListener {</span>
+<span class="fc" id="L165">            var chooseFileIntent = Intent(Intent.ACTION_GET_CONTENT)</span>
+<span class="fc" id="L166">            chooseFileIntent.type = &quot;*/*&quot;</span>
+            chooseFileIntent =
+<span class="fc" id="L168">                Intent.createChooser(chooseFileIntent, getString(R.string.choose_a_file))</span>
+<span class="fc" id="L169">            startActivityForResult(chooseFileIntent, PICK_FILE_RESULT_CODE)</span>
+<span class="fc" id="L170">        }</span>
+
+<span class="fc" id="L172">        sendFileButton.setOnClickListener {</span>
+<span class="fc" id="L173">            mainViewModel.onFileSendButtonClicked()</span>
+<span class="fc" id="L174">        }</span>
+
+<span class="fc" id="L176">        getContentButton.setOnClickListener {</span>
+<span class="fc" id="L177">            mainViewModel.onGetContentButtonClicked()</span>
+<span class="fc" id="L178">        }</span>
+
+<span class="fc" id="L180">        getFileButton.setOnClickListener {</span>
+<span class="fc" id="L181">            mainViewModel.onGetFileButtonClicked()</span>
+<span class="fc" id="L182">        }</span>
+
+<span class="fc" id="L184">        updateTreeView(arrayListOf())</span>
+<span class="fc" id="L185">    }</span>
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+<span class="fc" id="L188">        super.onActivityResult(requestCode, resultCode, data)</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if (requestCode == PICK_FILE_RESULT_CODE) {</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">            if (resultCode == Activity.RESULT_OK) {</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">                mainViewModel.onFileSelected(data?.data)</span>
+            }
+        }
+<span class="fc" id="L194">    }</span>
+
+    private fun updateTreeView(list: ArrayList&lt;CustomTreeItem&gt;) {
+<span class="fc" id="L197">        contentTreeViewLinearLayout.removeAllViews()</span>
+<span class="fc" id="L198">        previousTreeNode = null</span>
+<span class="fc" id="L199">        rootNode = TreeNode.root()</span>
+<span class="fc" id="L200">        var sdCardTitle = &quot;ME14 - SD STORAGE&quot;</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        if (list.isEmpty()) {</span>
+<span class="fc" id="L202">            sdCardTitle += &quot;(Not ready!)&quot;</span>
+        }
+<span class="fc" id="L204">        val sdCard =</span>
+<span class="fc" id="L205">            TreeNode(CustomTreeItem(TreeNodeType.SD_STORAGE, sdCardTitle, 0)).setViewHolder(</span>
+<span class="fc" id="L206">                TreeViewHolder(requireContext())</span>
+            )
+
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        for (item in list) {</span>
+<span class="fc" id="L210">            val node = TreeNode(item).setViewHolder(TreeViewHolder(requireContext()))</span>
+<span class="fc" id="L211">            sdCard.addChild(node)</span>
+        }
+
+<span class="fc" id="L214">        rootNode.addChild(sdCard)</span>
+<span class="fc" id="L215">        val treeView = AndroidTreeView(requireContext(), rootNode)</span>
+<span class="fc" id="L216">        treeView.setDefaultAnimation(true)</span>
+<span class="fc" id="L217">        treeView.setDefaultContainerStyle(R.style.TreeNodeStyleCustom)</span>
+<span class="fc" id="L218">        treeView.setDefaultViewHolder(TreeViewHolder::class.java)</span>
+<span class="fc" id="L219">        treeView.setDefaultNodeClickListener { node, value -&gt;</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">            if (node.isLeaf) {</span>
+<span class="pc bpc" id="L221" title="3 of 6 branches missed.">                (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">                val item = value as CustomTreeItem</span>
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">                previousTreeNode = if (node == previousTreeNode) {</span>
+<span class="nc" id="L224">                    mainViewModel.onTreeItemDeselected()</span>
+<span class="nc" id="L225">                    null</span>
+                } else {
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">                    (node.viewHolder as TreeViewHolder).changeBackground(true)</span>
+<span class="fc" id="L228">                    mainViewModel.onTreeItemSelected(item)</span>
+<span class="fc" id="L229">                    node</span>
+                }
+            }
+
+<span class="fc" id="L233">        }</span>
+<span class="fc" id="L234">        contentTreeViewLinearLayout.addView(treeView.view)</span>
+<span class="fc" id="L235">        treeView.expandAll()</span>
+<span class="fc" id="L236">    }</span>
+
+    private fun updateFileContentTextView(text: String) {
+<span class="fc" id="L239">        contentDisplayImageView.isVisible = false</span>
+<span class="fc" id="L240">        contentDisplayTextView.isVisible = true</span>
+<span class="fc" id="L241">        contentDisplayTextView.text = text</span>
+<span class="fc" id="L242">    }</span>
+
+    private fun updateFileContentTextView(data: ByteArray) {
+<span class="fc" id="L245">        contentDisplayImageView.isVisible = false</span>
+<span class="fc" id="L246">        contentDisplayTextView.isVisible = true</span>
+<span class="fc" id="L247">        val sb = SpannableStringBuilder()</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        if (data.size &gt; 256) {</span>
+<span class="fc" id="L249">            val first = data.sliceArray(0..127)</span>
+<span class="fc" id="L250">            val second = data.sliceArray((data.size - 128) until data.size)</span>
+
+<span class="fc" id="L252">            val hex1 = first.toHexString()</span>
+<span class="fc" id="L253">            val ascii1 = hex1.fromHexStringToMeaningfulAscii()</span>
+<span class="fc" id="L254">            val hex2 = second.toHexString()</span>
+<span class="fc" id="L255">            val ascii2 = hex2.fromHexStringToMeaningfulAscii()</span>
+<span class="fc" id="L256">            sb.bold { appendLine(&quot;Hex Content:&quot;) }</span>
+<span class="fc" id="L257">                .append(hex1).appendLine(&quot; ...&quot;).append(&quot;... &quot;).appendLine(hex2).appendLine()</span>
+<span class="fc" id="L258">            sb.bold { appendLine(&quot;Ascii Content:&quot;) }</span>
+<span class="fc" id="L259">                .append(ascii1).appendLine(&quot; ...&quot;).append(&quot;... &quot;).appendLine(ascii2)</span>
+        } else {
+<span class="fc" id="L261">            val hex = data.toHexString()</span>
+<span class="fc" id="L262">            val ascii = hex.fromHexStringToMeaningfulAscii()</span>
+<span class="fc" id="L263">            sb.bold { appendLine(&quot;Hex Content:&quot;) }.appendLine(hex).appendLine()</span>
+<span class="fc" id="L264">            sb.bold { appendLine(&quot;Ascii Content&quot;) }.appendLine(ascii)</span>
+        }
+<span class="fc" id="L266">        contentDisplayTextView.text = sb</span>
+<span class="fc" id="L267">    }</span>
+
+    private fun updateFileContentImageView(data: ByteArray) {
+<span class="fc" id="L270">        contentDisplayImageView.isVisible = true</span>
+<span class="fc" id="L271">        contentDisplayTextView.isVisible = false</span>
+<span class="fc" id="L272">        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)</span>
+<span class="fc" id="L273">        contentDisplayImageView.setImageBitmap(bitmap)</span>
+<span class="fc" id="L274">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

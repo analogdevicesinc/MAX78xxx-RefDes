@@ -2,13 +2,14 @@
 
 buildscript {
 
-    final majorVersion = 0
-    final minorVersion = 1
+    final majorVersion = 1
+    final minorVersion = 0
     final patchVersion = 0
 
     final minSdk = 21
-    final latestSdk = 29
+    final latestSdk = 28
     final buildToolsVersion = "29.0.2"
+    final jacocoVersion = "0.8.5"
 
     ext.config = [
             versionCode: 1000000 * majorVersion + 1000 * minorVersion + patchVersion,
@@ -16,7 +17,8 @@ buildscript {
             compileSdk : latestSdk,
             targetSdk  : latestSdk,
             minSdk     : minSdk,
-            buildToolsVersion : buildToolsVersion
+            buildToolsVersion : buildToolsVersion,
+            jacocoVersion : jacocoVersion,
     ]
 
     final versions = [
@@ -33,17 +35,21 @@ buildscript {
             junit                : '4.13-beta-3',
             atsl                 : '1.2.0-beta01', // Android Testing Support Library
             espresso             : '3.2.0-beta01',
-            grabner              : '1.4',
             kotpref              : '2.11.0',
             room                 : '2.1.0-alpha03',
             navigation           : '1.0.0-alpha09',
-            appIntro             : '6.0.0',
             bluetoothStateView   : '1.1.1',
             batteryMeterView     : '2.0.0',
             roomPersistence      : '1.1.1',
             legacySupport        : '1.0.0',
             coroutine            : '1.3.9',
-            gson                 : '2.8.6'
+            gson                 : '2.8.6',
+            testCore             : '1.2.0',
+            testExt              : '1.1.1',
+            hamcrest             : '1.3',
+            robolectric          : '4.3.1',
+            archCoreTesting      : '2.0.0',
+            fragmentTest         : '1.1.0-alpha07'
     ]
 
     ext.deps = [
@@ -69,16 +75,25 @@ buildscript {
             junit                         : "junit:junit:${versions.junit}",
             atsl                          : "androidx.test:runner:${versions.atsl}",
             espresso                      : "androidx.test.espresso:espresso-core:${versions.espresso}",
-            circleProgress                : "com.github.jakob-grabner:Circle-Progress-View:${versions.grabner}",
+            espressoIntents               : "androidx.test.espresso:espresso-intents:${versions.espresso}",
             kotpref                       : "com.chibatching.kotpref:kotpref:${versions.kotpref}",
             kotprefInitializer            : "com.chibatching.kotpref:initializer:${versions.kotpref}",
             roomRuntime                   : "androidx.room:room-runtime:${versions.room}",
             roomCompiler                  : "androidx.room:room-compiler:${versions.room}",
             roomPersistence               : "android.arch.persistence.room:compiler:${versions.roomPersistence}",
-            appIntro                      : "com.github.AppIntro:AppIntro:${versions.appIntro}",
             legacySupport                 : "androidx.legacy:legacy-support-v4:${versions.legacySupport}",
             coroutine                     : "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.coroutine}",
             gson                          : "com.google.code.gson:gson:${versions.gson}",
+            extJunit                      : "androidx.test.ext:junit:${versions.testExt}",
+            extJunitKtx                   : "androidx.test.ext:junit-ktx:${versions.testExt}",
+            hamcrest                      : "org.hamcrest:hamcrest-all:${versions.hamcrest}",
+            testCoreKtx                   : "androidx.test:core-ktx:${versions.testCore}",
+            robolectric                   : "org.robolectric:robolectric:${versions.robolectric}",
+            archCoreTesting               : "androidx.arch.core:core-testing:${versions.archCoreTesting}",
+            coroutineTest                 : "org.jetbrains.kotlinx:kotlinx-coroutines-test:${versions.coroutine}",
+            fragmentTest                  : "androidx.fragment:fragment-testing:${versions.fragmentTest}",
+            testCore                      : "androidx.test:core:${versions.testCore}",
+            espressoContrib               : "androidx.test.espresso:espresso-contrib:${versions.espresso}"
     ]
 
     repositories {
@@ -89,6 +104,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.2'
         classpath deps.kotlinGradlePlugin
+        classpath "org.jacoco:org.jacoco.core:$jacocoVersion"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }

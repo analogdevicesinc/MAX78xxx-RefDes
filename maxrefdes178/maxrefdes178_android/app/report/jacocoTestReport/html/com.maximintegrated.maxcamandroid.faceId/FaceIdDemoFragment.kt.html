@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FaceIdDemoFragment.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.maximintegrated.maxcamandroid.faceId</a> &gt; <span class="el_source">FaceIdDemoFragment.kt</span></div><h1>FaceIdDemoFragment.kt</h1><pre class="source lang-java linenums">package com.maximintegrated.maxcamandroid.faceId
+
+
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.observe
+import com.maximintegrated.maxcamandroid.MainViewModel
+import com.maximintegrated.maxcamandroid.MainViewModelFactory
+import com.maximintegrated.maxcamandroid.MaxCamApplication
+import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.utils.ROOT_FRAGMENT
+import com.maximintegrated.maxcamandroid.exts.replaceFragment
+import com.maximintegrated.maxcamandroid.main.MainFragment
+import com.maximintegrated.maxcamandroid.view.CustomTreeItem
+import com.maximintegrated.maxcamandroid.view.TreeNodeType
+import com.maximintegrated.maxcamandroid.view.TreeViewHolder
+import com.theartofdev.edmodo.cropper.CropImage
+import com.theartofdev.edmodo.cropper.CropImageView
+import com.unnamed.b.atv.model.TreeNode
+import com.unnamed.b.atv.view.AndroidTreeView
+import kotlinx.android.synthetic.main.fragment_face_id_demo.*
+
+/**
+ * A simple [Fragment] subclass.
+ */
+<span class="nc" id="L34">class FaceIdDemoFragment : Fragment() {</span>
+
+    companion object {
+<span class="nc" id="L37">        fun newInstance() = FaceIdDemoFragment()</span>
+    }
+
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var faceIdViewModel: FaceIdViewModel
+
+    private var previousTreeNode: TreeNode? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+<span class="nc" id="L50">        return inflater.inflate(R.layout.fragment_face_id_demo, container, false)</span>
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+<span class="nc" id="L54">        super.onViewCreated(view, savedInstanceState)</span>
+<span class="nc" id="L55">        faceIdViewModel = ViewModelProviders.of(requireActivity()).get(FaceIdViewModel::class.java)</span>
+
+        mainViewModel =
+<span class="nc" id="L58">            ViewModelProvider(</span>
+<span class="nc" id="L59">                requireActivity(),</span>
+<span class="nc" id="L60">                MainViewModelFactory(</span>
+<span class="nc" id="L61">                    requireActivity().application,</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                    (requireActivity().application as MaxCamApplication).maxCamNativeLibrary</span>
+                )
+<span class="nc" id="L64">            ).get(MainViewModel::class.java)</span>
+
+<span class="nc" id="L66">        initializeViews()</span>
+
+<span class="nc" id="L68">        mainViewModel.treeItemList.observe(viewLifecycleOwner) {</span>
+            updateTreeView(it)
+        }
+
+<span class="nc" id="L72">        mainViewModel.demoBitmap.observe(viewLifecycleOwner) {</span>
+            if (it != null) {
+                demoImageView.setImageBitmap(it)
+            }
+        }
+<span class="nc" id="L77">    }</span>
+
+    private fun initializeViews() {
+<span class="nc" id="L80">        stepperView.onBackButtonClicked {</span>
+<span class="nc" id="L81">            requireActivity().onBackPressed()</span>
+<span class="nc" id="L82">        }</span>
+<span class="nc" id="L83">        stepperView.onNextButtonClicked {</span>
+<span class="nc" id="L84">            requireActivity().replaceFragment(fragment = MainFragment.newInstance(), backStackName = ROOT_FRAGMENT)</span>
+<span class="nc" id="L85">        }</span>
+<span class="nc bnc" id="L86" title="All 7 branches missed.">        when (faceIdViewModel.selectedScenario?.imageSource) {</span>
+            ImageSource.FILE_SYSTEM -&gt; {
+<span class="nc" id="L88">                androidViews.isVisible = false</span>
+<span class="nc" id="L89">                fileSystemViews.isVisible = true</span>
+            }
+            ImageSource.ANDROID -&gt; {
+<span class="nc" id="L92">                androidViews.isVisible = true</span>
+<span class="nc" id="L93">                fileSystemViews.isVisible = false</span>
+            }
+            else -&gt; {
+<span class="nc" id="L96">                androidViews.isVisible = false</span>
+<span class="nc" id="L97">                fileSystemViews.isVisible = false</span>
+            }
+        }
+
+<span class="nc" id="L101">        getContentButton.setOnClickListener {</span>
+<span class="nc" id="L102">            mainViewModel.onGetContentButtonClicked()</span>
+<span class="nc" id="L103">        }</span>
+
+<span class="nc" id="L105">        selectImageButton.setOnClickListener {</span>
+<span class="nc" id="L106">            CropImage.activity()</span>
+<span class="nc" id="L107">                .setGuidelines(CropImageView.Guidelines.ON)</span>
+<span class="nc" id="L108">                .setAspectRatio(3, 4)</span>
+<span class="nc" id="L109">                .setMinCropWindowSize(120, 160)</span>
+<span class="nc" id="L110">                .setRequestedSize(120, 160)</span>
+<span class="nc" id="L111">                .start(requireContext(), this)</span>
+<span class="nc" id="L112">        }</span>
+<span class="nc" id="L113">        runDemoButton.setOnClickListener {</span>
+<span class="nc" id="L114">            mainViewModel.onRunDemoButtonClicked()</span>
+<span class="nc" id="L115">        }</span>
+
+<span class="nc" id="L117">        updateTreeView(arrayListOf())</span>
+<span class="nc" id="L118">    }</span>
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+<span class="nc" id="L121">        super.onActivityResult(requestCode, resultCode, data)</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {</span>
+<span class="nc bnc" id="L123" title="All 4 branches missed.">            if (resultCode == Activity.RESULT_OK &amp;&amp; data != null) {</span>
+<span class="nc" id="L124">                val result = CropImage.getActivityResult(data)</span>
+<span class="nc" id="L125">                mainViewModel.onDemoImageSelected(result.uri)</span>
+            }
+        }
+<span class="nc" id="L128">    }</span>
+
+    private fun updateTreeView(list: ArrayList&lt;CustomTreeItem&gt;) {
+<span class="nc" id="L131">        treeViewLinearLayout.removeAllViews()</span>
+<span class="nc" id="L132">        previousTreeNode = null</span>
+<span class="nc" id="L133">        val rootNode = TreeNode.root()</span>
+<span class="nc" id="L134">        var sdCardTitle = &quot;ME14 - SD STORAGE&quot;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (list.isEmpty()) {</span>
+<span class="nc" id="L136">            sdCardTitle += &quot;(Not ready!)&quot;</span>
+        }
+<span class="nc" id="L138">        val sdCard =</span>
+<span class="nc" id="L139">            TreeNode(CustomTreeItem(TreeNodeType.SD_STORAGE, sdCardTitle, 0)).setViewHolder(</span>
+<span class="nc" id="L140">                TreeViewHolder(requireContext())</span>
+            )
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        for (item in list) {</span>
+<span class="nc" id="L144">            val node = TreeNode(item).setViewHolder(TreeViewHolder(requireContext()))</span>
+<span class="nc" id="L145">            sdCard.addChild(node)</span>
+        }
+
+<span class="nc" id="L148">        rootNode.addChild(sdCard)</span>
+<span class="nc" id="L149">        val treeView = AndroidTreeView(requireContext(), rootNode)</span>
+<span class="nc" id="L150">        treeView.setDefaultAnimation(true)</span>
+<span class="nc" id="L151">        treeView.setDefaultContainerStyle(R.style.TreeNodeStyleCustom)</span>
+<span class="nc" id="L152">        treeView.setDefaultViewHolder(TreeViewHolder::class.java)</span>
+<span class="nc" id="L153">        treeView.setDefaultNodeClickListener { node, value -&gt;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">            if (node.isLeaf) {</span>
+<span class="nc bnc" id="L155" title="All 6 branches missed.">                (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                val item = value as CustomTreeItem</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                previousTreeNode = if (node == previousTreeNode) {</span>
+<span class="nc" id="L158">                    mainViewModel.onTreeItemDeselected()</span>
+<span class="nc" id="L159">                    null</span>
+                } else {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                    (node.viewHolder as TreeViewHolder).changeBackground(true)</span>
+<span class="nc" id="L162">                    mainViewModel.onTreeItemSelected(item)</span>
+<span class="nc" id="L163">                    node</span>
+                }
+            }
+
+<span class="nc" id="L167">        }</span>
+<span class="nc" id="L168">        treeView.setDefaultNodeLongClickListener { node, value -&gt;</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (node.isLeaf) {</span>
+<span class="nc bnc" id="L170" title="All 6 branches missed.">                (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">                val item = value as CustomTreeItem</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                previousTreeNode = if (node == previousTreeNode) {</span>
+<span class="nc" id="L173">                    mainViewModel.onTreeItemDeselected()</span>
+<span class="nc" id="L174">                    null</span>
+                } else {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                    (node.viewHolder as TreeViewHolder).changeBackground(true)</span>
+<span class="nc" id="L177">                    mainViewModel.onTreeItemSelected(item)</span>
+<span class="nc" id="L178">                    node</span>
+                }
+            }
+<span class="nc" id="L181">            return@setDefaultNodeLongClickListener true</span>
+        }
+<span class="nc" id="L183">        treeViewLinearLayout.addView(treeView.view)</span>
+<span class="nc" id="L184">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
