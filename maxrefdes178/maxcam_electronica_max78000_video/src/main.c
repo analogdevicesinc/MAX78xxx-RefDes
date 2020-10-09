@@ -39,7 +39,6 @@
  *
  */
 
-#define S_MODULE_NAME   "Main"
 
 /***** Includes *****/
 #include <stdio.h>
@@ -58,9 +57,13 @@
 #include "version.h"
 #include "embedding_process.h"
 #include "utils.h"
-#include "AI85_Debug.h"
+#include "maxcam_debug.h"
 #include "faceID.h"
 #include "weights.h"
+
+
+/***** Definitions *****/
+#define S_MODULE_NAME   "main"
 
 #define IMAGE_XRES  240
 #define IMAGE_YRES  240
@@ -79,7 +82,7 @@
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
-#define QSPI             MXC_SPI0
+#define QSPI_ID             MXC_SPI0
 
 #define DMA_CHANNEL_CAMERA          0
 #define DMA_CHANNEL_CAMERA_IRQ      DMA0_IRQn
@@ -243,7 +246,7 @@ void DMA_CHANNEL_CAMERA_IRQ_HAND(void)
 
 void DMA_CHANNEL_QSPI_IRQ_HAND(void)
 {
-    qspi_dma_slave_int_handler(QSPI, DMA_CHANNEL_QSPI);
+    qspi_dma_slave_int_handler(QSPI_ID, DMA_CHANNEL_QSPI);
 }
 
 int main(void)
@@ -329,7 +332,7 @@ int main(void)
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
 
-    qspi_dma_slave_init(QSPI, qspi_pins);
+    qspi_dma_slave_init(QSPI_ID, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
@@ -655,10 +658,10 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
 
     PR_INFO("image tx start");
 
-    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
+    qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
     qspi_dma_slave_tx_wait();
 
-    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, image, len, &qspi_int);
+    qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, image, len, &qspi_int);
 //    qspi_dma_slave_tx_wait();
 
     PR_INFO("image tx completed");
@@ -673,10 +676,10 @@ static void send_result_to_me14(char *result, uint32_t len)
 
     PR_INFO("result tx start");
 
-    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
+    qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
     qspi_dma_slave_tx_wait();
 
-    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, (uint8_t *)result, len, &qspi_int);
+    qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t *)result, len, &qspi_int);
     qspi_dma_slave_tx_wait();
 
     PR_INFO("result tx completed");

@@ -42,22 +42,20 @@
 #include "gpio.h"
 #include "tmr_utils.h"
 
+#include "config.h"
 #include "max20303.h"
 #include "lcd.h"
 #include "faceid_definitions.h"
+#include "maxcam_debug.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define SPI_NAME          SPI1
-#define MXC_SPI           MXC_SPI1
-#define DMA_REQSEL_SPITX  DMA_REQSEL_SPI1TX
-#define SPI_SPEED         16000000
+#define S_MODULE_NAME   "lcd"
 
-#define DMA_CHANNEL          0
-#define DMA_CHANNEL_IRQ      DMA0_IRQn
-#define DMA_CHANNEL_IRQ_HAND DMA0_IRQHandler
+
+#define SPI_DMA_COUNTER_MAX  0xffff
 
 #define ST_CMD_DELAY   0x80
 
@@ -123,10 +121,11 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
+const gpio_cfg_t lcd_dc_pin    = {PORT_1, PIN_14  , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
+const gpio_cfg_t lcd_reset_pin = {PORT_1, PIN_15 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
+const gpio_cfg_t lcd_ssel_pin  = {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
+
 //static volatile int  spi_flag;
-static const gpio_cfg_t lcd_dc_pin     = {PORT_1, PIN_14  , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
-static const gpio_cfg_t lcd_reset_pin  = {PORT_1, PIN_15 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
-static const gpio_cfg_t ssel_pin       = {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
 static volatile int tx_dma_complete = 1;
 
 
@@ -150,30 +149,41 @@ static void spi_sendPacket(uint8_t* out, unsigned int len);
 //-----------------------------------------------------------------------------
 
 // DMA IRQ Handlers
-void DMA_CHANNEL_IRQ_HAND()
+void LCD_DMA_CHANNEL_IRQ_HAND()
 {
-    int ch = DMA_CHANNEL;
+    int ch = LCD_DMA_CHANNEL;
     if (MXC_DMA->intr & (0x1 << ch)) {
         if (MXC_DMA->ch[ch].st & (MXC_F_DMA_ST_TO_ST | MXC_F_DMA_ST_BUS_ERR)) {
-            printf("dma error %d\n", MXC_DMA->ch[ch].st);
+            PR_ERROR("dma error %d", MXC_DMA->ch[ch].st);
         }
 
-        if (MXC_DMA->ch[ch].cnt) {
-            printf("dma is not empty %d\n", MXC_DMA->ch[ch].cnt);
+        if (MXC_DMA->ch[ch].st & MXC_F_DMA_ST_RLD_ST) {
+            // reload occurred, do nothing
+        } else {
+            if (MXC_DMA->ch[ch].cnt) {
+                PR_WARN("dma is not empty %d", MXC_DMA->ch[ch].cnt);
+            }
+
+//            // Stop DMA
+//            MXC_DMA->ch[ch].cfg &= ~MXC_F_DMA_CFG_CHEN;
+//
+//            // Stop SPI
+//            MXC_SPI->ctrl0 &= ~MXC_F_SPI17Y_CTRL0_EN;
+//
+//            // Disable SPI DMA, flush FIFO
+//            MXC_SPI->dma = (MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR | MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
+
+            tx_dma_complete = 1;
         }
 
         // Clear DMA int flags
         MXC_DMA->ch[ch].st =  MXC_DMA->ch[ch].st;
-
-        tx_dma_complete = 1;
     }
 }
 
 static void spi_init()
 {
-    // Initialize DMA peripheral
-    DMA_Init();
-    NVIC_EnableIRQ(DMA_CHANNEL_IRQ);
+
 
     // Initialize SPI peripheral
     sys_cfg_spi_t master_cfg = {0};
@@ -182,62 +192,84 @@ static void spi_init()
     master_cfg.ss1 = Disable;
     master_cfg.ss2 = Disable;
 
-    SPI_Init(SPI_NAME, 0, SPI_SPEED, master_cfg);
-    MXC_SPI->ctrl0 |= MXC_F_SPI17Y_CTRL0_MASTER; // Switch SPI to master mode, else the state of the SS pin could cause the SPI periph to appear 'BUSY';
+    SPI_Init(LCD_SPI_ID, 0, LCD_SPI_SPEED, master_cfg);
 
-    MXC_SPI->ss_time = (4 << MXC_F_SPI17Y_SS_TIME_PRE_POS) |
-            (8 << MXC_F_SPI17Y_SS_TIME_POST_POS) |
-            (16 << MXC_F_SPI17Y_SS_TIME_INACT_POS);
+    // Switch SPI to master mode, else the state of the SS pin could cause the SPI periph to appear 'BUSY';
+    LCD_SPI->ctrl0 |= MXC_F_SPI17Y_CTRL0_MASTER;
+
+    // Initialize the CTRL2 register
+    LCD_SPI->ctrl2 = (MXC_S_SPI17Y_CTRL2_DATA_WIDTH_MONO) |
+                     (8 << MXC_F_SPI17Y_CTRL2_NUMBITS_POS);
+
+    LCD_SPI->ss_time = (4 << MXC_F_SPI17Y_SS_TIME_PRE_POS) |
+                       (8 << MXC_F_SPI17Y_SS_TIME_POST_POS) |
+                       (16 << MXC_F_SPI17Y_SS_TIME_INACT_POS);
 }
 
 static void spi_sendPacket(uint8_t* out, unsigned int len)
 {
-    int ch = DMA_CHANNEL;
-
-    // Clear DMA fifo
-    MXC_SPI->dma |= MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR | MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR;
-
-    // Initialize the CTRL0 register
-    MXC_SPI->ctrl0 = MXC_F_SPI17Y_CTRL0_MASTER |   // Enable master mode
-                     MXC_F_SPI17Y_CTRL0_EN;   // Enable the peripheral
+    int ch = LCD_DMA_CHANNEL;
 
     // Initialize the CTRL1 register
-    MXC_SPI->ctrl1 = 0;
+    LCD_SPI->ctrl1 = 0;
 
     // Set how many to characters to send, or when in quad mode how many characters to receive
-    MXC_SPI->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
+    if (len > SPI_DMA_COUNTER_MAX) {
+        LCD_SPI->ctrl1 |= (SPI_DMA_COUNTER_MAX << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
+    } else {
+        LCD_SPI->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
+    }
 
-    // Initialize the CTRL2 register
-    MXC_SPI->ctrl2 = (MXC_S_SPI17Y_CTRL2_DATA_WIDTH_MONO) |
-                     (8 << MXC_F_SPI17Y_CTRL2_NUMBITS_POS);
+    // TX FIFO Enabled, clear TX and RX FIFO
+    LCD_SPI->dma = (MXC_F_SPI17Y_DMA_TX_DMA_EN |
+                    MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR |
+                    MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
 
-    // Initialize the DMA register
-    MXC_SPI->dma = 0;
-    MXC_SPI->dma |= MXC_F_SPI17Y_DMA_TX_DMA_EN |                   // Enable DMA for transmit
-                    MXC_F_SPI17Y_DMA_TX_FIFO_EN |                  // Enable the TX FIFO
-                    (31 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);    // Set the threshold of when to add more data to TX FIFO
+    // Set SPI DMA TX and RX Thresholds
+    LCD_SPI->dma |= (31 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);    // Set the threshold of when to add more data to TX FIFO
 
-    // Prepare DMA to fill TX FIFO.
-    MXC_DMA->ch[ch].cfg = MXC_F_DMA_CFG_SRCINC |
-                          MXC_F_DMA_CFG_CHDIEN |
-                          MXC_S_DMA_CFG_PRI_LOW |
-                          DMA_REQSEL_SPITX |
-                          MXC_S_DMA_CFG_TOSEL_TO4 |
-                          MXC_S_DMA_CFG_PSSEL_DIS |
-                          (MXC_V_DMA_CFG_SRCWD_BYTE << MXC_F_DMA_CFG_SRCWD_POS) |
-                          (MXC_V_DMA_CFG_SRCWD_BYTE << MXC_F_DMA_CFG_DSTWD_POS);
+    // Enable SPI DMA
+    LCD_SPI->dma |= MXC_F_SPI17Y_DMA_TX_FIFO_EN;
 
-    MXC_DMA->cn |= (1 << ch);
-    MXC_DMA->ch[ch].src = (unsigned int) out;
-    MXC_DMA->ch[ch].dst = 0;
-    MXC_DMA->ch[ch].cnt = len;
-
+    // Setup DMA
     tx_dma_complete = 0;
 
-    MXC_DMA->ch[ch].cfg |= MXC_F_DMA_CFG_CHEN;
+    // Clear DMA int flags
+    MXC_DMA->ch[ch].st =  MXC_DMA->ch[ch].st;
+
+    // Prepare DMA to fill TX FIFO.
+    MXC_DMA->ch[ch].cfg = (MXC_F_DMA_CFG_SRCINC |
+                           LCD_DMA_REQSEL_SPITX |
+                           (MXC_V_DMA_CFG_SRCWD_BYTE << MXC_F_DMA_CFG_SRCWD_POS) |
+                           (MXC_V_DMA_CFG_SRCWD_BYTE << MXC_F_DMA_CFG_DSTWD_POS) |
+                           MXC_F_DMA_CFG_CHDIEN |
+                           MXC_F_DMA_CFG_CTZIEN);
+
+    // Set DMA source, destination, counter
+    MXC_DMA->ch[ch].cnt = len;
+    MXC_DMA->ch[ch].src = (unsigned int) out;
+    MXC_DMA->ch[ch].dst = 0;
+
+    // if too big, set reload registers
+    if (len > SPI_DMA_COUNTER_MAX) {
+        MXC_DMA->ch[ch].cnt = SPI_DMA_COUNTER_MAX;
+        MXC_DMA->ch[ch].src_rld = (unsigned int) (out + SPI_DMA_COUNTER_MAX);
+        MXC_DMA->ch[ch].dst_rld = 0;
+        MXC_DMA->ch[ch].cnt_rld = len - SPI_DMA_COUNTER_MAX;
+    }
+
+    // Enable DMA int
+    MXC_DMA->cn |= (1 << ch);
+
+    // Enable DMA
+    if (len > SPI_DMA_COUNTER_MAX) {
+        MXC_DMA->ch[ch].cfg |= (MXC_F_DMA_CFG_CHEN | MXC_F_DMA_CFG_RLDEN);
+    } else {
+        MXC_DMA->ch[ch].cfg |= MXC_F_DMA_CFG_CHEN;
+    }
 
     // Start the SPI transaction
-    MXC_SPI->ctrl0 |= MXC_F_SPI17Y_CTRL0_START;
+    LCD_SPI->ctrl0 |= (MXC_F_SPI17Y_CTRL0_EN | MXC_F_SPI17Y_CTRL0_START);
 
     // Wait here for all DMA transactions to complete.
     // This would normally be where this function would
@@ -249,8 +281,8 @@ static void spi_sendPacket(uint8_t* out, unsigned int len)
 
     // DMA has completed, but that just means DMA has loaded all of its data to/from
     //  the FIFOs.  We now need to wait for the SPI transaction to fully complete.
-    if(MXC_SPI->ctrl0 & MXC_F_SPI17Y_CTRL0_EN) {
-        while(MXC_SPI->stat & MXC_F_SPI17Y_STAT_BUSY);
+    if(LCD_SPI->ctrl0 & MXC_F_SPI17Y_CTRL0_EN) {
+        while(LCD_SPI->stat & MXC_F_SPI17Y_STAT_BUSY);
     }
 }
 
@@ -291,7 +323,7 @@ static void lcd_backlight(unsigned char onoff)
 
 static void lcd_configure()
 {
-    GPIO_OutClr(&ssel_pin);
+    GPIO_OutClr(&lcd_ssel_pin);
 
     lcd_sendCommand(ST7789_COLMOD);     //  Set color mode
     lcd_sendSmallData(0x55);            //  RGB565 (16bit)
@@ -359,7 +391,7 @@ static void lcd_configure()
 
     lcd_sendCommand(ST7789_DISPON);    //  Main screen turned on
 
-    GPIO_OutSet(&ssel_pin);
+    GPIO_OutSet(&lcd_ssel_pin);
 }
 
 /**
@@ -372,7 +404,7 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
     uint16_t x_start = x0 + X_SHIFT, x_end = x1 + X_SHIFT;
     uint16_t y_start = y0 + Y_SHIFT, y_end = y1 + Y_SHIFT;
 
-    GPIO_OutClr(&ssel_pin);
+    GPIO_OutClr(&lcd_ssel_pin);
     lcd_sendCommand(ST7789_CASET);
     {
         uint8_t data[] = {x_start >> 8, x_start & 0xFF, x_end >> 8, x_end & 0xFF};
@@ -386,7 +418,7 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
     }
 
     lcd_sendCommand(ST7789_RAMWR);
-    GPIO_OutSet(&ssel_pin);
+    GPIO_OutSet(&lcd_ssel_pin);
 }
 
 /**
@@ -399,25 +431,19 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
 void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
 {
 //    uint32_t chunk_size;
-//    uint32_t buff_size = 2 * w * h;
     uint8_t *buff = data;
 
     lcd_setAddrWindow(x, y, x + w - 1, y + h - 1);
 
     GPIO_OutSet(&lcd_dc_pin);
-    GPIO_OutClr(&ssel_pin);
-
-//    while (buff_size > 0) {
-//        chunk_size = buff_size > 57600 ? 57600 : buff_size;
-//        spi_sendPacket(buff, chunk_size);
-//        buff += chunk_size;
-//        buff_size -= chunk_size;
-//    }
+    GPIO_OutClr(&lcd_ssel_pin);
 
     spi_sendPacket(buff, 57600);
     spi_sendPacket(buff + 57600, 57600);
 
-    GPIO_OutSet(&ssel_pin);
+//    spi_sendPacket(buff, 2 * w * h);
+
+    GPIO_OutSet(&lcd_ssel_pin);
 }
 
 /**
@@ -435,7 +461,7 @@ static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_
 
     lcd_setAddrWindow(x, y, x + font.width - 1, y + font.height - 1);
 
-    GPIO_OutClr(&ssel_pin);
+    GPIO_OutClr(&lcd_ssel_pin);
 
     for (i = 0; i < font.height; i++) {
         b = font.data[(ch - 32) * font.height + i];
@@ -451,7 +477,7 @@ static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_
         }
     }
 
-    GPIO_OutSet(&ssel_pin);
+    GPIO_OutSet(&lcd_ssel_pin);
 }
 
 /**
@@ -489,8 +515,8 @@ int lcd_init()
 {
     lcd_backlight(1);
 
-    GPIO_OutSet(&ssel_pin);
-    GPIO_Config(&ssel_pin);
+    GPIO_OutSet(&lcd_ssel_pin);
+    GPIO_Config(&lcd_ssel_pin);
 
     GPIO_OutSet(&lcd_dc_pin);
     GPIO_Config(&lcd_dc_pin);

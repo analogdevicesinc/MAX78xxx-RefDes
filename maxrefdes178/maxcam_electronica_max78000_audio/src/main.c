@@ -40,7 +40,6 @@
  *          
  */
 
-#define S_MODULE_NAME   "Main"
 
 /* **** Includes **** */
 #include <stdio.h>
@@ -63,11 +62,14 @@
 #include "mxc.h"
 
 #include "qspi_dma.h"
-#include "AI85_Debug.h"
+#include "maxcam_debug.h"
 #include "faceid_definitions.h"
 #include "version.h"
 
 /* **** Definitions **** */
+#define S_MODULE_NAME   "main"
+
+
 /* Enable/Disable Features */
 //#define ENABLE_PRINT_ENVELOPE            // enables printing average waveform envelope for samples
 //#define ENABLE_CLASSIFICATION_DISPLAY	 // enables printing classification result
@@ -92,7 +94,7 @@
 #define INFERENCE_THRESHOLD   		49 		// min probability (0-100) to accept an inference
 
 /* Peripherals */
-#define QSPI             MXC_SPI0
+#define QSPI_ID             MXC_SPI0
 
 #define DMA_CHANNEL_QSPI            1
 #define DMA_CHANNEL_QSPI_IRQ        DMA1_IRQn
@@ -150,7 +152,7 @@ static void send_result_to_me14(char *result, uint32_t len);
 /* **************************************************************************** */
 void DMA_CHANNEL_QSPI_IRQ_HAND(void)
 {
-    qspi_dma_slave_int_handler(QSPI, DMA_CHANNEL_QSPI);
+    qspi_dma_slave_int_handler(QSPI_ID, DMA_CHANNEL_QSPI);
 }
 
 int main(void)
@@ -213,17 +215,14 @@ int main(void)
     MXC_GPIO_Config(&gpio_audio_osc);
     MXC_GPIO_OutSet(gpio_audio_osc.port, gpio_audio_osc.mask);
 
-    PR_INFO("\nmaxcam_electronica_max78000_audio v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    PR_INFO("maxcam_electronica_max78000_audio v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
 
-    printf("Maxim Integrated \nKeyword Spotting Demo\n");
-
-    printf("\n***** Init *****\n");
     memset(pAI85Buffer, 0x0, sizeof(pAI85Buffer));
     memset(pPreambleCircBuffer, 0x0, sizeof(pPreambleCircBuffer));
 
-    printf("pChunkBuff: %d\n", sizeof(pChunkBuff));
-    printf("pPreambleCircBuffer: %d\n", sizeof(pPreambleCircBuffer));
-    printf("pAI85Buffer: %d\n", sizeof(pAI85Buffer));
+    PR_DEBUG("pChunkBuff: %d", sizeof(pChunkBuff));
+    PR_DEBUG("pPreambleCircBuffer: %d", sizeof(pPreambleCircBuffer));
+    PR_DEBUG("pAI85Buffer: %d", sizeof(pAI85Buffer));
 
     mxc_spi_pins_t qspi_pins;
     qspi_pins.clock = TRUE;
@@ -235,7 +234,7 @@ int main(void)
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
 
-    qspi_dma_slave_init(QSPI, qspi_pins);
+    qspi_dma_slave_init(QSPI_ID, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
@@ -244,9 +243,9 @@ int main(void)
     NVIC_EnableIRQ(DMA_CHANNEL_QSPI_IRQ);
 
     /* load kernels */
-    printf("\n*** CNN Kernel load ***\n");
+    PR_INFO("*** CNN Kernel load ***");
     if (!cnn_load_kernel()) {
-        printf("ERROR: Loading Kernel! \n");
+        PR_ERROR("ERROR: Loading Kernel!");
         fail();
     }
     /* switch to silence state*/
@@ -255,7 +254,7 @@ int main(void)
     /* initialize I2S interface to Mic */
     I2SInit();
 
-    printf("\n*** READY ***\n");
+    PR_INFO("** READY ***");
 
     /* Read samples */
     while (1) {
@@ -293,7 +292,7 @@ int main(void)
             if (avg >= thresholdHigh) {
                 /* switch to keyword data collection*/
                 procState = KEYWORD;
-                printf("%.6d Word starts from index: %d, avg:%d > %d \n",
+                PR_DEBUG("%.6d Word starts from index: %d, avg:%d > %d",
                         sampleCounter, sampleCounter - PREAMBLE_SIZE - CHUNK,
                         avg, thresholdHigh);
 
@@ -302,18 +301,18 @@ int main(void)
                     /* copy latest samples afterwards */
                     if (AddTranspose(&pPreambleCircBuffer[0], pAI85Buffer,
                             PREAMBLE_SIZE, SAMPLE_SIZE, TRANSPOSE_WIDTH))
-                        printf("ERROR: Transpose ended early \n");
+                        PR_ERROR("ERROR: Transpose ended early");
                 } else {
                     /* copy oldest samples to the beginning*/
                     if (AddTranspose(&pPreambleCircBuffer[preambleCounter],
                             pAI85Buffer, PREAMBLE_SIZE - preambleCounter,
                             SAMPLE_SIZE, TRANSPOSE_WIDTH))
-                        printf("ERROR: Transpose ended early \n");
+                        PR_ERROR("ERROR: Transpose ended early");
 
                     /* copy latest samples afterwards */
                     if (AddTranspose(&pPreambleCircBuffer[0], pAI85Buffer,
                             preambleCounter, SAMPLE_SIZE, TRANSPOSE_WIDTH))
-                        printf("ERROR: Transpose ended early \n");
+                        PR_ERROR("ERROR: Transpose ended early");
 
                 }
 
@@ -350,7 +349,7 @@ int main(void)
             if (avgSilenceCounter > SILENCE_COUNTER_THRESHOLD)
             {
                 memset(pChunkBuff,0,CHUNK);
-                printf("%.6d: Word ends, Appends %d zeros \n", sampleCounter,
+                PR_DEBUG("%.6d: Word ends, Appends %d zeros", sampleCounter,
                         SAMPLE_SIZE - ai85Counter);
                 ret = 0;
                 while (!ret) {
@@ -377,16 +376,16 @@ int main(void)
 
                 /* sanity check, last transpose should have returned 1, as enough samples should have already been added */
                 if (ret != 1) {
-                    printf("ERROR: Transpose incomplete!\n");
+                    PR_ERROR("ERROR: Transpose incomplete!");
                     fail();
                 }
 
                 //----------------------------------  : invoke AI85 CNN
-                printf("%.6d: Starts CNN: %d\n", sampleCounter, wordCounter);
+                PR_DEBUG("%.6d: Starts CNN: %d", sampleCounter, wordCounter);
 
                 /* load to CNN */
                 if (!cnn_load_data(pAI85Buffer)) {
-                    printf("ERROR: Loading data to CNN! \n");
+                    PR_ERROR("ERROR: Loading data to CNN!");
                     fail();
                 }
 
@@ -395,7 +394,7 @@ int main(void)
 
                 /* Start CNN */
                 if (!cnn_start()) {
-                    printf("ERROR: Starting CNN! \n");
+                    PR_ERROR("ERROR: Starting CNN!");
                     fail();
                 }
 
@@ -407,7 +406,7 @@ int main(void)
 
                 /* Get time */
                 MXC_TMR_GetTime(MXC_TMR0, cnn_time, &cnn_time, &units);
-                printf("%.6d: Completes CNN: %d\n", sampleCounter, wordCounter);
+                PR_DEBUG("%.6d: Completes CNN: %d", sampleCounter, wordCounter);
 
                 switch (units) {
                 case TMR_UNIT_NANOSEC:
@@ -422,14 +421,14 @@ int main(void)
                 default:
                     break;
                 }
-                printf("CNN Time: %d us\n", cnn_time);
+                PR_DEBUG("CNN Time: %d us", cnn_time);
 
                 /* run softmax */
                 softmax_q17p14_q15((const q31_t*) ml_data, NUM_OUTPUTS,
                         ml_softmax);
 
 #ifdef ENABLE_CLASSIFICATION_DISPLAY
-                printf("\nClassification results:\n");
+                PR_INFO("Classification results:");
                 for (int i = 0; i < NUM_OUTPUTS; i++) {
                     int digs = (1000 * ml_softmax[i] + 0x4000) >> 15;
                     int tens = digs % 10;
@@ -442,11 +441,10 @@ int main(void)
                 /* find detected class with max probability */
                 ret = check_inference(ml_softmax, ml_data, &out_class, &probability);
 
-                printf("----------------------------------------- \n");
                 if (!ret)
-                    printf("LOW CONFIDENCE!: ");
+                    PR_WARN("LOW CONFIDENCE!: ");
 
-                printf("Detected word: %s (%0.1f%%)\n", keywords[out_class],
+                PR_INFO("Detected word: %s (%0.1f%%)", keywords[out_class],
                         probability);
 
                 if (ret) {
@@ -463,7 +461,7 @@ int main(void)
     }
 
     /* Turn off LED2 (Red) */
-    printf("Total Samples:%d, Total Words: %d \n", sampleCounter, wordCounter);
+    PR_INFO("Total Samples:%d, Total Words: %d", sampleCounter, wordCounter);
 
     while (1);
 }
@@ -475,7 +473,7 @@ void I2SInit()
     mxc_i2s_req_t req;
     int32_t err;
 
-    printf("\n*** I2S & Mic Init ***\n");
+    PR_INFO("*** I2S & Mic Init ***");
     /* Initialize High Pass Filter */
     HPF_init();
     /* Initialize I2S RX buffer */
@@ -499,9 +497,8 @@ void I2SInit()
 
 
     if((err = MXC_I2S_Init(&req)) != E_NO_ERROR) {
-        printf("\nError in I2S_Init: %d\n", err);
-        while (1)
-            ;
+        PR_ERROR("\nError in I2S_Init: %d", err);
+        while (1);
     }
 
     /* Set I2S RX FIFO threshold to generate interrupt */
@@ -545,7 +542,7 @@ uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
         }
     }
 
-    printf("Min: %d,   Max: %d \n", Min, Max);
+    PR_DEBUG("Min: %d,   Max: %d", Min, Max);
 
     /* check if probability is low */
     if (*out_prob > INFERENCE_THRESHOLD)
@@ -619,7 +616,7 @@ uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
     if (total >= outSize) {
         /* sanity check */
         if (row != width)
-            printf("ERROR: Rearranging!\n");
+            PR_ERROR("ERROR: Rearranging!");
 
         total = 0;
         row = 0;
@@ -756,10 +753,10 @@ static void send_result_to_me14(char *result, uint32_t len)
 
     PR_INFO("result tx start");
 
-    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
+    qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
     qspi_dma_slave_tx_wait();
 
-    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, (uint8_t *)result, len, &qspi_int);
+    qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t *)result, len, &qspi_int);
     qspi_dma_slave_tx_wait();
 
     PR_INFO("result tx completed");

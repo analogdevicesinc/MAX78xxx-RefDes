@@ -79,7 +79,7 @@ void qspi_dma_slave_init(mxc_spi_regs_t *qspi, mxc_spi_pins_t qspi_pins)
     }
 
     // Set data size
-    MXC_SETFIELD(qspi->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, 8 << MXC_F_SPI_CTRL2_NUMBITS_POS);
+    MXC_SETFIELD(qspi->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, (8 << MXC_F_SPI_CTRL2_NUMBITS_POS));
 
     if (MXC_SPI_SetWidth(qspi, SPI_WIDTH_QUAD) != E_NO_ERROR) {
         printf("SPI SET WIDTH ERROR\n");
@@ -93,20 +93,20 @@ void qspi_dma_slave_tx(mxc_spi_regs_t *qspi, uint8_t ch, uint8_t *txData, uint32
 
     // Number of characters to transmit from TX FIFO.
     if (txLen > SPI_DMA_COUNTER_MAX) {
-        MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, SPI_DMA_COUNTER_MAX << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS);
+        MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (SPI_DMA_COUNTER_MAX << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
     } else {
-        MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, txLen << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS);
+        MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (txLen << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
     }
 
     // TX FIFO Enabled, clear TX and RX FIFO
-    qspi->dma = ((MXC_F_SPI_DMA_TX_FIFO_EN) |
-                 (MXC_F_SPI_DMA_TX_FLUSH) |
-                 (MXC_F_SPI_DMA_RX_FLUSH));
+    qspi->dma = (MXC_F_SPI_DMA_TX_FIFO_EN |
+                 MXC_F_SPI_DMA_TX_FLUSH |
+                 MXC_F_SPI_DMA_RX_FLUSH);
 
 
     // Set SPI DMA TX and RX Thresholds
-    MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_TX_THD_VAL, 4 << MXC_F_SPI_DMA_TX_THD_VAL_POS);
-    MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_RX_THD_VAL, 0 << MXC_F_SPI_DMA_RX_THD_VAL_POS);
+    MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_TX_THD_VAL, (4 << MXC_F_SPI_DMA_TX_THD_VAL_POS));
+    MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_RX_THD_VAL, (0 << MXC_F_SPI_DMA_RX_THD_VAL_POS));
 
     // Enable SPI DMA
     qspi->dma |= MXC_F_SPI_DMA_DMA_TX_EN;
@@ -118,20 +118,21 @@ void qspi_dma_slave_tx(mxc_spi_regs_t *qspi, uint8_t ch, uint8_t *txData, uint32
     MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
 
     // Enable SRC increment, set request, set source and destination width, enable channel, Count-To-Zero int enable
-    MXC_DMA->ch[ch].ctrl = ((MXC_F_DMA_CTRL_SRCINC) |
-                            (MXC_S_DMA_CTRL_REQUEST_SPI0TX) |
+    MXC_DMA->ch[ch].ctrl = (MXC_F_DMA_CTRL_SRCINC |
+                            MXC_S_DMA_CTRL_REQUEST_SPI0TX |
                             (MXC_S_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_SRCWD_POS) |
                             (MXC_S_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_DSTWD_POS) |
-                            (MXC_F_DMA_CTRL_CTZ_IE));
+                            MXC_F_DMA_CTRL_CTZ_IE);
 
     // Set DMA source, destination, counter
     MXC_DMA->ch[ch].cnt = txLen;
     MXC_DMA->ch[ch].src = (unsigned int) txData;
     MXC_DMA->ch[ch].dst = 0;
 
+    // if too big, set reload registers
     if (txLen > SPI_DMA_COUNTER_MAX) {
-        MXC_DMA->ch[ch].cnt = 0xffff;
-        MXC_DMA->ch[ch].srcrld = (unsigned int) (txData + 0xffff);
+        MXC_DMA->ch[ch].cnt = SPI_DMA_COUNTER_MAX;
+        MXC_DMA->ch[ch].srcrld = (unsigned int) (txData + SPI_DMA_COUNTER_MAX);
         MXC_DMA->ch[ch].dstrld = 0;
         MXC_DMA->ch[ch].cntrld = txLen - SPI_DMA_COUNTER_MAX;
     }
@@ -191,7 +192,7 @@ void qspi_dma_slave_int_handler(mxc_spi_regs_t *qspi, uint8_t ch)
             qspi->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
 
             // Disable SPI DMA, flush FIFO
-            qspi->dma = (MXC_F_SPI_DMA_TX_FLUSH) | (MXC_F_SPI_DMA_RX_FLUSH);
+            qspi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
 
             DMA_DONE_FLAG = 1;
         }

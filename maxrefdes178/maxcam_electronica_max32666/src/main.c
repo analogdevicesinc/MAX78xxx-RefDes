@@ -42,16 +42,20 @@
 #include "i2c.h"
 
 #include "max20303.h"
+#include "board.h"
+#include "config.h"
 #include "qspi.h"
 #include "lcd.h"
 #include "lcd_data.h"
 #include "faceid_definitions.h"
+#include "maxcam_debug.h"
 #include "version.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
+#define S_MODULE_NAME   "main"
 
 
 //-----------------------------------------------------------------------------
@@ -81,34 +85,38 @@ int main(void)
     uint8_t cmdData[1] = {0};
 
     snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    printf("\n\nmaxcam_electronica_max32666 %s\n", version);
+    PR_INFO("maxcam_electronica_max32666 %s", version);
 
     if (MAX20303_initialize(1) != E_NO_ERROR) {
-        printf("pmic init failed\n");
+        PR_ERROR("pmic init failed");
         while(1);
     }
 
     /* Switch USB-TYpe-C Debug Connection to MAX78000-Video */
     cmdData[0] = 0xff;
-    if (I2C_MasterWrite(MXC_I2C0_BUS0, 0xd8, cmdData, 1, 0) ) {
-        printf("MAX78000 select failed\n");
+    if (I2C_MasterWrite(PMIC_I2C, 0xd8, cmdData, 1, 0) ) {
+        PR_ERROR("MAX78000 select failed");
     }
 
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel =  0x00;
     MXC_GPIO1->vssel =  0x00;
 
+    // Initialize DMA peripheral
+    DMA_Init();
+    NVIC_EnableIRQ(LCD_DMA_CHANNEL_IRQ);
+
     if (qspi_init(1) != E_NO_ERROR) {
-        printf("qspi init failed\n");
+        PR_ERROR("qspi init failed");
         while(1);
     }
 
     if (lcd_init() != E_NO_ERROR) {
-        printf("lcd init failed\n");
+        PR_ERROR("lcd init failed");
         while(1);
     }
 
-    printf("init completed\n");
+    PR_INFO("init completed");
 
     MAX20303_led_green(MAX20303_LED_OUTPUT_ON);
 

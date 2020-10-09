@@ -40,7 +40,7 @@
 #include "board.h"
 #include "embedding_process.h"
 #include "embeddings.h"
-#include "AI85_Debug.h"
+#include "maxcam_debug.h"
 
 
 /*******************************      DEFINES      ***************************/

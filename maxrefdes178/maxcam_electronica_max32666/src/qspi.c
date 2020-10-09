@@ -33,9 +33,6 @@
 *******************************************************************************
 */
 
-#define S_MODULE_NAME   "qspi"
-
-
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
@@ -44,16 +41,16 @@
 #include "spi.h"
 #include "tmr_utils.h"
 
+#include "config.h"
 #include "qspi.h"
 #include "faceid_definitions.h"
+#include "maxcam_debug.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define QSPI              SPI0
-#define QSPI_REGS         MXC_SPI17Y0
-#define QSPI_IRQ          SPI0_IRQn
+#define S_MODULE_NAME   "qspi"
 
 
 //-----------------------------------------------------------------------------
@@ -64,15 +61,16 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
+const gpio_cfg_t ai85_video_int_pin = {PORT_0, PIN_30, GPIO_FUNC_IN, GPIO_PAD_PULL_UP};
+const gpio_cfg_t ai85_video_cs_pin  = {PORT_0, PIN_8, GPIO_FUNC_OUT, GPIO_PAD_NONE};
+const gpio_cfg_t ai85_audio_cs_pin  = {PORT_0, PIN_14, GPIO_FUNC_OUT, GPIO_PAD_NONE};
+const gpio_cfg_t ai85_audio_int_pin = {PORT_1, PIN_13, GPIO_FUNC_IN, GPIO_PAD_PULL_UP};
+
 uint8_t qspi_image_buff[IMAGE_SIZE];
 char video_result_string[RESULT_MAX_SIZE];
 char audio_result_string[RESULT_MAX_SIZE];
 static volatile int qspi_video_int_flag;
 static volatile int qspi_audio_int_flag;
-static const gpio_cfg_t ai85_video_int = {PORT_0, PIN_30, GPIO_FUNC_IN, GPIO_PAD_PULL_UP};
-static const gpio_cfg_t ai85_video_cs = {PORT_0, PIN_8, GPIO_FUNC_OUT, GPIO_PAD_NONE};
-static const gpio_cfg_t ai85_audio_cs = {PORT_0, PIN_14, GPIO_FUNC_OUT, GPIO_PAD_NONE};
-static const gpio_cfg_t ai85_audio_int = {PORT_1, PIN_13, GPIO_FUNC_IN, GPIO_PAD_PULL_UP};
 
 
 //-----------------------------------------------------------------------------
@@ -83,9 +81,9 @@ static const gpio_cfg_t ai85_audio_int = {PORT_1, PIN_13, GPIO_FUNC_IN, GPIO_PAD
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void SPI0_IRQHandler(void)
+void QSPI_IRQ_HAND(void)
 {
-    SPI_Handler(QSPI);
+    SPI_Handler(QSPI_ID);
 }
 
 void qspi_video_int(void *cbdata)
@@ -102,11 +100,11 @@ int qspi_init()
 {
     sys_cfg_spi_t qspi_master_cfg;
 
-    GPIO_OutSet(&ai85_video_cs);
-    GPIO_Config(&ai85_video_cs);
+    GPIO_OutSet(&ai85_video_cs_pin);
+    GPIO_Config(&ai85_video_cs_pin);
 
-    GPIO_OutSet(&ai85_audio_cs);
-    GPIO_Config(&ai85_audio_cs);
+    GPIO_OutSet(&ai85_audio_cs_pin);
+    GPIO_Config(&ai85_audio_cs_pin);
 
     qspi_master_cfg.map = MAP_B;
     qspi_master_cfg.ss0 = Disable;
@@ -114,26 +112,26 @@ int qspi_init()
     qspi_master_cfg.ss2 = Disable;
     qspi_master_cfg.num_io = 4;
 
-    SPI_Shutdown(QSPI);
+    SPI_Shutdown(QSPI_ID);
 
     // Configure the peripheral
-    if (SPI_Init(QSPI, 0, QSPI_SPEED, qspi_master_cfg) != 0) {
-        printf("Error configuring QSPI\n");
+    if (SPI_Init(QSPI_ID, 0, QSPI_SPEED, qspi_master_cfg) != 0) {
+        PR_ERROR("Error configuring QSPI_ID");
     }
 
     qspi_video_int_flag = 0;
-    GPIO_Config(&ai85_video_int);
-    GPIO_RegisterCallback(&ai85_video_int, qspi_video_int, NULL);
-    GPIO_IntConfig(&ai85_video_int, GPIO_INT_EDGE, GPIO_INT_FALLING);
-    GPIO_IntEnable(&ai85_video_int);
-    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(ai85_video_int.port));
+    GPIO_Config(&ai85_video_int_pin);
+    GPIO_RegisterCallback(&ai85_video_int_pin, qspi_video_int, NULL);
+    GPIO_IntConfig(&ai85_video_int_pin, GPIO_INT_EDGE, GPIO_INT_FALLING);
+    GPIO_IntEnable(&ai85_video_int_pin);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(ai85_video_int_pin.port));
 
     qspi_audio_int_flag = 0;
-    GPIO_Config(&ai85_audio_int);
-    GPIO_RegisterCallback(&ai85_audio_int, qspi_audio_int, NULL);
-    GPIO_IntConfig(&ai85_audio_int, GPIO_INT_EDGE, GPIO_INT_FALLING);
-    GPIO_IntEnable(&ai85_audio_int);
-    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(ai85_audio_int.port));
+    GPIO_Config(&ai85_audio_int_pin);
+    GPIO_RegisterCallback(&ai85_audio_int_pin, qspi_audio_int, NULL);
+    GPIO_IntConfig(&ai85_audio_int_pin, GPIO_INT_EDGE, GPIO_INT_FALLING);
+    GPIO_IntEnable(&ai85_audio_int_pin);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(ai85_audio_int_pin.port));
 
     return E_NO_ERROR;
 }
@@ -145,7 +143,7 @@ int qspi_worker(void)
         spi_req_t qspi_req = {0};
         qspi_header_t qspi_header = {0};
 
-        GPIO_OutClr(&ai85_video_cs);
+        GPIO_OutClr(&ai85_video_cs_pin);
         qspi_req.tx_data = NULL;
         qspi_req.rx_data = (uint8_t *) &qspi_header;
         qspi_req.len = sizeof(qspi_header_t);
@@ -157,11 +155,11 @@ int qspi_worker(void)
         qspi_req.tx_num = 0;
         qspi_req.rx_num = 0;
         qspi_req.callback = NULL;
-        SPI_MasterTrans(QSPI, &qspi_req);
-        GPIO_OutSet(&ai85_video_cs);
+        SPI_MasterTrans(QSPI_ID, &qspi_req);
+        GPIO_OutSet(&ai85_video_cs_pin);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
-            printf("Invalid QSPI start byte 0x%08hhX\n", qspi_header.start_symbol);
+            PR_ERROR("Invalid QSPI_ID start byte 0x%08hhX", qspi_header.start_symbol);
             return E_BAD_STATE;
         }
 
@@ -170,11 +168,11 @@ int qspi_worker(void)
 
         if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_DATA) {
             if ((qspi_header.data_len == 0) || (qspi_header.data_len > IMAGE_SIZE)) {
-                printf("Invalid QSPI data len %u\n", qspi_header.data_len);
+                PR_ERROR("Invalid QSPI_ID data len %u", qspi_header.data_len);
                 return E_BAD_PARAM;
             }
 
-            GPIO_OutClr(&ai85_video_cs);
+            GPIO_OutClr(&ai85_video_cs_pin);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)qspi_image_buff;
             qspi_req.len = qspi_header.data_len / 2;
@@ -186,7 +184,7 @@ int qspi_worker(void)
             qspi_req.tx_num = 0;
             qspi_req.rx_num = 0;
             qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI, &qspi_req);
+            SPI_MasterTrans(QSPI_ID, &qspi_req);
 
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)&(qspi_image_buff[qspi_header.data_len/2]);
@@ -199,21 +197,21 @@ int qspi_worker(void)
             qspi_req.tx_num = 0;
             qspi_req.rx_num = 0;
             qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI, &qspi_req);
-            GPIO_OutSet(&ai85_video_cs);
+            SPI_MasterTrans(QSPI_ID, &qspi_req);
+            GPIO_OutSet(&ai85_video_cs_pin);
 
-            printf("video %u\n", qspi_req.rx_num * 2);
+            PR_INFO("video %u", qspi_req.rx_num * 2);
 
             return QSPI_TYPE_RESPONSE_VIDEO_DATA;
         } else if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_RESULT) {
             if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(video_result_string))) {
-                printf("Invalid QSPI data len %u\n", qspi_header.data_len);
+                PR_ERROR("Invalid QSPI_ID data len %u", qspi_header.data_len);
                 return E_BAD_PARAM;
             }
 
             memset(video_result_string, 0, sizeof(video_result_string));
 
-            GPIO_OutClr(&ai85_video_cs);
+            GPIO_OutClr(&ai85_video_cs_pin);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)video_result_string;
             qspi_req.len = qspi_header.data_len;
@@ -225,10 +223,10 @@ int qspi_worker(void)
             qspi_req.tx_num = 0;
             qspi_req.rx_num = 0;
             qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI, &qspi_req);
-            GPIO_OutSet(&ai85_video_cs);
+            SPI_MasterTrans(QSPI_ID, &qspi_req);
+            GPIO_OutSet(&ai85_video_cs_pin);
 
-            printf("video result %u %s\n", qspi_req.rx_num, video_result_string);
+            PR_INFO("video result %u %s", qspi_req.rx_num, video_result_string);
 
             return QSPI_TYPE_RESPONSE_VIDEO_RESULT;
         }
@@ -240,7 +238,7 @@ int qspi_worker(void)
         spi_req_t qspi_req = {0};
         qspi_header_t qspi_header = {0};
 
-        GPIO_OutClr(&ai85_audio_cs);
+        GPIO_OutClr(&ai85_audio_cs_pin);
         qspi_req.tx_data = NULL;
         qspi_req.rx_data = (uint8_t *) &qspi_header;
         qspi_req.len = sizeof(qspi_header_t);
@@ -252,11 +250,11 @@ int qspi_worker(void)
         qspi_req.tx_num = 0;
         qspi_req.rx_num = 0;
         qspi_req.callback = NULL;
-        SPI_MasterTrans(QSPI, &qspi_req);
-        GPIO_OutSet(&ai85_audio_cs);
+        SPI_MasterTrans(QSPI_ID, &qspi_req);
+        GPIO_OutSet(&ai85_audio_cs_pin);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
-            printf("Invalid QSPI start byte 0x%08hhX\n", qspi_header.start_symbol);
+            PR_ERROR("Invalid QSPI_ID start byte 0x%08hhX", qspi_header.start_symbol);
             return E_BAD_STATE;
         }
 
@@ -267,11 +265,11 @@ int qspi_worker(void)
             memset(audio_result_string, 0, sizeof(audio_result_string));
 
             if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(audio_result_string))) {
-                printf("Invalid QSPI data len %u\n", qspi_header.data_len);
+                PR_ERROR("Invalid QSPI_ID data len %u", qspi_header.data_len);
                 return E_BAD_PARAM;
             }
 
-            GPIO_OutClr(&ai85_audio_cs);
+            GPIO_OutClr(&ai85_audio_cs_pin);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)audio_result_string;
             qspi_req.len = qspi_header.data_len;
@@ -283,10 +281,10 @@ int qspi_worker(void)
             qspi_req.tx_num = 0;
             qspi_req.rx_num = 0;
             qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI, &qspi_req);
-            GPIO_OutSet(&ai85_audio_cs);
+            SPI_MasterTrans(QSPI_ID, &qspi_req);
+            GPIO_OutSet(&ai85_audio_cs_pin);
 
-            printf("audio result %u %s\n", qspi_req.rx_num, audio_result_string);
+            PR_INFO("audio result %u %s", qspi_req.rx_num, audio_result_string);
 
             return QSPI_TYPE_RESPONSE_AUDIO_RESULT;
         }
