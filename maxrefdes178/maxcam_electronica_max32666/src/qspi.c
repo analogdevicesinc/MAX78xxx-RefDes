@@ -118,7 +118,6 @@ int qspi_init()
 
     // Configure the peripheral
     if (SPI_Init(QSPI, 0, QSPI_SPEED, qspi_master_cfg) != 0) {
-
         printf("Error configuring QSPI\n");
     }
 
@@ -166,7 +165,8 @@ int qspi_worker(void)
             return E_BAD_STATE;
         }
 
-        TMR_Delay(MXC_TMR0, USEC(5), 0);
+        while(!qspi_video_int_flag);
+        qspi_video_int_flag = 0;
 
         if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_DATA) {
             if ((qspi_header.data_len == 0) || (qspi_header.data_len > IMAGE_SIZE)) {
@@ -187,11 +187,7 @@ int qspi_worker(void)
             qspi_req.rx_num = 0;
             qspi_req.callback = NULL;
             SPI_MasterTrans(QSPI, &qspi_req);
-            GPIO_OutSet(&ai85_video_cs);
 
-            TMR_Delay(MXC_TMR0, USEC(5), 0);
-
-            GPIO_OutClr(&ai85_video_cs);
             qspi_req.tx_data = NULL;
             qspi_req.rx_data = (void *)&(qspi_image_buff[qspi_header.data_len/2]);
             qspi_req.len = qspi_header.data_len / 2;
@@ -264,7 +260,8 @@ int qspi_worker(void)
             return E_BAD_STATE;
         }
 
-        TMR_Delay(MXC_TMR0, USEC(5), 0);
+        while(!qspi_audio_int_flag);
+        qspi_audio_int_flag = 0;
 
         if (qspi_header.data_type == QSPI_TYPE_RESPONSE_AUDIO_RESULT) {
             memset(audio_result_string, 0, sizeof(audio_result_string));

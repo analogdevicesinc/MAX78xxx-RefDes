@@ -53,6 +53,7 @@
 #include "gpio.h"
 #include "spi.h"
 
+#include "qspi_dma.h"
 #include "faceid_definitions.h"
 #include "version.h"
 #include "embedding_process.h"
@@ -79,7 +80,6 @@
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
 #define QSPI             MXC_SPI0
-#define QSPI_TIMEOUT_CNT 100000000
 
 #define DMA_CHANNEL_CAMERA          0
 #define DMA_CHANNEL_CAMERA_IRQ      DMA0_IRQn
@@ -96,7 +96,6 @@ static void fail(void);
 static void process_img(void);
 static void run_cnn(int x_offset, int y_offset);
 static void run_demo(void);
-static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen);
 static void send_image_to_me14(uint8_t *image, uint32_t len);
 static void send_result_to_me14(char *result, uint32_t len);
 static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color);
@@ -228,10 +227,8 @@ static const uint8_t camera_settings[][2] = {
 };
 
 // *****************************************************************************
-
 static int8_t prev_decision = -2;
 static int8_t decision = -2;
-static volatile uint8_t DMA_DONE_FLAG = 0;
 
 mxc_gpio_cfg_t gpio_flash;
 mxc_gpio_cfg_t qspi_int;
@@ -246,30 +243,7 @@ void DMA_CHANNEL_CAMERA_IRQ_HAND(void)
 
 void DMA_CHANNEL_QSPI_IRQ_HAND(void)
 {
-    int ch = DMA_CHANNEL_QSPI;
-    if (MXC_DMA->intfl & (0x1 << ch)) {
-        if (MXC_DMA->ch[ch].status & (MXC_F_DMA_STATUS_TO_IF | MXC_F_DMA_STATUS_BUS_ERR)) {
-            PR_ERROR("dma error %d", MXC_DMA->ch[ch].status);
-        }
-
-        if (MXC_DMA->ch[ch].cnt) {
-            PR_ERROR("dma is not empty %d", MXC_DMA->ch[ch].cnt);
-        }
-
-        // Stop DMA
-        MXC_DMA->ch[ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
-
-        // Clear DMA int flags
-        MXC_DMA->ch[ch].status |= (MXC_DMA->ch[ch].status & 0x5F);
-
-        // Stop SPI
-        QSPI->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
-
-        // Disable SPI DMA, flush FIFO
-        QSPI->dma = (MXC_F_SPI_DMA_TX_FLUSH) | (MXC_F_SPI_DMA_RX_FLUSH);
-
-        DMA_DONE_FLAG = 1;
-    }
+    qspi_dma_slave_int_handler(QSPI, DMA_CHANNEL_QSPI);
 }
 
 int main(void)
@@ -355,16 +329,7 @@ int main(void)
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
 
-    if (MXC_SPI_Init(QSPI, 0, 1, 0, 0, QSPI_SPEED, qspi_pins) != E_NO_ERROR) {
-        PR_ERROR("SPI INITIALIZATION ERROR");
-    }
-
-    // Set data size
-    MXC_SETFIELD(QSPI->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, 8 << MXC_F_SPI_CTRL2_NUMBITS_POS);
-
-    if (MXC_SPI_SetWidth(QSPI, SPI_WIDTH_QUAD) != E_NO_ERROR) {
-        PR_ERROR("SPI SET WIDTH ERROR");
-    }
+    qspi_dma_slave_init(QSPI, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
@@ -681,54 +646,6 @@ static void run_cnn(int x_offset, int y_offset)
     }
 }
 
-static void QSPI_SlaveTransDMA(uint8_t *txData, uint32_t txLen)
-{
-    uint8_t ch = DMA_CHANNEL_QSPI;
-
-    // Setup SPI
-    // Number of characters to receive in RX FIFO
-    QSPI->ctrl1 &= ~(MXC_F_SPI_CTRL1_RX_NUM_CHAR);
-
-    // Number of characters to transmit from TX FIFO.
-    MXC_SETFIELD(QSPI->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, txLen << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS);
-
-    // TX FIFO Enabled, clear TX and RX FIFO
-    QSPI->dma = ((MXC_F_SPI_DMA_TX_FIFO_EN) |
-                 (MXC_F_SPI_DMA_TX_FLUSH) |
-                 (MXC_F_SPI_DMA_RX_FLUSH));
-
-
-    // Set SPI DMA TX and RX Thresholds
-    MXC_SETFIELD(QSPI->dma, MXC_F_SPI_DMA_TX_THD_VAL, 4 << MXC_F_SPI_DMA_TX_THD_VAL_POS);
-    MXC_SETFIELD(QSPI->dma, MXC_F_SPI_DMA_RX_THD_VAL, 0 << MXC_F_SPI_DMA_RX_THD_VAL_POS);
-
-    // Setup DMA
-    DMA_DONE_FLAG = 0;
-    MXC_DMA->ch[ch].src = (unsigned int) txData;
-    MXC_DMA->ch[ch].dst = 0;
-    MXC_DMA->ch[ch].cnt = txLen;
-
-    // Clear DMA int flags
-    MXC_DMA->ch[ch].status |= (MXC_DMA->ch[ch].status & 0x5F);
-
-    // Enable SRC increment, set request, set source and destination width, enable channel, Count-To-Zero int enable
-    MXC_DMA->ch[ch].ctrl = ((MXC_F_DMA_CTRL_SRCINC) |
-                            (MXC_S_DMA_CTRL_REQUEST_SPI0TX) |
-                            (MXC_V_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_SRCWD_POS) |
-                            (MXC_V_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_DSTWD_POS) |
-                            (MXC_F_DMA_CTRL_EN) |
-                            (MXC_F_DMA_CTRL_CTZ_IE));
-
-    // Enable DMA int
-    MXC_DMA->inten |= (1 << ch);
-
-    // Enable SPI
-    QSPI->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
-
-    // Enable SPI DMA
-    QSPI->dma |= (MXC_F_SPI_DMA_DMA_TX_EN | MXC_F_SPI_DMA_DMA_RX_EN);
-}
-
 static void send_image_to_me14(uint8_t *image, uint32_t len)
 {
     qspi_header_t header;
@@ -738,21 +655,11 @@ static void send_image_to_me14(uint8_t *image, uint32_t len)
 
     PR_INFO("image tx start");
 
-    QSPI_SlaveTransDMA((uint8_t*) &header, sizeof(qspi_header_t));
+    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
+    qspi_dma_slave_tx_wait();
 
-    // Send interrupt to master
-    GPIO_CLR(qspi_int);
-    GPIO_SET(qspi_int);
-
-    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
-
-    QSPI_SlaveTransDMA(image, len/2);
-
-    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
-
-    QSPI_SlaveTransDMA(image+(len/2), len/2);
-
-    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
+    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, image, len, &qspi_int);
+//    qspi_dma_slave_tx_wait();
 
     PR_INFO("image tx completed");
 }
@@ -766,17 +673,11 @@ static void send_result_to_me14(char *result, uint32_t len)
 
     PR_INFO("result tx start");
 
-    QSPI_SlaveTransDMA((uint8_t*) &header, sizeof(qspi_header_t));
+    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
+    qspi_dma_slave_tx_wait();
 
-    // Send interrupt to master
-    GPIO_CLR(qspi_int);
-    GPIO_SET(qspi_int);
-
-    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
-
-    QSPI_SlaveTransDMA((uint8_t *)result, len);
-
-    for(uint32_t i = QSPI_TIMEOUT_CNT; !DMA_DONE_FLAG && i; i--);
+    qspi_dma_slave_tx(QSPI, DMA_CHANNEL_QSPI, (uint8_t *)result, len, &qspi_int);
+    qspi_dma_slave_tx_wait();
 
     PR_INFO("result tx completed");
 }

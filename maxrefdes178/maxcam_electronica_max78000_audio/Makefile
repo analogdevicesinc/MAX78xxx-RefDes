@@ -66,13 +66,13 @@ export CMSIS_ROOT
 SRCS  = main.c
 SRCS += softmax.c
 SRCS += cnn.c
+SRCS += qspi_dma.c
 
 # Where to find source files for this test
 VPATH=.
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 VPATH += $(LIBS_DIR)/Common
 VPATH += ./src
-# Where to find header files for this test
 # Where to find header files for this test
 IPATH = .
 IPATH += ./include

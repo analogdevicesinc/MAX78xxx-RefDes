@@ -63,10 +63,11 @@ export CMSIS_ROOT
 
 
 # Source files for this test (add path to VPATH below)
-SRCS  = src/main.c
-SRCS += src/utils.c
-SRCS += src/faceID.c
-SRCS += src/embedding_process.c
+SRCS  = main.c
+SRCS += utils.c
+SRCS += faceID.c
+SRCS += embedding_process.c
+SRCS += qspi_dma.c
 
 # Where to find source files for this test
 VPATH=.
@@ -74,11 +75,11 @@ VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 VPATH += $(LIBS_DIR)/Common
 VPATH += ./src
 # Where to find header files for this test
-# Where to find header files for this test
 IPATH = .
 IPATH += ./resources
 IPATH += ./include
 IPATH += ./../common
+IPATH += $(LIBS_DIR)/Common
 
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE

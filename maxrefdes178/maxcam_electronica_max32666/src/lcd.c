@@ -52,9 +52,12 @@
 //-----------------------------------------------------------------------------
 #define SPI_NAME          SPI1
 #define MXC_SPI           MXC_SPI1
-#define DMA_REQSEL_SPIRX  DMA_REQSEL_SPI1RX
 #define DMA_REQSEL_SPITX  DMA_REQSEL_SPI1TX
 #define SPI_SPEED         16000000
+
+#define DMA_CHANNEL          0
+#define DMA_CHANNEL_IRQ      DMA0_IRQn
+#define DMA_CHANNEL_IRQ_HAND DMA0_IRQHandler
 
 #define ST_CMD_DELAY   0x80
 
@@ -124,7 +127,6 @@
 static const gpio_cfg_t lcd_dc_pin     = {PORT_1, PIN_14  , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
 static const gpio_cfg_t lcd_reset_pin  = {PORT_1, PIN_15 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
 static const gpio_cfg_t ssel_pin       = {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
-static volatile int rx_dma_complete  = 1;
 static volatile int tx_dma_complete = 1;
 
 
@@ -140,42 +142,38 @@ static void lcd_configure();
 static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor);
 static void spi_init();
-static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len);
+static void spi_sendPacket(uint8_t* out, unsigned int len);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
 
-// DMA IRQ Handlers - there needs to be one handler for each channel used.  This example uses 2.
-void DMA0_IRQHandler()
+// DMA IRQ Handlers
+void DMA_CHANNEL_IRQ_HAND()
 {
-    DMA_Handler(0);
-}
+    int ch = DMA_CHANNEL;
+    if (MXC_DMA->intr & (0x1 << ch)) {
+        if (MXC_DMA->ch[ch].st & (MXC_F_DMA_ST_TO_ST | MXC_F_DMA_ST_BUS_ERR)) {
+            printf("dma error %d\n", MXC_DMA->ch[ch].st);
+        }
 
-void DMA1_IRQHandler()
-{
-    DMA_Handler(1);
-}
+        if (MXC_DMA->ch[ch].cnt) {
+            printf("dma is not empty %d\n", MXC_DMA->ch[ch].cnt);
+        }
 
-// A callback function that will be called when the RX DMA completes.
-void spi_rxCallback(int ch, int reason)
-{
-    rx_dma_complete = 1;
-}
+        // Clear DMA int flags
+        MXC_DMA->ch[ch].st =  MXC_DMA->ch[ch].st;
 
-// A callback function that will be called when the TX DMA completes.
-void spi_txCallback(int ch, int reason)
-{
-    tx_dma_complete = 1;
+        tx_dma_complete = 1;
+    }
 }
 
 static void spi_init()
 {
     // Initialize DMA peripheral
     DMA_Init();
-    NVIC_EnableIRQ(DMA0_IRQn);
-    NVIC_EnableIRQ(DMA1_IRQn);
+    NVIC_EnableIRQ(DMA_CHANNEL_IRQ);
 
     // Initialize SPI peripheral
     sys_cfg_spi_t master_cfg = {0};
@@ -192,78 +190,51 @@ static void spi_init()
             (16 << MXC_F_SPI17Y_SS_TIME_INACT_POS);
 }
 
-static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
+static void spi_sendPacket(uint8_t* out, unsigned int len)
 {
-    int in_ch = -1;
-    int out_ch = -1;
+    int ch = DMA_CHANNEL;
 
     // Clear DMA fifo
     MXC_SPI->dma |= MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR | MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR;
 
     // Initialize the CTRL0 register
     MXC_SPI->ctrl0 = MXC_F_SPI17Y_CTRL0_MASTER |   // Enable master mode
-            MXC_F_SPI17Y_CTRL0_EN;   // Enable the peripheral
+                     MXC_F_SPI17Y_CTRL0_EN;   // Enable the peripheral
 
     // Initialize the CTRL1 register
     MXC_SPI->ctrl1 = 0;
-    if(out) {
-        // Set how many to characters to send, or when in quad mode how many characters to receive
-        MXC_SPI->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
-    }
 
-    if(in) {
-        // Set how many characters to receive
-        MXC_SPI->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_RX_NUM_CHAR_POS);
-    }
+    // Set how many to characters to send, or when in quad mode how many characters to receive
+    MXC_SPI->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
 
     // Initialize the CTRL2 register
     MXC_SPI->ctrl2 = (MXC_S_SPI17Y_CTRL2_DATA_WIDTH_MONO) |
-            (8 << MXC_F_SPI17Y_CTRL2_NUMBITS_POS);
+                     (8 << MXC_F_SPI17Y_CTRL2_NUMBITS_POS);
 
     // Initialize the DMA register
     MXC_SPI->dma = 0;
-    if(out) {
-        MXC_SPI->dma |= MXC_F_SPI17Y_DMA_TX_DMA_EN |                   // Enable DMA for transmit
-                MXC_F_SPI17Y_DMA_TX_FIFO_EN |                  // Enable the TX FIFO
-                (31 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);    // Set the threshold of when to add more data to TX FIFO
-    }
-    if(in) {
-        MXC_SPI->dma |= MXC_F_SPI17Y_DMA_RX_DMA_EN |                   // Enable DMA for receive
-                MXC_F_SPI17Y_DMA_RX_FIFO_EN |                  // Enable the RX FIFO
-                (0 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);     // Set the threshold of when to read data from RX FIFO
-    }
-
-    // Prepare DMA for unloading RX FIFO.
-    if(in) {
-        in_ch = DMA_AcquireChannel();
-        DMA_ConfigChannel(in_ch, DMA_PRIO_LOW, DMA_REQSEL_SPIRX, 0,
-                DMA_TIMEOUT_4_CLK, DMA_PRESCALE_DISABLE,
-                DMA_WIDTH_BYTE, 0, DMA_WIDTH_BYTE, 1, 1, 1, 0);
-        DMA_SetCallback(in_ch, spi_rxCallback);
-        DMA_EnableInterrupt(in_ch);
-        DMA_SetSrcDstCnt(in_ch, 0, in, len);
-        rx_dma_complete = 0;
-        DMA_Start(in_ch);
-    }
-    else {
-        rx_dma_complete = 1;    // Not using the RX DMA, mark it as completed.
-    }
+    MXC_SPI->dma |= MXC_F_SPI17Y_DMA_TX_DMA_EN |                   // Enable DMA for transmit
+                    MXC_F_SPI17Y_DMA_TX_FIFO_EN |                  // Enable the TX FIFO
+                    (31 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);    // Set the threshold of when to add more data to TX FIFO
 
     // Prepare DMA to fill TX FIFO.
-    if(out) {
-        out_ch = DMA_AcquireChannel();
-        DMA_ConfigChannel(out_ch, DMA_PRIO_LOW, DMA_REQSEL_SPITX, 0,
-                DMA_TIMEOUT_4_CLK, DMA_PRESCALE_DISABLE,
-                DMA_WIDTH_BYTE, 1, DMA_WIDTH_BYTE, 0, 1, 1, 0);
-        DMA_SetCallback(out_ch, spi_txCallback);
-        DMA_EnableInterrupt(out_ch);
-        DMA_SetSrcDstCnt(out_ch, out, 0, len);
-        tx_dma_complete = 0;
-        DMA_Start(out_ch);
-    }
-    else {
-        tx_dma_complete = 1;    // Not using the TX DMA, mark it as completed.
-    }
+    MXC_DMA->ch[ch].cfg = MXC_F_DMA_CFG_SRCINC |
+                          MXC_F_DMA_CFG_CHDIEN |
+                          MXC_S_DMA_CFG_PRI_LOW |
+                          DMA_REQSEL_SPITX |
+                          MXC_S_DMA_CFG_TOSEL_TO4 |
+                          MXC_S_DMA_CFG_PSSEL_DIS |
+                          (MXC_V_DMA_CFG_SRCWD_BYTE << MXC_F_DMA_CFG_SRCWD_POS) |
+                          (MXC_V_DMA_CFG_SRCWD_BYTE << MXC_F_DMA_CFG_DSTWD_POS);
+
+    MXC_DMA->cn |= (1 << ch);
+    MXC_DMA->ch[ch].src = (unsigned int) out;
+    MXC_DMA->ch[ch].dst = 0;
+    MXC_DMA->ch[ch].cnt = len;
+
+    tx_dma_complete = 0;
+
+    MXC_DMA->ch[ch].cfg |= MXC_F_DMA_CFG_CHEN;
 
     // Start the SPI transaction
     MXC_SPI->ctrl0 |= MXC_F_SPI17Y_CTRL0_START;
@@ -274,14 +245,7 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
     // callbacks will be triggered when the DMA completes
     // so the application knows its time to do more work.
     // For this simple example, we'll just block here.
-    while(!rx_dma_complete || !tx_dma_complete);
-
-    if(in) {
-        DMA_ReleaseChannel(in_ch);
-    }
-    if(out) {
-        DMA_ReleaseChannel(out_ch);
-    }
+    while(!tx_dma_complete);
 
     // DMA has completed, but that just means DMA has loaded all of its data to/from
     //  the FIFOs.  We now need to wait for the SPI transaction to fully complete.
@@ -293,19 +257,19 @@ static void spi_sendPacket(uint8_t* out, uint8_t* in, unsigned int len)
 static void lcd_sendCommand(uint8_t command)
 {
     GPIO_OutClr(&lcd_dc_pin);
-    spi_sendPacket(&command, NULL, 1);
+    spi_sendPacket(&command, 1);
 }
 
 static void lcd_sendSmallData(uint8_t data)
 {
     GPIO_OutSet(&lcd_dc_pin);
-    spi_sendPacket(&data, NULL, 1);
+    spi_sendPacket(&data, 1);
 }
 
 static void lcd_sendData(uint8_t *data, uint32_t dataLen)
 {
     GPIO_OutSet(&lcd_dc_pin);
-    spi_sendPacket(data, NULL, dataLen);
+    spi_sendPacket(data, dataLen);
 }
 
 static void lcd_reset()
@@ -434,8 +398,8 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
  */
 void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
 {
-    uint32_t chunk_size;
-    uint32_t buff_size = 2 * w * h;
+//    uint32_t chunk_size;
+//    uint32_t buff_size = 2 * w * h;
     uint8_t *buff = data;
 
     lcd_setAddrWindow(x, y, x + w - 1, y + h - 1);
@@ -443,12 +407,15 @@ void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data
     GPIO_OutSet(&lcd_dc_pin);
     GPIO_OutClr(&ssel_pin);
 
-    while (buff_size > 0) {
-        chunk_size = buff_size > 57600 ? 57600 : buff_size;
-        spi_sendPacket(buff, NULL, chunk_size);
-        buff += chunk_size;
-        buff_size -= chunk_size;
-    }
+//    while (buff_size > 0) {
+//        chunk_size = buff_size > 57600 ? 57600 : buff_size;
+//        spi_sendPacket(buff, chunk_size);
+//        buff += chunk_size;
+//        buff_size -= chunk_size;
+//    }
+
+    spi_sendPacket(buff, 57600);
+    spi_sendPacket(buff + 57600, 57600);
 
     GPIO_OutSet(&ssel_pin);
 }
