@@ -54,7 +54,6 @@
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "lcd"
 
-
 #define SPI_DMA_COUNTER_MAX  0xffff
 
 #define ST_CMD_DELAY   0x80
@@ -183,8 +182,6 @@ void LCD_DMA_CHANNEL_IRQ_HAND()
 
 static void spi_init()
 {
-
-
     // Initialize SPI peripheral
     sys_cfg_spi_t master_cfg = {0};
     master_cfg.map = MAP_A;
@@ -204,6 +201,8 @@ static void spi_init()
     LCD_SPI->ss_time = (4 << MXC_F_SPI17Y_SS_TIME_PRE_POS) |
                        (8 << MXC_F_SPI17Y_SS_TIME_POST_POS) |
                        (16 << MXC_F_SPI17Y_SS_TIME_INACT_POS);
+
+    NVIC_EnableIRQ(LCD_DMA_CHANNEL_IRQ);
 }
 
 static void spi_sendPacket(uint8_t* out, unsigned int len)

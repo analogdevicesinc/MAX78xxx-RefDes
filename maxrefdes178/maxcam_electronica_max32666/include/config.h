@@ -46,20 +46,24 @@
 // Defines
 //-----------------------------------------------------------------------------
 // LCD
-#define LCD_SPI_ID               SPI1
-#define LCD_SPI                  MXC_SPI1
-#define LCD_DMA_REQSEL_SPITX     DMA_REQSEL_SPI1TX
-#define LCD_SPI_SPEED            16000000
+#define LCD_SPI_ID                SPI1
+#define LCD_SPI                   MXC_SPI1
+#define LCD_DMA_REQSEL_SPITX      DMA_REQSEL_SPI1TX
+#define LCD_SPI_SPEED             16000000
 
-#define LCD_DMA_CHANNEL          0
-#define LCD_DMA_CHANNEL_IRQ      DMA0_IRQn
-#define LCD_DMA_CHANNEL_IRQ_HAND DMA0_IRQHandler
+#define LCD_DMA_CHANNEL           0
+#define LCD_DMA_CHANNEL_IRQ       DMA0_IRQn
+#define LCD_DMA_CHANNEL_IRQ_HAND  DMA0_IRQHandler
 
 // QSPI
-#define QSPI_ID                  SPI0
-#define QSPI                     MXC_SPI0
-#define QSPI_IRQ                 SPI0_IRQn
-#define QSPI_IRQ_HAND            SPI0_IRQHandler
+#define QSPI_ID                   SPI0
+#define QSPI                      MXC_SPI0
+#define QSPI_DMA_REQSEL_SPITX     DMA_REQSEL_SPI0TX
+#define QSPI_DMA_REQSEL_SPIRX     DMA_REQSEL_SPI0RX
+
+#define QSPI_DMA_CHANNEL          1
+#define QSPI_DMA_CHANNEL_IRQ      DMA1_IRQn
+#define QSPI_DMA_CHANNEL_IRQ_HAND DMA1_IRQHandler
 
 
 //-----------------------------------------------------------------------------

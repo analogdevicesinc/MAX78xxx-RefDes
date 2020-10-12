@@ -52,6 +52,9 @@
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "qspi"
 
+#define SPI_DMA_COUNTER_MAX  0xffff
+#define QSPI_TIMEOUT_CNT     100000000
+
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -71,20 +74,133 @@ char video_result_string[RESULT_MAX_SIZE];
 char audio_result_string[RESULT_MAX_SIZE];
 static volatile int qspi_video_int_flag;
 static volatile int qspi_audio_int_flag;
+static volatile uint8_t dma_done_flag = 0;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static void qspi_dma_master_rx(uint8_t* in, unsigned int len);
+static int qspi_dma_wait(void);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void QSPI_IRQ_HAND(void)
+void QSPI_DMA_CHANNEL_IRQ_HAND(void)
 {
-    SPI_Handler(QSPI_ID);
+    int ch = QSPI_DMA_CHANNEL;
+    if (MXC_DMA->intr & (0x1 << ch)) {
+        if (MXC_DMA->ch[ch].st & (MXC_F_DMA_ST_TO_ST | MXC_F_DMA_ST_BUS_ERR)) {
+            PR_ERROR("dma error %d", MXC_DMA->ch[ch].st);
+        }
+
+        if (MXC_DMA->ch[ch].st & MXC_F_DMA_ST_RLD_ST) {
+            // reload occurred, do nothing
+        } else {
+            if (MXC_DMA->ch[ch].cnt) {
+                PR_WARN("dma is not empty %d", MXC_DMA->ch[ch].cnt);
+            }
+
+//            // Stop DMA
+//            MXC_DMA->ch[ch].cfg &= ~MXC_F_DMA_CFG_CHEN;
+//
+//            // Stop SPI
+//            MXC_SPI->ctrl0 &= ~MXC_F_SPI17Y_CTRL0_EN;
+//
+//            // Disable SPI DMA, flush FIFO
+//            MXC_SPI->dma = (MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR | MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
+
+            dma_done_flag = 1;
+        }
+
+        // Clear DMA int flags
+        MXC_DMA->ch[ch].st =  MXC_DMA->ch[ch].st;
+    }
 }
+
+static void qspi_dma_master_rx(uint8_t* in, unsigned int len)
+{
+    int ch = QSPI_DMA_CHANNEL;
+
+    // Initialize the CTRL1 register
+    QSPI->ctrl1 = 0;
+
+    // Set how many to characters to send, or when in quad mode how many characters to receive
+    if (len > SPI_DMA_COUNTER_MAX) {
+        QSPI->ctrl1 |= (SPI_DMA_COUNTER_MAX << MXC_F_SPI17Y_CTRL1_RX_NUM_CHAR_POS);
+    } else {
+        QSPI->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_RX_NUM_CHAR_POS);
+    }
+
+    // RX FIFO Enabled, clear TX and RX FIFO
+    QSPI->dma = (MXC_F_SPI17Y_DMA_RX_DMA_EN |
+                    MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR |
+                    MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
+
+    // Set SPI DMA TX and RX Thresholds
+    QSPI->dma |= (0 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);
+
+    // Enable SPI DMA
+    QSPI->dma |= MXC_F_SPI17Y_DMA_RX_FIFO_EN;
+
+    // Setup DMA
+    dma_done_flag = 0;
+
+    // Clear DMA int flags
+    MXC_DMA->ch[ch].st =  MXC_DMA->ch[ch].st;
+
+    // Prepare DMA to fill TX FIFO.
+    MXC_DMA->ch[ch].cfg = (MXC_F_DMA_CFG_DSTINC |
+                           QSPI_DMA_REQSEL_SPIRX |
+                           (MXC_V_DMA_CFG_SRCWD_BYTE << MXC_F_DMA_CFG_SRCWD_POS) |
+                           (MXC_V_DMA_CFG_SRCWD_BYTE << MXC_F_DMA_CFG_DSTWD_POS) |
+                           MXC_F_DMA_CFG_CHDIEN |
+                           MXC_F_DMA_CFG_CTZIEN);
+
+    // Set DMA source, destination, counter
+    MXC_DMA->ch[ch].cnt = len;
+    MXC_DMA->ch[ch].src = 0;
+    MXC_DMA->ch[ch].dst = (unsigned int) in;
+
+    // if too big, set reload registers
+    if (len > SPI_DMA_COUNTER_MAX) {
+        MXC_DMA->ch[ch].cnt = SPI_DMA_COUNTER_MAX;
+        MXC_DMA->ch[ch].src_rld = 0;
+        MXC_DMA->ch[ch].dst_rld = (unsigned int) (in + SPI_DMA_COUNTER_MAX);
+        MXC_DMA->ch[ch].cnt_rld = len - SPI_DMA_COUNTER_MAX;
+    }
+
+    // Enable DMA int
+    MXC_DMA->cn |= (1 << ch);
+
+    // Enable DMA
+    if (len > SPI_DMA_COUNTER_MAX) {
+        MXC_DMA->ch[ch].cfg |= (MXC_F_DMA_CFG_CHEN | MXC_F_DMA_CFG_RLDEN);
+    } else {
+        MXC_DMA->ch[ch].cfg |= MXC_F_DMA_CFG_CHEN;
+    }
+
+    // Start the SPI transaction
+    QSPI->ctrl0 |= (MXC_F_SPI17Y_CTRL0_EN | MXC_F_SPI17Y_CTRL0_START);
+}
+
+static int qspi_dma_wait(void)
+{
+    uint32_t cnt = QSPI_TIMEOUT_CNT;
+
+    while(!dma_done_flag && cnt) {
+        cnt--;
+    }
+
+    if (cnt == 0) {
+        PR_ERROR("timeout");
+        return 1;
+    }
+
+    return 0;
+}
+
 
 void qspi_video_int(void *cbdata)
 {
@@ -119,6 +235,19 @@ int qspi_init()
         PR_ERROR("Error configuring QSPI_ID");
     }
 
+    // Switch SPI to master mode, else the state of the SS pin could cause the SPI periph to appear 'BUSY';
+    QSPI->ctrl0 |= MXC_F_SPI17Y_CTRL0_MASTER;
+
+    // Initialize the CTRL2 register
+    QSPI->ctrl2 = (MXC_S_SPI17Y_CTRL2_DATA_WIDTH_QUAD) |
+                      (8 << MXC_F_SPI17Y_CTRL2_NUMBITS_POS);
+
+    QSPI->ss_time = (4 << MXC_F_SPI17Y_SS_TIME_PRE_POS) |
+                        (8 << MXC_F_SPI17Y_SS_TIME_POST_POS) |
+                        (16 << MXC_F_SPI17Y_SS_TIME_INACT_POS);
+
+    NVIC_EnableIRQ(QSPI_DMA_CHANNEL_IRQ);
+
     qspi_video_int_flag = 0;
     GPIO_Config(&ai85_video_int_pin);
     GPIO_RegisterCallback(&ai85_video_int_pin, qspi_video_int, NULL);
@@ -140,22 +269,11 @@ int qspi_worker(void)
 {
     if (qspi_video_int_flag) {
         qspi_video_int_flag = 0;
-        spi_req_t qspi_req = {0};
         qspi_header_t qspi_header = {0};
 
         GPIO_OutClr(&ai85_video_cs_pin);
-        qspi_req.tx_data = NULL;
-        qspi_req.rx_data = (uint8_t *) &qspi_header;
-        qspi_req.len = sizeof(qspi_header_t);
-        qspi_req.bits = 8;
-        qspi_req.width = SPI17Y_WIDTH_4;
-        qspi_req.ssel = 0;
-        qspi_req.deass = 0;
-        qspi_req.ssel_pol = SPI17Y_POL_LOW;
-        qspi_req.tx_num = 0;
-        qspi_req.rx_num = 0;
-        qspi_req.callback = NULL;
-        SPI_MasterTrans(QSPI_ID, &qspi_req);
+        qspi_dma_master_rx((uint8_t *) &qspi_header, sizeof(qspi_header_t));
+        qspi_dma_wait();
         GPIO_OutSet(&ai85_video_cs_pin);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
@@ -173,34 +291,13 @@ int qspi_worker(void)
             }
 
             GPIO_OutClr(&ai85_video_cs_pin);
-            qspi_req.tx_data = NULL;
-            qspi_req.rx_data = (void *)qspi_image_buff;
-            qspi_req.len = qspi_header.data_len / 2;
-            qspi_req.bits = 8;
-            qspi_req.width = SPI17Y_WIDTH_4;
-            qspi_req.ssel = 0;
-            qspi_req.deass = 0;
-            qspi_req.ssel_pol = SPI17Y_POL_LOW;
-            qspi_req.tx_num = 0;
-            qspi_req.rx_num = 0;
-            qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI_ID, &qspi_req);
-
-            qspi_req.tx_data = NULL;
-            qspi_req.rx_data = (void *)&(qspi_image_buff[qspi_header.data_len/2]);
-            qspi_req.len = qspi_header.data_len / 2;
-            qspi_req.bits = 8;
-            qspi_req.width = SPI17Y_WIDTH_4;
-            qspi_req.ssel = 0;
-            qspi_req.deass = 0;
-            qspi_req.ssel_pol = SPI17Y_POL_LOW;
-            qspi_req.tx_num = 0;
-            qspi_req.rx_num = 0;
-            qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI_ID, &qspi_req);
+            qspi_dma_master_rx((void *)qspi_image_buff, qspi_header.data_len / 2);
+            qspi_dma_wait();
+            qspi_dma_master_rx((void *)&(qspi_image_buff[qspi_header.data_len/2]), qspi_header.data_len / 2);
+            qspi_dma_wait();
             GPIO_OutSet(&ai85_video_cs_pin);
 
-            PR_INFO("video %u", qspi_req.rx_num * 2);
+            PR_INFO("video %u", qspi_header.data_len);
 
             return QSPI_TYPE_RESPONSE_VIDEO_DATA;
         } else if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_RESULT) {
@@ -212,21 +309,11 @@ int qspi_worker(void)
             memset(video_result_string, 0, sizeof(video_result_string));
 
             GPIO_OutClr(&ai85_video_cs_pin);
-            qspi_req.tx_data = NULL;
-            qspi_req.rx_data = (void *)video_result_string;
-            qspi_req.len = qspi_header.data_len;
-            qspi_req.bits = 8;
-            qspi_req.width = SPI17Y_WIDTH_4;
-            qspi_req.ssel = 0;
-            qspi_req.deass = 0;
-            qspi_req.ssel_pol = SPI17Y_POL_LOW;
-            qspi_req.tx_num = 0;
-            qspi_req.rx_num = 0;
-            qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI_ID, &qspi_req);
+            qspi_dma_master_rx((void *)video_result_string, qspi_header.data_len);
+            qspi_dma_wait();
             GPIO_OutSet(&ai85_video_cs_pin);
 
-            PR_INFO("video result %u %s", qspi_req.rx_num, video_result_string);
+            PR_INFO("video result %u %s", qspi_header.data_len, video_result_string);
 
             return QSPI_TYPE_RESPONSE_VIDEO_RESULT;
         }
@@ -235,22 +322,11 @@ int qspi_worker(void)
     if (qspi_audio_int_flag) {
         qspi_audio_int_flag = 0;
 
-        spi_req_t qspi_req = {0};
         qspi_header_t qspi_header = {0};
 
         GPIO_OutClr(&ai85_audio_cs_pin);
-        qspi_req.tx_data = NULL;
-        qspi_req.rx_data = (uint8_t *) &qspi_header;
-        qspi_req.len = sizeof(qspi_header_t);
-        qspi_req.bits = 8;
-        qspi_req.width = SPI17Y_WIDTH_4;
-        qspi_req.ssel = 0;
-        qspi_req.deass = 0;
-        qspi_req.ssel_pol = SPI17Y_POL_LOW;
-        qspi_req.tx_num = 0;
-        qspi_req.rx_num = 0;
-        qspi_req.callback = NULL;
-        SPI_MasterTrans(QSPI_ID, &qspi_req);
+        qspi_dma_master_rx((uint8_t *) &qspi_header, sizeof(qspi_header_t));
+        qspi_dma_wait();
         GPIO_OutSet(&ai85_audio_cs_pin);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
@@ -270,21 +346,11 @@ int qspi_worker(void)
             }
 
             GPIO_OutClr(&ai85_audio_cs_pin);
-            qspi_req.tx_data = NULL;
-            qspi_req.rx_data = (void *)audio_result_string;
-            qspi_req.len = qspi_header.data_len;
-            qspi_req.bits = 8;
-            qspi_req.width = SPI17Y_WIDTH_4;
-            qspi_req.ssel = 0;
-            qspi_req.deass = 0;
-            qspi_req.ssel_pol = SPI17Y_POL_LOW;
-            qspi_req.tx_num = 0;
-            qspi_req.rx_num = 0;
-            qspi_req.callback = NULL;
-            SPI_MasterTrans(QSPI_ID, &qspi_req);
+            qspi_dma_master_rx((void *)audio_result_string, qspi_header.data_len);
+            qspi_dma_wait();
             GPIO_OutSet(&ai85_audio_cs_pin);
 
-            PR_INFO("audio result %u %s", qspi_req.rx_num, audio_result_string);
+            PR_INFO("audio result %u %s", qspi_header.data_len, audio_result_string);
 
             return QSPI_TYPE_RESPONSE_AUDIO_RESULT;
         }

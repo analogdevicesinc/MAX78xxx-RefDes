@@ -754,10 +754,10 @@ static void send_result_to_me14(char *result, uint32_t len)
     PR_INFO("result tx start");
 
     qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
-    qspi_dma_slave_tx_wait();
+    qspi_dma_slave_wait();
 
     qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t *)result, len, &qspi_int);
-    qspi_dma_slave_tx_wait();
+    qspi_dma_slave_wait();
 
     PR_INFO("result tx completed");
 }

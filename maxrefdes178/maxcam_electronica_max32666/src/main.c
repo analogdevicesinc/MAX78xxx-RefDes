@@ -104,7 +104,6 @@ int main(void)
 
     // Initialize DMA peripheral
     DMA_Init();
-    NVIC_EnableIRQ(LCD_DMA_CHANNEL_IRQ);
 
     if (qspi_init(1) != E_NO_ERROR) {
         PR_ERROR("qspi init failed");

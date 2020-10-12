@@ -45,6 +45,8 @@
 #include "board.h"
 #include "spi.h"
 
+#include "maxcam_debug.h"
+
 
 //-----------------------------------------------------------------------------
 // Defines
@@ -61,7 +63,7 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-volatile uint8_t DMA_DONE_FLAG = 0;
+static volatile uint8_t dma_done_flag = 0;
 
 
 //-----------------------------------------------------------------------------
@@ -75,14 +77,14 @@ volatile uint8_t DMA_DONE_FLAG = 0;
 void qspi_dma_slave_init(mxc_spi_regs_t *qspi, mxc_spi_pins_t qspi_pins)
 {
     if (MXC_SPI_Init(qspi, 0, 1, 0, 0, 0, qspi_pins) != E_NO_ERROR) {
-        printf("SPI INITIALIZATION ERROR\n");
+        PR_ERROR("SPI INITIALIZATION ERROR");
     }
 
     // Set data size
     MXC_SETFIELD(qspi->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, (8 << MXC_F_SPI_CTRL2_NUMBITS_POS));
 
     if (MXC_SPI_SetWidth(qspi, SPI_WIDTH_QUAD) != E_NO_ERROR) {
-        printf("SPI SET WIDTH ERROR\n");
+        PR_ERROR("SPI SET WIDTH ERROR");
     }
 }
 
@@ -112,7 +114,7 @@ void qspi_dma_slave_tx(mxc_spi_regs_t *qspi, uint8_t ch, uint8_t *txData, uint32
     qspi->dma |= MXC_F_SPI_DMA_DMA_TX_EN;
 
     // Setup DMA
-    DMA_DONE_FLAG = 0;
+    dma_done_flag = 0;
 
     // Clear DMA int flags
     MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
@@ -155,16 +157,16 @@ void qspi_dma_slave_tx(mxc_spi_regs_t *qspi, uint8_t ch, uint8_t *txData, uint32
     qspi_int->port->out_set = qspi_int->mask;
 }
 
-int qspi_dma_slave_tx_wait(void)
+int qspi_dma_slave_wait(void)
 {
     uint32_t cnt = QSPI_TIMEOUT_CNT;
 
-    while(!DMA_DONE_FLAG && cnt) {
+    while(!dma_done_flag && cnt) {
         cnt--;
     }
 
     if (cnt == 0) {
-        printf("timeout\n");
+        PR_WARN("timeout");
         return 1;
     }
 
@@ -175,14 +177,14 @@ void qspi_dma_slave_int_handler(mxc_spi_regs_t *qspi, uint8_t ch)
 {
     if (MXC_DMA->intfl & (0x1 << ch)) {
         if (MXC_DMA->ch[ch].status & (MXC_F_DMA_STATUS_TO_IF | MXC_F_DMA_STATUS_BUS_ERR)) {
-            printf("dma error %d", MXC_DMA->ch[ch].status);
+            PR_ERROR("dma error %d", MXC_DMA->ch[ch].status);
         }
 
         if (MXC_DMA->ch[ch].status & MXC_F_DMA_STATUS_RLD_IF) {
             // reload interrupt, do nothing
         } else {
             if (MXC_DMA->ch[ch].cnt) {
-                printf("dma is not empty %d", MXC_DMA->ch[ch].cnt);
+                PR_ERROR("dma is not empty %d", MXC_DMA->ch[ch].cnt);
             }
 
             // Stop DMA
@@ -194,7 +196,7 @@ void qspi_dma_slave_int_handler(mxc_spi_regs_t *qspi, uint8_t ch)
             // Disable SPI DMA, flush FIFO
             qspi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
 
-            DMA_DONE_FLAG = 1;
+            dma_done_flag = 1;
         }
 
         // Clear DMA int flags
