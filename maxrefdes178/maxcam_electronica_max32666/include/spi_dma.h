@@ -32,8 +32,8 @@
 * ownership rights.
 *******************************************************************************
 */
-#ifndef QSPI_DMA_H_
-#define QSPI_DMA_H_
+#ifndef SPI_DMA_H_
+#define SPI_DMA_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -60,9 +60,10 @@
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void qspi_dma_slave_init(mxc_spi_regs_t *qspi, mxc_spi_pins_t qspi_pins);
-void qspi_dma_slave_tx(mxc_spi_regs_t *qspi, uint8_t ch, uint8_t *txData, uint32_t txLen, mxc_gpio_cfg_t *qspi_int);
-int qspi_dma_slave_wait(void);
-void qspi_dma_slave_int_handler(mxc_spi_regs_t *qspi, uint8_t ch);
+void spi_dma_int_handler(uint8_t ch, mxc_spi17y_regs_t *spi);
+void spi_dma_master_init(mxc_spi17y_regs_t *spi, spi_type spi_id, sys_cfg_spi_t spi_pins, uint32_t speed, uint8_t quad);
+void spi_dma_rx(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data, uint32_t len, dma_reqsel_t reqsel);
+void spi_dma_tx(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data, uint32_t len, dma_reqsel_t reqsel, uint8_t sync);
+int spi_dma_wait(uint8_t ch);
 
-#endif /* QSPI_DMA_H_ */
+#endif /* SPI_DMA_H_ */

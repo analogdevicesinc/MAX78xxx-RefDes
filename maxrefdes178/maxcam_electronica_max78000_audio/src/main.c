@@ -61,7 +61,7 @@
 #include "cnn.h"
 #include "mxc.h"
 
-#include "qspi_dma.h"
+#include "spi_dma.h"
 #include "maxcam_debug.h"
 #include "faceid_definitions.h"
 #include "version.h"
@@ -152,7 +152,7 @@ static void send_result_to_me14(char *result, uint32_t len);
 /* **************************************************************************** */
 void DMA_CHANNEL_QSPI_IRQ_HAND(void)
 {
-    qspi_dma_slave_int_handler(QSPI_ID, DMA_CHANNEL_QSPI);
+    spi_dma_int_handler(DMA_CHANNEL_QSPI, QSPI_ID);
 }
 
 int main(void)
@@ -234,7 +234,7 @@ int main(void)
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
 
-    qspi_dma_slave_init(QSPI_ID, qspi_pins);
+    spi_dma_slave_init(QSPI_ID, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
@@ -753,11 +753,11 @@ static void send_result_to_me14(char *result, uint32_t len)
 
     PR_INFO("result tx start");
 
-    qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
-    qspi_dma_slave_wait();
+    spi_dma_tx(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
+    spi_dma_wait(DMA_CHANNEL_QSPI);
 
-    qspi_dma_slave_tx(QSPI_ID, DMA_CHANNEL_QSPI, (uint8_t *)result, len, &qspi_int);
-    qspi_dma_slave_wait();
+    spi_dma_tx(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t *)result, len, &qspi_int);
+    spi_dma_wait(DMA_CHANNEL_QSPI);
 
     PR_INFO("result tx completed");
 }

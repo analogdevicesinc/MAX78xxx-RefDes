@@ -33,7 +33,7 @@
 *******************************************************************************
 */
 
-#define S_MODULE_NAME   "qspi_dma"
+#define S_MODULE_NAME   "spi_dma"
 
 
 //-----------------------------------------------------------------------------
@@ -44,6 +44,7 @@
 #include <mxc.h>
 #include "board.h"
 #include "spi.h"
+#include "spi_dma.h"
 
 #include "maxcam_debug.h"
 
@@ -52,7 +53,7 @@
 // Defines
 //-----------------------------------------------------------------------------
 #define SPI_DMA_COUNTER_MAX  0xffff
-#define QSPI_TIMEOUT_CNT     100000000
+#define SPI_TIMEOUT_CNT      100000000
 
 
 //-----------------------------------------------------------------------------
@@ -63,7 +64,7 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static volatile uint8_t dma_done_flag = 0;
+static volatile uint8_t dma_done_flag[MXC_DMA_CHANNELS] = {0};
 
 
 //-----------------------------------------------------------------------------
@@ -74,106 +75,7 @@ static volatile uint8_t dma_done_flag = 0;
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void qspi_dma_slave_init(mxc_spi_regs_t *qspi, mxc_spi_pins_t qspi_pins)
-{
-    if (MXC_SPI_Init(qspi, 0, 1, 0, 0, 0, qspi_pins) != E_NO_ERROR) {
-        PR_ERROR("SPI INITIALIZATION ERROR");
-    }
-
-    // Set data size
-    MXC_SETFIELD(qspi->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, (8 << MXC_F_SPI_CTRL2_NUMBITS_POS));
-
-    if (MXC_SPI_SetWidth(qspi, SPI_WIDTH_QUAD) != E_NO_ERROR) {
-        PR_ERROR("SPI SET WIDTH ERROR");
-    }
-}
-
-void qspi_dma_slave_tx(mxc_spi_regs_t *qspi, uint8_t ch, uint8_t *txData, uint32_t txLen, mxc_gpio_cfg_t *qspi_int)
-{
-    // Setup SPI
-    qspi->ctrl1 = 0;
-
-    // Number of characters to transmit from TX FIFO.
-    if (txLen > SPI_DMA_COUNTER_MAX) {
-        MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (SPI_DMA_COUNTER_MAX << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
-    } else {
-        MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (txLen << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
-    }
-
-    // TX FIFO Enabled, clear TX and RX FIFO
-    qspi->dma = (MXC_F_SPI_DMA_TX_FIFO_EN |
-                 MXC_F_SPI_DMA_TX_FLUSH |
-                 MXC_F_SPI_DMA_RX_FLUSH);
-
-
-    // Set SPI DMA TX and RX Thresholds
-    MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_TX_THD_VAL, (4 << MXC_F_SPI_DMA_TX_THD_VAL_POS));
-    MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_RX_THD_VAL, (0 << MXC_F_SPI_DMA_RX_THD_VAL_POS));
-
-    // Enable SPI DMA
-    qspi->dma |= MXC_F_SPI_DMA_DMA_TX_EN;
-
-    // Setup DMA
-    dma_done_flag = 0;
-
-    // Clear DMA int flags
-    MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
-
-    // Enable SRC increment, set request, set source and destination width, enable channel, Count-To-Zero int enable
-    MXC_DMA->ch[ch].ctrl = (MXC_F_DMA_CTRL_SRCINC |
-                            MXC_S_DMA_CTRL_REQUEST_SPI0TX |
-                            (MXC_S_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_SRCWD_POS) |
-                            (MXC_S_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_DSTWD_POS) |
-                            MXC_F_DMA_CTRL_CTZ_IE);
-
-    // Set DMA source, destination, counter
-    MXC_DMA->ch[ch].cnt = txLen;
-    MXC_DMA->ch[ch].src = (unsigned int) txData;
-    MXC_DMA->ch[ch].dst = 0;
-
-    // if too big, set reload registers
-    if (txLen > SPI_DMA_COUNTER_MAX) {
-        MXC_DMA->ch[ch].cnt = SPI_DMA_COUNTER_MAX;
-        MXC_DMA->ch[ch].srcrld = (unsigned int) (txData + SPI_DMA_COUNTER_MAX);
-        MXC_DMA->ch[ch].dstrld = 0;
-        MXC_DMA->ch[ch].cntrld = txLen - SPI_DMA_COUNTER_MAX;
-    }
-
-    // Enable DMA int
-    MXC_DMA->inten |= (1 << ch);
-
-    // Enable DMA
-    if (txLen > SPI_DMA_COUNTER_MAX) {
-        MXC_DMA->ch[ch].ctrl |= (MXC_F_DMA_CTRL_EN | MXC_F_DMA_CTRL_RLDEN);
-    } else {
-        MXC_DMA->ch[ch].ctrl |= MXC_F_DMA_CTRL_EN;
-    }
-
-    // Enable SPI
-    qspi->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
-
-    // Send interrupt to master
-    qspi_int->port->out_clr = qspi_int->mask;
-    qspi_int->port->out_set = qspi_int->mask;
-}
-
-int qspi_dma_slave_wait(void)
-{
-    uint32_t cnt = QSPI_TIMEOUT_CNT;
-
-    while(!dma_done_flag && cnt) {
-        cnt--;
-    }
-
-    if (cnt == 0) {
-        PR_WARN("timeout");
-        return 1;
-    }
-
-    return 0;
-}
-
-void qspi_dma_slave_int_handler(mxc_spi_regs_t *qspi, uint8_t ch)
+void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi)
 {
     if (MXC_DMA->intfl & (0x1 << ch)) {
         if (MXC_DMA->ch[ch].status & (MXC_F_DMA_STATUS_TO_IF | MXC_F_DMA_STATUS_BUS_ERR)) {
@@ -191,15 +93,115 @@ void qspi_dma_slave_int_handler(mxc_spi_regs_t *qspi, uint8_t ch)
             MXC_DMA->ch[ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
 
             // Stop SPI
-            qspi->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
+            spi->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
 
             // Disable SPI DMA, flush FIFO
-            qspi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
+            spi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
 
-            dma_done_flag = 1;
+            dma_done_flag[ch] = 1;
         }
 
         // Clear DMA int flags
         MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
     }
+}
+
+
+void spi_dma_slave_init(mxc_spi_regs_t *spi, mxc_spi_pins_t spi_pins)
+{
+    if (MXC_SPI_Init(spi, 0, 1, 0, 0, 0, spi_pins) != E_NO_ERROR) {
+        PR_ERROR("SPI INITIALIZATION ERROR");
+    }
+
+    // Set data size
+    MXC_SETFIELD(spi->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, (8 << MXC_F_SPI_CTRL2_NUMBITS_POS));
+
+    if (MXC_SPI_SetWidth(spi, SPI_WIDTH_QUAD) != E_NO_ERROR) {
+        PR_ERROR("SPI SET WIDTH ERROR");
+    }
+}
+
+void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mxc_gpio_cfg_t *spi_int)
+{
+    // Setup SPI
+    spi->ctrl1 = 0;
+
+    // Number of characters to transmit from TX FIFO.
+    if (len > SPI_DMA_COUNTER_MAX) {
+        MXC_SETFIELD(spi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (SPI_DMA_COUNTER_MAX << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
+    } else {
+        MXC_SETFIELD(spi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (len << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
+    }
+
+    // TX FIFO Enabled, clear TX and RX FIFO
+    spi->dma = (MXC_F_SPI_DMA_TX_FIFO_EN |
+                 MXC_F_SPI_DMA_TX_FLUSH |
+                 MXC_F_SPI_DMA_RX_FLUSH);
+
+
+    // Set SPI DMA TX and RX Thresholds
+    MXC_SETFIELD(spi->dma, MXC_F_SPI_DMA_TX_THD_VAL, (4 << MXC_F_SPI_DMA_TX_THD_VAL_POS));
+    MXC_SETFIELD(spi->dma, MXC_F_SPI_DMA_RX_THD_VAL, (0 << MXC_F_SPI_DMA_RX_THD_VAL_POS));
+
+    // Enable SPI DMA
+    spi->dma |= MXC_F_SPI_DMA_DMA_TX_EN;
+
+    // Setup DMA
+    dma_done_flag[ch] = 0;
+
+    // Clear DMA int flags
+    MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
+
+    // Enable SRC increment, set request, set source and destination width, enable channel, Count-To-Zero int enable
+    MXC_DMA->ch[ch].ctrl = (MXC_F_DMA_CTRL_SRCINC |
+                            MXC_S_DMA_CTRL_REQUEST_SPI0TX |
+                            (MXC_S_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_SRCWD_POS) |
+                            (MXC_S_DMA_CTRL_SRCWD_WORD << MXC_F_DMA_CTRL_DSTWD_POS) |
+                            MXC_F_DMA_CTRL_CTZ_IE);
+
+    // Set DMA source, destination, counter
+    MXC_DMA->ch[ch].cnt = len;
+    MXC_DMA->ch[ch].src = (unsigned int) data;
+    MXC_DMA->ch[ch].dst = 0;
+
+    // if too big, set reload registers
+    if (len > SPI_DMA_COUNTER_MAX) {
+        MXC_DMA->ch[ch].cnt = SPI_DMA_COUNTER_MAX;
+        MXC_DMA->ch[ch].srcrld = (unsigned int) (data + SPI_DMA_COUNTER_MAX);
+        MXC_DMA->ch[ch].dstrld = 0;
+        MXC_DMA->ch[ch].cntrld = len - SPI_DMA_COUNTER_MAX;
+    }
+
+    // Enable DMA int
+    MXC_DMA->inten |= (1 << ch);
+
+    // Enable DMA
+    if (len > SPI_DMA_COUNTER_MAX) {
+        MXC_DMA->ch[ch].ctrl |= (MXC_F_DMA_CTRL_EN | MXC_F_DMA_CTRL_RLDEN);
+    } else {
+        MXC_DMA->ch[ch].ctrl |= MXC_F_DMA_CTRL_EN;
+    }
+
+    // Enable SPI
+    spi->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
+
+    // Send interrupt to master
+    spi_int->port->out_clr = spi_int->mask;
+    spi_int->port->out_set = spi_int->mask;
+}
+
+int spi_dma_wait(uint8_t ch)
+{
+    uint32_t cnt = SPI_TIMEOUT_CNT;
+
+    while(!dma_done_flag[ch] && cnt) {
+        cnt--;
+    }
+
+    if (cnt == 0) {
+        PR_WARN("timeout");
+        return 1;
+    }
+
+    return 0;
 }

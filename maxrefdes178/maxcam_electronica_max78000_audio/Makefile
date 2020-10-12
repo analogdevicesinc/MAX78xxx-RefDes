@@ -66,7 +66,7 @@ export CMSIS_ROOT
 SRCS  = main.c
 SRCS += softmax.c
 SRCS += cnn.c
-SRCS += qspi_dma.c
+SRCS += spi_dma.c
 
 # Where to find source files for this test
 VPATH=.

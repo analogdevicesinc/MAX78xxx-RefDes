@@ -61,11 +61,11 @@ LIBS_DIR=./Libraries
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 # Source files for this test (add path to VPATH below)
-SRCS  = ./src/main.c
-SRCS += ./src/qspi.c
-SRCS += ./src/lcd.c
-SRCS += ./src/fonts.c
-
+SRCS  = main.c
+SRCS += qspi.c
+SRCS += lcd.c
+SRCS += fonts.c
+SRCS += spi_dma.c
 
 # Where to find source files for this test
 VPATH = ./src

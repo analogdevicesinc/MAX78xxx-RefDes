@@ -67,7 +67,7 @@ SRCS  = main.c
 SRCS += utils.c
 SRCS += faceID.c
 SRCS += embedding_process.c
-SRCS += qspi_dma.c
+SRCS += spi_dma.c
 
 # Where to find source files for this test
 VPATH=.
