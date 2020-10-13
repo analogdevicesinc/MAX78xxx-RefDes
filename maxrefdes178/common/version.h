@@ -46,7 +46,7 @@
 // Defines
 //-----------------------------------------------------------------------------
 #define S_VERSION_MAJOR 0
-#define S_VERSION_MINOR 1
+#define S_VERSION_MINOR 2
 #define S_VERSION_BUILD S_BUILD_NUMBER
 
 #endif /* _VERSION_H_ */
