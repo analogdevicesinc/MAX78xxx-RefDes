@@ -244,7 +244,7 @@ int MAX20303_initialize(uint8_t initialize_i2c)
 
     // Power On MAX78000 Board
     MAX20303_setbuck2(MAX20303_BUCK_OUTPUT_ON);
-    TMR_Delay(MXC_TMR0, MSEC(10), 0);
+    TMR_Delay(MXC_TMR0, MSEC(100), 0);
 
     return E_NO_ERROR;
 }

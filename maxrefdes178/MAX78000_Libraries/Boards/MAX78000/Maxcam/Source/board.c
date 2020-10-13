@@ -76,7 +76,7 @@ int Board_Init(void)
 #ifndef __riscv
     int err;
 
-//    for(unsigned long delay_count = 0 ; delay_count < 1000000; delay_count++ );
+    for(unsigned long delay_count = 0 ; delay_count < 500000; delay_count++ );
 
     // Enable GPIO
     MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_GPIO0);
