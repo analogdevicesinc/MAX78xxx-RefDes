@@ -142,7 +142,7 @@ int qspi_worker(void)
 
         GPIO_OutClr(&ai85_video_cs_pin);
         spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (uint8_t *) &qspi_header, sizeof(qspi_header_t), QSPI_DMA_REQSEL_SPIRX);
-        spi_dma_wait(QSPI_DMA_CHANNEL);
+        spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
         GPIO_OutSet(&ai85_video_cs_pin);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
@@ -160,10 +160,8 @@ int qspi_worker(void)
             }
 
             GPIO_OutClr(&ai85_video_cs_pin);
-            spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (void *)qspi_image_buff, qspi_header.data_len / 2, QSPI_DMA_REQSEL_SPIRX);
-            spi_dma_wait(QSPI_DMA_CHANNEL);
-            spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (void *)&(qspi_image_buff[qspi_header.data_len/2]), qspi_header.data_len / 2, QSPI_DMA_REQSEL_SPIRX);
-            spi_dma_wait(QSPI_DMA_CHANNEL);
+            spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (void *)qspi_image_buff, qspi_header.data_len, QSPI_DMA_REQSEL_SPIRX);
+            spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
             GPIO_OutSet(&ai85_video_cs_pin);
 
             PR_INFO("video %u", qspi_header.data_len);
@@ -179,7 +177,7 @@ int qspi_worker(void)
 
             GPIO_OutClr(&ai85_video_cs_pin);
             spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (void *)video_result_string, qspi_header.data_len, QSPI_DMA_REQSEL_SPIRX);
-            spi_dma_wait(QSPI_DMA_CHANNEL);
+            spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
             GPIO_OutSet(&ai85_video_cs_pin);
 
             PR_INFO("video result %u %s", qspi_header.data_len, video_result_string);
@@ -195,7 +193,7 @@ int qspi_worker(void)
 
         GPIO_OutClr(&ai85_audio_cs_pin);
         spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (uint8_t *) &qspi_header, sizeof(qspi_header_t), QSPI_DMA_REQSEL_SPIRX);
-        spi_dma_wait(QSPI_DMA_CHANNEL);
+        spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
         GPIO_OutSet(&ai85_audio_cs_pin);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
@@ -216,7 +214,7 @@ int qspi_worker(void)
 
             GPIO_OutClr(&ai85_audio_cs_pin);
             spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (void *)audio_result_string, qspi_header.data_len, QSPI_DMA_REQSEL_SPIRX);
-            spi_dma_wait(QSPI_DMA_CHANNEL);
+            spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
             GPIO_OutSet(&ai85_audio_cs_pin);
 
             PR_INFO("audio result %u %s", qspi_header.data_len, audio_result_string);

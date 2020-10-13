@@ -165,19 +165,22 @@ static void spi_init()
 static void lcd_sendCommand(uint8_t command)
 {
     GPIO_OutClr(&lcd_dc_pin);
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, &command, 1, LCD_DMA_REQSEL_SPITX, 1);
+    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, &command, 1, LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
 }
 
 static void lcd_sendSmallData(uint8_t data)
 {
     GPIO_OutSet(&lcd_dc_pin);
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, &data, 1, LCD_DMA_REQSEL_SPITX, 1);
+    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, &data, 1, LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
 }
 
 static void lcd_sendData(uint8_t *data, uint32_t dataLen)
 {
     GPIO_OutSet(&lcd_dc_pin);
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, data, dataLen, LCD_DMA_REQSEL_SPITX, 1);
+    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, data, dataLen, LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
 }
 
 static void lcd_reset()
@@ -314,10 +317,13 @@ void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data
     GPIO_OutSet(&lcd_dc_pin);
     GPIO_OutClr(&lcd_ssel_pin);
 
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff, 57600, LCD_DMA_REQSEL_SPITX, 1);
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff + 57600, 57600, LCD_DMA_REQSEL_SPITX, 1);
+    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff, 57600, LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
+    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff + 57600, 57600, LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
 
-//    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff, 2 * w * h, LCD_DMA_REQSEL_SPITX, 0);
+//    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff, 2 * w * h, LCD_DMA_REQSEL_SPITX);
+//    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
 
     GPIO_OutSet(&lcd_ssel_pin);
 }
