@@ -169,10 +169,10 @@ static int MAX20303_readReg(const uint8_t reg, uint8_t * buf)
 
 }*/
 
-int MAX20303_initialize(uint8_t initialize_i2c) {
-
-/*    int err;
-	uint8_t hardwareID;*/
+int MAX20303_initialize(uint8_t initialize_i2c)
+{
+//    int err;
+//	uint8_t hardwareID;
 
 	if (initialize_i2c) {
         I2C_Shutdown(PMIC_I2C);
@@ -188,20 +188,17 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     MAX20303_led_green(MAX20303_LED_OUTPUT_OFF);
     MAX20303_led_blue(MAX20303_LED_OUTPUT_OFF);
 
-/*
- * TODO : implement I2C read reg
-    if ((err = MAX20303_readReg( MAX20303_HARDWARE_ID , &hardwareID )) != E_NO_ERROR ) {
+//    TODO : implement I2C read reg
+//    if ((err = MAX20303_readReg( MAX20303_HARDWARE_ID , &hardwareID )) != E_NO_ERROR ) {
+//    	printf("\r\nError: %d \r\n", err );
+//    	return err;
+//    }
+//
+//    if (hardwareID != MAX20303_HARDWARE_ID) {
+//    	printf("\r\nHardware ID: %x", hardwareID );
+//    	return E_NOT_SUPPORTED;
+//    }
 
-    	printf("\r\nError: %d \r\n", err );
-    	return err;
-    }
-
-    if ( hardwareID != MAX20303_HARDWARE_ID ) {
-
-    	printf("\r\nHardware ID: %x", hardwareID );
-    	return E_NOT_SUPPORTED;
-    }
-*/
     // MAX20303J : Default configuration must modified for normal mode of operation
     // At Power-Up :
     // LOD1				is disabled , configured as LDO; Vout = 1.2V
@@ -221,10 +218,8 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
     MAX20303_setbuck2(MAX20303_BUCK_OUTPUT_OFF);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
 
-
     MAX20303_setbuck1(MAX20303_BUCK_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
-
 
     MAX20303_setbuck2(MAX20303_BUCK_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
@@ -234,20 +229,22 @@ int MAX20303_initialize(uint8_t initialize_i2c) {
 
     MAX20303_setldo1(MAX20303_LDO_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
     MAX20303_setldo1(MAX20303_LDO_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
 
     MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
     MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
     MAX20303_setldo2(MAX20303_LDO_OUTPUT_ON);
     TMR_Delay(MXC_TMR0, MSEC(10), 0);
 
     // Power On MAX78000 Board
     MAX20303_setbuck2(MAX20303_BUCK_OUTPUT_ON);
-    TMR_Delay(MXC_TMR0, MSEC(500), 0);
-
+    TMR_Delay(MXC_TMR0, MSEC(10), 0);
 
     return E_NO_ERROR;
 }
@@ -336,7 +333,6 @@ void MAX20303_setbuck2(uint8_t buck2_onoff)
 
 void MAX20303_setbuckboost(uint8_t buckboost_onoff)
 {
-
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT0, 0x00 );				   //  Reserved. Set to 0x00
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT1, 0x07 );				   //  BBstIset : 350mAa Max
     MAX20303_writeReg(MAX20303_REG_AP_DATOUT2, 0x19 );				   //  BBstVset = 0x19=25  ( ( 25 * 100mV) + 2.5V = 5.00V)

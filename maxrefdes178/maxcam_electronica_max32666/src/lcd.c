@@ -128,7 +128,6 @@ const gpio_cfg_t lcd_ssel_pin  = {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_PAD_PULL_
 // Local function declarations
 //-----------------------------------------------------------------------------
 static void lcd_reset();
-static void lcd_backlight(unsigned char onoff);
 static void lcd_sendCommand(uint8_t command);
 static void lcd_sendSmallData(uint8_t data);
 static void lcd_sendData(uint8_t *data, uint32_t dataLen);
@@ -191,7 +190,7 @@ static void lcd_reset()
     TMR_Delay(MXC_TMR0, MSEC(15), 0);
 }
 
-static void lcd_backlight(unsigned char onoff)
+void lcd_backlight(unsigned char onoff)
 {
     if (onoff) {
         MAX20303_setboost( MAX20303_BOOST_OUTPUT_ON, 0x10 );

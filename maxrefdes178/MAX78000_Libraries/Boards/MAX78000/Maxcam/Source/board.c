@@ -76,21 +76,16 @@ int Board_Init(void)
 #ifndef __riscv
     int err;
 
-
-    unsigned long delay_count;
-    for( delay_count = 0 ; delay_count < 5000000; delay_count++ );
+//    for(unsigned long delay_count = 0 ; delay_count < 1000000; delay_count++ );
 
     // Enable GPIO
     MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_GPIO0);
     MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_GPIO1);
     MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_GPIO2);
 
-
-
     if ((err = Console_Init()) < E_NO_ERROR) {
         return err;
     }
-
 
     if ((err = PB_Init()) != E_NO_ERROR) {
         MXC_ASSERT_FAIL();

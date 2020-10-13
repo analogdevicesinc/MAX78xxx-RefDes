@@ -134,7 +134,7 @@ int main(void)
                         fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, video_result_string, Font_16x26, resultColor, qspi_image_buff);
                     }
                     if (audio_result_print_cnt) {
-                        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, audio_result_string, Font_16x26, BLACK, qspi_image_buff);
+                        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, audio_result_string, Font_16x26, YELLOW, qspi_image_buff);
                         audio_result_print_cnt--;
                     }
                     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, qspi_image_buff);
@@ -150,6 +150,14 @@ int main(void)
                     break;
                 case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
                     audio_result_print_cnt = 10;
+
+                    if (strcmp(audio_result_string, "OFF") == 0) {
+                        lcd_backlight(0);
+                        audio_result_print_cnt = 0;
+                    } else if(strcmp(audio_result_string, "ON") == 0) {
+                        lcd_backlight(1);
+                        audio_result_print_cnt = 0;
+                    }
                     break;
                 default:
                     break;
