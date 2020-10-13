@@ -64,5 +64,6 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi);
 void spi_dma_slave_init(mxc_spi_regs_t *spi, mxc_spi_pins_t spi_pins);
 void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mxc_gpio_cfg_t *spi_int);
 int spi_dma_wait(uint8_t ch);
+void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, uint8_t data_type, mxc_gpio_cfg_t *spi_int);
 
 #endif /* SPI_DMA_H_ */

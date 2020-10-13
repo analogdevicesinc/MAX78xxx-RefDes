@@ -47,6 +47,7 @@
 #include "spi_dma.h"
 
 #include "maxcam_debug.h"
+#include "faceid_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -204,4 +205,22 @@ int spi_dma_wait(uint8_t ch)
     }
 
     return 0;
+}
+
+void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, uint8_t data_type, mxc_gpio_cfg_t *spi_int)
+{
+    qspi_header_t header;
+    header.start_symbol = QSPI_START_SYMBOL;
+    header.data_len = len;
+    header.data_type = data_type;
+
+    PR_INFO("spi tx started %d", data_type);
+
+    spi_dma_tx(ch, spi, (uint8_t*) &header, sizeof(qspi_header_t), spi_int);
+    spi_dma_wait(ch);
+
+    spi_dma_tx(ch, spi, data, len, spi_int);
+//    spi_dma_wait(ch);
+
+    PR_INFO("spi tx completed %d", data_type);
 }

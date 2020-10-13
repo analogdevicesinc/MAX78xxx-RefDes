@@ -56,12 +56,6 @@ void memcpy32(uint32_t *dst, const uint32_t *src, int n)
   }
 }
 /* **************************************************************************** */
-void fail(void)
-{
-  printf("\n*** FAIL ***\n\n");
-  while (1);
-}
-/* **************************************************************************** */
 // Custom unload for this network:
 // 32-bit data, shape: [21, 1, 1]
 void cnn_unload(uint32_t *out_buf)

@@ -1,47 +1,41 @@
 /*******************************************************************************
- * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
- *
- * This software is protected by copyright laws of the United States and
- * of foreign countries. This material may also be protected by patent laws
- * and technology transfer regulations of the United States and of foreign
- * countries. This software is furnished under a license agreement and/or a
- * nondisclosure agreement and may only be used or reproduced in accordance
- * with the terms of those agreements. Dissemination of this information to
- * any party or parties not specified in the license agreement and/or
- * nondisclosure agreement is expressly prohibited.
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
- *******************************************************************************/
+* Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+*
+* This software is protected by copyright laws of the United States and
+* of foreign countries. This material may also be protected by patent laws
+* and technology transfer regulations of the United States and of foreign
+* countries. This software is furnished under a license agreement and/or a
+* nondisclosure agreement and may only be used or reproduced in accordance
+* with the terms of those agreements. Dissemination of this information to
+* any party or parties not specified in the license agreement and/or
+* nondisclosure agreement is expressly prohibited.
+*
+* The above copyright notice and this permission notice shall be included
+* in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+* IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+* OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*
+* Except as contained in this notice, the name of Maxim Integrated
+* Products, Inc. shall not be used except as stated in the Maxim Integrated
+* Products, Inc. Branding Policy.
+*
+* The mere transfer of this software does not imply any licenses
+* of trade secrets, proprietary technology, copyrights, patents,
+* trademarks, maskwork rights, or any other form of intellectual
+* property whatsoever. Maxim Integrated Products, Inc. retains all
+* ownership rights.
+*******************************************************************************
+*/
 
-/**
- * @file    main.c
- * @brief   Main for KWS20
- * @details 
- *         
- *          
- */
-
-
-/* **** Includes **** */
+//-----------------------------------------------------------------------------
+// Includes
+//-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -66,9 +60,11 @@
 #include "faceid_definitions.h"
 #include "version.h"
 
-/* **** Definitions **** */
-#define S_MODULE_NAME   "main"
 
+//-----------------------------------------------------------------------------
+// Defines
+//-----------------------------------------------------------------------------
+#define S_MODULE_NAME   "main"
 
 /* Enable/Disable Features */
 //#define ENABLE_PRINT_ENVELOPE            // enables printing average waveform envelope for samples
@@ -94,16 +90,37 @@
 #define INFERENCE_THRESHOLD   		49 		// min probability (0-100) to accept an inference
 
 /* Peripherals */
+#define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
+#define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
+
 #define QSPI_ID             MXC_SPI0
 
 #define DMA_CHANNEL_QSPI            1
 #define DMA_CHANNEL_QSPI_IRQ        DMA1_IRQn
 #define DMA_CHANNEL_QSPI_IRQ_HAND   DMA1_IRQHandler
 
-#define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
-#define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
-/* **** Globals **** */
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+mxc_gpio_cfg_t gpio_cnn_boost = {MXC_GPIO2, MXC_GPIO_PIN_5, MXC_GPIO_FUNC_OUT,
+                                 MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t gpio_audio_osc = {MXC_GPIO0, MXC_GPIO_PIN_31, MXC_GPIO_FUNC_OUT,
+                                 MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t qspi_int    = {MXC_GPIO0, MXC_GPIO_PIN_12, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t gpio_red    = {MXC_GPIO2, MXC_GPIO_PIN_0, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t gpio_green  = {MXC_GPIO2, MXC_GPIO_PIN_1, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t gpio_blue   = {MXC_GPIO2, MXC_GPIO_PIN_2, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
 extern uint32_t cnn_time;
 static int32_t ml_data[NUM_OUTPUTS];
 static q15_t ml_softmax[NUM_OUTPUTS];
@@ -112,10 +129,11 @@ uint8_t pPreambleCircBuffer[PREAMBLE_SIZE];
 int16_t Max, Min;
 uint16_t thresholdHigh = THRESHOLD_HIGH;
 uint16_t thresholdLow = THRESHOLD_LOW;
+static int16_t  x0, x1, Coeff;
+static int32_t  y0, y1;
 
 volatile uint8_t i2s_flag = 0;
 int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
-mxc_gpio_cfg_t qspi_int;
 
 /* **** Constants **** */
 typedef enum _mic_processing_state {
@@ -129,14 +147,10 @@ char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
         "GO", "YES", "NO", "ON", "OFF", "ONE", "TWO", "THREE", "FOUR", "FIVE",
         "SIX", "SEVEN", "EIGHT", "NINE", "ZERO", "Unknown" };
 
-void i2s_isr(void)
-{
-    i2s_flag = 1;
-    /* Clear I2S interrupt flag */
-    MXC_I2S_ClearFlags(MXC_F_I2S_INTFL_RX_THD_CH0);
-}
 
-/* **** Functions Prototypes **** */
+//-----------------------------------------------------------------------------
+// Local function declarations
+//-----------------------------------------------------------------------------
 int8_t MicReader(int16_t *sample);
 uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg);
 uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
@@ -146,13 +160,22 @@ uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
 void I2SInit();
 void HPF_init(void);
 int16_t HPF(int16_t input);
-static void send_result_to_me14(char *result, uint32_t len);
+static void fail(void);
 
 
-/* **************************************************************************** */
+//-----------------------------------------------------------------------------
+// Function definitions
+//-----------------------------------------------------------------------------
 void DMA_CHANNEL_QSPI_IRQ_HAND(void)
 {
     spi_dma_int_handler(DMA_CHANNEL_QSPI, QSPI_ID);
+}
+
+void i2s_isr(void)
+{
+    i2s_flag = 1;
+    /* Clear I2S interrupt flag */
+    MXC_I2S_ClearFlags(MXC_F_I2S_INTFL_RX_THD_CH0);
 }
 
 int main(void)
@@ -190,30 +213,27 @@ int main(void)
     MXC_GCR->pclkdiv |= MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1; // CNN clock: 100 MHz div 2
     MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN); // Enable CNN clock
 
-    qspi_int.port = MXC_GPIO0;
-    qspi_int.mask = MXC_GPIO_PIN_12;
-    qspi_int.pad = MXC_GPIO_PAD_NONE;
-    qspi_int.func = MXC_GPIO_FUNC_OUT;
+    /* Configure CNN Boost pin */
+    GPIO_SET(gpio_cnn_boost);
+    MXC_GPIO_Config(&gpio_cnn_boost);
+
+    /* Configure audio OSC pin */
+    GPIO_SET(gpio_audio_osc);
+    MXC_GPIO_Config(&gpio_audio_osc);
+
+    // Configure SPI int pin
     GPIO_SET(qspi_int);
     MXC_GPIO_Config(&qspi_int);
 
-    /* Configure P2.5, turn on the CNN Boost */
-    mxc_gpio_cfg_t gpio_cnn_boost;
-    gpio_cnn_boost.port = MXC_GPIO2;
-    gpio_cnn_boost.mask = MXC_GPIO_PIN_5;
-    gpio_cnn_boost.pad = MXC_GPIO_PAD_NONE;
-    gpio_cnn_boost.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_cnn_boost);
-    MXC_GPIO_OutSet(gpio_cnn_boost.port, gpio_cnn_boost.mask);
+    // Configure LEDs
+    GPIO_CLR(gpio_red);
+    MXC_GPIO_Config(&gpio_red);
 
-    /* Configure P0.31, turn on the audio OSC */
-    mxc_gpio_cfg_t gpio_audio_osc;
-    gpio_audio_osc.port = MXC_GPIO0;
-    gpio_audio_osc.mask = MXC_GPIO_PIN_31;
-    gpio_audio_osc.pad = MXC_GPIO_PAD_NONE;
-    gpio_audio_osc.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_audio_osc);
-    MXC_GPIO_OutSet(gpio_audio_osc.port, gpio_audio_osc.mask);
+    GPIO_CLR(gpio_green);
+    MXC_GPIO_Config(&gpio_green);
+
+    GPIO_CLR(gpio_blue);
+    MXC_GPIO_Config(&gpio_blue);
 
     PR_INFO("maxcam_electronica_max78000_audio v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
 
@@ -238,6 +258,7 @@ int main(void)
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
+        fail();
     }
 
     NVIC_EnableIRQ(DMA_CHANNEL_QSPI_IRQ);
@@ -255,6 +276,8 @@ int main(void)
     I2SInit();
 
     PR_INFO("** READY ***");
+
+    GPIO_SET(gpio_green);
 
     /* Read samples */
     while (1) {
@@ -448,25 +471,20 @@ int main(void)
                         probability);
 
                 if (ret) {
-                    send_result_to_me14((char *)keywords[out_class], sizeof(keywords[out_class]));
+                    spi_dma_send_packet(DMA_CHANNEL_QSPI, QSPI_ID,
+                            (uint8_t *) keywords[out_class],
+                            sizeof(keywords[out_class]),
+                            QSPI_TYPE_RESPONSE_AUDIO_RESULT, &qspi_int);
                 }
 
                 printf("\n----------------------------------------- \n");
 
                 Max = 0;
                 Min = 0;
-                //------------------------------------------------------------
             }
         }
     }
-
-    /* Turn off LED2 (Red) */
-    PR_INFO("Total Samples:%d, Total Words: %d", sampleCounter, wordCounter);
-
-    while (1);
 }
-
-/* **************************************************************************** */
 
 void I2SInit()
 {
@@ -498,7 +516,7 @@ void I2SInit()
 
     if((err = MXC_I2S_Init(&req)) != E_NO_ERROR) {
         PR_ERROR("\nError in I2S_Init: %d", err);
-        while (1);
+        fail();
     }
 
     /* Set I2S RX FIFO threshold to generate interrupt */
@@ -511,7 +529,6 @@ void I2SInit()
     __enable_irq();
 }
 
-/* **************************************************************************** */
 uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
         int16_t *out_class, double *out_prob) {
     int32_t temp[NUM_OUTPUTS];
@@ -550,8 +567,6 @@ uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
     else
         return 0;
 }
-
-/* **************************************************************************** */
 
 uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
         uint16_t outSize, uint16_t width) {
@@ -626,7 +641,7 @@ uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
         return 0;
 
 }
-/* **************************************************************************** */
+
 uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg)
 {
     static uint16_t chunkCount = 0;
@@ -702,10 +717,6 @@ uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg)
     return 1;
 }
 
-static int16_t	x0, x1, Coeff;
-static int32_t	y0, y1;
-
-/************************************************************************************/
 void HPF_init(void) {
     Coeff = 32604; //0.995
     x0 = 0;
@@ -714,7 +725,6 @@ void HPF_init(void) {
     x1 = x0;
 }
 
-/************************************************************************************/
 int16_t HPF(int16_t input) {
     int16_t Acc, output;
     int32_t tmp;
@@ -743,21 +753,13 @@ int16_t HPF(int16_t input) {
     return	(output);
 }
 
-/************************************************************************************/
-static void send_result_to_me14(char *result, uint32_t len)
+static void fail(void)
 {
-    qspi_header_t header;
-    header.start_symbol = QSPI_START_SYMBOL;
-    header.data_len = len;
-    header.data_type = QSPI_TYPE_RESPONSE_AUDIO_RESULT;
+    PR_ERROR("fail");
 
-    PR_INFO("result tx start");
+    GPIO_SET(gpio_red);
+    GPIO_CLR(gpio_green);
+    GPIO_CLR(gpio_blue);
 
-    spi_dma_tx(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
-    spi_dma_wait(DMA_CHANNEL_QSPI);
-
-    spi_dma_tx(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t *)result, len, &qspi_int);
-    spi_dma_wait(DMA_CHANNEL_QSPI);
-
-    PR_INFO("result tx completed");
+    while(1);
 }

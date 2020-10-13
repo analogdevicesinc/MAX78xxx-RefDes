@@ -49,7 +49,6 @@ uint8_t cnn_start(void);
 void cnn_wait(void);
 void memcpy32(uint32_t *dst, const uint32_t *src, int n);
 void load_kernels(void);
-void fail(void);
 
 #ifdef __cplusplus
 }

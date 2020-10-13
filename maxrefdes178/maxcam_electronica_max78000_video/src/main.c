@@ -1,12 +1,14 @@
 /*******************************************************************************
-* Copyright (C) Maxim Integrated Products, Inc., All Rights Reserved.
+* Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
 *
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
+* This software is protected by copyright laws of the United States and
+* of foreign countries. This material may also be protected by patent laws
+* and technology transfer regulations of the United States and of foreign
+* countries. This software is furnished under a license agreement and/or a
+* nondisclosure agreement and may only be used or reproduced in accordance
+* with the terms of those agreements. Dissemination of this information to
+* any party or parties not specified in the license agreement and/or
+* nondisclosure agreement is expressly prohibited.
 *
 * The above copyright notice and this permission notice shall be included
 * in all copies or substantial portions of the Software.
@@ -28,19 +30,12 @@
 * trademarks, maskwork rights, or any other form of intellectual
 * property whatsoever. Maxim Integrated Products, Inc. retains all
 * ownership rights.
-*
-******************************************************************************/
+*******************************************************************************
+*/
 
-/**
- * @file    main.c
- * @brief   FaceID Electronica 2020 Demo
- *
- * @details
- *
- */
-
-
-/***** Includes *****/
+//-----------------------------------------------------------------------------
+// Includes
+//-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdint.h>
 #include "board.h"
@@ -56,13 +51,14 @@
 #include "faceid_definitions.h"
 #include "version.h"
 #include "embedding_process.h"
-#include "utils.h"
 #include "maxcam_debug.h"
 #include "faceID.h"
 #include "weights.h"
 
 
-/***** Definitions *****/
+//-----------------------------------------------------------------------------
+// Defines
+//-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "main"
 
 #define IMAGE_XRES  240
@@ -77,8 +73,9 @@
 #define FRAME_COLOR_DARK    0x535A
 #define FRAME_COLOR_LIGHT   0xFFFF
 
-#define PRINT_TIME 0
+//#define PRINT_TIME
 
+/* Peripherals */
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
@@ -93,15 +90,28 @@
 #define DMA_CHANNEL_QSPI_IRQ_HAND   DMA1_IRQHandler
 
 
-uint8_t embedding_result[512];
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+mxc_gpio_cfg_t gpio_flash  = {MXC_GPIO0, MXC_GPIO_PIN_19, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_PULL_DOWN, MXC_GPIO_VSSEL_VDDIO};
 
-static void fail(void);
-static void process_img(void);
-static void run_cnn(int x_offset, int y_offset);
-static void run_demo(void);
-static void send_image_to_me14(uint8_t *image, uint32_t len);
-static void send_result_to_me14(char *result, uint32_t len);
-static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color);
+mxc_gpio_cfg_t gpio_camera = {MXC_GPIO0, MXC_GPIO_PIN_3, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t qspi_int    = {MXC_GPIO0, MXC_GPIO_PIN_12, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t gpio_red    = {MXC_GPIO2, MXC_GPIO_PIN_0, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t gpio_green  = {MXC_GPIO2, MXC_GPIO_PIN_1, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+mxc_gpio_cfg_t gpio_blue   = {MXC_GPIO2, MXC_GPIO_PIN_2, MXC_GPIO_FUNC_OUT,
+                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+
+uint8_t embedding_result[512];
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -233,13 +243,26 @@ static const uint8_t camera_settings[][2] = {
 static int8_t prev_decision = -2;
 static int8_t decision = -2;
 
-mxc_gpio_cfg_t gpio_flash;
-mxc_gpio_cfg_t qspi_int;
-mxc_gpio_cfg_t gpio_red;
-mxc_gpio_cfg_t gpio_green;
-mxc_gpio_cfg_t gpio_blue;
+
+#ifdef PRINT_TIME
+    uint32_t timer_counter = 0;
+#define PR_TIMER(fmt, args...)    if(timer_counter%10==0) printf("T[%-10s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
+#endif
 
 
+//-----------------------------------------------------------------------------
+// Local function declarations
+//-----------------------------------------------------------------------------
+static void fail(void);
+static void process_img(void);
+static void run_cnn(int x_offset, int y_offset);
+static void run_demo(void);
+static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color);
+
+
+//-----------------------------------------------------------------------------
+// Function definitions
+//-----------------------------------------------------------------------------
 void DMA_CHANNEL_CAMERA_IRQ_HAND(void)
 {
 }
@@ -249,57 +272,46 @@ void DMA_CHANNEL_QSPI_IRQ_HAND(void)
     spi_dma_int_handler(DMA_CHANNEL_QSPI, QSPI_ID);
 }
 
+uint32_t utils_get_time_ms(void)
+{
+    int sec;
+    double subsec;
+    uint32_t ms;
+
+    subsec = MXC_RTC_GetSubSecond() / 4096.0;
+    sec = MXC_RTC_GetSecond();
+
+    ms = (sec*1000) +  (int)(subsec*1000);
+
+    return ms;
+}
+
 int main(void)
 {
     int ret = 0;
     int slaveAddress;
     int id;
 
-    PR_INFO("\nmaxcam_electronica_max78000_video v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    mxc_gpio_cfg_t gpio_camera;
-
     // Enable camera
-    gpio_camera.port = MXC_GPIO0;
-    gpio_camera.mask = MXC_GPIO_PIN_3;
-    gpio_camera.pad = MXC_GPIO_PAD_NONE;
-    gpio_camera.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_camera);
     GPIO_CLR(gpio_camera);
+    MXC_GPIO_Config(&gpio_camera);
 
-    // Configure LEDs
-    gpio_red.port = MXC_GPIO2;
-    gpio_red.mask = MXC_GPIO_PIN_0;
-    gpio_red.pad = MXC_GPIO_PAD_NONE;
-    gpio_red.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_red);
-    GPIO_SET(gpio_red);
-
-    gpio_green.port = MXC_GPIO2;
-    gpio_green.mask = MXC_GPIO_PIN_1;
-    gpio_green.pad = MXC_GPIO_PAD_NONE;
-    gpio_green.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_green);
-    GPIO_SET(gpio_green);
-
-    gpio_blue.port = MXC_GPIO2;
-    gpio_blue.mask = MXC_GPIO_PIN_2;
-    gpio_blue.pad = MXC_GPIO_PAD_NONE;
-    gpio_blue.func = MXC_GPIO_FUNC_OUT;
-    MXC_GPIO_Config(&gpio_blue);
-    GPIO_SET(gpio_blue);
-
-    gpio_flash.port = MXC_GPIO0;
-    gpio_flash.mask = MXC_GPIO_PIN_19;
-    gpio_flash.pad = MXC_GPIO_PAD_PULL_DOWN;
-    gpio_flash.func = MXC_GPIO_FUNC_OUT;
+    // Configure flash pin
     MXC_GPIO_Config(&gpio_flash);
 
-    qspi_int.port = MXC_GPIO0;
-    qspi_int.mask = MXC_GPIO_PIN_12;
-    qspi_int.pad = MXC_GPIO_PAD_NONE;
-    qspi_int.func = MXC_GPIO_FUNC_OUT;
+    // Configure SPI int pin
     GPIO_SET(qspi_int);
     MXC_GPIO_Config(&qspi_int);
+
+    // Configure LEDs
+    GPIO_CLR(gpio_red);
+    MXC_GPIO_Config(&gpio_red);
+
+    GPIO_CLR(gpio_green);
+    MXC_GPIO_Config(&gpio_green);
+
+    GPIO_CLR(gpio_blue);
+    MXC_GPIO_Config(&gpio_blue);
 
     /* Enable cache */
     MXC_ICC_Enable(MXC_ICC0);
@@ -307,6 +319,8 @@ int main(void)
     /* Set system clock to 100 MHz */
     MXC_SYS_Clock_Select(MXC_SYS_CLOCK_IPO);
     SystemCoreClockUpdate();
+
+    PR_INFO("\nmaxcam_electronica_max78000_video v%d.%d.%d\n", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
 
     if (initCNN() < 0 ) {
         PR_ERROR("Could not initialize the CNN accelerator");
@@ -336,6 +350,7 @@ int main(void)
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
+        fail();
     }
 
 //    NVIC_EnableIRQ(DMA_CHANNEL_CAMERA_IRQ);
@@ -381,12 +396,8 @@ int main(void)
 
     // Successfully initialize the program
     PR_INFO("Program initialized successfully");
-    GPIO_CLR(gpio_red);
-    GPIO_CLR(gpio_blue);
-    GPIO_SET(gpio_green);
 
-    GPIO_CLR(gpio_green);
-    GPIO_SET(gpio_blue);
+    GPIO_SET(gpio_green);
 
     run_demo();
 
@@ -395,21 +406,20 @@ int main(void)
 
 static void fail(void)
 {
+    PR_ERROR("fail");
+
     GPIO_SET(gpio_red);
     GPIO_CLR(gpio_green);
     GPIO_CLR(gpio_blue);
+
     while(1);
 }
-
-#if (PRINT_TIME==1)
-    uint32_t timer_counter = 0;
-#endif
 
 static void run_demo(void)
 {
     camera_start_capture_image();
     uint32_t run_count = 0;
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     /* Get current time */
     uint32_t process_time = utils_get_time_ms();
     uint32_t total_time = utils_get_time_ms();
@@ -419,8 +429,7 @@ static void run_demo(void)
 
         if (camera_is_image_rcv()) { // Check whether image is ready
 
-#if (PRINT_TIME==1)
-
+#ifdef PRINT_TIME
             process_time = utils_get_time_ms();
 #endif
             run_cnn(0, 0);
@@ -436,14 +445,13 @@ static void run_demo(void)
             process_img();
 
 
-
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
             PR_TIMER("Process Time Total : %dms", utils_get_time_ms()-process_time);
 #endif
 
             camera_start_capture_image();
 
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
             PR_TIMER("Capture Time : %dms", process_time - total_time);
             PR_TIMER("Total Time : %dms\n\n\n", utils_get_time_ms()-total_time);
             total_time = utils_get_time_ms();
@@ -454,8 +462,6 @@ static void run_demo(void)
     }
 }
 
-
-
 static void process_img(void)
 {
     uint8_t   *raw;
@@ -465,26 +471,23 @@ static void process_img(void)
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &imgLen, &w, &h);
 
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     uint32_t pass_time = 0;
     pass_time = utils_get_time_ms();
 #endif
 
-draw_frame(56, 36, 128, 168, 2, FRAME_COLOR_DARK);
-draw_frame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
+    draw_frame(56, 36, 128, 168, 2, FRAME_COLOR_DARK);
+    draw_frame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
 
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     PR_TIMER("Frame drawing duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
-// Send the image through the UART to the console.
-// A python program will read from the console and write to an image file.
-//    utils_send_img_to_pc(raw, imgLen, w, h, (uint8_t*)"RGB565");
 
-    GPIO_SET(gpio_blue);
-    send_image_to_me14(raw, imgLen);
-    GPIO_CLR(gpio_blue);
-#if (PRINT_TIME==1)
+    spi_dma_send_packet(DMA_CHANNEL_QSPI, QSPI_ID, raw, imgLen,
+            QSPI_TYPE_RESPONSE_VIDEO_DATA, &qspi_int);
+
+#ifdef PRINT_TIME
     PR_TIMER("QSPI transfer duration : %d", utils_get_time_ms() - pass_time);
 #endif
 }
@@ -545,7 +548,7 @@ static void run_cnn(int x_offset, int y_offset)
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &imgLen, &w, &h);
 
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     uint32_t pass_time = utils_get_time_ms();
 #endif
 
@@ -555,7 +558,7 @@ static void run_cnn(int x_offset, int y_offset)
 
     uint8_t * data = raw;
 
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     PR_TIMER("CNN initialization duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
@@ -592,29 +595,27 @@ static void run_cnn(int x_offset, int y_offset)
         }
     }
 
-//    utils_send_img_to_pc(raw, 120*160*3, 120, 160, (uint8_t*)"RGB888");
-
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     PR_TIMER("CNN load data duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
     cnn_wait();
 
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     PR_TIMER("CNN wait duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
 
     cnn_unload(embedding_result);
 
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     PR_TIMER("CNN unload duration : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
 
     int pResult = calculate_minDistance(embedding_result);
 
-#if (PRINT_TIME==1)
+#ifdef PRINT_TIME
     PR_TIMER("Embedding calculation duration : %d", utils_get_time_ms() - pass_time);
 #endif
 
@@ -643,44 +644,9 @@ static void run_cnn(int x_offset, int y_offset)
         }
 
         if(decision != prev_decision){
-            send_result_to_me14(name, strlen(name));
+            spi_dma_send_packet(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t *)name,
+                    strlen(name), QSPI_TYPE_RESPONSE_VIDEO_RESULT, &qspi_int);
             PR_DEBUG("Result : %s\n", name);
         }
     }
-}
-
-static void send_image_to_me14(uint8_t *image, uint32_t len)
-{
-    qspi_header_t header;
-    header.start_symbol = QSPI_START_SYMBOL;
-    header.data_len = len;
-    header.data_type = QSPI_TYPE_RESPONSE_VIDEO_DATA;
-
-    PR_INFO("image tx start");
-
-    spi_dma_tx(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
-    spi_dma_wait(DMA_CHANNEL_QSPI);
-
-    spi_dma_tx(DMA_CHANNEL_QSPI, QSPI_ID, image, len, &qspi_int);
-//    spi_dma_slave_tx_wait(DMA_CHANNEL_QSPI);
-
-    PR_INFO("image tx completed");
-}
-
-static void send_result_to_me14(char *result, uint32_t len)
-{
-    qspi_header_t header;
-    header.start_symbol = QSPI_START_SYMBOL;
-    header.data_len = len;
-    header.data_type = QSPI_TYPE_RESPONSE_VIDEO_RESULT;
-
-    PR_INFO("result tx start");
-
-    spi_dma_tx(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t*) &header, sizeof(qspi_header_t), &qspi_int);
-    spi_dma_wait(DMA_CHANNEL_QSPI);
-
-    spi_dma_tx(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t *)result, len, &qspi_int);
-    spi_dma_wait(DMA_CHANNEL_QSPI);
-
-    PR_INFO("result tx completed");
 }
