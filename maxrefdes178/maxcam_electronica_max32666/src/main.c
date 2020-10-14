@@ -81,6 +81,8 @@ int main(void)
 {
     int qspi_return = 0;
     uint16_t resultColor = 0;
+    uint16_t frameColor = 0;
+    uint8_t runFaceId = 0;
     char version[10] = {0};
     uint8_t cmdData[1] = {0};
 
@@ -130,22 +132,36 @@ int main(void)
             switch(qspi_return)
             {
                 case QSPI_TYPE_RESPONSE_VIDEO_DATA:
-                    if (strcmp(video_result_string, "nothing")) {
-                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, video_result_string, Font_16x26, resultColor, qspi_image_buff);
+                    if (runFaceId) {
+                        if (strcmp(video_result_string, "nothing")) {
+                            fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, video_result_string, Font_16x26, resultColor, qspi_image_buff);
+                        } else {
+                            frameColor = WHITE;
+                        }
+
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 60, 40, 180, 200, frameColor, qspi_image_buff);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 59, 39, 181, 201, frameColor, qspi_image_buff);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 58, 38, 182, 202, BLACK, qspi_image_buff);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 57, 37, 183, 203, BLACK, qspi_image_buff);
                     }
+
                     if (audio_result_print_cnt) {
                         fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, audio_result_string, Font_16x26, YELLOW, qspi_image_buff);
                         audio_result_print_cnt--;
                     }
+
                     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, qspi_image_buff);
                     break;
                 case QSPI_TYPE_RESPONSE_VIDEO_RESULT:
                     if (strcmp(video_result_string, "Unknown") == 0) {
                         resultColor = RED;
+                        frameColor = RED;
                     } else if(strcmp(video_result_string, "Adjust Face") == 0) {
                         resultColor = YELLOW;
+                        frameColor = YELLOW;
                     } else {
                         resultColor = GREEN;
+                        frameColor = GREEN;
                     }
                     break;
                 case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
@@ -157,6 +173,10 @@ int main(void)
                     } else if(strcmp(audio_result_string, "ON") == 0) {
                         lcd_backlight(1);
                         audio_result_print_cnt = 0;
+                    } else if (strcmp(audio_result_string, "GO") == 0) {
+                        runFaceId = 1;
+                    } else if(strcmp(audio_result_string, "STOP") == 0) {
+                        runFaceId = 0;
                     }
                     break;
                 default:

@@ -257,7 +257,6 @@ static void fail(void);
 static void process_img(void);
 static void run_cnn(int x_offset, int y_offset);
 static void run_demo(void);
-static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color);
 
 
 //-----------------------------------------------------------------------------
@@ -476,67 +475,12 @@ static void process_img(void)
     pass_time = utils_get_time_ms();
 #endif
 
-    draw_frame(56, 36, 128, 168, 2, FRAME_COLOR_DARK);
-    draw_frame(58, 38, 124, 164, 2, FRAME_COLOR_LIGHT);
-
-#ifdef PRINT_TIME
-    PR_TIMER("Frame drawing duration : %d", utils_get_time_ms() - pass_time);
-    pass_time = utils_get_time_ms();
-#endif
-
     spi_dma_send_packet(DMA_CHANNEL_QSPI, QSPI_ID, raw, imgLen,
             QSPI_TYPE_RESPONSE_VIDEO_DATA, &qspi_int);
 
 #ifdef PRINT_TIME
     PR_TIMER("QSPI transfer duration : %d", utils_get_time_ms() - pass_time);
 #endif
-}
-
-static void draw_frame(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t thickness, uint16_t color)
-{
-    uint8_t   *raw;
-    uint32_t  imgLen;
-    uint32_t  w, h;
-
-    // Get the details of the image from the camera driver.
-    camera_get_image(&raw, &imgLen, &w, &h);
-
-    uint16_t *image = (uint16_t*)raw;   // 2bytes per pixel RGB565
-
-    // top line
-    image+=y*w;
-    for (int i = 0; i<thickness; i++) {
-        image+= x;
-        for(int j=0; j< width; j++) {
-            *(image++) = color; //color
-        }
-        image+=w-(width+x);
-    }
-
-    //bottom line
-    image=((uint16_t*)raw) + (y+height-thickness)*w;
-    for (int i = 0; i<thickness; i++) {
-        image+= x;
-        for(int j=0; j< width; j++) {
-            *(image++) = color; //color
-        }
-        image+=w-(width+x);
-    }
-
-    //right + left lines
-    image = ((uint16_t*)raw) + y*w;
-    for (int i = 0; i<height; i++) {
-        image+=x;
-        for(int j =0; j< thickness; j++) {
-            *(image++) = color; //color
-        }
-        image+=width-2*thickness;
-        for(int j =0; j< thickness; j++) {
-            *(image++) = color; //color
-        }
-        image+=w-(width+x);
-    }
-
 }
 
 static void run_cnn(int x_offset, int y_offset)

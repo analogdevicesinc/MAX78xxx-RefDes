@@ -3,6 +3,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <string.h>
+#include <stdlib.h>
 
 #include "fonts.h"
 #include "faceid_definitions.h"
@@ -347,7 +348,7 @@ static void fonts_putChar(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char c
     }
 }
 
-void fonts_putString(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char *str, FontDef font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff)
+void fonts_putString(uint16_t w, uint16_t h, uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff)
 {
     while (*str) {
         if (x + font.width >= w) {
@@ -374,7 +375,7 @@ void fonts_putSubtitle(uint16_t w, uint16_t h, const char *str, FontDef font, ui
     uint16_t x = (w - (font.width * strlen(str))) / 2;
     uint16_t y = h - font.height - 3;
 
-    fonts_putString(x, y, LCD_WIDTH, LCD_HEIGHT, str, font, color, 0, 0, buff);
+    fonts_putString(LCD_WIDTH, LCD_HEIGHT, x, y, str, font, color, 0, 0, buff);
 }
 
 void fonts_putToptitle(uint16_t w, uint16_t h, const char *str, FontDef font, uint16_t color, uint8_t *buff)
@@ -382,5 +383,85 @@ void fonts_putToptitle(uint16_t w, uint16_t h, const char *str, FontDef font, ui
     uint16_t x = (w - (font.width * strlen(str))) / 2;
     uint16_t y = 3;
 
-    fonts_putString(x, y, LCD_WIDTH, LCD_HEIGHT, str, font, color, 0, 0, buff);
+    fonts_putString(LCD_WIDTH, LCD_HEIGHT, x, y, str, font, color, 0, 0, buff);
+}
+
+/**
+ * @brief Draw a line with single color
+ * @param x1&y1 -> coordinate of the start point
+ * @param x2&y2 -> coordinate of the end point
+ * @param color -> color of the line to Draw
+ * @return none
+ */
+void fonts_drawLine(uint16_t w, uint16_t h, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, uint8_t *buff) {
+    uint16_t swap;
+    uint16_t steep = abs(y1 - y0) > abs(x1 - x0);
+    uint32_t pos;
+    uint16_t *p = (uint16_t *) buff;
+
+    if (steep) {
+        swap = x0;
+        x0 = y0;
+        y0 = swap;
+
+        swap = x1;
+        x1 = y1;
+        y1 = swap;
+        //_swap_int16_t(x0, y0);
+        //_swap_int16_t(x1, y1);
+    }
+
+    if (x0 > x1) {
+        swap = x0;
+        x0 = x1;
+        x1 = swap;
+
+        swap = y0;
+        y0 = y1;
+        y1 = swap;
+        //_swap_int16_t(x0, x1);
+        //_swap_int16_t(y0, y1);
+    }
+
+    int16_t dx, dy;
+    dx = x1 - x0;
+    dy = abs(y1 - y0);
+
+    int16_t err = dx / 2;
+    int16_t ystep;
+
+    if (y0 < y1) {
+        ystep = 1;
+    } else {
+        ystep = -1;
+    }
+
+    for (; x0<=x1; x0++) {
+        if (steep) {
+            pos = ((x0 * w) + y0);
+            p[pos] = __builtin_bswap16 (color);
+        } else {
+            pos = ((y0 * w) + x0);
+            p[pos] = __builtin_bswap16 (color);
+        }
+        err -= dy;
+        if (err < 0) {
+            y0 += ystep;
+            err += dx;
+        }
+    }
+}
+
+/**
+ * @brief Draw a Rectangle with single color
+ * @param xi&yi -> 2 coordinates of 2 top points.
+ * @param color -> color of the Rectangle line
+ * @return none
+ */
+void fonts_drawRectangle(uint16_t w, uint16_t h, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t *buff)
+{
+    fonts_drawLine(w, h, x1, y1, x2, y1, color, buff);
+    fonts_drawLine(w, h, x1, y1, x1, y2, color, buff);
+    fonts_drawLine(w, h, x1, y2, x2, y2, color, buff);
+    fonts_drawLine(w, h, x2, y1, x2, y2, color, buff);
 }
