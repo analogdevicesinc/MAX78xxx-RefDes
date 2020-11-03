@@ -65,7 +65,7 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static volatile uint8_t dma_done_flag[MXC_DMA_CHANNELS] = {0};
+static volatile uint8_t dma_busy_flag[MXC_DMA_CHANNELS] = {0};
 
 
 //-----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi)
             // Disable SPI DMA, flush FIFO
             spi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
 
-            dma_done_flag[ch] = 1;
+            dma_busy_flag[ch] = 0;
         }
 
         // Clear DMA int flags
@@ -148,7 +148,7 @@ void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mx
     spi->dma |= MXC_F_SPI_DMA_DMA_TX_EN;
 
     // Setup DMA
-    dma_done_flag[ch] = 0;
+    dma_busy_flag[ch] = 1;
 
     // Clear DMA int flags
     MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
@@ -195,7 +195,7 @@ int spi_dma_wait(uint8_t ch)
 {
     uint32_t cnt = SPI_TIMEOUT_CNT;
 
-    while(!dma_done_flag[ch] && cnt) {
+    while(dma_busy_flag[ch] && cnt) {
         cnt--;
     }
 
@@ -213,6 +213,10 @@ void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_
     header.start_symbol = QSPI_START_SYMBOL;
     header.data_len = len;
     header.data_type = data_type;
+
+    if (dma_busy_flag[ch]) {
+        PR_ERROR("dma is busy");
+    }
 
     PR_INFO("spi tx started %d", data_type);
 

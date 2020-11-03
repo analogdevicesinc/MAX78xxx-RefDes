@@ -477,6 +477,7 @@ static void process_img(void)
 
     spi_dma_send_packet(DMA_CHANNEL_QSPI, QSPI_ID, raw, imgLen,
             QSPI_TYPE_RESPONSE_VIDEO_DATA, &qspi_int);
+    MXC_Delay(MXC_DELAY_MSEC(3)); // Yield SPI DMA RAM read
 
 #ifdef PRINT_TIME
     PR_TIMER("QSPI transfer duration : %d", utils_get_time_ms() - pass_time);
