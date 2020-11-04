@@ -147,6 +147,9 @@ void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mx
     // Enable SPI DMA
     spi->dma |= MXC_F_SPI_DMA_DMA_TX_EN;
 
+    // Enable SPI
+    spi->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
+
     // Setup DMA
     dma_busy_flag[ch] = 1;
 
@@ -182,9 +185,6 @@ void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mx
     } else {
         MXC_DMA->ch[ch].ctrl |= MXC_F_DMA_CTRL_EN;
     }
-
-    // Enable SPI
-    spi->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
 
     // Send interrupt to master
     spi_int->port->out_clr = spi_int->mask;
