@@ -39,15 +39,15 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <stdio.h>
-#include <stdint.h>
+#include <board.h>
 #include <mxc.h>
-#include "board.h"
-#include "spi.h"
-#include "spi_dma.h"
+#include <spi.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #include "maxcam_debug.h"
-#include "faceid_definitions.h"
+#include "maxcam_definitions.h"
+#include "spi_dma.h"
 
 
 //-----------------------------------------------------------------------------

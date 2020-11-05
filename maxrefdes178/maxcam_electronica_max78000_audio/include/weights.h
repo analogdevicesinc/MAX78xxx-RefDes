@@ -1,3 +1,41 @@
+/*******************************************************************************
+ * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ *
+ * This software is protected by copyright laws of the United States and
+ * of foreign countries. This material may also be protected by patent laws
+ * and technology transfer regulations of the United States and of foreign
+ * countries. This software is furnished under a license agreement and/or a
+ * nondisclosure agreement and may only be used or reproduced in accordance
+ * with the terms of those agreements. Dissemination of this information to
+ * any party or parties not specified in the license agreement and/or
+ * nondisclosure agreement is expressly prohibited.
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of Maxim Integrated
+ * Products, Inc. shall not be used except as stated in the Maxim Integrated
+ * Products, Inc. Branding Policy.
+ *
+ * The mere transfer of this software does not imply any licenses
+ * of trade secrets, proprietary technology, copyrights, patents,
+ * trademarks, maskwork rights, or any other form of intellectual
+ * property whatsoever. Maxim Integrated Products, Inc. retains all
+ * ownership rights.
+ *******************************************************************************
+ */
+
+#ifndef _WEIGHTS_H_
+#define _WEIGHTS_H_
+
 #define KERNELS_0 { \
   0xf10a070d, 0x0f060c06, 0xf8eaf003, 0x110ffaf5, 0x1efc0104, 0xf40ad6ea, 0x0a05f30f, 0xfce2f210, \
   0x090701e7, 0x00120700, 0xe8151c0c, 0xf8ff1007, 0xf2f2fe09, 0x1204ebe3, 0x0d11e60a, 0xe917faf8, \
@@ -5389,3 +5427,5 @@
   0x1d271213, 0x08357f02, 0x061cf2e0, 0x22fbf429, 0x1bebbcb4, 0xb3e9fd1b, 0xdde5ebe8, 0xf8fcfbfd, \
   0x0f0af9b4, 0xfdeba8e4, 0xe6bfedef, 0xf0ddf229, 0xf2fd57e0, 0x1168c821, 0x1bb82c0b, 0xa7260b00 \
 }
+
+#endif // _WEIGHTS_H_

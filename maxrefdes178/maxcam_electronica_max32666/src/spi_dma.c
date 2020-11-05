@@ -39,13 +39,13 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <stdio.h>
+#include <dma.h>
+#include <spi.h>
 #include <stdint.h>
-#include "spi.h"
-#include "dma.h"
+#include <stdio.h>
 
-#include "spi_dma.h"
 #include "maxcam_debug.h"
+#include "spi_dma.h"
 
 
 //-----------------------------------------------------------------------------

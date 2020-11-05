@@ -31,6 +31,8 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *******************************************************************************
+ */
+/*
  * @brief   read and write sdhc
  * @details This example uses the sdhc and ffat to read/write the file system on
  *          an SD card. The Fat library used supports long filenames (see ffconf.h)
@@ -42,19 +44,18 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <stdio.h>
+#include <ff.h>
+#include <gpio.h>
+#include <mxc_config.h>
+#include <mxc_sys.h>
+#include <sdhc_lib.h>
+#include <sdhc_regs.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mxc_config.h"
-#include "mxc_sys.h"
-#include "sdhc_regs.h"
-#include "led.h"
-#include "tmr_utils.h"
-#include "uart.h"
-#include "gpio.h"
-#include "sdhc_lib.h"
-#include "ff.h"
+#include <tmr_utils.h>
+
 #include "maxcam_debug.h"
 
 

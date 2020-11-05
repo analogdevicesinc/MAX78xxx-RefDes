@@ -64,8 +64,8 @@ export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
 SRCS  = main.c
-SRCS += softmax.c
 SRCS += cnn.c
+SRCS += softmax.c
 SRCS += spi_dma.c
 
 # Where to find source files for this test
@@ -142,7 +142,5 @@ libclean:
 distclean: clean libclean
 
 sla: all
-
 #	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -O binary $(BUILD_DIR)/$(PROJECT).sbin
 #	$(BUILD_SESSION) $(BUILD_DIR)/$(PROJECT).sbin scp_packets $(TEST_KEY)
-

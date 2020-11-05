@@ -36,18 +36,19 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <dma.h>
+#include <gpio.h>
+#include <spi.h>
 #include <stdio.h>
-#include "spi.h"
-#include "dma.h"
-#include "gpio.h"
-#include "tmr_utils.h"
+#include <tmr_utils.h>
 
 #include "config.h"
-#include "max20303.h"
 #include "lcd.h"
-#include "spi_dma.h"
-#include "faceid_definitions.h"
+
+#include "maxcam_definitions.h"
+#include "max20303.h"
 #include "maxcam_debug.h"
+#include "spi_dma.h"
 
 
 //-----------------------------------------------------------------------------

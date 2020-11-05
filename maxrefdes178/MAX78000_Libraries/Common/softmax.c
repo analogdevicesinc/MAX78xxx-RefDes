@@ -32,36 +32,54 @@
  *
  * -------------------------------------------------------------------- */
 
+
+//-----------------------------------------------------------------------------
+// Includes
+//-----------------------------------------------------------------------------
 #include "tornadocnn.h"
 
+
+//-----------------------------------------------------------------------------
+// Defines
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Typedefs
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Local function declarations
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Function definitions
+//-----------------------------------------------------------------------------
 /**
- *  @ingroup groupNN
+ * @brief Q17.14 fixed point softmax function, returns Q15
+ * @param[in]       vec_in      pointer to input vector
+ * @param[in]       dim_vec     input vector dimension
+ * @param[out]      p_out       pointer to output vector
+ * @return none.
+ *
+ * @details
+ *
+ *  Here, instead of typical e based softmax, we use
+ *  2-based softmax, i.e.,:
+ *
+ *  y_i = 2^(x_i/16384) / sum(2^(x_j/16384))
+ *
+ *  The relative output will be different here.
+ *  But mathematically, the gradient will be the same
+ *  with a log(2) scaling factor.
  */
-
-/**
- * @addtogroup Softmax
- * @{
- */
-
-  /**
-   * @brief Q17.14 fixed point softmax function, returns Q15
-   * @param[in]       vec_in      pointer to input vector
-   * @param[in]       dim_vec     input vector dimension
-   * @param[out]      p_out       pointer to output vector
-   * @return none.
-   *
-   * @details
-   *
-   *  Here, instead of typical e based softmax, we use
-   *  2-based softmax, i.e.,:
-   *
-   *  y_i = 2^(x_i/16384) / sum(2^(x_j/16384))
-   *
-   *  The relative output will be different here.
-   *  But mathematically, the gradient will be the same
-   *  with a log(2) scaling factor.
-   */
-
 void softmax_q17p14_q15(const q31_t * vec_in, const uint16_t dim_vec, q15_t * p_out)
 {
     q31_t     sum;
@@ -127,9 +145,4 @@ void softmax_q17p14_q15(const q31_t * vec_in, const uint16_t dim_vec, q15_t * p_
             p_out[i] = 0;
         }
     }
-
 }
-
-/**
- * @} end of Softmax group
- */

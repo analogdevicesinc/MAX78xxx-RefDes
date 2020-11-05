@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -32,15 +32,22 @@
  * ownership rights.
  *******************************************************************************
  */
-#ifndef MAXCAM_DEBUG_H_
-#define MAXCAM_DEBUG_H_
 
+#ifndef _MAXCAM_DEBUG_H_
+#define _MAXCAM_DEBUG_H_
+
+//-----------------------------------------------------------------------------
+// Includes
+//-----------------------------------------------------------------------------
 #include <stdio.h>
-#include <string.h>
 
+
+//-----------------------------------------------------------------------------
+// Defines
+//-----------------------------------------------------------------------------
 #define PR_DEBUG(fmt, args...)   if(0) printf("D[%-8s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
 #define PR_INFO(fmt, args...)    if(1) printf("I[%-8s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
 #define PR_WARN(fmt, args...)    if(1) printf("W[%-8s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
 #define PR_ERROR(fmt, args...)   if(1) printf("E[%-8s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
 
-#endif /* MAXCAM_DEBUG_H_ */
+#endif /* _MAXCAM_DEBUG_H_ */

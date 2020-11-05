@@ -1,86 +1,101 @@
 /*******************************************************************************
-* Copyright (C) Maxim Integrated Products, Inc., All Rights Reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
-* OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
-*
-* Except as contained in this notice, the name of Maxim Integrated
-* Products, Inc. shall not be used except as stated in the Maxim Integrated
-* Products, Inc. Branding Policy.
-*
-* The mere transfer of this software does not imply any licenses
-* of trade secrets, proprietary technology, copyrights, patents,
-* trademarks, maskwork rights, or any other form of intellectual
-* property whatsoever. Maxim Integrated Products, Inc. retains all
-* ownership rights.
-*
-******************************************************************************/
+ * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ *
+ * This software is protected by copyright laws of the United States and
+ * of foreign countries. This material may also be protected by patent laws
+ * and technology transfer regulations of the United States and of foreign
+ * countries. This software is furnished under a license agreement and/or a
+ * nondisclosure agreement and may only be used or reproduced in accordance
+ * with the terms of those agreements. Dissemination of this information to
+ * any party or parties not specified in the license agreement and/or
+ * nondisclosure agreement is expressly prohibited.
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of Maxim Integrated
+ * Products, Inc. shall not be used except as stated in the Maxim Integrated
+ * Products, Inc. Branding Policy.
+ *
+ * The mere transfer of this software does not imply any licenses
+ * of trade secrets, proprietary technology, copyrights, patents,
+ * trademarks, maskwork rights, or any other form of intellectual
+ * property whatsoever. Maxim Integrated Products, Inc. retains all
+ * ownership rights.
+ *******************************************************************************
+ */
+
+//-----------------------------------------------------------------------------
+// Includes
+//-----------------------------------------------------------------------------
+#include <board.h>
+#include <math.h>
+#include <mxc_device.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <math.h>
-#include <math.h>
-#include <math.h>
-#include "mxc_device.h"
-#include "board.h"
+
 #include "embedding_process.h"
 #include "embeddings.h"
 #include "maxcam_debug.h"
 
 
-/*******************************      DEFINES      ***************************/
+//-----------------------------------------------------------------------------
+// Defines
+//-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "embedding"
 
-static const uint8_t embeddings[] = EMBEDDINGS;
 
+//-----------------------------------------------------------------------------
+// Typedefs
+//-----------------------------------------------------------------------------
 typedef struct  __attribute__((packed)) {
-	uint8_t numberOfSubjects;
-	uint16_t lengthOfEmbeddings;
-	uint16_t numberOfEmbeddings;
-	uint16_t imageWidth;
-	uint16_t imageHeight;
-	uint16_t lengthOfSubjectNames;
+    uint8_t numberOfSubjects;
+    uint16_t lengthOfEmbeddings;
+    uint16_t numberOfEmbeddings;
+    uint16_t imageWidth;
+    uint16_t imageHeight;
+    uint16_t lengthOfSubjectNames;
 
 }tsFaceIDFile;
 
-tsFaceIDFile *pDatabaseInfo = NULL;
-
-
 typedef struct  __attribute__((packed)) sDistance {
-		uint8_t subID;
-		int32_t distance;
+        uint8_t subID;
+        int32_t distance;
 }tsDistance;
 
-tsDistance *pDistance = NULL;
 
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+static const uint8_t embeddings[] = EMBEDDINGS;
+
+tsFaceIDFile *pDatabaseInfo = NULL;
+tsDistance *pDistance = NULL;
 tsMeanDistance *pMeanDistance = NULL;
 tsMinDistance *pMinDistance = NULL;
 
 int8_t *pClosestSubId = NULL;
 uint32_t closestSubIdBufIdx = 0;
-
 uint8_t *pMinDistanceCounter = NULL;
 
-/******************************** Static Functions ***************************/
+
+//-----------------------------------------------------------------------------
+// Local function declarations
+//-----------------------------------------------------------------------------
 
 
-
-/******************************** Public Functions ***************************/
+//-----------------------------------------------------------------------------
+// Function definitions
+//-----------------------------------------------------------------------------
 int init_database(void)
 {
 	pDatabaseInfo = (tsFaceIDFile *)embeddings;

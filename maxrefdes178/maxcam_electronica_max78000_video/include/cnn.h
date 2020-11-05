@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-#ifndef _DEFINTIIONS_H_
-#define _DEFINTIIONS_H_
+#ifndef _CNN_H_
+#define _CNN_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -44,40 +44,32 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define QSPI_SPEED                10000000UL
-#define QSPI_START_SYMBOL         0xAABBCCDD
-
-#define LCD_WIDTH           240
-#define LCD_HEIGHT          240
-#define IMAGE_SIZE          (LCD_WIDTH*LCD_HEIGHT*2)
-#define RESULT_MAX_SIZE     32
 
 
 //-----------------------------------------------------------------------------
 // Typedefs
-//-----------------------------------------------------------------------------
-typedef enum {
-    QSPI_TYPE_NO_DATA = 0,
-    QSPI_TYPE_RESPONSE_VIDEO_DATA ,
-    QSPI_TYPE_RESPONSE_VIDEO_RESULT,
-    QSPI_TYPE_RESPONSE_AUDIO_RESULT
-} teQspiDataType;
-
-typedef struct __attribute__((packed)) {
-    uint32_t start_symbol;
-    uint32_t data_len;
-    uint8_t data_type;
-} qspi_header_t;
-
-
-//-----------------------------------------------------------------------------
-// Global Variables
 //-----------------------------------------------------------------------------
 
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
+// Data input: HWC (little data): 3x160x120
+void load_input(const uint8_t *buffer);
 
+void cnn_start(void);
 
-#endif /* _DEFINTIIONS_H_ */
+int cnn_load(void);
+
+void cnn_wait(void);
+
+int cnn_check(void);
+
+// Custom unload for this network:
+// 8-bit data, shape: (512, 1, 1)
+void cnn_unload(uint8_t *out_buf);
+
+// Initialize CNN accelerator
+int initCNN(void);
+
+#endif /* _CNN_H_ */

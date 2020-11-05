@@ -33,33 +33,42 @@
  *******************************************************************************
  */
 
-#ifndef SPI_DMA_H_
-#define SPI_DMA_H_
+#ifndef _MAXCAM_DEFINTIIONS_H_
+#define _MAXCAM_DEFINTIIONS_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "spi.h"
+#include "stdint.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
+#define QSPI_SPEED                10000000UL
+#define QSPI_START_SYMBOL         0xAABBCCDD
 
+#define LCD_WIDTH           240
+#define LCD_HEIGHT          240
+#define IMAGE_SIZE          (LCD_WIDTH*LCD_HEIGHT*2)
+#define RESULT_MAX_SIZE     32
 
 
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+typedef enum {
+    QSPI_TYPE_NO_DATA = 0,
+    QSPI_TYPE_RESPONSE_VIDEO_DATA ,
+    QSPI_TYPE_RESPONSE_VIDEO_RESULT,
+    QSPI_TYPE_RESPONSE_AUDIO_RESULT
+} teQspiDataType;
+
+typedef struct __attribute__((packed)) {
+    uint32_t start_symbol;
+    uint32_t data_len;
+    uint8_t data_type;
+} qspi_header_t;
 
 
-//-----------------------------------------------------------------------------
-// Function declarations
-//-----------------------------------------------------------------------------
-void spi_dma_int_handler(uint8_t ch, mxc_spi17y_regs_t *spi);
-void spi_dma_master_init(mxc_spi17y_regs_t *spi, spi_type spi_id, sys_cfg_spi_t spi_pins, uint32_t speed, uint8_t quad);
-void spi_dma_rx(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data, uint32_t len, dma_reqsel_t reqsel);
-void spi_dma_tx(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data, uint32_t len, dma_reqsel_t reqsel);
-int spi_dma_wait(uint8_t ch, mxc_spi17y_regs_t *spi);
-
-#endif /* SPI_DMA_H_ */
+#endif /* _MAXCAM_DEFINTIIONS_H_ */

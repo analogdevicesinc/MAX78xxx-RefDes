@@ -1,63 +1,62 @@
 /*******************************************************************************
-* Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
-*
-* This software is protected by copyright laws of the United States and
-* of foreign countries. This material may also be protected by patent laws
-* and technology transfer regulations of the United States and of foreign
-* countries. This software is furnished under a license agreement and/or a
-* nondisclosure agreement and may only be used or reproduced in accordance
-* with the terms of those agreements. Dissemination of this information to
-* any party or parties not specified in the license agreement and/or
-* nondisclosure agreement is expressly prohibited.
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
-* OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
-*
-* Except as contained in this notice, the name of Maxim Integrated
-* Products, Inc. shall not be used except as stated in the Maxim Integrated
-* Products, Inc. Branding Policy.
-*
-* The mere transfer of this software does not imply any licenses
-* of trade secrets, proprietary technology, copyrights, patents,
-* trademarks, maskwork rights, or any other form of intellectual
-* property whatsoever. Maxim Integrated Products, Inc. retains all
-* ownership rights.
-*******************************************************************************
-*/
+ * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ *
+ * This software is protected by copyright laws of the United States and
+ * of foreign countries. This material may also be protected by patent laws
+ * and technology transfer regulations of the United States and of foreign
+ * countries. This software is furnished under a license agreement and/or a
+ * nondisclosure agreement and may only be used or reproduced in accordance
+ * with the terms of those agreements. Dissemination of this information to
+ * any party or parties not specified in the license agreement and/or
+ * nondisclosure agreement is expressly prohibited.
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of Maxim Integrated
+ * Products, Inc. shall not be used except as stated in the Maxim Integrated
+ * Products, Inc. Branding Policy.
+ *
+ * The mere transfer of this software does not imply any licenses
+ * of trade secrets, proprietary technology, copyrights, patents,
+ * trademarks, maskwork rights, or any other form of intellectual
+ * property whatsoever. Maxim Integrated Products, Inc. retains all
+ * ownership rights.
+ *******************************************************************************
+ */
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <stdio.h>
+#include <bbfc_regs.h>
+#include <board.h>
+#include <dma.h>
+#include <fcr_regs.h>
+#include <i2s.h>
+#include <i2s_regs.h>
+#include <icc.h>
+#include <mxc.h>
+#include <mxc_delay.h>
+#include <mxc_device.h>
+#include <mxc_sys.h>
+#include <nvic_table.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
+#include <tmr.h>
 
-#include "mxc_sys.h"
-#include "bbfc_regs.h"
-#include "fcr_regs.h"
-#include "icc.h"
-#include "mxc_device.h"
-#include "mxc_delay.h"
-#include "nvic_table.h"
-#include "i2s_regs.h"
-#include "board.h"
-#include "i2s.h"
-#include "tmr.h"
-#include "dma.h"
 #include "cnn.h"
-#include "mxc.h"
-
-#include "spi_dma.h"
 #include "maxcam_debug.h"
-#include "faceid_definitions.h"
+#include "maxcam_definitions.h"
+#include "spi_dma.h"
 #include "version.h"
 
 
@@ -78,7 +77,6 @@
 #define TRANSPOSE_WIDTH		128 	// width of 2d data model to be used for transpose
 #define NUM_OUTPUTS 		21		// number of classes
 #define I2S_RX_BUFFER_SIZE	64		// I2S buffer size
-#define TFT_BUFF_SIZE		50		// TFT buffer size
 /*-----------------------------*/
 
 /* Adjustables */
@@ -98,6 +96,11 @@
 #define DMA_CHANNEL_QSPI            1
 #define DMA_CHANNEL_QSPI_IRQ        DMA1_IRQn
 #define DMA_CHANNEL_QSPI_IRQ_HAND   DMA1_IRQHandler
+
+
+//-----------------------------------------------------------------------------
+// Typedefs
+//-----------------------------------------------------------------------------
 
 
 //-----------------------------------------------------------------------------
@@ -235,7 +238,7 @@ int main(void)
     GPIO_CLR(gpio_blue);
     MXC_GPIO_Config(&gpio_blue);
 
-    PR_INFO("maxcam_electronica_max78000_audio v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    PR_INFO("maxcam_electronica_max78000_audio v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
 
     memset(pAI85Buffer, 0x0, sizeof(pAI85Buffer));
     memset(pPreambleCircBuffer, 0x0, sizeof(pPreambleCircBuffer));

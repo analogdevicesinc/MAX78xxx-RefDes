@@ -1,36 +1,37 @@
 /*******************************************************************************
-* Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
-*
-* This software is protected by copyright laws of the United States and
-* of foreign countries. This material may also be protected by patent laws
-* and technology transfer regulations of the United States and of foreign
-* countries. This software is furnished under a license agreement and/or a
-* nondisclosure agreement and may only be used or reproduced in accordance
-* with the terms of those agreements. Dissemination of this information to
-* any party or parties not specified in the license agreement and/or
-* nondisclosure agreement is expressly prohibited.
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
-* OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
-*
-* Except as contained in this notice, the name of Maxim Integrated
-* Products, Inc. shall not be used except as stated in the Maxim Integrated
-* Products, Inc. Branding Policy.
-*
-* The mere transfer of this software does not imply any licenses
-* of trade secrets, proprietary technology, copyrights, patents,
-* trademarks, maskwork rights, or any other form of intellectual
-* property whatsoever. Maxim Integrated Products, Inc. retains all
-* ownership rights.
-*******************************************************************************/
+ * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ *
+ * This software is protected by copyright laws of the United States and
+ * of foreign countries. This material may also be protected by patent laws
+ * and technology transfer regulations of the United States and of foreign
+ * countries. This software is furnished under a license agreement and/or a
+ * nondisclosure agreement and may only be used or reproduced in accordance
+ * with the terms of those agreements. Dissemination of this information to
+ * any party or parties not specified in the license agreement and/or
+ * nondisclosure agreement is expressly prohibited.
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of Maxim Integrated
+ * Products, Inc. shall not be used except as stated in the Maxim Integrated
+ * Products, Inc. Branding Policy.
+ *
+ * The mere transfer of this software does not imply any licenses
+ * of trade secrets, proprietary technology, copyrights, patents,
+ * trademarks, maskwork rights, or any other form of intellectual
+ * property whatsoever. Maxim Integrated Products, Inc. retains all
+ * ownership rights.
+ *******************************************************************************
+ */
 
 // faceid_seq_nobias
 // Created using ./ai8xize.py -e --verbose --top-level cnn -L --test-dir sdk/Examples/MAX78000/CNN --prefix faceid_seq_nobias --checkpoint-file trained/ai85-streaming_seqfaceid_nobias_x6.pth.tar --config-file tests/ai85faceid_nobias.yaml --device 85 --fifo --compact-data --mexpress --display-checkpoint --unload
@@ -46,29 +47,47 @@
 // Layer 7: 64x10x7 (HWC/little data), 2x2 max pool with stride 2/2, conv2d with kernel size 1x1, stride 1/1, pad 0/0, 512x5x3 output
 // Layer 8: 512x5x3 (HWC/little data), 5x3 avg pool with stride 1/1, no convolution, stride 1/1, pad 0/0, 512x1x1 output
 
-#include <stdlib.h>
+//-----------------------------------------------------------------------------
+// Includes
+//-----------------------------------------------------------------------------
+#include <bbfc_regs.h>
+#include <fcr_regs.h>
+#include <icc.h>
+#include <led.h>
+#include <mxc_sys.h>
 #include <stdint.h>
-#include <string.h>
 #include <stdio.h>
-#include "mxc_sys.h"
-#include "bbfc_regs.h"
-#include "fcr_regs.h"
-#include "icc.h"
-#include "led.h"
-#include "tmr.h"
+#include <stdlib.h>
+#include <string.h>
+#include <tmr.h>
+
+#include "cnn.h"
 #include "weights.h"
-#include "faceID.h"
 
-#define CNN_START LED_On(0)
-#define CNN_COMPLETE LED_Off(0)
 
+//-----------------------------------------------------------------------------
+// Defines
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
 uint32_t cnn_time; // Stopwatch
 
+
+//-----------------------------------------------------------------------------
+// Local function declarations
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Function definitions
+//-----------------------------------------------------------------------------
 void cnn_wait(void)
 {
   while ((*((volatile uint32_t *) 0x50100000) & (1<<12)) != 1<<12) ;
   cnn_time = MXC_TMR_SW_Stop(MXC_TMR0);
-  CNN_COMPLETE;
 }
 
 void memcpy32(uint32_t *dst, const uint32_t *src, int n)
@@ -857,8 +876,6 @@ void cnn_start(void)
 
 	  // Allow capture of processing time
 	  *((volatile uint32_t *) 0x50100000) = 0x0018c809; // Master enable group 0
-
-	  CNN_START; // Allow capture of processing time
 }
 
 void load_input(const uint8_t *buffer)

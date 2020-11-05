@@ -36,20 +36,21 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <board.h>
+#include <i2c.h>
+#include <max20303.h>
 #include <stdio.h>
 #include <string.h>
-#include "tmr_utils.h"
-#include "i2c.h"
+#include <tmr_utils.h>
 
-#include "max20303.h"
-#include "board.h"
 #include "config.h"
-#include "qspi.h"
+
+#include "maxcam_definitions.h"
 #include "lcd.h"
-#include "sdcard.h"
 #include "lcd_data.h"
-#include "faceid_definitions.h"
 #include "maxcam_debug.h"
+#include "qspi.h"
+#include "sdcard.h"
 #include "version.h"
 
 
@@ -74,7 +75,6 @@
 //-----------------------------------------------------------------------------
 
 
-
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
@@ -88,7 +88,7 @@ int main(void)
     uint8_t cmdData[1] = {0};
 
     snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    PR_INFO("maxcam_electronica_max32666 %s", version);
+    PR_INFO("maxcam_electronica_max32666 %s [%s]", version, S_BUILD_TIMESTAMP);
 
     if (MAX20303_initialize(1) != E_NO_ERROR) {
         PR_ERROR("pmic init failed");
