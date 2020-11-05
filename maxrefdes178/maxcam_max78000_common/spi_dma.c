@@ -224,7 +224,7 @@ void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_
     spi_dma_wait(ch);
 
     spi_dma_tx(ch, spi, data, len, spi_int);
-//    spi_dma_wait(ch);
+    spi_dma_wait(ch);
 
     PR_INFO("spi tx completed %d", data_type);
 }

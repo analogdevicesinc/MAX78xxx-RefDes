@@ -141,6 +141,14 @@ void camera_irq_handler(void)
     MXC_PCIF->int_fl = flags; // clear flags
 }
 
+#ifdef __riscv
+void __attribute__((interrupt("machine")))  PCIF_IRQHandler(void)
+{
+    camera_irq_handler();
+    NVIC_ClearPendingIRQ(PCIF_IRQn);
+}
+#endif
+
 static void setup_dma(void)
 {
     MXC_DMA->ch[g_dma_channel].status = 0x4; // Clear CTZ status flag
@@ -215,7 +223,12 @@ int camera_init(void)
         MXC_SETFIELD(MXC_PCIF->ctrl, MXC_F_CAMERAIF_CTRL_PCIF_SYS, MXC_F_CAMERAIF_CTRL_PCIF_SYS);
         
         MXC_PCIF_EnableInt(MXC_F_CAMERAIF_INT_EN_IMG_DONE);
-        NVIC_SetVector(PCIF_IRQn, camera_irq_handler);
+        #ifndef __riscv
+            NVIC_SetVector(PCIF_IRQn, camera_irq_handler);
+        #else
+            __enable_irq();
+            NVIC_EnableIRQ(PCIF_IRQn);
+        #endif
     }
     
     return ret;
@@ -294,11 +307,14 @@ int camera_setup(int xres, int yres, pixformat_t pixformat, fifomode_t fifo_mode
         MXC_PCIF_DisableInt(MXC_F_CAMERAIF_INT_EN_FIFO_THRESH);
     }
     else {
+		// Slow down clock if not using dma
+		ret |= camera.write_reg(0x11, 0xf); // clock prescaler
         MXC_SETFIELD(MXC_PCIF->ctrl, MXC_F_CAMERAIF_CTRL_RX_DMA, 0x0);
         MXC_PCIF_EnableInt(MXC_F_CAMERAIF_INT_EN_FIFO_THRESH);
     }
-    camera.set_framesize(g_framesize_width, g_framesize_height);
     camera.set_pixformat(pixformat);
+    camera.set_framesize(g_framesize_width, g_framesize_height);
+
     return ret;
 }
 
