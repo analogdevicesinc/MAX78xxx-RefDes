@@ -65,6 +65,7 @@ SRCS  = main.c
 SRCS += qspi.c
 SRCS += lcd.c
 SRCS += fonts.c
+SRCS += sdcard.c
 SRCS += spi_dma.c
 
 # Where to find source files for this test
@@ -117,6 +118,14 @@ include $(BOARD_DIR)/board.mk
 # Include the peripheral driver
 PERIPH_DRIVER_DIR=$(LIBS_DIR)/$(TARGET_UC)PeriphDriver
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
+
+#include the FAT32 libraries
+SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
+FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
+include $(FAT32_DRIVER_DIR)/fat32.mk
+
+#include the SDHC libraries
+include $(SDHC_DRIVER_DIR)/sdhc.mk
 
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be

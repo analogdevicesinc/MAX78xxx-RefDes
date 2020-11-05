@@ -1,0 +1,360 @@
+/*******************************************************************************
+ * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ *
+ * This software is protected by copyright laws of the United States and
+ * of foreign countries. This material may also be protected by patent laws
+ * and technology transfer regulations of the United States and of foreign
+ * countries. This software is furnished under a license agreement and/or a
+ * nondisclosure agreement and may only be used or reproduced in accordance
+ * with the terms of those agreements. Dissemination of this information to
+ * any party or parties not specified in the license agreement and/or
+ * nondisclosure agreement is expressly prohibited.
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of Maxim Integrated
+ * Products, Inc. shall not be used except as stated in the Maxim Integrated
+ * Products, Inc. Branding Policy.
+ *
+ * The mere transfer of this software does not imply any licenses
+ * of trade secrets, proprietary technology, copyrights, patents,
+ * trademarks, maskwork rights, or any other form of intellectual
+ * property whatsoever. Maxim Integrated Products, Inc. retains all
+ * ownership rights.
+ *******************************************************************************
+ * @brief   read and write sdhc
+ * @details This example uses the sdhc and ffat to read/write the file system on
+ *          an SD card. The Fat library used supports long filenames (see ffconf.h)
+ *          the max length is 256 characters.
+ *
+ *          You must connect an sd card to the sd card slot.
+ */
+
+//-----------------------------------------------------------------------------
+// Includes
+//-----------------------------------------------------------------------------
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include "mxc_config.h"
+#include "mxc_sys.h"
+#include "sdhc_regs.h"
+#include "led.h"
+#include "tmr_utils.h"
+#include "uart.h"
+#include "gpio.h"
+#include "sdhc_lib.h"
+#include "ff.h"
+#include "maxcam_debug.h"
+
+
+//-----------------------------------------------------------------------------
+// Defines
+//-----------------------------------------------------------------------------
+#define S_MODULE_NAME   "sdcard"
+
+#define MAXLEN          256
+
+
+//-----------------------------------------------------------------------------
+// Typedefs
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+FATFS *fs;      //FFat Filesystem Object
+FATFS fs_obj;
+FIL file;       //FFat File Object
+FRESULT err;    //FFat Result (Struct)
+FILINFO fno;    //FFat File Information Object
+DIR dir;        //FFat Directory Object
+TCHAR message[MAXLEN], directory[MAXLEN], cwd[MAXLEN], filename[MAXLEN], volume_label[24], volume = '0';
+TCHAR *FF_ERRORS[20];
+DWORD clusters_free = 0, sectors_free = 0, sectors_total = 0, volume_sn = 0;
+UINT bytes_written = 0, bytes_read = 0, mounted = 0;
+BYTE work[4096];
+static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";
+const sys_cfg_tmr_t sys_tmr_cfg = NULL; /* No system specific configuration needed. */
+gpio_cfg_t SDPowerEnablePin = {PORT_1, PIN_12, GPIO_FUNC_OUT, GPIO_PAD_NONE};
+
+
+//-----------------------------------------------------------------------------
+// Local function declarations
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Function definitions
+//-----------------------------------------------------------------------------
+void sdcard_generateMessage(unsigned length)
+{
+    for(int i = 0 ; i < length; i++) {
+        /*Generate some random data to put in file*/
+        message[i] =  charset[rand() % (sizeof(charset)-1)];
+    }
+}
+
+int sdcard_mount() {
+    fs = &fs_obj;
+    if((err = f_mount(fs, "", 1)) != FR_OK) {           //Mount the default drive to fs now
+        PR_ERROR("Error opening SD card: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+    }
+    else {
+        PR_INFO("SD card mounted.");
+        mounted = 1;
+    }
+
+    f_getcwd(cwd, sizeof(cwd));                         //Set the Current working directory
+
+    return err;
+}
+
+int sdcard_umount() {
+    if((err = f_mount(NULL, "", 0)) != FR_OK){          //Unmount the default drive from its mount point
+        PR_ERROR("Error unmounting volume: %s", FF_ERRORS[err]);
+    }
+    else {
+        PR_INFO("SD card unmounted.");
+        mounted = 0;
+    }
+
+    return err;
+}
+
+int sdcard_formatSDHC() {
+    printf("FORMATTING DRIVE\n");
+
+    if((err = f_mkfs("", FM_ANY, 0, work, sizeof(work))) != FR_OK) {    //Format the default drive to FAT32
+        PR_ERROR("Error formatting SD card: %s", FF_ERRORS[err]);
+    }
+    else {
+        PR_INFO("Drive formatted.");
+    }
+
+    sdcard_mount();
+
+    if((err = f_setlabel("MAXIM")) != FR_OK){
+        PR_ERROR("Error setting drive label: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+    }
+
+    sdcard_umount();
+
+    return err;
+}
+
+int example()
+{
+    unsigned int length = 256;
+
+    if((err = sdcard_formatSDHC()) != FR_OK) {
+        PR_ERROR("Error Formatting SD Card: %s", FF_ERRORS[err]);
+        return err;
+    }
+
+    //open SD Card
+    if((err = sdcard_mount()) != FR_OK) {
+        PR_ERROR("Error opening SD Card: %s", FF_ERRORS[err]);
+        return err;
+    }
+    printf("SD Card Opened!\n");
+
+    if((err = f_setlabel("MAXIM")) != FR_OK){
+        PR_ERROR("Error setting drive label: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+
+    if((err = f_getfree(&volume,&clusters_free, &fs)) != FR_OK) {
+        PR_ERROR("Error finding free size of card: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+
+    if((err = f_getlabel(&volume,volume_label,&volume_sn)) != FR_OK){
+        PR_ERROR("Error reading drive label: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+
+    if((err = f_open(&file, "0:HelloWorld.txt", FA_CREATE_ALWAYS|FA_WRITE)) != FR_OK){
+        PR_ERROR("Error opening file: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+    PR_INFO("File opened!");
+
+    sdcard_generateMessage(length);
+
+    if((err = f_write(&file, &message, length, &bytes_written)) != FR_OK){
+        PR_ERROR("Error writing file: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+    PR_INFO("%d bytes written to file!", bytes_written);
+
+    if((err = f_close(&file)) != FR_OK){
+        PR_ERROR("Error closing file: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+    PR_INFO("File Closed!");
+
+    if((err = f_chmod("HelloWorld.txt", 0, AM_RDO | AM_ARC | AM_SYS | AM_HID)) != FR_OK){
+        PR_ERROR("Error in chmod: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+
+    err = f_stat("MaximSDHC", &fno);
+    if(err == FR_NO_FILE) {
+        PR_INFO("Creating Directory...");
+        if((err = f_mkdir("MaximSDHC")) != FR_OK) {
+            PR_ERROR("Error creating directory: %s", FF_ERRORS[err]);
+            f_mount(NULL, "", 0);
+            return err;
+        }
+    }
+
+    PR_INFO("Renaming File...");
+    if((err = f_rename("0:HelloWorld.txt", "0:MaximSDHC/HelloMaxim.txt")) != FR_OK){ //cr: clearify 0:file notation
+        PR_ERROR("Error moving file: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+
+    if((err = f_chdir("/MaximSDHC")) != FR_OK){
+        PR_ERROR("Error in chdir: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+
+    PR_INFO("Attempting to read back file...");
+    if((err = f_open(&file, "HelloMaxim.txt", FA_READ)) != FR_OK){
+        PR_ERROR("Error opening file: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+
+    if((err = f_read(&file, &message, bytes_written, &bytes_read)) != FR_OK){
+        PR_ERROR("Error reading file: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+
+    PR_INFO("Read Back %d bytes", bytes_read);
+    PR_INFO("Message: ");
+    PR_INFO("%s", message);
+
+    if((err = f_close(&file)) != FR_OK){
+        PR_ERROR("Error closing file: %s", FF_ERRORS[err]);
+        f_mount(NULL, "", 0);
+        return err;
+    }
+    PR_INFO("File Closed!\n");
+
+    //unmount SD Card
+    //f_mount(fs, "", 0);
+    if((err = f_mount(NULL, "", 0)) != FR_OK){
+        PR_ERROR("Error unmounting volume: %s", FF_ERRORS[err]);
+        return err;
+    }
+
+    return 0;
+}
+
+int sdcard_init(void) {
+    const sys_cfg_sdhc_t sys_sdhc_cfg = NULL; /* No system specific configuration needed. */
+    sdhc_cfg_t cfg;
+
+    FF_ERRORS[0] = "FR_OK";
+    FF_ERRORS[1] = "FR_DISK_ERR";
+    FF_ERRORS[2] = "FR_INT_ERR";
+    FF_ERRORS[3] = "FR_NOT_READY";
+    FF_ERRORS[4] = "FR_NO_FILE";
+    FF_ERRORS[5] = "FR_NO_PATH";
+    FF_ERRORS[6] = "FR_INVLAID_NAME";
+    FF_ERRORS[7] = "FR_DENIED";
+    FF_ERRORS[8] = "FR_EXIST";
+    FF_ERRORS[9] = "FR_INVALID_OBJECT";
+    FF_ERRORS[10] = "FR_WRITE_PROTECTED";
+    FF_ERRORS[11] = "FR_INVALID_DRIVE";
+    FF_ERRORS[12] = "FR_NOT_ENABLED";
+    FF_ERRORS[13] = "FR_NO_FILESYSTEM";
+    FF_ERRORS[14] = "FR_MKFS_ABORTED";
+    FF_ERRORS[15] = "FR_TIMEOUT";
+    FF_ERRORS[16] = "FR_LOCKED";
+    FF_ERRORS[17] = "FR_NOT_ENOUGH_CORE";
+    FF_ERRORS[18] = "FR_TOO_MANY_OPEN_FILES";
+    FF_ERRORS[19] = "FR_INVALID_PARAMETER";
+    srand(12347439);
+
+    // Enable Power To Card
+    GPIO_Config(&SDPowerEnablePin);
+    GPIO_OutClr(&SDPowerEnablePin);
+
+    // Initialize SDHC peripheral
+    cfg.bus_voltage = SDHC_Bus_Voltage_3_3;
+    cfg.block_gap = 0;
+    cfg.clk_div = 0x0b0; // Maximum divide ratio, frequency must be >= 400 kHz during Card Identification phase
+    if(SDHC_Init(&cfg, &sys_sdhc_cfg) != E_NO_ERROR) {
+        PR_ERROR("Unable to initialize SDHC driver.");
+        return 1;
+    }
+
+    // wait for card to be inserted
+    if (!SDHC_Card_Inserted()) {
+        PR_ERROR("Card is not inserted.");
+        return 1;
+    } else {
+        PR_INFO("Card inserted.");
+    }
+
+    // set up card to get it ready for a transaction
+    if (SDHC_Lib_InitCard(10) == E_NO_ERROR) {
+        PR_INFO("Card Initialized.");
+    } else {
+        PR_ERROR("No card response! Remove card, reset EvKit, and try again.");
+        return -1;
+    }
+
+    if (SDHC_Lib_Get_Card_Type() == CARD_SDHC) {
+        PR_INFO("Card type: SDHC");
+    } else {
+        PR_INFO("Card type: MMC/eMMC");
+    }
+
+    /* Configure for fastest possible clock, must not exceed 52 MHz for eMMC */
+    if (SystemCoreClock > 96000000)  {
+        PR_INFO("SD clock ratio (at card) 4:1");
+        SDHC_Set_Clock_Config(1);
+    } else {
+        PR_INFO("SD clock ratio (at card) 2:1");
+        SDHC_Set_Clock_Config(0);
+    }
+
+    if(example() != E_NO_ERROR) {
+        PR_ERROR("SD CARD example failed");
+        return 1;
+    }
+
+    if(err >= 0 && err <= 20) {
+        PR_ERROR("Function Returned with code: %d", FF_ERRORS[err]);
+        return 1;
+    }
+
+    return 0;
+}

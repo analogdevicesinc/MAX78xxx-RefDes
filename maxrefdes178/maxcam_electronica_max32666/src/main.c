@@ -46,6 +46,7 @@
 #include "config.h"
 #include "qspi.h"
 #include "lcd.h"
+#include "sdcard.h"
 #include "lcd_data.h"
 #include "faceid_definitions.h"
 #include "maxcam_debug.h"
@@ -116,6 +117,11 @@ int main(void)
         PR_ERROR("lcd init failed");
         while(1);
     }
+
+//    if (sdcard_init() != E_NO_ERROR) {
+//        PR_ERROR("sdhc_init failed");
+//        while(1);
+//    }
 
     PR_INFO("init completed");
 
