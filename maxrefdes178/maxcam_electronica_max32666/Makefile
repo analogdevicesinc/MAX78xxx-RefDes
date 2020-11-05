@@ -57,7 +57,7 @@ BOARD=MAXCAM-AI
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=./Libraries
+LIBS_DIR=./../max32666_libraries
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 # Source files for this test (add path to VPATH below)
@@ -73,7 +73,7 @@ VPATH = ./src
 
 # Where to find header files for this test
 IPATH  = ./include
-IPATH += ./../common
+IPATH += ./../maxcam_common
 
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE 

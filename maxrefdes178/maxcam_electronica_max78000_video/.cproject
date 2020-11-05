@@ -48,10 +48,10 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1648672385" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.1969112665" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.90884905" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/CMSIS/Device/Maxim/MAX78000/Include"/>
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/PeriphDrivers/Include/MAX78000"/>
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/Boards/MAX78000/Include"/>
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/Boards/MAX78000/Maxcam/Include"/>
+									<listOptionValue builtIn="false" value="../../max78000_libraries/CMSIS/Device/Maxim/MAX78000/Include"/>
+									<listOptionValue builtIn="false" value="../../max78000_libraries/PeriphDrivers/Include/MAX78000"/>
+									<listOptionValue builtIn="false" value="../../max78000_libraries/Boards/MAX78000/Include"/>
+									<listOptionValue builtIn="false" value="../../max78000_libraries/Boards/MAX78000/Maxcam/Include"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.507854261" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -134,10 +134,10 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.582145768" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.179440625" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.975675691" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/CMSIS/Device/Maxim/MAX78000/Include"/>
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/Boards/MAX78000/Include"/>
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/PeriphDrivers/Include/MAX78000"/>
-									<listOptionValue builtIn="false" value="../../MAX78000_Libraries/Boards/MAX78000/EvKit_V1/Include"/>
+									<listOptionValue builtIn="false" value="../../max78000_libraries/CMSIS/Device/Maxim/MAX78000/Include"/>
+									<listOptionValue builtIn="false" value="../../max78000_libraries/Boards/MAX78000/Include"/>
+									<listOptionValue builtIn="false" value="../../max78000_libraries/PeriphDrivers/Include/MAX78000"/>
+									<listOptionValue builtIn="false" value="../../max78000_libraries/Boards/MAX78000/EvKit_V1/Include"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.448062457" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>

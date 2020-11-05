@@ -55,12 +55,11 @@ BOARD=Maxcam
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=../MAX78000_Libraries
+LIBS_DIR=../max78000_libraries
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 #Use this for other library make files so they are all based off the same as root as the project
 export CMSIS_ROOT
-
 
 # Source files for this test (add path to VPATH below)
 SRCS  = main.c
@@ -70,14 +69,15 @@ SRCS += spi_dma.c
 
 # Where to find source files for this test
 VPATH=.
-VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
-VPATH += $(LIBS_DIR)/Common
 VPATH += ./src
+VPATH += ./../maxcam_max78000_common
+VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
+
 # Where to find header files for this test
 IPATH = .
 IPATH += ./include
-IPATH += ./../common
-IPATH += $(LIBS_DIR)/Common
+IPATH += ./../maxcam_common
+IPATH += ./../maxcam_max78000_common
 
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE

@@ -50,11 +50,11 @@
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/arm-none-eabi/include/sys&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/lib/gcc/arm-none-eabi/6.3.1/include&quot;"/>
-									<listOptionValue builtIn="false" value=".././Libraries/CMSIS/Device/Maxim/MAX32665/Include"/>
-									<listOptionValue builtIn="false" value=".././Libraries/MAX32665PeriphDriver/Include"/>
-									<listOptionValue builtIn="false" value=".././Libraries/Boards/EvKit_V1/Include"/>
-									<listOptionValue builtIn="false" value=".././Libraries/Boards/Include"/>
-									<listOptionValue builtIn="false" value=".././Libraries/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/CMSIS/Device/Maxim/MAX32665/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/MAX32665PeriphDriver/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/Boards/EvKit_V1/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/Boards/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/CMSIS/Include"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.68945223" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
@@ -136,11 +136,11 @@
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/arm-none-eabi/include/sys&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/lib/gcc/arm-none-eabi/6.3.1/include&quot;"/>
-									<listOptionValue builtIn="false" value=".././Libraries/CMSIS/Device/Maxim/MAX32665/Include"/>
-									<listOptionValue builtIn="false" value=".././Libraries/MAX32665PeriphDriver/Include"/>
-									<listOptionValue builtIn="false" value=".././Libraries/Boards/EvKit_V1/Include"/>
-									<listOptionValue builtIn="false" value=".././Libraries/Boards/Include"/>
-									<listOptionValue builtIn="false" value=".././Libraries/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/CMSIS/Device/Maxim/MAX32665/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/MAX32665PeriphDriver/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/Boards/EvKit_V1/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/Boards/Include"/>
+									<listOptionValue builtIn="false" value="../../max32666_libraries/CMSIS/Include"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1669071774" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
@@ -177,12 +177,6 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="maxcam_electronica_max32666.ilg.gnuarmeclipse.managedbuild.cross.target.elf.737306620" name="Executable" projectType="ilg.gnuarmeclipse.managedbuild.cross.target.elf"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1576427906;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.68945223">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
@@ -191,4 +185,13 @@
 		<configuration configurationName="Release"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1576427906;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.68945223">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962.1307073896;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1674944962.1307073896.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1658285891;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1669071774">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+	</storageModule>
 </cproject>

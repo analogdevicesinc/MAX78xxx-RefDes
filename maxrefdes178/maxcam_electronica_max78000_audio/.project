@@ -25,14 +25,19 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>MAX78000_Libraries</name>
+			<name>max78000_libraries</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/MAX78000_Libraries</locationURI>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/max78000_libraries</locationURI>
 		</link>
 		<link>
-			<name>common</name>
+			<name>maxcam_common</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/common</locationURI>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/maxcam_common</locationURI>
+		</link>
+		<link>
+			<name>maxcam_max78000_common</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/maxcam_max78000_common</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
