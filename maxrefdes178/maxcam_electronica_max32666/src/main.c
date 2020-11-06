@@ -43,12 +43,10 @@
 #include <string.h>
 #include <tmr_utils.h>
 
-#include "config.h"
-
-#include "maxcam_definitions.h"
 #include "lcd.h"
 #include "lcd_data.h"
 #include "maxcam_debug.h"
+#include "maxcam_definitions.h"
 #include "qspi.h"
 #include "sdcard.h"
 #include "version.h"
@@ -118,10 +116,10 @@ int main(void)
         while(1);
     }
 
-//    if (sdcard_init() != E_NO_ERROR) {
-//        PR_ERROR("sdhc_init failed");
+    if (sdcard_init() != E_NO_ERROR) {
+        PR_ERROR("sdhc_init failed");
 //        while(1);
-//    }
+    }
 
     PR_INFO("init completed");
 
@@ -139,30 +137,30 @@ int main(void)
             {
                 case QSPI_TYPE_RESPONSE_VIDEO_DATA:
                     if (runFaceId) {
-                        if (strcmp(video_result_string, "nothing")) {
-                            fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, video_result_string, Font_16x26, resultColor, qspi_image_buff);
+                        if (strcmp(lcd_subtitle, "nothing")) {
+                            fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_subtitle, Font_16x26, resultColor, lcd_data);
                         } else {
                             frameColor = WHITE;
                         }
 
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 60, 40, 180, 200, frameColor, qspi_image_buff);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 59, 39, 181, 201, frameColor, qspi_image_buff);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 58, 38, 182, 202, BLACK, qspi_image_buff);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 57, 37, 183, 203, BLACK, qspi_image_buff);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 60, 40, 180, 200, frameColor, lcd_data);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 59, 39, 181, 201, frameColor, lcd_data);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 58, 38, 182, 202, BLACK, lcd_data);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 57, 37, 183, 203, BLACK, lcd_data);
                     }
 
                     if (audio_result_print_cnt) {
-                        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, audio_result_string, Font_16x26, YELLOW, qspi_image_buff);
+                        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_toptitle, Font_16x26, YELLOW, lcd_data);
                         audio_result_print_cnt--;
                     }
 
-                    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, qspi_image_buff);
+                    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data);
                     break;
                 case QSPI_TYPE_RESPONSE_VIDEO_RESULT:
-                    if (strcmp(video_result_string, "Unknown") == 0) {
+                    if (strcmp(lcd_subtitle, "Unknown") == 0) {
                         resultColor = RED;
                         frameColor = RED;
-                    } else if(strcmp(video_result_string, "Adjust Face") == 0) {
+                    } else if(strcmp(lcd_subtitle, "Adjust Face") == 0) {
                         resultColor = YELLOW;
                         frameColor = YELLOW;
                     } else {
@@ -173,15 +171,15 @@ int main(void)
                 case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
                     audio_result_print_cnt = 10;
 
-                    if (strcmp(audio_result_string, "OFF") == 0) {
+                    if (strcmp(lcd_toptitle, "OFF") == 0) {
                         lcd_backlight(0);
                         audio_result_print_cnt = 0;
-                    } else if(strcmp(audio_result_string, "ON") == 0) {
+                    } else if(strcmp(lcd_toptitle, "ON") == 0) {
                         lcd_backlight(1);
                         audio_result_print_cnt = 0;
-                    } else if (strcmp(audio_result_string, "GO") == 0) {
+                    } else if (strcmp(lcd_toptitle, "GO") == 0) {
                         runFaceId = 1;
-                    } else if(strcmp(audio_result_string, "STOP") == 0) {
+                    } else if(strcmp(lcd_toptitle, "STOP") == 0) {
                         runFaceId = 0;
                     }
                     break;

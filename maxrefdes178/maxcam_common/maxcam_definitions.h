@@ -45,13 +45,63 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define QSPI_SPEED                10000000UL
-#define QSPI_START_SYMBOL         0xAABBCCDD
+// Common
+#define QSPI_SPEED               10000000UL  // hz
+#define QSPI_START_SYMBOL        0xAABBCCDD
 
-#define LCD_WIDTH           240
-#define LCD_HEIGHT          240
-#define IMAGE_SIZE          (LCD_WIDTH*LCD_HEIGHT*2)
-#define RESULT_MAX_SIZE     32
+#define SPI_TIMEOUT_CNT          10000000
+
+#define LCD_WIDTH                240
+#define LCD_HEIGHT               240
+#define LCD_DATA_SIZE            (LCD_WIDTH * LCD_HEIGHT * 2)  // RGB565
+#define LCD_SUBTITLE_SIZE        32
+#define LCD_TOPTITLE_SIZE        32
+#define LCD_ROTATION             2
+
+// MAX32666 PINS
+#define MAX32666_VIDEO_INT_PIN   {PORT_0, PIN_30, GPIO_FUNC_IN, GPIO_PAD_PULL_UP}
+#define MAX32666_VIDEO_INT_MODE  GPIO_INT_EDGE, GPIO_INT_FALLING
+#define MAX32666_VIDEO_CS_PIN    {PORT_0, PIN_8, GPIO_FUNC_OUT, GPIO_PAD_NONE}
+
+#define MAX32666_AUDIO_INT_PIN   {PORT_1, PIN_13, GPIO_FUNC_IN, GPIO_PAD_PULL_UP}
+#define MAX32666_AUDIO_INT_MODE  GPIO_INT_EDGE, GPIO_INT_FALLING
+#define MAX32666_AUDIO_CS_PIN    {PORT_0, PIN_14, GPIO_FUNC_OUT, GPIO_PAD_NONE}
+
+#define MAX32666_LCD_DC_PIN      {PORT_1, PIN_14  , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP}
+#define MAX32666_LCD_RESET_PIN   {PORT_1, PIN_15 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP}
+#define MAX32666_LCD_CS_PIN      {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP}
+
+#define MAX32666_SD_EN_PIN       {PORT_1, PIN_12, GPIO_FUNC_OUT, GPIO_PAD_NONE}
+
+
+// MAX32666 LCD
+#define MAX32666_LCD_SPI_ID                SPI1
+#define MAX32666_LCD_SPI                   MXC_SPI1
+#define MAX32666_LCD_DMA_REQSEL_SPITX      DMA_REQSEL_SPI1TX
+#define MAX32666_LCD_SPI_SPEED             16000000
+
+#define MAX32666_LCD_DMA_CHANNEL           0
+#define MAX32666_LCD_DMA_CHANNEL_IRQ       DMA0_IRQn
+#define MAX32666_LCD_DMA_CHANNEL_IRQ_HAND  DMA0_IRQHandler
+
+#define MAX32666_LCD_MAP                   MAP_A
+
+// MAX32666 QSPI
+#define MAX32666_QSPI_ID                   SPI0
+#define MAX32666_QSPI                      MXC_SPI0
+#define MAX32666_QSPI_DMA_REQSEL_SPITX     DMA_REQSEL_SPI0TX
+#define MAX32666_QSPI_DMA_REQSEL_SPIRX     DMA_REQSEL_SPI0RX
+
+#define MAX32666_QSPI_DMA_CHANNEL          1
+#define MAX32666_QSPI_DMA_CHANNEL_IRQ      DMA1_IRQn
+#define MAX32666_QSPI_DMA_CHANNEL_IRQ_HAND DMA1_IRQHandler
+
+#define MAX32666_QSPI_MAP                  MAP_B
+
+// MAX32666 SD CARD
+#define MAX32666_SD_BUS_VOLTAGE            SDHC_Bus_Voltage_3_3
+#define MAX32666_SD_CLK_DIV                0x0b0  // Maximum divide ratio
+#define MAX32666_SD_INIT_RETRY             10
 
 
 //-----------------------------------------------------------------------------

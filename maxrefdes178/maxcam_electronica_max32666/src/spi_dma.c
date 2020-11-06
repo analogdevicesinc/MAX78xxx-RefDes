@@ -45,14 +45,16 @@
 #include <stdio.h>
 
 #include "maxcam_debug.h"
+#include "maxcam_definitions.h"
 #include "spi_dma.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
+#define S_MODULE_NAME        "spi_dma"
+
 #define SPI_DMA_COUNTER_MAX  0xffff
-#define SPI_TIMEOUT_CNT      100000000
 
 
 //-----------------------------------------------------------------------------

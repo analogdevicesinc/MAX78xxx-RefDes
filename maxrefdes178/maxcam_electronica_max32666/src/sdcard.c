@@ -57,14 +57,17 @@
 #include <tmr_utils.h>
 
 #include "maxcam_debug.h"
+#include "maxcam_definitions.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_MODULE_NAME   "sdcard"
+#define S_MODULE_NAME     "sdcard"
 
-#define MAXLEN          256
+#define MESSAGE_MAX_LEN    256
+#define ERROR_MAX_LEN      20
+#define WORKING_BUFFER_LEN 4096
 
 
 //-----------------------------------------------------------------------------
@@ -81,14 +84,14 @@ FIL file;       //FFat File Object
 FRESULT err;    //FFat Result (Struct)
 FILINFO fno;    //FFat File Information Object
 DIR dir;        //FFat Directory Object
-TCHAR message[MAXLEN], directory[MAXLEN], cwd[MAXLEN], filename[MAXLEN], volume_label[24], volume = '0';
-TCHAR *FF_ERRORS[20];
+TCHAR message[MESSAGE_MAX_LEN], directory[MESSAGE_MAX_LEN], cwd[MESSAGE_MAX_LEN], filename[MESSAGE_MAX_LEN], volume_label[24], volume = '0';
+TCHAR *FF_ERRORS[ERROR_MAX_LEN];
 DWORD clusters_free = 0, sectors_free = 0, sectors_total = 0, volume_sn = 0;
 UINT bytes_written = 0, bytes_read = 0, mounted = 0;
-BYTE work[4096];
+BYTE work[WORKING_BUFFER_LEN];
 static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";
 const sys_cfg_tmr_t sys_tmr_cfg = NULL; /* No system specific configuration needed. */
-gpio_cfg_t SDPowerEnablePin = {PORT_1, PIN_12, GPIO_FUNC_OUT, GPIO_PAD_NONE};
+gpio_cfg_t SDPowerEnablePin = MAX32666_SD_EN_PIN;
 
 
 //-----------------------------------------------------------------------------
@@ -308,9 +311,9 @@ int sdcard_init(void) {
     GPIO_OutClr(&SDPowerEnablePin);
 
     // Initialize SDHC peripheral
-    cfg.bus_voltage = SDHC_Bus_Voltage_3_3;
+    cfg.bus_voltage = MAX32666_SD_BUS_VOLTAGE;
     cfg.block_gap = 0;
-    cfg.clk_div = 0x0b0; // Maximum divide ratio, frequency must be >= 400 kHz during Card Identification phase
+    cfg.clk_div = MAX32666_SD_CLK_DIV; // Maximum divide ratio, frequency must be >= 400 kHz during Card Identification phase
     if(SDHC_Init(&cfg, &sys_sdhc_cfg) != E_NO_ERROR) {
         PR_ERROR("Unable to initialize SDHC driver.");
         return 1;
@@ -325,7 +328,7 @@ int sdcard_init(void) {
     }
 
     // set up card to get it ready for a transaction
-    if (SDHC_Lib_InitCard(10) == E_NO_ERROR) {
+    if (SDHC_Lib_InitCard(MAX32666_SD_INIT_RETRY) == E_NO_ERROR) {
         PR_INFO("Card Initialized.");
     } else {
         PR_ERROR("No card response! Remove card, reset EvKit, and try again.");

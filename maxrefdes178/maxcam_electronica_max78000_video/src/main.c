@@ -571,7 +571,7 @@ static void run_cnn(int x_offset, int y_offset)
 #endif
 
     if ( pResult == 0 ) {
-        char name[RESULT_MAX_SIZE] = "nothing";
+        char name[LCD_SUBTITLE_SIZE] = "nothing";
         uint8_t *counter;
         uint8_t counter_len;
         get_min_dist_counter(&counter, &counter_len);

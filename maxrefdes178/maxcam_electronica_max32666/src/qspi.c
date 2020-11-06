@@ -40,11 +40,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "config.h"
+#include "lcd.h"
 #include "maxcam_debug.h"
-#include "qspi.h"
-
 #include "maxcam_definitions.h"
+#include "qspi.h"
 #include "spi_dma.h"
 
 
@@ -62,14 +61,11 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-const gpio_cfg_t ai85_video_int_pin = {PORT_0, PIN_30, GPIO_FUNC_IN, GPIO_PAD_PULL_UP};
-const gpio_cfg_t ai85_video_cs_pin  = {PORT_0, PIN_8, GPIO_FUNC_OUT, GPIO_PAD_NONE};
-const gpio_cfg_t ai85_audio_cs_pin  = {PORT_0, PIN_14, GPIO_FUNC_OUT, GPIO_PAD_NONE};
-const gpio_cfg_t ai85_audio_int_pin = {PORT_1, PIN_13, GPIO_FUNC_IN, GPIO_PAD_PULL_UP};
+const gpio_cfg_t video_int_pin = MAX32666_VIDEO_INT_PIN;
+const gpio_cfg_t video_cs_pin  = MAX32666_VIDEO_CS_PIN;
+const gpio_cfg_t audio_int_pin = MAX32666_AUDIO_INT_PIN;
+const gpio_cfg_t audio_cs_pin  = MAX32666_AUDIO_CS_PIN;
 
-uint8_t qspi_image_buff[IMAGE_SIZE];
-char video_result_string[RESULT_MAX_SIZE];
-char audio_result_string[RESULT_MAX_SIZE];
 static volatile int qspi_video_int_flag;
 static volatile int qspi_audio_int_flag;
 
@@ -82,9 +78,9 @@ static volatile int qspi_audio_int_flag;
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void QSPI_DMA_CHANNEL_IRQ_HAND(void)
+void MAX32666_QSPI_DMA_CHANNEL_IRQ_HAND(void)
 {
-    spi_dma_int_handler(QSPI_DMA_CHANNEL, QSPI);
+    spi_dma_int_handler(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
 }
 
 void qspi_video_int(void *cbdata)
@@ -101,35 +97,35 @@ int qspi_init()
 {
     sys_cfg_spi_t qspi_master_cfg;
 
-    GPIO_OutSet(&ai85_video_cs_pin);
-    GPIO_Config(&ai85_video_cs_pin);
+    GPIO_OutSet(&video_cs_pin);
+    GPIO_Config(&video_cs_pin);
 
-    GPIO_OutSet(&ai85_audio_cs_pin);
-    GPIO_Config(&ai85_audio_cs_pin);
+    GPIO_OutSet(&audio_cs_pin);
+    GPIO_Config(&audio_cs_pin);
 
-    qspi_master_cfg.map = MAP_B;
+    qspi_master_cfg.map = MAX32666_QSPI_MAP;
     qspi_master_cfg.ss0 = Disable;
     qspi_master_cfg.ss1 = Disable;
     qspi_master_cfg.ss2 = Disable;
     qspi_master_cfg.num_io = 4;
 
-    spi_dma_master_init(QSPI, QSPI_ID, qspi_master_cfg, QSPI_SPEED, 1);
+    spi_dma_master_init(MAX32666_QSPI, MAX32666_QSPI_ID, qspi_master_cfg, QSPI_SPEED, 1);
 
-    NVIC_EnableIRQ(QSPI_DMA_CHANNEL_IRQ);
+    NVIC_EnableIRQ(MAX32666_QSPI_DMA_CHANNEL_IRQ);
 
     qspi_video_int_flag = 0;
-    GPIO_Config(&ai85_video_int_pin);
-    GPIO_RegisterCallback(&ai85_video_int_pin, qspi_video_int, NULL);
-    GPIO_IntConfig(&ai85_video_int_pin, GPIO_INT_EDGE, GPIO_INT_FALLING);
-    GPIO_IntEnable(&ai85_video_int_pin);
-    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(ai85_video_int_pin.port));
+    GPIO_Config(&video_int_pin);
+    GPIO_RegisterCallback(&video_int_pin, qspi_video_int, NULL);
+    GPIO_IntConfig(&video_int_pin, MAX32666_VIDEO_INT_MODE);
+    GPIO_IntEnable(&video_int_pin);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(video_int_pin.port));
 
     qspi_audio_int_flag = 0;
-    GPIO_Config(&ai85_audio_int_pin);
-    GPIO_RegisterCallback(&ai85_audio_int_pin, qspi_audio_int, NULL);
-    GPIO_IntConfig(&ai85_audio_int_pin, GPIO_INT_EDGE, GPIO_INT_FALLING);
-    GPIO_IntEnable(&ai85_audio_int_pin);
-    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(ai85_audio_int_pin.port));
+    GPIO_Config(&audio_int_pin);
+    GPIO_RegisterCallback(&audio_int_pin, qspi_audio_int, NULL);
+    GPIO_IntConfig(&audio_int_pin, MAX32666_AUDIO_INT_MODE);
+    GPIO_IntEnable(&audio_int_pin);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(audio_int_pin.port));
 
     return E_NO_ERROR;
 }
@@ -140,10 +136,10 @@ int qspi_worker(void)
         qspi_video_int_flag = 0;
         qspi_header_t qspi_header = {0};
 
-        GPIO_OutClr(&ai85_video_cs_pin);
-        spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (uint8_t *) &qspi_header, sizeof(qspi_header_t), QSPI_DMA_REQSEL_SPIRX);
-        spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
-        GPIO_OutSet(&ai85_video_cs_pin);
+        GPIO_OutClr(&video_cs_pin);
+        spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (uint8_t *) &qspi_header, sizeof(qspi_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX);
+        spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+        GPIO_OutSet(&video_cs_pin);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
             PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_header.start_symbol);
@@ -154,33 +150,33 @@ int qspi_worker(void)
         qspi_video_int_flag = 0;
 
         if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_DATA) {
-            if ((qspi_header.data_len == 0) || (qspi_header.data_len > IMAGE_SIZE)) {
+            if ((qspi_header.data_len == 0) || (qspi_header.data_len > LCD_DATA_SIZE)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_header.data_len);
                 return E_BAD_PARAM;
             }
 
-            GPIO_OutClr(&ai85_video_cs_pin);
-            spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (void *)qspi_image_buff, qspi_header.data_len, QSPI_DMA_REQSEL_SPIRX);
-            spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
-            GPIO_OutSet(&ai85_video_cs_pin);
+            GPIO_OutClr(&video_cs_pin);
+            spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (void *)lcd_data, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX);
+            spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+            GPIO_OutSet(&video_cs_pin);
 
             PR_INFO("video %u", qspi_header.data_len);
 
             return QSPI_TYPE_RESPONSE_VIDEO_DATA;
         } else if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_RESULT) {
-            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(video_result_string))) {
+            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(lcd_subtitle))) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_header.data_len);
                 return E_BAD_PARAM;
             }
 
-            memset(video_result_string, 0, sizeof(video_result_string));
+            memset(lcd_subtitle, 0, sizeof(lcd_subtitle));
 
-            GPIO_OutClr(&ai85_video_cs_pin);
-            spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (void *)video_result_string, qspi_header.data_len, QSPI_DMA_REQSEL_SPIRX);
-            spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
-            GPIO_OutSet(&ai85_video_cs_pin);
+            GPIO_OutClr(&video_cs_pin);
+            spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (void *)lcd_subtitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX);
+            spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+            GPIO_OutSet(&video_cs_pin);
 
-            PR_INFO("video result %u %s", qspi_header.data_len, video_result_string);
+            PR_INFO("video result %u %s", qspi_header.data_len, lcd_subtitle);
 
             return QSPI_TYPE_RESPONSE_VIDEO_RESULT;
         }
@@ -191,10 +187,10 @@ int qspi_worker(void)
 
         qspi_header_t qspi_header = {0};
 
-        GPIO_OutClr(&ai85_audio_cs_pin);
-        spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (uint8_t *) &qspi_header, sizeof(qspi_header_t), QSPI_DMA_REQSEL_SPIRX);
-        spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
-        GPIO_OutSet(&ai85_audio_cs_pin);
+        GPIO_OutClr(&audio_cs_pin);
+        spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (uint8_t *) &qspi_header, sizeof(qspi_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX);
+        spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+        GPIO_OutSet(&audio_cs_pin);
 
         if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
             PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_header.start_symbol);
@@ -205,19 +201,19 @@ int qspi_worker(void)
         qspi_audio_int_flag = 0;
 
         if (qspi_header.data_type == QSPI_TYPE_RESPONSE_AUDIO_RESULT) {
-            memset(audio_result_string, 0, sizeof(audio_result_string));
+            memset(lcd_toptitle, 0, sizeof(lcd_toptitle));
 
-            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(audio_result_string))) {
+            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(lcd_toptitle))) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_header.data_len);
                 return E_BAD_PARAM;
             }
 
-            GPIO_OutClr(&ai85_audio_cs_pin);
-            spi_dma_rx(QSPI_DMA_CHANNEL, QSPI, (void *)audio_result_string, qspi_header.data_len, QSPI_DMA_REQSEL_SPIRX);
-            spi_dma_wait(QSPI_DMA_CHANNEL, QSPI);
-            GPIO_OutSet(&ai85_audio_cs_pin);
+            GPIO_OutClr(&audio_cs_pin);
+            spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (void *)lcd_toptitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX);
+            spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+            GPIO_OutSet(&audio_cs_pin);
 
-            PR_INFO("audio result %u %s", qspi_header.data_len, audio_result_string);
+            PR_INFO("audio result %u %s", qspi_header.data_len, lcd_toptitle);
 
             return QSPI_TYPE_RESPONSE_AUDIO_RESULT;
         }

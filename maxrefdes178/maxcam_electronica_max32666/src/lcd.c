@@ -42,19 +42,17 @@
 #include <stdio.h>
 #include <tmr_utils.h>
 
-#include "config.h"
 #include "lcd.h"
-
-#include "maxcam_definitions.h"
 #include "max20303.h"
 #include "maxcam_debug.h"
+#include "maxcam_definitions.h"
 #include "spi_dma.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_MODULE_NAME   "lcd"
+#define S_MODULE_NAME  "lcd"
 
 #define ST_CMD_DELAY   0x80
 
@@ -95,7 +93,7 @@
 #define ST7789_RDID3   0xDC
 #define ST7789_RDID4   0xDD
 
-#define ST7789_ROTATION 2
+#define ST7789_ROTATION LCD_ROTATION
 
 #if ST7789_ROTATION == 0
     #define X_SHIFT 0
@@ -120,9 +118,13 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-const gpio_cfg_t lcd_dc_pin    = {PORT_1, PIN_14  , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
-const gpio_cfg_t lcd_reset_pin = {PORT_1, PIN_15 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
-const gpio_cfg_t lcd_ssel_pin  = {PORT_0, PIN_22 , GPIO_FUNC_OUT, GPIO_PAD_PULL_UP};
+const gpio_cfg_t lcd_dc_pin    = MAX32666_LCD_DC_PIN;
+const gpio_cfg_t lcd_reset_pin = MAX32666_LCD_RESET_PIN;
+const gpio_cfg_t lcd_cs_pin    = MAX32666_LCD_CS_PIN;
+
+uint8_t lcd_data[LCD_DATA_SIZE];
+char lcd_subtitle[LCD_SUBTITLE_SIZE];
+char lcd_toptitle[LCD_TOPTITLE_SIZE];
 
 
 //-----------------------------------------------------------------------------
@@ -143,44 +145,44 @@ static void spi_init();
 //-----------------------------------------------------------------------------
 
 // DMA IRQ Handlers
-void LCD_DMA_CHANNEL_IRQ_HAND()
+void MAX32666_LCD_DMA_CHANNEL_IRQ_HAND()
 {
-    spi_dma_int_handler(LCD_DMA_CHANNEL, LCD_SPI);
+    spi_dma_int_handler(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 }
 
 static void spi_init()
 {
     // Initialize SPI peripheral
     sys_cfg_spi_t master_cfg = {0};
-    master_cfg.map = MAP_A;
+    master_cfg.map = MAX32666_LCD_MAP;
     master_cfg.ss0 = Disable;
     master_cfg.ss1 = Disable;
     master_cfg.ss2 = Disable;
 
-    spi_dma_master_init(LCD_SPI, LCD_SPI_ID, master_cfg, LCD_SPI_SPEED, 0);
+    spi_dma_master_init(MAX32666_LCD_SPI, MAX32666_LCD_SPI_ID, master_cfg, MAX32666_LCD_SPI_SPEED, 0);
 
-    NVIC_EnableIRQ(LCD_DMA_CHANNEL_IRQ);
+    NVIC_EnableIRQ(MAX32666_LCD_DMA_CHANNEL_IRQ);
 }
 
 static void lcd_sendCommand(uint8_t command)
 {
     GPIO_OutClr(&lcd_dc_pin);
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, &command, 1, LCD_DMA_REQSEL_SPITX);
-    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
+    spi_dma_tx(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, &command, 1, MAX32666_LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 }
 
 static void lcd_sendSmallData(uint8_t data)
 {
     GPIO_OutSet(&lcd_dc_pin);
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, &data, 1, LCD_DMA_REQSEL_SPITX);
-    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
+    spi_dma_tx(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, &data, 1, MAX32666_LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 }
 
 static void lcd_sendData(uint8_t *data, uint32_t dataLen)
 {
     GPIO_OutSet(&lcd_dc_pin);
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, data, dataLen, LCD_DMA_REQSEL_SPITX);
-    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
+    spi_dma_tx(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, dataLen, MAX32666_LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 }
 
 static void lcd_reset()
@@ -202,7 +204,7 @@ void lcd_backlight(unsigned char onoff)
 
 static void lcd_configure()
 {
-    GPIO_OutClr(&lcd_ssel_pin);
+    GPIO_OutClr(&lcd_cs_pin);
 
     lcd_sendCommand(ST7789_COLMOD);     //  Set color mode
     lcd_sendSmallData(0x55);            //  RGB565 (16bit)
@@ -270,7 +272,7 @@ static void lcd_configure()
 
     lcd_sendCommand(ST7789_DISPON);    //  Main screen turned on
 
-    GPIO_OutSet(&lcd_ssel_pin);
+    GPIO_OutSet(&lcd_cs_pin);
 }
 
 /**
@@ -283,7 +285,7 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
     uint16_t x_start = x0 + X_SHIFT, x_end = x1 + X_SHIFT;
     uint16_t y_start = y0 + Y_SHIFT, y_end = y1 + Y_SHIFT;
 
-    GPIO_OutClr(&lcd_ssel_pin);
+    GPIO_OutClr(&lcd_cs_pin);
     lcd_sendCommand(ST7789_CASET);
     {
         uint8_t data[] = {x_start >> 8, x_start & 0xFF, x_end >> 8, x_end & 0xFF};
@@ -297,7 +299,7 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
     }
 
     lcd_sendCommand(ST7789_RAMWR);
-    GPIO_OutSet(&lcd_ssel_pin);
+    GPIO_OutSet(&lcd_cs_pin);
 }
 
 /**
@@ -315,17 +317,18 @@ void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data
     lcd_setAddrWindow(x, y, x + w - 1, y + h - 1);
 
     GPIO_OutSet(&lcd_dc_pin);
-    GPIO_OutClr(&lcd_ssel_pin);
+    GPIO_OutClr(&lcd_cs_pin);
 
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff, 57600, LCD_DMA_REQSEL_SPITX);
-    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
-    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff + 57600, 57600, LCD_DMA_REQSEL_SPITX);
-    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
+    spi_dma_tx(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, buff, 57600, MAX32666_LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
+    spi_dma_tx(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, buff + 57600, 57600, MAX32666_LCD_DMA_REQSEL_SPITX);
+    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 
+    // TODO
 //    spi_dma_tx(LCD_DMA_CHANNEL, LCD_SPI, buff, 2 * w * h, LCD_DMA_REQSEL_SPITX);
 //    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
 
-    GPIO_OutSet(&lcd_ssel_pin);
+    GPIO_OutSet(&lcd_cs_pin);
 }
 
 /**
@@ -343,7 +346,7 @@ static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_
 
     lcd_setAddrWindow(x, y, x + font.width - 1, y + font.height - 1);
 
-    GPIO_OutClr(&lcd_ssel_pin);
+    GPIO_OutClr(&lcd_cs_pin);
 
     for (i = 0; i < font.height; i++) {
         b = font.data[(ch - 32) * font.height + i];
@@ -359,7 +362,7 @@ static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_
         }
     }
 
-    GPIO_OutSet(&lcd_ssel_pin);
+    GPIO_OutSet(&lcd_cs_pin);
 }
 
 /**
@@ -397,8 +400,8 @@ int lcd_init()
 {
     lcd_backlight(1);
 
-    GPIO_OutSet(&lcd_ssel_pin);
-    GPIO_Config(&lcd_ssel_pin);
+    GPIO_OutSet(&lcd_cs_pin);
+    GPIO_Config(&lcd_cs_pin);
 
     GPIO_OutSet(&lcd_dc_pin);
     GPIO_Config(&lcd_dc_pin);
