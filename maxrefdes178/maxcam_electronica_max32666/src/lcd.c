@@ -136,7 +136,6 @@ static void lcd_sendSmallData(uint8_t data);
 static void lcd_sendData(uint8_t *data, uint32_t dataLen);
 static void lcd_configure();
 static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor);
 static void spi_init();
 
 
@@ -329,71 +328,6 @@ void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data
 //    spi_dma_wait(LCD_DMA_CHANNEL, LCD_SPI);
 
     GPIO_OutSet(&lcd_cs_pin);
-}
-
-/**
- * @brief Write a char
- * @param  x&y -> cursor of the start point.
- * @param ch -> char to write
- * @param font -> fontstyle of the string
- * @param color -> color of the char
- * @param bgcolor -> background color of the char
- * @return  none
- */
-static void lcd_writeChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor)
-{
-    uint32_t i, b, j;
-
-    lcd_setAddrWindow(x, y, x + font.width - 1, y + font.height - 1);
-
-    GPIO_OutClr(&lcd_cs_pin);
-
-    for (i = 0; i < font.height; i++) {
-        b = font.data[(ch - 32) * font.height + i];
-        for (j = 0; j < font.width; j++) {
-            if ((b << j) & 0x8000) {
-                uint8_t data[] = {color >> 8, color & 0xFF};
-                lcd_sendData(data, sizeof(data));
-            }
-            else {
-                uint8_t data[] = {bgcolor >> 8, bgcolor & 0xFF};
-                lcd_sendData(data, sizeof(data));
-            }
-        }
-    }
-
-    GPIO_OutSet(&lcd_cs_pin);
-}
-
-/**
- * @brief Write a string
- * @param  x&y -> cursor of the start point.
- * @param str -> string to write
- * @param font -> fontstyle of the string
- * @param color -> color of the string
- * @param bgcolor -> background color of the string
- * @return  none
- */
-void lcd_writeStringWithBG(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
-{
-    while (*str) {
-        if (x + font.width >= LCD_WIDTH) {
-            x = 0;
-            y += font.height;
-            if (y + font.height >= LCD_HEIGHT) {
-                break;
-            }
-
-            if (*str == ' ') {
-                // skip spaces in the beginning of the new line
-                str++;
-                continue;
-            }
-        }
-        lcd_writeChar(x, y, *str, font, color, bgcolor);
-        x += font.width;
-        str++;
-    }
 }
 
 int lcd_init()

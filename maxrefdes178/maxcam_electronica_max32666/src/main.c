@@ -126,8 +126,8 @@ int main(void)
     MAX20303_led_green(MAX20303_LED_OUTPUT_ON);
 
     // Print logo and version
+    fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version, Font_16x26, RED, image_data_rsz_maxim_logo);
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, image_data_rsz_maxim_logo);
-    lcd_writeStringWithBG(60, 210, version, Font_16x26, RED, WHITE);
 
     int audio_result_print_cnt = 0;
     while (1) {
@@ -143,10 +143,14 @@ int main(void)
                             frameColor = WHITE;
                         }
 
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 60, 40, 180, 200, frameColor, lcd_data);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 59, 39, 181, 201, frameColor, lcd_data);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 58, 38, 182, 202, BLACK, lcd_data);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, 57, 37, 183, 203, BLACK, lcd_data);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
+                                FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, frameColor, lcd_data);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1,
+                                FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, frameColor, lcd_data);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2,
+                                FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3,
+                                FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data);
                     }
 
                     if (audio_result_print_cnt) {

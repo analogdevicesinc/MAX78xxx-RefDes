@@ -60,35 +60,10 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_MODULE_NAME   "main"
+#define S_MODULE_NAME          "main"
 
-#define IMAGE_XRES  240
-#define IMAGE_YRES  240
-
-#define HEIGHT          160
-#define WIDTH           120
-#define THICKNESS       4
-#define IMAGE_H         240
-#define IMAGE_W         240
-#define BYTE_PER_PIXEL  2
-#define FRAME_COLOR_DARK    0x535A
-#define FRAME_COLOR_LIGHT   0xFFFF
-
+#define EMBEDDING_RESULT_LEN   512
 //#define PRINT_TIME
-
-/* Peripherals */
-#define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
-#define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
-
-#define QSPI_ID             MXC_SPI0
-
-#define DMA_CHANNEL_CAMERA          0
-#define DMA_CHANNEL_CAMERA_IRQ      DMA0_IRQn
-#define DMA_CHANNEL_CAMERA_IRQ_HAND DMA0_IRQHandler
-
-#define DMA_CHANNEL_QSPI            1
-#define DMA_CHANNEL_QSPI_IRQ        DMA1_IRQn
-#define DMA_CHANNEL_QSPI_IRQ_HAND   DMA1_IRQHandler
 
 
 //-----------------------------------------------------------------------------
@@ -99,25 +74,14 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-mxc_gpio_cfg_t gpio_flash  = {MXC_GPIO0, MXC_GPIO_PIN_19, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_PULL_DOWN, MXC_GPIO_VSSEL_VDDIO};
+mxc_gpio_cfg_t gpio_flash  = MAX78000_VIDEO_FLASH_PIN;
+mxc_gpio_cfg_t gpio_camera = MAX78000_VIDEO_CAMERA_PIN;
+mxc_gpio_cfg_t qspi_int    = MAX78000_VIDEO_HOST_INT_PIN;
+mxc_gpio_cfg_t gpio_red    = MAX78000_VIDEO_LED_RED_PIN;
+mxc_gpio_cfg_t gpio_green  = MAX78000_VIDEO_LED_GREEN_PIN;
+mxc_gpio_cfg_t gpio_blue   = MAX78000_VIDEO_LED_BLUE_PIN;
 
-mxc_gpio_cfg_t gpio_camera = {MXC_GPIO0, MXC_GPIO_PIN_3, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t qspi_int    = {MXC_GPIO0, MXC_GPIO_PIN_12, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t gpio_red    = {MXC_GPIO2, MXC_GPIO_PIN_0, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t gpio_green  = {MXC_GPIO2, MXC_GPIO_PIN_1, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t gpio_blue   = {MXC_GPIO2, MXC_GPIO_PIN_2, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-uint8_t embedding_result[512];
+uint8_t embedding_result[EMBEDDING_RESULT_LEN];
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -268,13 +232,13 @@ static void run_demo(void);
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void DMA_CHANNEL_CAMERA_IRQ_HAND(void)
+void MAX78000_VIDEO_CAMERA_DMA_IRQ_HAND(void)
 {
 }
 
-void DMA_CHANNEL_QSPI_IRQ_HAND(void)
+void MAX78000_VIDEO_QSPI_DMA_IRQ_HAND(void)
 {
-    spi_dma_int_handler(DMA_CHANNEL_QSPI, QSPI_ID);
+    spi_dma_int_handler(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI_ID);
 }
 
 uint32_t utils_get_time_ms(void)
@@ -351,15 +315,15 @@ int main(void)
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
 
-    spi_dma_slave_init(QSPI_ID, qspi_pins);
+    spi_dma_slave_init(MAX78000_VIDEO_QSPI_ID, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
         fail();
     }
 
-//    NVIC_EnableIRQ(DMA_CHANNEL_CAMERA_IRQ);
-    NVIC_EnableIRQ(DMA_CHANNEL_QSPI_IRQ);
+//    NVIC_EnableIRQ(MAX78000_VIDEO_CAMERA_DMA_IRQ);
+    NVIC_EnableIRQ(MAX78000_VIDEO_QSPI_DMA_IRQ);
 
     // Initialize the camera driver.
     if (camera_init() != E_NO_ERROR) {
@@ -393,7 +357,7 @@ int main(void)
     }
 
     // Setup the camera image dimensions, pixel format and data acquiring details.
-    ret = camera_setup(IMAGE_XRES, IMAGE_YRES, PIXFORMAT_RGB565, FIFO_FOUR_BYTE, USE_DMA, DMA_CHANNEL_CAMERA);
+    ret = camera_setup(CAMERA_WIDTH, CAMERA_HEIGHT, CAMERA_FORMAT, FIFO_FOUR_BYTE, USE_DMA, MAX78000_VIDEO_CAMERA_DMA_CHANNEL);
     if (ret != STATUS_OK) {
         PR_ERROR("Error returned from setting up camera. Error : %d", ret);
         fail();
@@ -481,7 +445,7 @@ static void process_img(void)
     pass_time = utils_get_time_ms();
 #endif
 
-    spi_dma_send_packet(DMA_CHANNEL_QSPI, QSPI_ID, raw, imgLen,
+    spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI_ID, raw, imgLen,
             QSPI_TYPE_RESPONSE_VIDEO_DATA, &qspi_int);
     MXC_Delay(MXC_DELAY_MSEC(3)); // Yield SPI DMA RAM read
 
@@ -516,18 +480,18 @@ static void run_cnn(int x_offset, int y_offset)
 
 //    int counter = 0;
 
-    data =  raw + ((IMAGE_H - (HEIGHT))/2)*IMAGE_W*BYTE_PER_PIXEL;
-    for (int i = y_offset; i<HEIGHT+y_offset; i++) {
-        data =  raw + (((IMAGE_H - HEIGHT)/2)+i)*IMAGE_W*BYTE_PER_PIXEL;
-        data += ((IMAGE_W - WIDTH)/2)*BYTE_PER_PIXEL;
-        for(int j =x_offset; j< WIDTH+x_offset; j++) {
+    data =  raw + ((LCD_HEIGHT - (FACEID_HEIGHT))/2)*LCD_WIDTH*LCD_BYTE_PER_PIXEL;
+    for (int i = y_offset; i<FACEID_HEIGHT+y_offset; i++) {
+        data =  raw + (((LCD_HEIGHT - FACEID_HEIGHT)/2)+i)*LCD_WIDTH*LCD_BYTE_PER_PIXEL;
+        data += ((LCD_WIDTH - FACEID_WIDTH)/2)*LCD_BYTE_PER_PIXEL;
+        for(int j =x_offset; j< FACEID_WIDTH+x_offset; j++) {
             uint8_t ur,ug,ub;
             int8_t r,g,b;
             uint32_t number;
 
-            ub = (uint8_t)(data[j*BYTE_PER_PIXEL+1]<<3);
-            ug = (uint8_t)((data[j*BYTE_PER_PIXEL]<<5) | ((data[j*BYTE_PER_PIXEL+1]&0xE0)>>3));
-            ur = (uint8_t)(data[j*BYTE_PER_PIXEL]&0xF8);
+            ub = (uint8_t)(data[j*LCD_BYTE_PER_PIXEL+1]<<3);
+            ug = (uint8_t)((data[j*LCD_BYTE_PER_PIXEL]<<5) | ((data[j*LCD_BYTE_PER_PIXEL+1]&0xE0)>>3));
+            ur = (uint8_t)(data[j*LCD_BYTE_PER_PIXEL]&0xF8);
 
 //            raw[counter++] = ur;
 //            raw[counter++] = ug;
@@ -595,7 +559,7 @@ static void run_cnn(int x_offset, int y_offset)
         }
 
         if(decision != prev_decision){
-            spi_dma_send_packet(DMA_CHANNEL_QSPI, QSPI_ID, (uint8_t *)name,
+            spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI_ID, (uint8_t *)name,
                     strlen(name), QSPI_TYPE_RESPONSE_VIDEO_RESULT, &qspi_int);
             PR_DEBUG("Result : %s\n", name);
         }

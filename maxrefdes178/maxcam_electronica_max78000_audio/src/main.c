@@ -87,16 +87,6 @@
 #define PREAMBLE_SIZE				30*CHUNK// how many samples before beginning of a keyword to include
 #define INFERENCE_THRESHOLD   		49 		// min probability (0-100) to accept an inference
 
-/* Peripherals */
-#define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
-#define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
-
-#define QSPI_ID             MXC_SPI0
-
-#define DMA_CHANNEL_QSPI            1
-#define DMA_CHANNEL_QSPI_IRQ        DMA1_IRQn
-#define DMA_CHANNEL_QSPI_IRQ_HAND   DMA1_IRQHandler
-
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -106,23 +96,12 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-mxc_gpio_cfg_t gpio_cnn_boost = {MXC_GPIO2, MXC_GPIO_PIN_5, MXC_GPIO_FUNC_OUT,
-                                 MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t gpio_audio_osc = {MXC_GPIO0, MXC_GPIO_PIN_31, MXC_GPIO_FUNC_OUT,
-                                 MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t qspi_int    = {MXC_GPIO0, MXC_GPIO_PIN_12, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t gpio_red    = {MXC_GPIO2, MXC_GPIO_PIN_0, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t gpio_green  = {MXC_GPIO2, MXC_GPIO_PIN_1, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
-
-mxc_gpio_cfg_t gpio_blue   = {MXC_GPIO2, MXC_GPIO_PIN_2, MXC_GPIO_FUNC_OUT,
-                              MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO};
+mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_AUDIO_CNN_BOOST_PIN;
+mxc_gpio_cfg_t gpio_audio_osc = MAX78000_AUDIO_AUDIO_OSC_PIN;
+mxc_gpio_cfg_t qspi_int    = MAX78000_AUDIO_HOST_INT_PIN;
+mxc_gpio_cfg_t gpio_red    = MAX78000_AUDIO_LED_RED_PIN;
+mxc_gpio_cfg_t gpio_green  = MAX78000_AUDIO_LED_GREEN_PIN;
+mxc_gpio_cfg_t gpio_blue   = MAX78000_AUDIO_LED_BLUE_PIN;
 
 extern uint32_t cnn_time;
 static int32_t ml_data[NUM_OUTPUTS];
@@ -169,9 +148,9 @@ static void fail(void);
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void DMA_CHANNEL_QSPI_IRQ_HAND(void)
+void MAX78000_AUDIO_QSPI_DMA_IRQ_HAND(void)
 {
-    spi_dma_int_handler(DMA_CHANNEL_QSPI, QSPI_ID);
+    spi_dma_int_handler(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI_ID);
 }
 
 void i2s_isr(void)
@@ -257,14 +236,14 @@ int main(void)
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
 
-    spi_dma_slave_init(QSPI_ID, qspi_pins);
+    spi_dma_slave_init(MAX78000_AUDIO_QSPI_ID, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
         fail();
     }
 
-    NVIC_EnableIRQ(DMA_CHANNEL_QSPI_IRQ);
+    NVIC_EnableIRQ(MAX78000_AUDIO_QSPI_DMA_IRQ);
 
     /* load kernels */
     PR_INFO("*** CNN Kernel load ***");
@@ -474,7 +453,7 @@ int main(void)
                         probability);
 
                 if (ret) {
-                    spi_dma_send_packet(DMA_CHANNEL_QSPI, QSPI_ID,
+                    spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI_ID,
                             (uint8_t *) keywords[out_class],
                             sizeof(keywords[out_class]),
                             QSPI_TYPE_RESPONSE_AUDIO_RESULT, &qspi_int);
