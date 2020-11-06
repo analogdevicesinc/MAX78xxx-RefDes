@@ -51,29 +51,26 @@ extern "C" {
 #endif
 
 #ifndef CONSOLE_UART
-#define CONSOLE_UART    2      /// UART instance to use for console
+#define CONSOLE_UART    2
 #endif
 
 #ifndef PMIC_I2C
-#define PMIC_I2C	    MXC_I2C0_BUS0	// I2C instance to use for PMIC
+#define PMIC_I2C	    MXC_I2C0_BUS0
 #endif
 
 #ifndef PMIC_I2C_IRQ
 #define PMIC_I2C_IRQ	I2C0_IRQn
 #endif
 
-
-
 #ifndef CONSOLE_BAUD
-#define CONSOLE_BAUD    115200  /// Console baud rate
+#define CONSOLE_BAUD    115200
 #endif
 
-#define LED_OFF         1       /// Inactive state of LEDs
-#define LED_ON          0       /// Active state of LEDs
+#define LED_OFF         1
+#define LED_ON          0
 
-#define MX25_SPI                    MXC_SPIXFC
-#define MX25_SSEL                   0
-// #define SPI_CHAR_BITS               8
+#define MX25_SPI        MXC_SPIXFC
+#define MX25_SSEL       0
 
 
 /**
