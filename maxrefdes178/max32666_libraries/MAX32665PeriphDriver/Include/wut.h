@@ -34,8 +34,8 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2020-08-05 23:33:15 +0300 (Wed, 05 Aug 2020) $
- * $Revision: 54718 $
+ * $Date: 2020-09-18 22:29:01 +0300 (Fri, 18 Sep 2020) $
+ * $Revision: 55832 $
  *
  *************************************************************************** */
 
@@ -252,6 +252,12 @@ void WUT_Edge(void);
  * @brief   Store the count and snapshot values.
  */
 void WUT_Store(void);
+
+/**
+ * @brief   Store the count and given snapshot values.
+ * @param   snapshot    Snapshot value to save.
+ */
+void WUT_StoreSnap(uint32_t snapshot);
 
 /**
  * @brief   Restore the DBB clock with the stored count and snapshot values.

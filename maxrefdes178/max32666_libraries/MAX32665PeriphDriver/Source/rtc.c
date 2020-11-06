@@ -32,19 +32,37 @@
  *
  **************************************************************************** */
 
+#include <stddef.h>
 #include "mxc_config.h"
 #include "rtc_regs.h"
 #include "rtc.h"
+#include "tmr.h"
+#include "tmr_utils.h"
 #include "mxc_sys.h"
 #include "mxc_delay.h"
-#include "gpio_regs.h"
 #include "mxc_errors.h"
 
-#define RTC_CTRL_RESET_DEFAULT (0x0000UL)
-#define RTC_IS_BUSY (MXC_RTC->ctrl & MXC_F_RTC_CTRL_BUSY)
-#define RTC_IS_ENABLED (MXC_RTC->ctrl & MXC_F_RTC_CTRL_RTCE)
+#define RTC_CTRL_RESET_DEFAULT  (0x0000UL)
+#define RTC_IS_BUSY             (MXC_RTC->ctrl & MXC_F_RTC_CTRL_BUSY)
+#define RTC_IS_ENABLED          (MXC_RTC->ctrl & MXC_F_RTC_CTRL_RTCE)
 
-#define BUSY_TIMEOUT 1000   // Timeout counts for the Busy bit
+#define BUSY_TIMEOUT            1000   // Timeout counts for the Busy bit
+
+#define SUBSECOND_MSEC_0        200
+#define SEARCH_STEPS            7
+#define CORRECTION_COUNTS       0xc30  /* Accounts for algo overhead, xtal offset, start uncertainty, and affects final accuracy */
+#define SEARCH_TARGET           0x30d400  /* 1/2 of 32 MHz periods in 32.768 kHz */
+
+#define RTCX1x_MASK             0x1F /* 5 bits */
+#define RTCX2x_MASK             0x1F /* 5 bits */
+
+#define MXC_BASE_BBSIR          ((uint32_t)0x40005400UL)
+
+#define NOM_32K_FREQ            32768
+#define TICKS_PER_RTC           122
+
+/* Converts a time in milleseconds to the equivalent RSSA register value. */
+#define MSEC_TO_RSSA(x)         (unsigned int)(0x100000000ULL    - ((x * 4096) / 1000))
 
 // *****************************************************************************
 int RTC_EnableTimeofdayInterrupt(mxc_rtc_regs_t *rtc)
@@ -392,4 +410,133 @@ int RTC_GetTime(uint32_t* sec, uint32_t* subsec)
     } while (temp_sec != *sec);
     
     return E_NO_ERROR;
+}
+
+// *****************************************************************************
+static void write_bb_sir(unsigned int rtcx1_, unsigned int rtcx2_)
+{
+    uint32_t *bb_sir;
+    uint32_t shift1, shift2;
+
+    if(MXC_GCR->revision == 0xA1) {
+        bb_sir = (uint32_t *)(MXC_BASE_BBSIR+0x00000018UL);
+        shift1 = 4;
+        shift2 = 9;
+    } else {
+        bb_sir = (uint32_t *)(MXC_BASE_BBSIR+0x00000008UL);
+        shift1 = 16;
+        shift2 = 21;
+    }
+
+    /* Clear old values */
+    *bb_sir &= ~((RTCX1x_MASK << shift1) | (RTCX2x_MASK << shift2));
+
+    /* Insert new values, DO NOT ALTER ANY OTHER BITS WITHIN BB-SIR6 */
+    *bb_sir |= ((rtcx1_ & RTCX1x_MASK) << shift1) | ((rtcx2_ & RTCX2x_MASK) << shift2);
+}
+
+// *****************************************************************************
+int RTC_LoadTrim(void) 
+{
+    unsigned int flags, search_step;
+    unsigned int elapsed;
+    tmr_cfg_t tmr_config = { .mode = TMR_MODE_CONTINUOUS, .cmp_cnt = 0xffffffff, .pol = 0 };
+    unsigned int upper, lower, trim, oldtrim, bestTrim, bestElapsed, bestElapsedDiff;
+    unsigned int freq = NOM_32K_FREQ;
+    int retval;
+
+    /* Determine starting point for internal load capacitors */
+    upper = RTCX1x_MASK;
+    lower = 0;
+    trim = (upper + lower) / 2;
+
+    /* Initialize best trim variables */
+    bestTrim = trim;
+    bestElapsed = bestElapsedDiff = SEARCH_TARGET;
+
+    /* Init timer to count 32 MHz periods */
+    TMR_Init(MXC_TMR3, TMR_PRES_1, NULL);
+    TMR_Config(MXC_TMR3, &tmr_config);
+
+    /* Trim loop */
+    search_step = 0;
+    while (search_step < SEARCH_STEPS) {
+        /* Set new trim point */
+        oldtrim = trim;
+        trim = (lower + upper) / 2;
+        if ((search_step > 0) && (trim == oldtrim)) {
+            /* Found trim value */
+            break;
+        }
+        write_bb_sir(trim, trim);
+
+        /* Sleep to settle new caps */
+        TMR_Delay(MXC_TMR0, MSEC(10), 0);
+
+        /* Start 200 msec sampling window */
+        TMR_Disable(MXC_TMR3);
+        TMR_SetCount(MXC_TMR3, 0);
+        retval = RTC_SetSubsecondAlarm(MXC_RTC, MSEC_TO_RSSA(SUBSECOND_MSEC_0));
+        if (retval != E_NO_ERROR) {
+            return retval;
+        }
+
+        retval = RTC_CheckBusy();
+        if (retval != E_NO_ERROR) {
+            return retval;
+        }
+        TMR_Enable(MXC_TMR3);
+        RTC_ClearFlags(RTC_GetFlags());
+
+        flags = RTC_GetFlags();
+        while (!(flags & MXC_F_RTC_CTRL_ALSF)) {
+            flags = RTC_GetFlags();
+        }
+
+        elapsed = TMR_GetCount(MXC_TMR3);
+        TMR_Disable(MXC_TMR3);
+
+        elapsed -= CORRECTION_COUNTS;
+        /* Binary search for optimal trim value */
+        if (elapsed > SEARCH_TARGET) {
+            /* Too slow */
+            upper = trim;
+
+            /* Record best setting */
+            if((elapsed - SEARCH_TARGET) <= bestElapsedDiff) {
+                bestElapsedDiff = elapsed - SEARCH_TARGET;
+                bestElapsed = elapsed;
+                bestTrim = trim;
+            }
+        } else {
+            /* Too fast */
+            lower = trim;
+
+            /* Record best setting */
+            if((SEARCH_TARGET - elapsed) <= bestElapsedDiff) {
+                bestElapsedDiff = SEARCH_TARGET - elapsed;
+                bestElapsed = elapsed;
+                bestTrim = trim;
+            }
+        }
+
+        search_step++;
+    }
+
+    /* Apply the closest trim setting */
+    write_bb_sir(bestTrim, bestTrim);
+
+    /* Adjust 32K freq if we can't get close enough to 32768 Hz */
+    if(bestElapsed >= SEARCH_TARGET) {
+        freq -= (((bestElapsed - SEARCH_TARGET) + (TICKS_PER_RTC/2-1)) / TICKS_PER_RTC);
+    } else {
+        freq += (((SEARCH_TARGET - bestElapsed) + (TICKS_PER_RTC/2-1)) / TICKS_PER_RTC);
+    }
+
+	/* Clear hardware state */
+    TMR_Disable(MXC_TMR3);
+    TMR_Shutdown(MXC_TMR3);
+    RTC_ClearFlags(RTC_GetFlags());
+
+    return freq;
 }

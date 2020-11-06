@@ -29,8 +29,8 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2020-07-30 23:33:15 +0300 (Thu, 30 Jul 2020) $
- * $Revision: 54553 $
+ * $Date: 2020-09-18 22:29:01 +0300 (Fri, 18 Sep 2020) $
+ * $Revision: 55832 $
  *
  **************************************************************************** */
 
@@ -282,6 +282,13 @@ void WUT_Store(void)
 {
     wut_count = MXC_WUT->cnt;
     wut_snapshot = MXC_WUT->snapshot;
+}
+
+/* ************************************************************************** */
+void WUT_StoreSnap(uint32_t snapshot)
+{
+    wut_count = MXC_WUT->cnt;
+    wut_snapshot = snapshot;
 }
 
 /* ************************************************************************** */

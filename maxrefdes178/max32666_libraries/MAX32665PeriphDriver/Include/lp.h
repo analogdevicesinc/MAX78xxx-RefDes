@@ -34,8 +34,8 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2019-11-07 22:07:17 +0300 (Thu, 07 Nov 2019) $
- * $Revision: 48499 $
+ * $Date: 2020-10-29 17:36:56 +0300 (Thu, 29 Oct 2020) $
+ * $Revision: 56488 $
  *
  *************************************************************************** */
 

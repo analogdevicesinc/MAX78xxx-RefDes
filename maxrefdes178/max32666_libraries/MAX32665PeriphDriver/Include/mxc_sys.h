@@ -29,8 +29,8 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2020-06-29 17:56:17 +0300 (Mon, 29 Jun 2020) $
- * $Revision: 53984 $
+ * $Date: 2020-09-23 17:00:53 +0300 (Wed, 23 Sep 2020) $
+ * $Revision: 55884 $
  *
  ******************************************************************************/
 
@@ -624,6 +624,12 @@ int SYS_WDT_Init(mxc_wdt_regs_t *wdt, const sys_cfg_wdt_t* sys_cfg);
  * @return     frequency in Hz
  */
 uint32_t SYS_WUT_GetFreq(void);
+
+/**
+ * @brief      Set the frequency of the WUT module source clock
+ * @param      freq     frequency in Hz
+ */
+void SYS_WUT_SetFreq(uint32_t freq);
 
 #ifdef __cplusplus
 }

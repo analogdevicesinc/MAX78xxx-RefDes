@@ -1,11 +1,5 @@
-/**
- * @file    core1.h
- * @brief   Startup Code for MAX32665 Family CPU1
- * @details These functions are called at the startup of the second ARM core (CPU1/Core1)
- */
-
 /*******************************************************************************
- * Copyright (C) 2016 Maxim Integrated Products, Inc., All Rights Reserved.
+ * Copyright (C) 2017 Maxim Integrated Products, Inc., All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,51 +29,66 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2018-08-10 17:11:51 -0500 (Fri, 10 Aug 2018) $
- * $Revision: 36872 $
+ * $Date: 2019-10-29 09:21:01 -0500 (Tue, 29 Oct 2019) $
+ * $Revision: 48140 $
  *
  ******************************************************************************/
 
-#ifndef _CORE_1_H_
-#define _CORE_1_H_
+/**
+ * @file    board.h
+ * @brief   Board support package API.
+ */
+
+
+#include <stdio.h>
+#include "spixfc.h"
+
+#ifndef _BOARD_H
+#define _BOARD_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @brief Starts the code on core 1
- *        Core1 code beings executing from Core1_Main()
- */
-void Core1_Start(void);
+#ifndef CONSOLE_UART
+#define CONSOLE_UART    1      /// UART instance to use for console
+#endif
+
+#ifndef CONSOLE_BAUD
+#define CONSOLE_BAUD    115200  /// Console baud rate
+#endif
+
+#define LED_OFF         0       /// Inactive state of LEDs
+#define LED_ON          1       /// Active state of LEDs
 
 /**
- * @brief Stops code executing in Core 1
+ * \brief   Initialize the BSP and board interfaces.
+ * \returns #E_NO_ERROR if everything is successful
  */
-void Core1_Stop(void);
+int Board_Init(void);
 
 /**
- * @brief Main function for Core 1 Code
- *        The user should override this function
- *        in their application code
+ * \brief   Initialize or reinitialize the console. This may be necessary if the
+ *          system clock rate is changed.
+ * \returns #E_NO_ERROR if everything is successful
  */
-int Core1_Main(void);
+int Console_Init(void);
 
 /**
- * @brief Equivalent to PreInit for Core 0
- *        Can be used for preliminary initialization
+ * \brief   Attempt to prepare the console for sleep.
+ * \returns #E_NO_ERROR if ready to sleep, #E_BUSY if not ready for sleep.
  */
-void PreInit_Core1(void);
+int Console_PrepForSleep(void);
 
 /**
- * @brief Equivalent to PreInit for Core 1
- *        Enables FPU, and ICache
- *        Sets interrupt vector
+ * @brief   Initialize or reinitialize the console. This may be necessary if the
+ *          system clock rate is changed.
+ * @returns #E_NO_ERROR if everything is successful
  */
-void SystemInit_Core1(void);
+int Console_Shutdown(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _CORE_1_H_ */
+#endif /* _BOARD_H */

@@ -33,13 +33,17 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2018-10-16 00:49:29 +0300 (Tue, 16 Oct 2018) $
- * $Revision: 38520 $
+ * $Date: 2020-09-28 17:41:57 +0300 (Mon, 28 Sep 2020) $
+ * $Revision: 55932 $
  *
  ************************************************************************** */
 
 #ifndef _MEM_UTILS_H_
 #define _MEM_UTILS_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* **** Definitions **** */
 
@@ -108,6 +112,10 @@ void memcpy32(uint32_t * dst, uint32_t * src, unsigned int len);
  * @return     #E_INVALID Memory is not equal
  */
 int memcmp32(uint32_t * dst, uint32_t * src, unsigned int len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _MEM_UTILS_H_ */
 

@@ -34,14 +34,18 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2018-08-29 01:06:43 +0300 (Wed, 29 Aug 2018) $ 
- * $Revision: 37425 $
+ * $Date: 2020-09-28 17:41:57 +0300 (Mon, 28 Sep 2020) $ 
+ * $Revision: 55932 $
  *
  *************************************************************************** */
 
 /* Define to prevent redundant inclusion */
 #ifndef _DELAY_H_
 #define _DELAY_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup devicelibs 
@@ -120,5 +124,9 @@ void mxc_delay_stop(void);
 void mxc_delay_handler(void);
 
 /**@} end of group MXC_delay */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _DELAY_H_ */

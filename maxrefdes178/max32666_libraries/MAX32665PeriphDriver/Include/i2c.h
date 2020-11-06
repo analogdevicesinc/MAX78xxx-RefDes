@@ -34,8 +34,8 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2019-07-01 18:18:20 +0300 (Mon, 01 Jul 2019) $
- * $Revision: 44374 $
+ * $Date: 2020-09-28 17:41:57 +0300 (Mon, 28 Sep 2020) $
+ * $Revision: 55932 $
  *
  *************************************************************************** */
 
@@ -45,6 +45,10 @@
 #include <stdint.h>
 #include "i2c_regs.h"
 #include "mxc_sys.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup i2c I2C
@@ -245,5 +249,11 @@ int I2C_SetTimeout(mxc_i2c_regs_t *i2c, int us);
  * @param      i2c   pointer to I2C regs
  */
 void I2C_ClearTimeout(mxc_i2c_regs_t *i2c);
+
 /**@} end of group i2c */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* _I2C_H_ */

@@ -35,8 +35,8 @@
  * ownership rights.
  *
  *
- * $Date: 2019-12-24 20:42:21 +0300 (Tue, 24 Dec 2019) $
- * $Revision: 50314 $
+ * $Date: 2020-09-23 17:00:53 +0300 (Wed, 23 Sep 2020) $
+ * $Revision: 55884 $
  *************************************************************************** */
 
 /* Define to prevent redundant inclusion */
@@ -221,6 +221,27 @@ int RTC_GetSecond(void);
  *@return    #E_BUSY If RTC is busy.
  */
 int RTC_GetTime(uint32_t* sec, uint32_t* subsec);
+
+/**
+ * @brief       32kHz XTAL internal capacitor self-trim routine
+ * @details     The RTC is enabled and the sub-second alarm set to trigger every 200 ms.
+ *              The 32MHz crystal is enabled and used as the system clock. This is the
+ *              clock for Timer 3 in Continous Mode. On every sub-second alarm, the
+ *              Timer 3 count value is used in a binary search for the optimal 32kHz
+ *              internal capacitor trim value.
+ *
+ *              For 200ms (the wider, the more accurate decision), using the sub-second
+ *              counter, the window of time is 819 sub-seconds (1 sub-second =
+ *              1 4096 cycle = 8 32kHz cycles) or 199.951172... divided by 32MHz/2 (PCLK)
+ *              cycles or 62.5ns is 0x30d0f2 expected cycle count. This is the number
+ *              used in the binary search to determine if it's too slow.
+ *
+ *              Must set system clock to 32 MHz and enable RTC prior to calling this function.
+ *
+ * @return      Closest 32K frequency if function is successful.
+ * @return      #E_BUSY If RTC is busy.
+ */
+int RTC_LoadTrim(void);
 
 #ifdef __cplusplus
 }

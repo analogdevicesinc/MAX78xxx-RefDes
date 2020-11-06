@@ -35,8 +35,8 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2019-10-25 00:10:14 +0300 (Fri, 25 Oct 2019) $
- * $Revision: 48075 $
+ * $Date: 2020-09-28 17:41:57 +0300 (Mon, 28 Sep 2020) $
+ * $Revision: 55932 $
  *
  *************************************************************************** */
 
@@ -48,6 +48,10 @@
 #include <stdint.h>
 #include "uart_regs.h"
 #include "mxc_sys.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /***** Definitions *****/
 
@@ -359,5 +363,9 @@ void UART_DrainRX(mxc_uart_regs_t *uart);
  */
 void UART_DrainTX(mxc_uart_regs_t *uart);
 /**@} end of group uart */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _UART_H_ */

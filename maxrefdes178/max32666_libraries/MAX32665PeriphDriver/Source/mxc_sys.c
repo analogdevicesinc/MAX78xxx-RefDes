@@ -29,8 +29,8 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  *
- * $Date: 2020-06-29 17:56:17 +0300 (Mon, 29 Jun 2020) $
- * $Revision: 53984 $
+ * $Date: 2020-09-23 17:00:53 +0300 (Wed, 23 Sep 2020) $
+ * $Revision: 55884 $
  *
  *************************************************************************** */
 
@@ -68,13 +68,14 @@
  */
 
 /* **** Definitions **** */
-#define SYS_CLOCK_TIMEOUT       MSEC(1)
+#define SYS_CLOCK_TIMEOUT       MSEC(2)
 #define MXC_I2C0  MXC_I2C0_BUS0
 #define MXC_I2C1  MXC_I2C1_BUS0
 #define MXC_I2C2  MXC_I2C2_BUS0
 
 /* **** Globals **** */
 static sys_cfg_spixr_t* spixr_cfg;
+static uint32_t xtal32k_freq = XTAL32K_FREQ;
 
 /* **** Functions **** */
 static int SYS_Clock_Timeout(uint32_t ready);
@@ -1118,7 +1119,13 @@ int SYS_WDT_Shutdown(mxc_wdt_regs_t* wdt)
 /* ************************************************************************** */
 uint32_t SYS_WUT_GetFreq(void)
 {
-    return XTAL32K_FREQ;
+    return xtal32k_freq;
+}
+
+/* ************************************************************************** */
+void SYS_WUT_SetFreq(uint32_t freq)
+{
+    xtal32k_freq = freq;
 }
 
 /**@} end of mxc_sys */
