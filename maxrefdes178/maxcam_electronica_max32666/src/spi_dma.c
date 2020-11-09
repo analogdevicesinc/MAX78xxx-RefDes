@@ -65,7 +65,8 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static volatile uint8_t dma_done_flag[MXC_DMA_CHANNELS] = {0};
+static volatile uint8_t dma_busy_flag[MXC_DMA_CHANNELS] = {0};
+static void (*dma_callback[MXC_DMA_CHANNELS]) (void) = {0};
 
 
 //-----------------------------------------------------------------------------
@@ -78,13 +79,25 @@ static volatile uint8_t dma_done_flag[MXC_DMA_CHANNELS] = {0};
 //-----------------------------------------------------------------------------
 void spi_dma_int_handler(uint8_t ch, mxc_spi17y_regs_t *spi)
 {
+    uint32_t cnt;
+
     if (MXC_DMA->intr & (0x1 << ch)) {
         if (MXC_DMA->ch[ch].st & (MXC_F_DMA_ST_TO_ST | MXC_F_DMA_ST_BUS_ERR)) {
             PR_ERROR("dma error %08x", MXC_DMA->ch[ch].st);
         }
 
         if (MXC_DMA->ch[ch].st & MXC_F_DMA_ST_RLD_ST) {
-            // reload occurred, start the SPI transaction
+            // DMA has completed, but that just means DMA has loaded all of its data to/from
+            //  the FIFOs.  We now need to wait for the SPI transaction to fully complete.
+            cnt = SPI_TIMEOUT_CNT;
+            while((spi->stat & MXC_F_SPI17Y_STAT_BUSY) && cnt) {
+                cnt--;
+            }
+            if (cnt == 0) {
+                PR_WARN("timeout");
+            }
+
+            // Reload occurred, start the SPI transaction
             spi->ctrl0 |= (MXC_F_SPI17Y_CTRL0_EN | MXC_F_SPI17Y_CTRL0_START);
         } else {
             if (MXC_DMA->ch[ch].cnt) {
@@ -102,8 +115,12 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi17y_regs_t *spi)
                 // Disable SPI DMA, flush FIFO
                 spi->dma = (MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR | MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
             }
+            dma_busy_flag[ch] = 0;
 
-            dma_done_flag[ch] = 1;
+            // call callback
+            if (dma_callback[ch]) {
+                (*dma_callback[ch]) ();
+            }
         }
 
         // Clear DMA int flags
@@ -136,119 +153,110 @@ void spi_dma_master_init(mxc_spi17y_regs_t *spi, spi_type spi_id, sys_cfg_spi_t 
                     (16 << MXC_F_SPI17Y_SS_TIME_INACT_POS));
 }
 
-void spi_dma_rx(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data, uint32_t len, dma_reqsel_t reqsel)
+void spi_dma(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, dma_reqsel_t reqsel, void (*callback)(void))
 {
+    if (dma_busy_flag[ch]) {
+        PR_ERROR("dma is busy");
+    }
+
+    // Stop SPI
+    spi->ctrl0 &= ~(MXC_F_SPI17Y_CTRL0_EN | MXC_F_SPI17Y_CTRL0_START);
+
     // Initialize the CTRL1 register
     spi->ctrl1 = 0;
 
     // Set how many to characters to send, or when in quad mode how many characters to receive
-    if (len > SPI_DMA_COUNTER_MAX) {
-        spi->ctrl1 |= (SPI_DMA_COUNTER_MAX << MXC_F_SPI17Y_CTRL1_RX_NUM_CHAR_POS);
-    } else {
-        spi->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_RX_NUM_CHAR_POS);
+    if (data_out) {
+        if (len > SPI_DMA_COUNTER_MAX) {
+            spi->ctrl1 |= (SPI_DMA_COUNTER_MAX << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
+        } else {
+            spi->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
+        }
+    }
+    if (data_in) {
+        if (len > SPI_DMA_COUNTER_MAX) {
+            spi->ctrl1 |= (SPI_DMA_COUNTER_MAX << MXC_F_SPI17Y_CTRL1_RX_NUM_CHAR_POS);
+        } else {
+            spi->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_RX_NUM_CHAR_POS);
+        }
     }
 
     // RX FIFO Enabled, clear TX and RX FIFO
-    spi->dma = (MXC_F_SPI17Y_DMA_RX_DMA_EN |
-                MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR |
-                MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
+    if (data_out) {
+        spi->dma = (MXC_F_SPI17Y_DMA_TX_DMA_EN |
+                    MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR |
+                    MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
+    }
+    if (data_in) {
+        spi->dma = (MXC_F_SPI17Y_DMA_RX_DMA_EN |
+                    MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR |
+                    MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
+    }
 
     // Set SPI DMA TX and RX Thresholds
-    spi->dma |= (0 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);
+    if (data_out) {
+        spi->dma |= (31 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);
+    }
+    if (data_in) {
+        spi->dma |= (0 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);
+    }
 
     // Enable SPI DMA
-    spi->dma |= MXC_F_SPI17Y_DMA_RX_FIFO_EN;
+    if (data_out) {
+        spi->dma |= MXC_F_SPI17Y_DMA_TX_FIFO_EN;
+    }
+    if (data_in) {
+        spi->dma |= MXC_F_SPI17Y_DMA_RX_FIFO_EN;
+    }
 
     // Setup DMA
-    dma_done_flag[ch] = 0;
+    dma_busy_flag[ch] = 1;
+    dma_callback[ch] = callback;
 
     // Clear DMA int flags
     MXC_DMA->ch[ch].st =  MXC_DMA->ch[ch].st;
 
     // Prepare DMA to fill TX FIFO.
-    MXC_DMA->ch[ch].cfg = (MXC_F_DMA_CFG_DSTINC |
-                           reqsel |
-                           MXC_S_DMA_CFG_SRCWD_BYTE |
-                           MXC_S_DMA_CFG_DSTWD_BYTE |
-                           MXC_F_DMA_CFG_CHDIEN |
-                           MXC_F_DMA_CFG_CTZIEN);
+    if (data_out) {
+        MXC_DMA->ch[ch].cfg = (MXC_F_DMA_CFG_SRCINC |
+                               reqsel |
+                               MXC_S_DMA_CFG_SRCWD_BYTE |
+                               MXC_S_DMA_CFG_DSTWD_BYTE |
+                               MXC_F_DMA_CFG_CHDIEN |
+                               MXC_F_DMA_CFG_CTZIEN);
+    }
+    if (data_in) {
+        MXC_DMA->ch[ch].cfg = (MXC_F_DMA_CFG_DSTINC |
+                               reqsel |
+                               MXC_S_DMA_CFG_SRCWD_BYTE |
+                               MXC_S_DMA_CFG_DSTWD_BYTE |
+                               MXC_F_DMA_CFG_CHDIEN |
+                               MXC_F_DMA_CFG_CTZIEN);
+    }
 
     // Set DMA source, destination, counter
     MXC_DMA->ch[ch].cnt = len;
     MXC_DMA->ch[ch].cnt_rld = 0;
-    MXC_DMA->ch[ch].src = 0;
-    MXC_DMA->ch[ch].dst = (unsigned int) data;
+    if (data_out) {
+        MXC_DMA->ch[ch].src = (unsigned int) data_out;
+        MXC_DMA->ch[ch].dst = 0;
+    }
+    if (data_in) {
+        MXC_DMA->ch[ch].src = 0;
+        MXC_DMA->ch[ch].dst = (unsigned int) data_in;
+    }
 
     // if too big, set reload registers
     if (len > SPI_DMA_COUNTER_MAX) {
         MXC_DMA->ch[ch].cnt = SPI_DMA_COUNTER_MAX;
-        MXC_DMA->ch[ch].src_rld = 0;
-        MXC_DMA->ch[ch].dst_rld = (unsigned int) (data + SPI_DMA_COUNTER_MAX);
-        MXC_DMA->ch[ch].cnt_rld = len - SPI_DMA_COUNTER_MAX;
-    }
-
-    // Enable DMA int
-    MXC_DMA->cn |= (1 << ch);
-
-    // Enable DMA
-    if (len > SPI_DMA_COUNTER_MAX) {
-        MXC_DMA->ch[ch].cfg |= (MXC_F_DMA_CFG_CHEN | MXC_F_DMA_CFG_RLDEN);
-    } else {
-        MXC_DMA->ch[ch].cfg |= MXC_F_DMA_CFG_CHEN;
-    }
-
-    // Start the SPI transaction
-    spi->ctrl0 |= (MXC_F_SPI17Y_CTRL0_EN | MXC_F_SPI17Y_CTRL0_START);
-}
-
-void spi_dma_tx(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data, uint32_t len, dma_reqsel_t reqsel)
-{
-    // Initialize the CTRL1 register
-    spi->ctrl1 = 0;
-
-    // Set how many to characters to send, or when in quad mode how many characters to receive
-    if (len > SPI_DMA_COUNTER_MAX) {
-        spi->ctrl1 |= (SPI_DMA_COUNTER_MAX << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
-    } else {
-        spi->ctrl1 |= (len << MXC_F_SPI17Y_CTRL1_TX_NUM_CHAR_POS);
-    }
-
-    // RX FIFO Enabled, clear TX and RX FIFO
-    spi->dma = (MXC_F_SPI17Y_DMA_TX_DMA_EN |
-                MXC_F_SPI17Y_DMA_TX_FIFO_CLEAR |
-                MXC_F_SPI17Y_DMA_RX_FIFO_CLEAR);
-
-    // Set SPI DMA TX and RX Thresholds
-    spi->dma |= (31 << MXC_F_SPI17Y_DMA_TX_FIFO_LEVEL_POS);
-
-    // Enable SPI DMA
-    spi->dma |= MXC_F_SPI17Y_DMA_TX_FIFO_EN;
-
-    // Setup DMA
-    dma_done_flag[ch] = 0;
-
-    // Clear DMA int flags
-    MXC_DMA->ch[ch].st =  MXC_DMA->ch[ch].st;
-
-    // Prepare DMA to fill TX FIFO.
-    MXC_DMA->ch[ch].cfg = (MXC_F_DMA_CFG_SRCINC |
-                           reqsel |
-                           MXC_S_DMA_CFG_SRCWD_BYTE |
-                           MXC_S_DMA_CFG_DSTWD_BYTE |
-                           MXC_F_DMA_CFG_CHDIEN |
-                           MXC_F_DMA_CFG_CTZIEN);
-
-    // Set DMA source, destination, counter
-    MXC_DMA->ch[ch].cnt = len;
-    MXC_DMA->ch[ch].cnt_rld = 0;
-    MXC_DMA->ch[ch].src = (unsigned int) data;
-    MXC_DMA->ch[ch].dst = 0;
-
-    // if too big, set reload registers
-    if (len > SPI_DMA_COUNTER_MAX) {
-        MXC_DMA->ch[ch].cnt = SPI_DMA_COUNTER_MAX;
-        MXC_DMA->ch[ch].src_rld = (unsigned int) (data + SPI_DMA_COUNTER_MAX);
-        MXC_DMA->ch[ch].dst_rld = 0;
+        if (data_out) {
+            MXC_DMA->ch[ch].src_rld = (unsigned int) (data_out + SPI_DMA_COUNTER_MAX);
+            MXC_DMA->ch[ch].dst_rld = 0;
+        }
+        if (data_in) {
+            MXC_DMA->ch[ch].src_rld = 0;
+            MXC_DMA->ch[ch].dst_rld = (unsigned int) (data_in + SPI_DMA_COUNTER_MAX);
+        }
         MXC_DMA->ch[ch].cnt_rld = len - SPI_DMA_COUNTER_MAX;
     }
 
@@ -270,7 +278,7 @@ int spi_dma_wait(uint8_t ch, mxc_spi17y_regs_t *spi)
 {
     uint32_t cnt = SPI_TIMEOUT_CNT;
 
-    while(!dma_done_flag[ch] && cnt) {
+    while(dma_busy_flag[ch] && cnt) {
         cnt--;
     }
 

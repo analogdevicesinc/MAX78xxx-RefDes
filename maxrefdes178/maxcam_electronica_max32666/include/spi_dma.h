@@ -58,8 +58,7 @@
 //-----------------------------------------------------------------------------
 void spi_dma_int_handler(uint8_t ch, mxc_spi17y_regs_t *spi);
 void spi_dma_master_init(mxc_spi17y_regs_t *spi, spi_type spi_id, sys_cfg_spi_t spi_pins, uint32_t speed, uint8_t quad);
-void spi_dma_rx(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data, uint32_t len, dma_reqsel_t reqsel);
-void spi_dma_tx(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data, uint32_t len, dma_reqsel_t reqsel);
+void spi_dma(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, dma_reqsel_t reqsel, void (*callback)(void));
 int spi_dma_wait(uint8_t ch, mxc_spi17y_regs_t *spi);
 
 #endif /* SPI_DMA_H_ */

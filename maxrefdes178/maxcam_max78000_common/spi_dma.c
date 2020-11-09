@@ -65,6 +65,7 @@
 // Global variables
 //-----------------------------------------------------------------------------
 static volatile uint8_t dma_busy_flag[MXC_DMA_CHANNELS] = {0};
+static void (*dma_callback[MXC_DMA_CHANNELS]) (void) = {0};
 
 
 //-----------------------------------------------------------------------------
@@ -99,6 +100,11 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi)
             spi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
 
             dma_busy_flag[ch] = 0;
+
+            // call callback
+            if (dma_callback[ch]) {
+                (*dma_callback[ch]) ();
+            }
         }
 
         // Clear DMA int flags
@@ -121,8 +127,15 @@ void spi_dma_slave_init(mxc_spi_regs_t *spi, mxc_spi_pins_t spi_pins)
     }
 }
 
-void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mxc_gpio_cfg_t *spi_int)
+void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mxc_gpio_cfg_t *spi_int, void (*callback)(void))
 {
+    if (dma_busy_flag[ch]) {
+        PR_ERROR("dma is busy");
+    }
+
+    // Stop SPI
+    spi->ctrl0 &= ~(MXC_F_SPI_CTRL0_EN);
+
     // Setup SPI
     spi->ctrl1 = 0;
 
@@ -151,6 +164,7 @@ void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mx
 
     // Setup DMA
     dma_busy_flag[ch] = 1;
+    dma_callback[ch] = callback;
 
     // Clear DMA int flags
     MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
@@ -213,16 +227,12 @@ void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_
     header.data_len = len;
     header.data_type = data_type;
 
-    if (dma_busy_flag[ch]) {
-        PR_ERROR("dma is busy");
-    }
-
     PR_INFO("spi tx started %d", data_type);
 
-    spi_dma_tx(ch, spi, (uint8_t*) &header, sizeof(qspi_header_t), spi_int);
+    spi_dma_tx(ch, spi, (uint8_t*) &header, sizeof(qspi_header_t), spi_int, NULL);
     spi_dma_wait(ch);
 
-    spi_dma_tx(ch, spi, data, len, spi_int);
+    spi_dma_tx(ch, spi, data, len, spi_int, NULL);
 //    spi_dma_wait(ch); // TODO
 
     PR_INFO("spi tx completed %d", data_type);

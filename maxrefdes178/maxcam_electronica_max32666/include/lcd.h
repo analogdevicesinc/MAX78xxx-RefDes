@@ -64,7 +64,7 @@ extern char lcd_toptitle[LCD_SUBTITLE_SIZE];
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int lcd_init();
+int lcd_init(void);
 void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data);
 void lcd_backlight(unsigned char onoff);
 

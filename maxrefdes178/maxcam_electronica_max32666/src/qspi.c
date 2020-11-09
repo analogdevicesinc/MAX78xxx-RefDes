@@ -137,7 +137,7 @@ int qspi_worker(void)
         qspi_header_t qspi_header = {0};
 
         GPIO_OutClr(&video_cs_pin);
-        spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (uint8_t *) &qspi_header, sizeof(qspi_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX);
+        spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_header, sizeof(qspi_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_OutSet(&video_cs_pin);
 
@@ -156,7 +156,7 @@ int qspi_worker(void)
             }
 
             GPIO_OutClr(&video_cs_pin);
-            spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (void *)lcd_data, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_OutSet(&video_cs_pin);
 
@@ -172,7 +172,7 @@ int qspi_worker(void)
             memset(lcd_subtitle, 0, sizeof(lcd_subtitle));
 
             GPIO_OutClr(&video_cs_pin);
-            spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (void *)lcd_subtitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_subtitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_OutSet(&video_cs_pin);
 
@@ -188,7 +188,7 @@ int qspi_worker(void)
         qspi_header_t qspi_header = {0};
 
         GPIO_OutClr(&audio_cs_pin);
-        spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (uint8_t *) &qspi_header, sizeof(qspi_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX);
+        spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_header, sizeof(qspi_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_OutSet(&audio_cs_pin);
 
@@ -209,7 +209,7 @@ int qspi_worker(void)
             }
 
             GPIO_OutClr(&audio_cs_pin);
-            spi_dma_rx(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (void *)lcd_toptitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_toptitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_OutSet(&audio_cs_pin);
 
