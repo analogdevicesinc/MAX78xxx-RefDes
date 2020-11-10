@@ -233,7 +233,7 @@ void attsProcPrepWriteReq(attCcb_t *pCcb, uint16_t len, uint8_t *pPacket)
   uint8_t         *p;
   attsAttr_t      *pAttr;
   attsGroup_t     *pGroup;
-  attsPrepWrite_t *pPrep;
+  attsPrepWrite_t *pPrep = NULL;
   uint16_t        handle;
   uint16_t        offset;
   uint16_t        writeLen;

@@ -99,13 +99,13 @@ export FIXDBGPATHS_REPLACE=
 endif
 
 # This is the path to the CMSIS root directory
-ifeq "$(MAXIM_PATH)" ""
-LIBS_DIR=../../../../../Libraries
-NDALIBS_DIR=../../../../../NDALibraries
-else
-LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Firmware/$(TARGET_UC)/Libraries)
-NDALIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Firmware/$(TARGET_UC)/NDALibraries)
-endif
+#ifeq "$(MAXIM_PATH)" ""
+LIBS_DIR=../../../../../max32666_libraries
+#NDALIBS_DIR=../../../../../NDALibraries
+#else
+#LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Firmware/$(TARGET_UC)/Libraries)
+#NDALIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Firmware/$(TARGET_UC)/NDALibraries)
+#endif
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 # Include Cordio BTLE Library

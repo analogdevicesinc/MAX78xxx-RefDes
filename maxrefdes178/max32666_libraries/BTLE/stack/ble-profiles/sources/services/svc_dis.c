@@ -34,37 +34,37 @@
 #endif
 
 /*! Default manufacturer name */
-#define DIS_DEFAULT_MFR_NAME        "ARM Ltd."
+#define DIS_DEFAULT_MFR_NAME        "Maxim"
 
 /*! Length of default manufacturer name */
-#define DIS_DEFAULT_MFR_NAME_LEN    8
+#define DIS_DEFAULT_MFR_NAME_LEN    5
 
 /*! Default model number */
-#define DIS_DEFAULT_MODEL_NUM       "Cordio model num"
+#define DIS_DEFAULT_MODEL_NUM       "MAXCAM model num"
 
 /*! Length of default model number */
 #define DIS_DEFAULT_MODEL_NUM_LEN   16
 
 /*! Default serial number */
-#define DIS_DEFAULT_SERIAL_NUM      "Cordio serial num"
+#define DIS_DEFAULT_SERIAL_NUM      "MAXCAM serial num"
 
 /*! Length of default serial number */
 #define DIS_DEFAULT_SERIAL_NUM_LEN  17
 
 /*! Default firmware revision */
-#define DIS_DEFAULT_FW_REV          "Cordio fw rev"
+#define DIS_DEFAULT_FW_REV          "MAXCAM fw rev"
 
 /*! Length of default firmware revision */
 #define DIS_DEFAULT_FW_REV_LEN      13
 
 /*! Default hardware revision */
-#define DIS_DEFAULT_HW_REV          "Cordio hw rev"
+#define DIS_DEFAULT_HW_REV          "MAXCAM hw rev"
 
 /*! Length of default hardware revision */
 #define DIS_DEFAULT_HW_REV_LEN      13
 
 /*! Default software revision */
-#define DIS_DEFAULT_SW_REV          "Cordio sw rev"
+#define DIS_DEFAULT_SW_REV          "MAXCAM sw rev"
 
 /*! Length of default software revision */
 #define DIS_DEFAULT_SW_REV_LEN      13

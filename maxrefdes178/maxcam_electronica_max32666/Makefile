@@ -62,6 +62,7 @@ CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 # Source files for this test (add path to VPATH below)
 SRCS  = main.c
+#SRCS += ble.c
 SRCS += fonts.c
 SRCS += lcd.c
 SRCS += qspi.c
@@ -75,10 +76,33 @@ VPATH = ./src
 IPATH  = ./include
 IPATH += ./../maxcam_common
 
+# Specifies whether the legacy 4.2 api should be used.
+# 1 by default.
+# Set to use 4.2 advertisements.
+# Unset to use 5.0 extended advertisements.
+PROJ_CFLAGS+=-DBTLE_APP_USE_LEGACY_API=TRUE
+
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE 
+PROJ_CFLAGS+=-DWSF_ASSERT_ENABLED=TRUE
+# PROJ_CFLAGS+=-DLL_TRACE_ENABLED=TRUE
+# PROJ_CFLAGS+=-DLL_DBG_PIN_ENABLED=TRUE
+
+# Use this to enable or disable Core 1
+# Enabling Core 1 reserves RAM for its stack
+DUAL_CORE=1
 
 PROJ_CFLAGS+=-DCONSOLE_BAUD=115200
+
+# Stack CFLAGS configuration
+PROJ_CFLAGS+=-DINIT_BROADCASTER
+# PROJ_CFLAGS+=-DINIT_OBSERVER
+# PROJ_CFLAGS+=-DINIT_CENTRAL
+PROJ_CFLAGS+=-DINIT_PERIPHERAL
+PROJ_CFLAGS+=-DINIT_ENCRYPTED
+PROJ_CFLAGS+=-DINIT_PHY
+
+ENABLE_LL_TESTER?=#1
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
@@ -105,6 +129,10 @@ else
 MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
+ifndef RELEASE
+DEBUG=1
+endif
+
 # Point this variable to a linker file to override the default file
 # LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(TARGET_LC).ld
 
@@ -118,6 +146,10 @@ include $(BOARD_DIR)/board.mk
 # Include the peripheral driver
 PERIPH_DRIVER_DIR=$(LIBS_DIR)/$(TARGET_UC)PeriphDriver
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
+
+# Include Cordio BTLE Library
+CORDIO_DIR=$(LIBS_DIR)/BTLE
+include ${CORDIO_DIR}/btle.mk
 
 #include the FAT32 libraries
 SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
@@ -138,3 +170,6 @@ all:
 # The rule to clean out all the build products.
 distclean: clean
 	$(MAKE) -C ${PERIPH_DRIVER_DIR} clean
+
+# The rule to clean out BLE build products.
+bleclean: clean clean.stack clean.linklayer clean.wsf

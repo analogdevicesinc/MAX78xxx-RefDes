@@ -41,7 +41,7 @@
 #include <string.h>
 
 #include "lcd.h"
-#include "maxcam_debug.h"
+#include "max32666_debug.h"
 #include "maxcam_definitions.h"
 #include "qspi.h"
 #include "spi_dma.h"

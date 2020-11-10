@@ -117,7 +117,7 @@ WSF_CT_ASSERT(PLXPC_PLXS_HDL_LIST_LEN == ((sizeof(plxpcPlxsDiscCharList) / sizeo
 /*************************************************************************************************/
 void plxpcPlxsParsePlxsc(uint8_t *pValue, uint16_t len)
 {
-  uint8_t   flags;
+  uint8_t   flags = 0;
   uint16_t  year;
   uint8_t   month, day, hour, min, sec;
   int16_t   mantissa;
@@ -223,7 +223,7 @@ void plxpcPlxsParsePlxsc(uint8_t *pValue, uint16_t len)
 /*************************************************************************************************/
 void plxpcPlxsParsePlxc(uint8_t *pValue, uint16_t len)
 {
-  uint8_t   flags;
+  uint8_t   flags = 0;
   int16_t   mantissa;
   int8_t    exponent;
   uint16_t  spo2;

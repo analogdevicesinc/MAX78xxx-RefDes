@@ -45,7 +45,7 @@
 
 #include "embedding_process.h"
 #include "embeddings.h"
-#include "maxcam_debug.h"
+#include "max78000_debug.h"
 
 
 //-----------------------------------------------------------------------------

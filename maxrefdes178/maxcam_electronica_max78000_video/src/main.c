@@ -50,7 +50,7 @@
 
 #include "cnn.h"
 #include "embedding_process.h"
-#include "maxcam_debug.h"
+#include "max78000_debug.h"
 #include "maxcam_definitions.h"
 #include "spi_dma.h"
 #include "version.h"

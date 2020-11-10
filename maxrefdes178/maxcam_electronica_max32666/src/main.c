@@ -37,6 +37,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <board.h>
+#include <core1.h>
 #include <i2c.h>
 #include <max20303.h>
 #include <stdio.h>
@@ -45,7 +46,7 @@
 
 #include "lcd.h"
 #include "lcd_data.h"
-#include "maxcam_debug.h"
+#include "max32666_debug.h"
 #include "maxcam_definitions.h"
 #include "qspi.h"
 #include "sdcard.h"
@@ -85,8 +86,11 @@ int main(void)
     char version[10] = {0};
     uint8_t cmdData[1] = {0};
 
+    sys_cfg_sema_t sema_cfg = NULL;
+    SEMA_Init(sema_cfg);
+
     snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    PR_INFO("maxcam_electronica_max32666 %s [%s]", version, S_BUILD_TIMESTAMP);
+    PR_INFO("maxcam_electronica_max32666 core0 %s [%s]", version, S_BUILD_TIMESTAMP);
 
     if (MAX20303_initialize(1) != E_NO_ERROR) {
         PR_ERROR("pmic init failed");
@@ -120,6 +124,10 @@ int main(void)
         PR_ERROR("sdhc_init failed");
 //        while(1);
     }
+
+    // Enable Core1 and start it
+    Core1_Start();
+    PR_INFO("Core1 started by Core0");
 
     PR_INFO("init completed");
 
@@ -191,5 +199,44 @@ int main(void)
                     break;
             }
         }
+    }
+}
+
+// Similar to Core 0, the entry point for Core 1
+// is Core1Main()
+// Execution begins when the CPU1 Clock is enabled
+int Core1_Main(void) {
+
+    PR_INFO("maxcam_electronica_max32666 core1");
+
+    //  __asm__("BKPT");
+
+    /* Quiet GCC warnings */
+    return -1;
+}
+
+void HardFault_Handler(void)
+{
+    unsigned int cnt = 0;
+    while(1) {
+        if (cnt % 100000000 == 0) {
+            PR_ERROR("\n\n\n\n!!!!!\n Core0 FaultISR: CFSR %08X, BFAR %08x, MMFAR %08x, HFSR %08x\n!!!!!\n\n\n",
+                    (unsigned int)SCB->CFSR, (unsigned int)SCB->BFAR, (unsigned int)SCB->MMFAR, (unsigned int)SCB->HFSR);
+            cnt = 1;
+        }
+        cnt++;
+    }
+}
+
+void HardFault_Handler_Core1(void)
+{
+    unsigned int cnt = 0;
+    while(1) {
+        if (cnt % 100000000 == 0) {
+            PR_ERROR("\n\n\n\n!!!!!\n Core1 FaultISR: CFSR %08X, BFAR %08x, MMFAR %08x, HFSR %08x\n!!!!!\n\n\n",
+                    (unsigned int)SCB->CFSR, (unsigned int)SCB->BFAR, (unsigned int)SCB->MMFAR, (unsigned int)SCB->HFSR);
+            cnt = 1;
+        }
+        cnt++;
     }
 }

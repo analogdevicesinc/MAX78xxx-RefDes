@@ -280,8 +280,8 @@ void attsProcMtuReq(attCcb_t *pCcb, uint16_t len, uint8_t *pPacket)
 /*************************************************************************************************/
 void attsProcFindInfoReq(attCcb_t *pCcb, uint16_t len, uint8_t *pPacket)
 {
-  uint8_t     *pBuf;
-  uint8_t     *p;
+  uint8_t     *pBuf = NULL;
+  uint8_t     *p = NULL;
   attsAttr_t  *pAttr;
   uint16_t    startHandle;
   uint16_t    endHandle;

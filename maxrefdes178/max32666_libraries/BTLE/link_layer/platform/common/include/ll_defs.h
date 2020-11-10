@@ -42,6 +42,8 @@ extern "C" {
 #define LL_VER_BT_CORE_SPEC_5_1     0x0A    /*!< Bluetooth core specification 5.1 */
 
 #define LL_COMP_ID_ARM              0x005F  /*!< ARM Ltd. company ID. */
+#define LL_COMP_ID_MAXIM            0x058B  /*!< Maxim Integrated Products company ID. */
+
 
 /*** Common ***/
 

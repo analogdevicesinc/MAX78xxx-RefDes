@@ -54,7 +54,7 @@
 #include <tmr.h>
 
 #include "cnn.h"
-#include "maxcam_debug.h"
+#include "max78000_debug.h"
 #include "maxcam_definitions.h"
 #include "spi_dma.h"
 #include "version.h"

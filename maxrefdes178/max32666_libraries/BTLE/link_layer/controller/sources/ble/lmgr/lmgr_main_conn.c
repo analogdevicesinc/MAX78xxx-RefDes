@@ -46,8 +46,8 @@ void LmgrConnInit(void)
   lmgrConnCb.availTxBuf = pLctrRtCfg->numTxBufs;
   lmgrConnCb.availRxBuf = pLctrRtCfg->numRxBufs;
 
-  lmgrConnCb.maxTxLen = LL_MAX_DATA_LEN_MIN;
-  lmgrConnCb.maxTxTime = LL_MAX_DATA_TIME_MIN;
+  lmgrConnCb.maxTxLen = LL_MAX_DATA_LEN_ABS_MAX;
+  lmgrConnCb.maxTxTime = LL_MAX_DATA_TIME_ABS_MAX;
 
   lmgrConnCb.allPhys = LL_ALL_PHY_TX_PREFERENCE_BIT | LL_ALL_PHY_RX_PREFERENCE_BIT;
   lmgrConnCb.rxPhys = LL_PHYS_NONE;

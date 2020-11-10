@@ -1354,6 +1354,7 @@ extern "C" {
  */
 /**@{*/
 #define HCI_ID_ARM                                   0x005F  /*!< \brief ARM Ltd. company ID */
+#define HCI_ID_MAXIM                                 0x058B  /*!< \brief Maxim Integrated Products company ID */
 /**@}*/
 
 /** \name Manufacturer location in Local version

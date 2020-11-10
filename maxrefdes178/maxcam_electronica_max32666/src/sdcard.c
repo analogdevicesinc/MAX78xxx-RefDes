@@ -56,7 +56,7 @@
 #include <string.h>
 #include <tmr_utils.h>
 
-#include "maxcam_debug.h"
+#include "max32666_debug.h"
 #include "maxcam_definitions.h"
 
 

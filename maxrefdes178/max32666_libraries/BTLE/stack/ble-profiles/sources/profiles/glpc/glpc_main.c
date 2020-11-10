@@ -123,7 +123,7 @@ static struct
 /*************************************************************************************************/
 void glpcGlsParseGlm(uint8_t *pValue, uint16_t len)
 {
-  uint8_t   flags;
+  uint8_t   flags = 0;
   uint16_t  seqNum;
   uint16_t  year;
   uint8_t   month, day, hour, min, sec;
@@ -219,7 +219,7 @@ void glpcGlsParseGlm(uint8_t *pValue, uint16_t len)
 /*************************************************************************************************/
 void glpcGlsParseGlmc(uint8_t *pValue, uint16_t len)
 {
-  uint8_t   flags;
+  uint8_t   flags = 0;
   uint16_t  seqNum;
   uint8_t   extFlags;
   uint8_t   carbId;

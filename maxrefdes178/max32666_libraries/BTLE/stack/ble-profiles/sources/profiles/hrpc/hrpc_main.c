@@ -88,7 +88,7 @@ WSF_CT_ASSERT(HRPC_HRS_HDL_LIST_LEN == ((sizeof(hrpcHrsDiscCharList) / sizeof(at
 /*************************************************************************************************/
 void hrcpHrsParseHrm(uint8_t *pValue, uint16_t len)
 {
-  uint8_t   flags;
+  uint8_t   flags = 0;
   uint16_t  minLen = 1 + CH_HRM_LEN_VALUE_8BIT;
   uint16_t  heartRate;
   uint16_t  energyExp;

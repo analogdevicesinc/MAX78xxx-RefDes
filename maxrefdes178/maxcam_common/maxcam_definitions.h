@@ -143,6 +143,9 @@
 #define MAX32666_SD_CLK_DIV                0x0b0  // Maximum divide ratio
 #define MAX32666_SD_INIT_RETRY             10
 
+// MAX32666 Hardware semaphores
+#define MAX32666_SEMAPHORE_PRINT           1
+
 /*** MAX78000 AUDIO ***/
 // MAX78000 AUDIO PINS
 #define MAX78000_AUDIO_CNN_BOOST_PIN       {MXC_GPIO2, MXC_GPIO_PIN_5, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO}

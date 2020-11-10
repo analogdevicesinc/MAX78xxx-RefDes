@@ -256,8 +256,8 @@ void attsProcReadBlobReq(attCcb_t *pCcb, uint16_t len, uint8_t *pPacket)
 /*************************************************************************************************/
 void attsProcFindTypeReq(attCcb_t *pCcb, uint16_t len, uint8_t *pPacket)
 {
-  uint8_t     *pBuf;
-  uint8_t     *p;
+  uint8_t     *pBuf = NULL;
+  uint8_t     *p = NULL;
   uint8_t     *pUuid;
   attsAttr_t  *pAttr;
   attsGroup_t *pGroup;
@@ -383,8 +383,8 @@ void attsProcFindTypeReq(attCcb_t *pCcb, uint16_t len, uint8_t *pPacket)
 /*************************************************************************************************/
 void attsProcReadTypeReq(attCcb_t *pCcb, uint16_t len, uint8_t *pPacket)
 {
-  uint8_t     *pBuf;
-  uint8_t     *p;
+  uint8_t     *pBuf = NULL;
+  uint8_t     *p = NULL;
   attsAttr_t  *pAttr;
   attsGroup_t *pGroup;
   uint16_t    startHandle;
