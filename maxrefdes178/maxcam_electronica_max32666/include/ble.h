@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-#ifndef _QSPI_H_
-#define _QSPI_H_
+#ifndef _BLE_H_
+#define _BLE_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -46,6 +46,7 @@
 //-----------------------------------------------------------------------------
 
 
+
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
@@ -54,8 +55,13 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int qspi_init(void);
-int qspi_worker(void);
+int Ble_GetCurrentMtuSize(void);
+int Ble_GetCurrentPacketSize(void);
+int Ble_IsConnected(void);
+int Ble_IsNotificationEnabled(void);
+int Ble_SendNotification(uint16_t dataLen, uint8_t *data);
+int Ble_SendIndication(uint16_t dataLen, uint8_t *data);
+int Ble_Init(void);
+int Ble_Worker(void);
 
-
-#endif /* _QSPI_H_ */
+#endif /* _BLE_H_ */

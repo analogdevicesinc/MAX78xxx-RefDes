@@ -83,9 +83,9 @@ extern uint32_t __isr_vector_core1;
 }
 
 #define PR(fmt, args...) \
-    while(SEMA_GetSema(MAXCAM_SEMAPHORE_PRINT) == E_BUSY) {} \
+    while(SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
     printf(fmt , ##args); \
     fflush(stdout); \
-    SEMA_FreeSema(MAXCAM_SEMAPHORE_PRINT); \
+    SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
 
 #endif /* _MAX32666_DEBUG_H_ */

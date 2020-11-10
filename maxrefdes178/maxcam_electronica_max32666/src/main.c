@@ -44,6 +44,7 @@
 #include <string.h>
 #include <tmr_utils.h>
 
+#include "ble.h"
 #include "lcd.h"
 #include "lcd_data.h"
 #include "max32666_debug.h"
@@ -79,7 +80,7 @@
 //-----------------------------------------------------------------------------
 int main(void)
 {
-    int qspi_return = 0;
+    int ret = 0;
     uint16_t resultColor = 0;
     uint16_t frameColor = 0;
     uint8_t runFaceId = 0;
@@ -92,15 +93,19 @@ int main(void)
     snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     PR_INFO("maxcam_electronica_max32666 core0 %s [%s]", version, S_BUILD_TIMESTAMP);
 
-    if (MAX20303_initialize(1) != E_NO_ERROR) {
-        PR_ERROR("pmic init failed");
+    ret = MAX20303_initialize(1);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MAX20303_initialize failed %d", ret);
         while(1);
     }
 
     /* Switch USB-TYpe-C Debug Connection to MAX78000-Video */
     cmdData[0] = 0xff;
-    if (I2C_MasterWrite(PMIC_I2C, 0xd8, cmdData, 1, 0) ) {
-        PR_ERROR("MAX78000 select failed");
+    ret = I2C_MasterWrite(PMIC_I2C, 0xd8, cmdData, 1, 0);
+    if (ret < E_NO_ERROR) {
+        PR_ERROR("MAX78000 select failed %d", ret);
+//        MAX20303_led_red(MAX20303_LED_OUTPUT_ON);
+//        while(1);
     }
 
     // Set PORT1 and PORT2 rail to VDDIO
@@ -108,22 +113,43 @@ int main(void)
     MXC_GPIO1->vssel =  0x00;
 
     // Initialize DMA peripheral
-    DMA_Init();
-
-    if (qspi_init(1) != E_NO_ERROR) {
-        PR_ERROR("qspi init failed");
+    ret = DMA_Init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("DMA_Init failed %d", ret);
         while(1);
     }
 
-    if (lcd_init() != E_NO_ERROR) {
-        PR_ERROR("lcd init failed");
+    ret = qspi_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("qspi_init failed %d", ret);
+        MAX20303_led_red(MAX20303_LED_OUTPUT_ON);
         while(1);
     }
 
-    if (sdcard_init() != E_NO_ERROR) {
-        PR_ERROR("sdhc_init failed");
+    ret = lcd_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("lcd_init failed %d", ret);
+        MAX20303_led_red(MAX20303_LED_OUTPUT_ON);
+        while(1);
+    }
+
+//    ret = Ble_Init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("Ble_Init failed %d", ret);
+//        MAX20303_led_red(MAX20303_LED_OUTPUT_ON);
+//        while(1);
+//    }
+
+    ret = sdcard_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("sdhc_init failed %d", ret);
+//        MAX20303_led_red(MAX20303_LED_OUTPUT_ON);
 //        while(1);
     }
+
+//    // To debug Core1 set alternate function 3
+//    const gpio_cfg_t gpio_cfg_swdio2 =   { PORT_0, (PIN_6 | PIN_7), GPIO_FUNC_ALT3, GPIO_PAD_NONE };
+//    GPIO_Config(&gpio_cfg_swdio2);
 
     // Enable Core1 and start it
     Core1_Start();
@@ -139,9 +165,11 @@ int main(void)
 
     int audio_result_print_cnt = 0;
     while (1) {
-        qspi_return = qspi_worker();
-        if (qspi_return > QSPI_TYPE_NO_DATA) {
-            switch(qspi_return)
+//        Ble_Worker();
+
+        ret = qspi_worker();
+        if (ret > QSPI_TYPE_NO_DATA) {
+            switch(ret)
             {
                 case QSPI_TYPE_RESPONSE_VIDEO_DATA:
                     if (runFaceId) {
@@ -210,6 +238,10 @@ int Core1_Main(void) {
     PR_INFO("maxcam_electronica_max32666 core1");
 
     //  __asm__("BKPT");
+
+    while (1) {
+//        Ble_Worker();
+    }
 
     /* Quiet GCC warnings */
     return -1;

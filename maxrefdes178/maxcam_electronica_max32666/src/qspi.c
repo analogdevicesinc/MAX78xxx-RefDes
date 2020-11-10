@@ -93,7 +93,7 @@ void qspi_audio_int(void *cbdata)
     qspi_audio_int_flag = 1;
 }
 
-int qspi_init()
+int qspi_init(void)
 {
     sys_cfg_spi_t qspi_master_cfg;
 
@@ -160,7 +160,7 @@ int qspi_worker(void)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_OutSet(&video_cs_pin);
 
-            PR_INFO("video %u", qspi_header.data_len);
+            PR_DEBUG("video %u", qspi_header.data_len);
 
             return QSPI_TYPE_RESPONSE_VIDEO_DATA;
         } else if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_RESULT) {

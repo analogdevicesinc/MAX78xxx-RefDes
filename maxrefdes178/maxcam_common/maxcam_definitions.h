@@ -75,6 +75,10 @@
 #define FACEID_RECTANGLE_X2                FACEID_RECTANGLE_X1 + FACEID_WIDTH
 #define FACEID_RECTANGLE_Y2                FACEID_RECTANGLE_Y1 + FACEID_HEIGHT
 
+// Common BLE
+#define BLE_MAX_MTU_SIZE                   252
+#define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_SIZE - 3)
+
 /*** MAX32666 ***/
 // MAX32666 PINS
 #define MAX32666_VIDEO_INT_PIN             {PORT_0, PIN_30, GPIO_FUNC_IN, GPIO_PAD_PULL_UP}
