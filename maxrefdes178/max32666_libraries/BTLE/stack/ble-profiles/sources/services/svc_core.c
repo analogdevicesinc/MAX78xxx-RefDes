@@ -40,10 +40,10 @@
 #endif
 
 /*! Default device name */
-#define CORE_DEFAULT_DEV_NAME       "MAXCAM"
+#define CORE_DEFAULT_DEV_NAME       "MAXREFDES178"
 
 /*! Length of default device name */
-#define CORE_DEFAULT_DEV_NAME_LEN   6
+#define CORE_DEFAULT_DEV_NAME_LEN   12
 
 /**************************************************************************************************
  GAP group

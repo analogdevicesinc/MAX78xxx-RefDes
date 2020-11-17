@@ -34,40 +34,40 @@
 #endif
 
 /*! Default manufacturer name */
-#define DIS_DEFAULT_MFR_NAME        "Maxim"
+#define DIS_DEFAULT_MFR_NAME        "MAXIM"
 
 /*! Length of default manufacturer name */
 #define DIS_DEFAULT_MFR_NAME_LEN    5
 
 /*! Default model number */
-#define DIS_DEFAULT_MODEL_NUM       "MAXCAM model num"
+#define DIS_DEFAULT_MODEL_NUM       "MAXREFDES178 model"
 
 /*! Length of default model number */
-#define DIS_DEFAULT_MODEL_NUM_LEN   16
+#define DIS_DEFAULT_MODEL_NUM_LEN   18
 
 /*! Default serial number */
-#define DIS_DEFAULT_SERIAL_NUM      "MAXCAM serial num"
+#define DIS_DEFAULT_SERIAL_NUM      "MAXREFDES178 serial"
 
 /*! Length of default serial number */
-#define DIS_DEFAULT_SERIAL_NUM_LEN  17
+#define DIS_DEFAULT_SERIAL_NUM_LEN  19
 
 /*! Default firmware revision */
-#define DIS_DEFAULT_FW_REV          "MAXCAM fw rev"
+#define DIS_DEFAULT_FW_REV          "MAXREFDES178 fw"
 
 /*! Length of default firmware revision */
-#define DIS_DEFAULT_FW_REV_LEN      13
+#define DIS_DEFAULT_FW_REV_LEN      15
 
 /*! Default hardware revision */
-#define DIS_DEFAULT_HW_REV          "MAXCAM hw rev"
+#define DIS_DEFAULT_HW_REV          "MAXREFDES178 hw"
 
 /*! Length of default hardware revision */
-#define DIS_DEFAULT_HW_REV_LEN      13
+#define DIS_DEFAULT_HW_REV_LEN      15
 
 /*! Default software revision */
-#define DIS_DEFAULT_SW_REV          "MAXCAM sw rev"
+#define DIS_DEFAULT_SW_REV          "MAXREFDES178 sw"
 
 /*! Length of default software revision */
-#define DIS_DEFAULT_SW_REV_LEN      13
+#define DIS_DEFAULT_SW_REV_LEN      15
 
 /**************************************************************************************************
  Service variables
