@@ -175,12 +175,12 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="maxcam_electronica_max32666.ilg.gnuarmeclipse.managedbuild.cross.target.elf.737306620" name="Executable" projectType="ilg.gnuarmeclipse.managedbuild.cross.target.elf"/>
+		<project id="maxcam_max32666.ilg.gnuarmeclipse.managedbuild.cross.target.elf.737306620" name="Executable" projectType="ilg.gnuarmeclipse.managedbuild.cross.target.elf"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/maxcam_electronica_max32666"/>
+			<resource resourceType="PROJECT" workspacePath="/maxcam_max32666"/>
 		</configuration>
 		<configuration configurationName="Release"/>
 	</storageModule>

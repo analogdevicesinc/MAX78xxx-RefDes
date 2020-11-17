@@ -289,7 +289,7 @@ int main(void)
     MXC_SYS_Clock_Select(MXC_SYS_CLOCK_IPO);
     SystemCoreClockUpdate();
 
-    PR_INFO("maxcam_electronica_max78000_video v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
+    PR_INFO("maxcam_max78000_video v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
 
     if (initCNN() < 0 ) {
         PR_ERROR("Could not initialize the CNN accelerator");

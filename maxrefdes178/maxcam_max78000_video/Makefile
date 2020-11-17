@@ -34,7 +34,7 @@
 
 # This is the name of the build output file
 ifeq "$(PROJECT)" ""
-PROJECT=maxcam_electronica_max78000_audio
+PROJECT=maxcam_max78000_video
 endif
 
 # Specify the target processor
@@ -64,7 +64,7 @@ export CMSIS_ROOT
 # Source files for this test (add path to VPATH below)
 SRCS  = main.c
 SRCS += cnn.c
-SRCS += softmax.c
+SRCS += embedding_process.c
 SRCS += spi_dma.c
 
 # Where to find source files for this test
@@ -110,8 +110,11 @@ MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
 # Point this variable to a linker file to override the default file
-#LINKER=$(TARGET_LC).ld
-#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+LINKER=$(TARGET_LC).ld
+LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+
+# Run bitmap converter to produce tft resource header and resource file
+#$(shell $(LIBS_DIR)/Tools/BitmapConverter/maxim_bitmap_converter ./resources)
 
 ################################################################################
 # Include external library makefiles here

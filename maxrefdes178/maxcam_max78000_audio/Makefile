@@ -1,5 +1,5 @@
 ################################################################################
- # Copyright (C) 2016 Maxim Integrated Products, Inc., All Rights Reserved.
+ # Copyright (C) Maxim Integrated Products, Inc., All Rights Reserved.
  #
  # Permission is hereby granted, free of charge, to any person obtaining a
  # copy of this software and associated documentation files (the "Software"),
@@ -29,19 +29,17 @@
  # property whatsoever. Maxim Integrated Products, Inc. retains all
  # ownership rights.
  #
- # $Date: 2018-09-28 13:22:39 -0500 (Fri, 28 Sep 2018) $ 
- # $Revision: 38193 $
  #
  ###############################################################################
 
 # This is the name of the build output file
 ifeq "$(PROJECT)" ""
-PROJECT=maxcam_electronica_max32666
+PROJECT=maxcam_max78000_audio
 endif
 
 # Specify the target processor
 ifeq "$(TARGET)" ""
-TARGET=MAX32665
+TARGET=MAX78000
 endif
 
 # Create Target name variables
@@ -53,56 +51,38 @@ COMPILER=GCC
 
 # Specify the board used
 ifeq "$(BOARD)" ""
-BOARD=MAXCAM-AI
+BOARD=Maxcam
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=./../max32666_libraries
+LIBS_DIR=../max78000_libraries
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
+
+#Use this for other library make files so they are all based off the same as root as the project
+export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
 SRCS  = main.c
-SRCS += ble.c
-SRCS += fonts.c
-SRCS += lcd.c
-SRCS += qspi.c
-SRCS += sdcard.c
+SRCS += cnn.c
+SRCS += softmax.c
 SRCS += spi_dma.c
 
 # Where to find source files for this test
-VPATH = ./src
+VPATH=.
+VPATH += ./src
+VPATH += ./../maxcam_max78000_common
+VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 
 # Where to find header files for this test
-IPATH  = ./include
+IPATH = .
+IPATH += ./include
 IPATH += ./../maxcam_common
-
-# Specifies whether the legacy 4.2 api should be used.
-# 1 by default.
-# Set to use 4.2 advertisements.
-# Unset to use 5.0 extended advertisements.
-PROJ_CFLAGS+=-DBTLE_APP_USE_LEGACY_API=TRUE
+IPATH += ./../maxcam_max78000_common
 
 # Enable assertion checking for development
-PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE 
-PROJ_CFLAGS+=-DWSF_ASSERT_ENABLED=TRUE
-# PROJ_CFLAGS+=-DLL_TRACE_ENABLED=TRUE
-# PROJ_CFLAGS+=-DLL_DBG_PIN_ENABLED=TRUE
+PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE
 
-# Use this to enable or disable Core 1
-# Enabling Core 1 reserves RAM for its stack
-DUAL_CORE=1
-
-PROJ_CFLAGS+=-DCONSOLE_BAUD=115200
-
-# Stack CFLAGS configuration
-PROJ_CFLAGS+=-DINIT_BROADCASTER
-# PROJ_CFLAGS+=-DINIT_OBSERVER
-# PROJ_CFLAGS+=-DINIT_CENTRAL
-PROJ_CFLAGS+=-DINIT_PERIPHERAL
-PROJ_CFLAGS+=-DINIT_ENCRYPTED
-PROJ_CFLAGS+=-DINIT_PHY
-
-ENABLE_LL_TESTER?=#1
+PROJ_CFLAGS+=-DARM_MATH_CM4
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
@@ -116,48 +96,34 @@ PROJ_CFLAGS+=-Werror
 #TOOL_DIR=/opt/gcc-arm-none-eabi-4_8-2013q4/bin
 
 # Use these variables to add project specific tool options
-#PROJ_CFLAGS+=--specs=nano.specs
+#PROJ_CFLAGS+=-D__FPU_PRESENT -DKINTEX_EMU
 #PROJ_LDFLAGS+=--specs=nano.specs
 
 # Point this variable to a startup file to override the default file
 #STARTUPFILE=start.S
 
-# Override the default optimization level using this variable
+# Set MXC_OPTIMIZE to override the default optimization level
 ifdef RELEASE
 MXC_OPTIMIZE_CFLAGS=-Ofast
 else
 MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
-ifndef RELEASE
-DEBUG=1
-endif
-
 # Point this variable to a linker file to override the default file
-# LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(TARGET_LC).ld
+#LINKER=$(TARGET_LC).ld
+#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
 
 ################################################################################
 # Include external library makefiles here
 
 # Include the BSP
-BOARD_DIR=$(LIBS_DIR)/Boards/$(BOARD)
+BOARD_DIR=$(LIBS_DIR)/Boards/$(TARGET_UC)/$(BOARD)
 include $(BOARD_DIR)/board.mk
 
 # Include the peripheral driver
-PERIPH_DRIVER_DIR=$(LIBS_DIR)/$(TARGET_UC)PeriphDriver
+PERIPH_DRIVER_DIR=$(LIBS_DIR)/PeriphDrivers
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
-
-# Include Cordio BTLE Library
-CORDIO_DIR=$(LIBS_DIR)/BTLE
-include ${CORDIO_DIR}/btle.mk
-
-#include the FAT32 libraries
-SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
-FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
-include $(FAT32_DRIVER_DIR)/fat32.mk
-
-#include the SDHC libraries
-include $(SDHC_DRIVER_DIR)/sdhc.mk
+export PERIPH_DRIVER_DIR
 
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be
@@ -166,10 +132,15 @@ include $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/$(COMPILER)/$(TARGET_LC).
 
 all:
 	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin
+# 	$(CA_SIGN_BUILD) $(BUILD_DIR)/$(PROJECT).bin $(TEST_KEY)
+# 	arm-none-eabi-objcopy  $(BUILD_DIR)/$(PROJECT).elf --update-section .sig=$(BUILD_DIR)/$(PROJECT).bin.sig
 
+libclean: 
+	$(MAKE)  -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
+	
 # The rule to clean out all the build products.
-distclean: clean
-	$(MAKE) -C ${PERIPH_DRIVER_DIR} clean
+distclean: clean libclean
 
-# The rule to clean out BLE build products.
-bleclean: clean clean.stack clean.linklayer clean.wsf
+sla: all
+#	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -O binary $(BUILD_DIR)/$(PROJECT).sbin
+#	$(BUILD_SESSION) $(BUILD_DIR)/$(PROJECT).sbin scp_packets $(TEST_KEY)

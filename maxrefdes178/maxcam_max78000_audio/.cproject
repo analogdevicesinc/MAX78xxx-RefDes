@@ -179,12 +179,12 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="maxcam_electronica_max78000_audio.ilg.gnumcueclipse.managedbuild.cross.target.elf.737306620" name="Executable"/>
+		<project id="maxcam_max78000_audio.ilg.gnumcueclipse.managedbuild.cross.target.elf.737306620" name="Executable"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/maxcam_electronica_max78000_audio"/>
+			<resource resourceType="PROJECT" workspacePath="/maxcam_max78000_audio"/>
 		</configuration>
 		<configuration configurationName="Release"/>
 	</storageModule>

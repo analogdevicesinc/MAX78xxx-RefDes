@@ -217,7 +217,7 @@ int main(void)
     GPIO_CLR(gpio_blue);
     MXC_GPIO_Config(&gpio_blue);
 
-    PR_INFO("maxcam_electronica_max78000_audio v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
+    PR_INFO("maxcam_max78000_audio v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
 
     memset(pAI85Buffer, 0x0, sizeof(pAI85Buffer));
     memset(pPreambleCircBuffer, 0x0, sizeof(pPreambleCircBuffer));

@@ -44,12 +44,12 @@
 <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="0"/>
 <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
 <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_REGISTER_GROUPS" value=""/>
-<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build\maxcam_electronica_max78000_audio.elf"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="maxcam_electronica_max78000_audio"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build\maxcam_max78000_video.elf"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="maxcam_max78000_video"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/maxcam_electronica_max78000_audio"/>
+<listEntry value="/maxcam_max78000_video"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>

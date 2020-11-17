@@ -91,7 +91,7 @@ int main(void)
     SEMA_Init(sema_cfg);
 
     snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    PR_INFO("maxcam_electronica_max32666 core0 %s [%s]", version, S_BUILD_TIMESTAMP);
+    PR_INFO("maxcam_max32666 core0 %s [%s]", version, S_BUILD_TIMESTAMP);
 
     ret = MAX20303_initialize(1);
     if (ret != E_NO_ERROR) {
@@ -235,7 +235,7 @@ int main(void)
 // Execution begins when the CPU1 Clock is enabled
 int Core1_Main(void) {
 
-    PR_INFO("maxcam_electronica_max32666 core1");
+    PR_INFO("maxcam_max32666 core1");
 
     //  __asm__("BKPT");
 
