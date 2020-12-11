@@ -33,57 +33,39 @@
  *******************************************************************************
  */
 
-#ifndef _MAX32666_DEBUG_H_
-#define _MAX32666_DEBUG_H_
+#ifndef _MAX32666_LCD_H_
+#define _MAX32666_LCD_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <stdio.h>
-#include <sema.h>
-
+#include "max32666_fonts.h"
 #include "maxrefdes178_definitions.h"
-
-
-//-----------------------------------------------------------------------------
-// Global variables
-//-----------------------------------------------------------------------------
-extern uint32_t __isr_vector_core1;
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define PR_DEBUG(fmt, args...)  if(0) { \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
-    printf("D%d[%-8s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
-    fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
-}
 
-#define PR_INFO(fmt, args...)  if(1) { \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
-    printf("I%d[%-8s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
-    fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
-}
 
-#define PR_WARN(fmt, args...)  if(1) { \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
-    printf("W%d[%-8s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
-    fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
-}
+//-----------------------------------------------------------------------------
+// Typedefs
+//-----------------------------------------------------------------------------
 
-#define PR_ERROR(fmt, args...)  if(1) { \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
-    printf("E%d[%-8s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
-    fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
-}
 
-#define PR(fmt, args...) \
-    printf(fmt , ##args); \
-    fflush(stdout); \
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+extern uint8_t lcd_data[LCD_DATA_SIZE];
+extern char lcd_subtitle[LCD_SUBTITLE_SIZE];
+extern char lcd_toptitle[LCD_SUBTITLE_SIZE];
 
-#endif /* _MAX32666_DEBUG_H_ */
+
+//-----------------------------------------------------------------------------
+// Function declarations
+//-----------------------------------------------------------------------------
+int lcd_init(void);
+void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data);
+void lcd_backlight(int on);
+
+#endif /* _MAX32666_LCD_H_ */

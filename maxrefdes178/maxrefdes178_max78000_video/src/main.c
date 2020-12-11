@@ -238,7 +238,7 @@ void MAX78000_VIDEO_CAMERA_DMA_IRQ_HAND(void)
 
 void MAX78000_VIDEO_QSPI_DMA_IRQ_HAND(void)
 {
-    spi_dma_int_handler(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI_ID);
+    spi_dma_int_handler(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI);
 }
 
 uint32_t utils_get_time_ms(void)
@@ -315,7 +315,7 @@ int main(void)
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
 
-    spi_dma_slave_init(MAX78000_VIDEO_QSPI_ID, qspi_pins);
+    spi_dma_slave_init(MAX78000_VIDEO_QSPI, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
@@ -445,7 +445,7 @@ static void process_img(void)
     pass_time = utils_get_time_ms();
 #endif
 
-    spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI_ID, raw, imgLen,
+    spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, raw, imgLen,
             QSPI_TYPE_RESPONSE_VIDEO_DATA, &qspi_int);
     MXC_Delay(MXC_DELAY_MSEC(3)); // Yield SPI DMA RAM read
 
@@ -559,7 +559,7 @@ static void run_cnn(int x_offset, int y_offset)
         }
 
         if(decision != prev_decision){
-            spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI_ID, (uint8_t *)name,
+            spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, (uint8_t *)name,
                     strlen(name), QSPI_TYPE_RESPONSE_VIDEO_RESULT, &qspi_int);
             PR_DEBUG("Result : %s\n", name);
         }

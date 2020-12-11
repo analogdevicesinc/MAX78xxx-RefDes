@@ -33,13 +33,12 @@
  *******************************************************************************
  */
 
-#ifndef SPI_DMA_H_
-#define SPI_DMA_H_
+#ifndef _MAX32666_BLE_H_
+#define _MAX32666_BLE_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "spi.h"
 
 
 //-----------------------------------------------------------------------------
@@ -56,9 +55,13 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-void spi_dma_int_handler(uint8_t ch, mxc_spi17y_regs_t *spi);
-void spi_dma_master_init(mxc_spi17y_regs_t *spi, spi_type spi_id, sys_cfg_spi_t spi_pins, uint32_t speed, uint8_t quad);
-void spi_dma(uint8_t ch, mxc_spi17y_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, dma_reqsel_t reqsel, void (*callback)(void));
-int spi_dma_wait(uint8_t ch, mxc_spi17y_regs_t *spi);
+int Ble_GetCurrentMtuSize(void);
+int Ble_GetCurrentPacketSize(void);
+int Ble_IsConnected(void);
+int Ble_IsNotificationEnabled(void);
+int Ble_SendNotification(uint16_t dataLen, uint8_t *data);
+int Ble_SendIndication(uint16_t dataLen, uint8_t *data);
+int Ble_Init(void);
+int Ble_Worker(void);
 
-#endif /* SPI_DMA_H_ */
+#endif /* _MAX32666_BLE_H_ */

@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-#ifndef _QSPI_H_
-#define _QSPI_H_
+#ifndef _MAX32666_QSPI_H_
+#define _MAX32666_QSPI_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -58,4 +58,4 @@ int qspi_init(void);
 int qspi_worker(void);
 
 
-#endif /* _QSPI_H_ */
+#endif /* _MAX32666_QSPI_H_ */

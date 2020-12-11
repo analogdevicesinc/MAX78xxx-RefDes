@@ -33,13 +33,13 @@
  *******************************************************************************
  */
 
-#ifndef _FONT_H_
-#define _FONT_H_
+#ifndef _MAX32666_FONT_H_
+#define _MAX32666_FONT_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "stdint.h"
+#include <stdint.h>
 
 
 //-----------------------------------------------------------------------------
@@ -95,4 +95,4 @@ void fonts_putToptitle(uint16_t w, uint16_t h, const char *str, FontDef font, ui
 void fonts_drawRectangle(uint16_t w, uint16_t h, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t *buff);
 void fonts_drawLine(uint16_t w, uint16_t h, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, uint8_t *buff);
 
-#endif /* _FONT_H_ */
+#endif /* _MAX32666_FONT_H_ */

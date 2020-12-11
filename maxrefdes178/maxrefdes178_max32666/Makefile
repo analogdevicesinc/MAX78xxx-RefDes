@@ -29,8 +29,6 @@
  # property whatsoever. Maxim Integrated Products, Inc. retains all
  # ownership rights.
  #
- # $Date: 2018-09-28 13:22:39 -0500 (Fri, 28 Sep 2018) $ 
- # $Revision: 38193 $
  #
  ###############################################################################
 
@@ -57,52 +55,41 @@ BOARD=MAXREFDES178
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=./../max32666_libraries
+LIBS_DIR=./../../MAXREFDES178_sdk/Libraries
+
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
+SECURE_BOOT_TOOLS_DIR=$(LIBS_DIR)/../Tools/SBT
+CA_SIGN_BUILD=$(SECURE_BOOT_TOOLS_DIR)/bin/sign_app.exe
+BUILD_SESSION=$(SECURE_BOOT_TOOLS_DIR)/bin/build_scp_session
+TEST_KEY=$(SECURE_BOOT_TOOLS_DIR)/devices/$(TARGET_UC)/keys/maximtestcrk.key
+SCP_PACKETS=scp_packets
+
+#Use this for other library make files so they are all based off the same as root as the project
+export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
-SRCS  = main.c
-SRCS += ble.c
-SRCS += fonts.c
-SRCS += lcd.c
-SRCS += qspi.c
-SRCS += sdcard.c
-SRCS += spi_dma.c
+SRCS  = max32666_main.c
+#SRCS += max32666_ble.c
+SRCS += max32666_expander.c
+SRCS += max32666_fonts.c
+SRCS += max32666_i2c.c
+SRCS += max32666_lcd.c
+SRCS += max32666_max20303.c
+SRCS += max32666_qspi.c
+#SRCS += max32666_sdcard.c
+SRCS += max32666_spi_dma.c
+#SRCS += sla_header.c
 
 # Where to find source files for this test
 VPATH = ./src
+VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 
 # Where to find header files for this test
 IPATH  = ./include
 IPATH += ./../maxrefdes178_common
 
-# Specifies whether the legacy 4.2 api should be used.
-# 1 by default.
-# Set to use 4.2 advertisements.
-# Unset to use 5.0 extended advertisements.
-PROJ_CFLAGS+=-DBTLE_APP_USE_LEGACY_API=TRUE
-
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE 
-PROJ_CFLAGS+=-DWSF_ASSERT_ENABLED=TRUE
-# PROJ_CFLAGS+=-DLL_TRACE_ENABLED=TRUE
-# PROJ_CFLAGS+=-DLL_DBG_PIN_ENABLED=TRUE
-
-# Use this to enable or disable Core 1
-# Enabling Core 1 reserves RAM for its stack
-DUAL_CORE=1
-
-PROJ_CFLAGS+=-DCONSOLE_BAUD=115200
-
-# Stack CFLAGS configuration
-PROJ_CFLAGS+=-DINIT_BROADCASTER
-# PROJ_CFLAGS+=-DINIT_OBSERVER
-# PROJ_CFLAGS+=-DINIT_CENTRAL
-PROJ_CFLAGS+=-DINIT_PERIPHERAL
-PROJ_CFLAGS+=-DINIT_ENCRYPTED
-PROJ_CFLAGS+=-DINIT_PHY
-
-ENABLE_LL_TESTER?=#1
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
@@ -115,6 +102,7 @@ PROJ_CFLAGS+=-Werror
 # Use this variables to specify and alternate tool path
 #TOOL_DIR=/opt/gcc-arm-none-eabi-4_8-2013q4/bin
 
+
 # Use these variables to add project specific tool options
 #PROJ_CFLAGS+=--specs=nano.specs
 #PROJ_LDFLAGS+=--specs=nano.specs
@@ -122,41 +110,32 @@ PROJ_CFLAGS+=-Werror
 # Point this variable to a startup file to override the default file
 #STARTUPFILE=start.S
 
-# Override the default optimization level using this variable
+# Set MXC_OPTIMIZE to override the default optimization level 
 ifdef RELEASE
 MXC_OPTIMIZE_CFLAGS=-Ofast
 else
 MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
-ifndef RELEASE
-DEBUG=1
-endif
-
 # Point this variable to a linker file to override the default file
-# LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(TARGET_LC).ld
+#LINKER=$(TARGET_LC).ld
+#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
 
 ################################################################################
 # Include external library makefiles here
 
 # Include the BSP
-BOARD_DIR=$(LIBS_DIR)/Boards/$(BOARD)
+BOARD_DIR=$(LIBS_DIR)/Boards/$(TARGET_UC)/$(BOARD)
 include $(BOARD_DIR)/board.mk
 
 # Include the peripheral driver
-PERIPH_DRIVER_DIR=$(LIBS_DIR)/$(TARGET_UC)PeriphDriver
+PERIPH_DRIVER_DIR=$(LIBS_DIR)/PeriphDrivers
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
+export PERIPH_DRIVER_DIR
 
-# Include Cordio BTLE Library
-CORDIO_DIR=$(LIBS_DIR)/BTLE
-include ${CORDIO_DIR}/btle.mk
-
-#include the FAT32 libraries
 SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
 FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
 include $(FAT32_DRIVER_DIR)/fat32.mk
-
-#include the SDHC libraries
 include $(SDHC_DRIVER_DIR)/sdhc.mk
 
 ################################################################################
@@ -165,11 +144,23 @@ include $(SDHC_DRIVER_DIR)/sdhc.mk
 include $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/$(COMPILER)/$(TARGET_LC).mk
 
 all:
+ifneq "$(LINKER)" "$(TARGET_LC)_ram.ld"	
 	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin
+#	@echo " "
+#	arm-none-eabi-size --format=berkeley $(BUILD_DIR)/$(PROJECT).elf
+#	@echo " "
+#	$(CA_SIGN_BUILD) -c $(TARGET_UC) key_file=$(TEST_KEY) algo=ecdsa header=no ca=$(BUILD_DIR)/$(PROJECT).bin sca=$(BUILD_DIR)/$(PROJECT).sbin
+#	@echo " "
+#	arm-none-eabi-objcopy  $(BUILD_DIR)/$(PROJECT).elf --update-section .sig=$(BUILD_DIR)/$(PROJECT).sig
+endif
+
+libclean: 
+	$(MAKE)  -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
+slaclean: 
+	rm -r ${SCP_PACKETS}/
 
 # The rule to clean out all the build products.
-distclean: clean
-	$(MAKE) -C ${PERIPH_DRIVER_DIR} clean
+distclean: clean libclean slaclean
 
-# The rule to clean out BLE build products.
-bleclean: clean clean.stack clean.linklayer clean.wsf
+#sla: all
+#	$(BUILD_SESSION) -c $(TARGET_UC) key_file=$(TEST_KEY) ${SCP_PACKETS} $(BUILD_DIR)/$(PROJECT).sbin

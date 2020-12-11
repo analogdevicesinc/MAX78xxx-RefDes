@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-#ifndef _BLE_H_
-#define _BLE_H_
+#ifndef _MAX32666_SDCARD_H_
+#define _MAX32666_SDCARD_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -46,7 +46,6 @@
 //-----------------------------------------------------------------------------
 
 
-
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
@@ -55,13 +54,7 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int Ble_GetCurrentMtuSize(void);
-int Ble_GetCurrentPacketSize(void);
-int Ble_IsConnected(void);
-int Ble_IsNotificationEnabled(void);
-int Ble_SendNotification(uint16_t dataLen, uint8_t *data);
-int Ble_SendIndication(uint16_t dataLen, uint8_t *data);
-int Ble_Init(void);
-int Ble_Worker(void);
+int sdcard_init(void);
 
-#endif /* _BLE_H_ */
+
+#endif /* _MAX32666_SDCARD_H_ */

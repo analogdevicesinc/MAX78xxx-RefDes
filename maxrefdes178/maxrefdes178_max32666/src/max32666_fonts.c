@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fonts.h"
+#include "max32666_fonts.h"
 #include "maxrefdes178_definitions.h"
 
 

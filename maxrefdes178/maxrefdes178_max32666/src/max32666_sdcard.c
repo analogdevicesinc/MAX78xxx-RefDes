@@ -50,7 +50,6 @@
 #include <mxc_sys.h>
 #include <sdhc_lib.h>
 #include <sdhc_regs.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

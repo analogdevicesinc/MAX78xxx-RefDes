@@ -150,7 +150,7 @@ static void fail(void);
 //-----------------------------------------------------------------------------
 void MAX78000_AUDIO_QSPI_DMA_IRQ_HAND(void)
 {
-    spi_dma_int_handler(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI_ID);
+    spi_dma_int_handler(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI);
 }
 
 void i2s_isr(void)
@@ -236,7 +236,7 @@ int main(void)
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
 
-    spi_dma_slave_init(MAX78000_AUDIO_QSPI_ID, qspi_pins);
+    spi_dma_slave_init(MAX78000_AUDIO_QSPI, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
@@ -453,7 +453,7 @@ int main(void)
                         probability);
 
                 if (ret) {
-                    spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI_ID,
+                    spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI,
                             (uint8_t *) keywords[out_class],
                             sizeof(keywords[out_class]),
                             QSPI_TYPE_RESPONSE_AUDIO_RESULT, &qspi_int);

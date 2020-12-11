@@ -33,19 +33,20 @@
  *******************************************************************************
  */
 
-#ifndef _LCD_H_
-#define _LCD_H_
+#ifndef _MAX32666_SPI_DMA_H_
+#define _MAX32666_SPI_DMA_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "fonts.h"
-#include "maxrefdes178_definitions.h"
+#include <dma.h>
+#include <spi.h>
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
+
 
 
 //-----------------------------------------------------------------------------
@@ -54,18 +55,11 @@
 
 
 //-----------------------------------------------------------------------------
-// Global variables
-//-----------------------------------------------------------------------------
-extern uint8_t lcd_data[LCD_DATA_SIZE];
-extern char lcd_subtitle[LCD_SUBTITLE_SIZE];
-extern char lcd_toptitle[LCD_SUBTITLE_SIZE];
-
-
-//-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int lcd_init(void);
-void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data);
-void lcd_backlight(unsigned char onoff);
+void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi);
+void spi_dma_master_init(mxc_spi_regs_t *spi, sys_map_t map, uint32_t speed, uint8_t quad);
+void spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, mxc_dma_reqsel_t reqsel, void (*callback)(void));
+int spi_dma_wait(uint8_t ch, mxc_spi_regs_t *spi);
 
-#endif /* _LCD_H_ */
+#endif /* _MAX32666_SPI_DMA_H_ */
