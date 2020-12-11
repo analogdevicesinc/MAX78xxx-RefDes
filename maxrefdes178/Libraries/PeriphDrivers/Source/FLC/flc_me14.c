@@ -141,15 +141,18 @@ int MXC_FLC_PageErase (uint32_t address)
     mxc_flc_regs_t *flc = NULL;
     
     // Get FLC Instance
-    if ( (err = MXC_FLC_ME14_GetByAddress (&flc, address)) != E_NO_ERROR) {
+    if ((err = MXC_FLC_ME14_GetByAddress (&flc, address)) != E_NO_ERROR) {
         return err;
     }
     
-    if ( (err = MXC_FLC_ME14_GetPhysicalAddress (address, &addr)) < E_NO_ERROR) {
+    if ((err = MXC_FLC_ME14_GetPhysicalAddress (address, &addr)) < E_NO_ERROR) {
         return err;
     }
     
-    err = MXC_FLC_RevA_PageErase ((mxc_flc_reva_regs_t*)flc,addr);
+    if ((err = MXC_FLC_RevA_PageErase ((mxc_flc_reva_regs_t*)flc,addr)) != E_NO_ERROR) {
+        return err;
+    }
+    
     // Flush the cache
     MXC_FLC_ME14_Flash_Operation();
     

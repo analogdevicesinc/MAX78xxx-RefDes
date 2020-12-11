@@ -126,7 +126,10 @@ int MXC_PT_Config(mxc_pt_cfg_t* cfg)
 
 int MXC_PT_SqrWaveConfig(unsigned channel, uint32_t freq)
 {
-    return MXC_PT_RevA_SqrWaveConfig((mxc_ptg_reva_regs_t*) MXC_PTG, channel, freq);
+    mxc_pt_cfg_t sqwcfg;
+    
+    MXC_PT_RevA_SqrWaveConfig((mxc_ptg_reva_regs_t*) MXC_PTG, &sqwcfg, channel, freq);
+    return MXC_PT_Config(&sqwcfg); 
 }
 
 void MXC_PT_Start(unsigned pts)

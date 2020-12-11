@@ -46,7 +46,7 @@
 int MXC_SPI_Init (mxc_spi_regs_t* spi, int masterMode, int quadModeUsed, int numSlaves,
                   unsigned ssPolarity, unsigned int hz, sys_map_t map)
 {
-    uint8_t spi_num;
+    int spi_num;
     
     spi_num = MXC_SPI_GET_IDX (spi);
     MXC_ASSERT (spi_num >= 0);
@@ -341,22 +341,28 @@ int MXC_SPI_SlaveTransactionDMA (mxc_spi_req_t* req)
         case 2:
             reqselTx = MXC_DMA_REQUEST_SPI2TX;
             break;
+
+        default:
+            return E_BAD_PARAM;   
         }
     }
 
     if (req->rxData != NULL) {
         switch (spi_num) {
         case 0:
-            reqselRx = MXC_DMA_REQUEST_SPI0TX;
+            reqselRx = MXC_DMA_REQUEST_SPI0RX;
             break;
 
         case 1:
-            reqselRx = MXC_DMA_REQUEST_SPI1TX;
+            reqselRx = MXC_DMA_REQUEST_SPI1RX;
             break;
 
         case 2:
-            reqselRx = MXC_DMA_REQUEST_SPI2TX;
+            reqselRx = MXC_DMA_REQUEST_SPI2RX;
             break;
+
+        default:
+            return E_BAD_PARAM;   
         }
     }
 

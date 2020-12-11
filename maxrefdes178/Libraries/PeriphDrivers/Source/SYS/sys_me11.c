@@ -111,7 +111,7 @@ int MXC_SYS_RTCClockDisable (void)
 {
     /* Check that the RTC is not the system clock source */
     //TODO: Verify.
-    if ( (MXC_GCR->clk_ctrl & MXC_F_GCR_CLK_CTRL_CLKSEL) != MXC_F_GCR_CLK_CTRL_X32K_EN) {
+    if ( (MXC_GCR->clk_ctrl & MXC_F_GCR_CLK_CTRL_CLKSEL) != MXC_S_GCR_CLK_CTRL_CLKSEL_HFXIN) {
         MXC_GCR->clk_ctrl &= ~MXC_F_GCR_CLK_CTRL_X32K_EN;
         return E_NO_ERROR;
     }

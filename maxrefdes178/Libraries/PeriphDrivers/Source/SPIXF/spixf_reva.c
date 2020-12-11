@@ -68,7 +68,7 @@ static void SPIXFC_TransHandler(mxc_spixfc_reva_regs_t *spixfc, mxc_spixfc_fifo_
 /******* Globals *******/
 typedef struct {
     mxc_spixf_req_t* req;
-    unsigned int head_rem;
+    int head_rem;
 } spixf_req_head_t;
 static spixf_req_head_t states;
 

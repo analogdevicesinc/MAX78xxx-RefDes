@@ -484,7 +484,7 @@ int MXC_UART_RevC_ClearFlags (mxc_uart_revc_regs_t* uart, unsigned int flags)
         return E_BAD_PARAM;
     }
     
-    uart->int_fl = flags;
+    uart->int_fl &= ~flags;
     
     return E_NO_ERROR;
 }

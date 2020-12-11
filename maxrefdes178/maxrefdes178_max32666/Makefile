@@ -78,7 +78,7 @@ SRCS += max32666_max20303.c
 SRCS += max32666_qspi.c
 #SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
-#SRCS += sla_header.c
+SRCS += sla_header.c
 
 # Where to find source files for this test
 VPATH = ./src
@@ -118,8 +118,8 @@ MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
 # Point this variable to a linker file to override the default file
-#LINKER=$(TARGET_LC).ld
-#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+LINKER=$(TARGET_LC).ld
+LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
 
 ################################################################################
 # Include external library makefiles here
@@ -162,5 +162,5 @@ slaclean:
 # The rule to clean out all the build products.
 distclean: clean libclean slaclean
 
-#sla: all
-#	$(BUILD_SESSION) -c $(TARGET_UC) key_file=$(TEST_KEY) ${SCP_PACKETS} $(BUILD_DIR)/$(PROJECT).sbin
+sla: all
+	$(BUILD_SESSION) -c $(TARGET_UC) key_file=$(TEST_KEY) ${SCP_PACKETS} $(BUILD_DIR)/$(PROJECT).sbin

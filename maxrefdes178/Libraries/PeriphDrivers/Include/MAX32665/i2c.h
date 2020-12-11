@@ -191,6 +191,20 @@ typedef int (*mxc_i2c_slave_handler_t) (mxc_i2c_regs_t* i2c,
 int MXC_I2C_Init (mxc_i2c_regs_t* i2c, int masterMode, unsigned int slaveAddr);
 
 /**
+ * @brief   Set slave address for I2C instances acting as slaves on the bus.
+ * @note    Set idx to zero, multiple I2C instances acting as slaves on the
+ *          bus is not yet supported.
+ *
+ * @param   i2c         Pointer to I2C registers (selects the I2C block used.)
+ * @param   slaveAddr   7-bit or 10-bit address to use when in slave mode.
+ *                      This parameter is ignored when masterMode is non-zero.
+ * @param   idx         Index of the I2C slave. 
+ *
+ * @return  Success/Fail, see \ref MXC_Error_Codes for a list of return codes.
+ */
+int MXC_I2C_SetSlaveAddr(mxc_i2c_regs_t* i2c, unsigned int slaveAddr, int idx);
+
+/**
  * @brief   Disable and shutdown I2C peripheral.
  *
  * @param   i2c         Pointer to I2C registers (selects the I2C block used.)
@@ -851,8 +865,6 @@ void MXC_I2C_AsyncHandler (mxc_i2c_regs_t* i2c);
  * @param   error       Error status
  */
 void MXC_I2C_DMACallback (int ch, int error);
-
-int MXC_I2C_SetSlaveAddr (mxc_i2c_regs_t* i2c, unsigned int slaveAddr, int idx);
 
 
 /**@} end of group i2c */

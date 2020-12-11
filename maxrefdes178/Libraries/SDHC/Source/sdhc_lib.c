@@ -42,9 +42,9 @@
 
 /* **** Includes **** */
 #include "mxc_device.h"
+#include "mxc_errors.h"
 #include "mxc_assert.h"
 #include "mxc_sys.h"
-#include "mxc_errors.h" 
 #include "sdhc.h"
 #include "sdhc_lib.h"
 #include "sdhc_resp_regs.h"

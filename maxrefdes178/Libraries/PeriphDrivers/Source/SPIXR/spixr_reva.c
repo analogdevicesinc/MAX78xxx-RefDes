@@ -158,7 +158,7 @@ int MXC_SPIXR_RevA_SetSPIMode(mxc_spixr_reva_regs_t *spixr, mxc_spixr_reva_mode_
         return E_BAD_PARAM;
     }
     
-    if(mode == MXC_SPIXR_REVA_MODE_0 || mode == MXC_SPIXR_REVA_MODE_1) {
+    if((mode == MXC_SPIXR_REVA_MODE_0) || (mode == MXC_SPIXR_REVA_MODE_1)) {
         MXC_SETFIELD(spixr->ctrl3, MXC_F_SPIXR_REVA_CTRL3_CPOL, (0<<MXC_F_SPIXR_REVA_CTRL3_CPOL_POS));
         
     }
@@ -167,7 +167,7 @@ int MXC_SPIXR_RevA_SetSPIMode(mxc_spixr_reva_regs_t *spixr, mxc_spixr_reva_mode_
         
     }
     
-    if(mode == MXC_SPIXR_REVA_MODE_0 || mode == MXC_SPIXR_REVA_MODE_2) {
+    if((mode == MXC_SPIXR_REVA_MODE_0) || (mode == MXC_SPIXR_REVA_MODE_2)) {
         MXC_SETFIELD(spixr->ctrl3, MXC_F_SPIXR_REVA_CTRL3_CPHA, (0<<MXC_F_SPIXR_REVA_CTRL3_CPHA_POS));
         
     }

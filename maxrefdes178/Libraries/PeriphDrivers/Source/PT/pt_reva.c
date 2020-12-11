@@ -97,30 +97,24 @@ int MXC_PT_RevA_Config(mxc_ptg_reva_regs_t* ptg, mxc_pt_cfg_t *cfg)
     return E_NO_ERROR;
 }
 
-int MXC_PT_RevA_SqrWaveConfig(mxc_ptg_reva_regs_t* ptg, unsigned channel, uint32_t freq)
+int MXC_PT_RevA_SqrWaveConfig(mxc_ptg_reva_regs_t* ptg, mxc_pt_cfg_t* sqwcfg, unsigned channel, uint32_t freq)
 {
     uint32_t rate;
     
     rate = 2 * freq;
-    mxc_pt_cfg_t sqwcfg;
-    sqwcfg.channel = channel;
-    sqwcfg.bps = rate;
-    sqwcfg.pattern = 0;
-    sqwcfg.ptLength = MXC_V_PT_REVA_RATE_LENGTH_MODE_SQUARE_WAVE;
-    sqwcfg.loop = 0;
-    sqwcfg.loopDelay = 0;
+
+    sqwcfg->channel = channel;
+    sqwcfg->bps = rate;
+    sqwcfg->pattern = 0;
+    sqwcfg->ptLength = MXC_V_PT_REVA_RATE_LENGTH_MODE_SQUARE_WAVE;
+    sqwcfg->loop = 0;
+    sqwcfg->loopDelay = 0;
     
-  #if TARGET_NUM == 32665
-    return MXC_PT_Config((mxc_ptg_regs_t*) ptg, &sqwcfg);
-  #else
-    return MXC_PT_Config(&sqwcfg);
-  #endif
+    return E_NO_ERROR;
 }
 
 void MXC_PT_RevA_Start(mxc_ptg_reva_regs_t* ptg, unsigned pts)
 {
-
-    MXC_ASSERT(pts >= 0)
     ptg->enable |= pts;
     
     //wait for PT to start

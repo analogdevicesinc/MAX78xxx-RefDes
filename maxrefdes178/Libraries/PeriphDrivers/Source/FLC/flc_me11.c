@@ -162,7 +162,9 @@ int MXC_FLC_ME11_Write128(uint32_t address, uint32_t *data)
         return err;
     }
     
-    err = MXC_FLC_RevA_Write128((mxc_flc_reva_regs_t*) flc, addr, data);
+    if((err = MXC_FLC_RevA_Write128((mxc_flc_reva_regs_t*) flc, addr, data)) != E_NO_ERROR) {
+        return err;
+    }
     
     // Flush the cache
     MXC_FLC_ME11_Flash_Operation();

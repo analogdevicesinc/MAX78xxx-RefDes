@@ -61,7 +61,6 @@ int        AsyncWritten[MXC_I2C_INSTANCES];
 int        AsyncRead[MXC_I2C_INSTANCES];
 
 /* **** Function Prototypes **** */
-int MXC_I2C_RevA_SetSlaveAddr (mxc_i2c_reva_regs_t* i2c, unsigned int slaveAddr, int idx);
 void MXC_I2C_RevA_AsyncCallback (mxc_i2c_reva_regs_t* i2c, int retVal);
 void MXC_I2C_RevA_AsyncStop (mxc_i2c_reva_regs_t* i2c);
 void MXC_I2C_RevA_AbortAsync (mxc_i2c_reva_regs_t* i2c);
@@ -92,11 +91,7 @@ int MXC_I2C_RevA_Init (mxc_i2c_reva_regs_t* i2c, int masterMode, unsigned int sl
     MXC_I2C_SetRXThreshold ((mxc_i2c_regs_t*) i2c, 6);    // set RX threshold to 6 bytes
     
     if (!masterMode) {
-      #if TARGET_NUM == 32660 || TARGET_NUM == 32520 || TARGET_NUM == 32670
     	MXC_I2C_SetSlaveAddr((mxc_i2c_regs_t*) i2c, slaveAddr, 0);
-      #else
-        MXC_I2C_RevA_SetSlaveAddr(i2c, slaveAddr, 0);
-	  #endif
         states[MXC_I2C_GET_IDX ((mxc_i2c_regs_t*) i2c)].master = 0;
     }
     else {
@@ -583,8 +578,14 @@ void MXC_I2C_RevA_DisableInt (mxc_i2c_reva_regs_t* i2c, unsigned int flags0, uns
 
 int MXC_I2C_RevA_Recover (mxc_i2c_reva_regs_t* i2c, unsigned int retries)
 {
-    int err = E_COMM_ERR;
+    int err;
     
+    if(i2c == NULL) {
+        return E_NULL_PTR;
+    }
+
+    err = E_COMM_ERR;
+
     i2c->ctrl |= MXC_F_I2C_REVA_CTRL_EN;
     int swBit = i2c->ctrl & MXC_F_I2C_REVA_CTRL_BB_MODE;
 
@@ -811,21 +812,20 @@ int MXC_I2C_RevA_MasterTransactionAsync (mxc_i2c_reva_req_t* req)
 
 int MXC_I2C_RevA_MasterTransactionDMA (mxc_i2c_reva_req_t* req)
 {
-    volatile uint8_t i2cNum;
+    int i2cNum;
     
     mxc_i2c_reva_regs_t* i2c = req->i2c; // Save off pointer for faster access
-    
     i2cNum = MXC_I2C_GET_IDX ((mxc_i2c_regs_t*) i2c);
 
     if (req->addr > MXC_I2C_REVA_MAX_ADDR_WIDTH) {
         return E_NOT_SUPPORTED;
     }
     
-    if ( (i2cNum = MXC_I2C_GET_IDX ((mxc_i2c_regs_t*) i2c)) < 0) {
+    if (i2cNum < 0) {
         return E_BAD_PARAM;
     }
     
-    if (! (i2c->ctrl & MXC_F_I2C_REVA_CTRL_MST_MODE)) {
+    if (!(i2c->ctrl & MXC_F_I2C_REVA_CTRL_MST_MODE)) {
         return E_BAD_STATE;
     }
     
@@ -1274,7 +1274,6 @@ void MXC_I2C_RevA_AsyncHandler (mxc_i2c_reva_regs_t* i2c, uint32_t interruptChec
         MXC_I2C_RevA_MasterAsyncHandler (i2cNum);
     }
     else {
-        mxc_i2c_reva_regs_t* i2c = (mxc_i2c_reva_regs_t*) MXC_I2C_GET_BASE (i2cNum);
         mxc_i2c_reva_slave_handler_t callback = (mxc_i2c_reva_slave_handler_t) AsyncRequests[i2cNum];
         i2c->inten0 = MXC_I2C_RevA_SlaveAsyncHandler (i2c, callback, i2c->inten0, &slaveRetVal);
     }

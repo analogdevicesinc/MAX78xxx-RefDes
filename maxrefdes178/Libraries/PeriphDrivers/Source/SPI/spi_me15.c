@@ -336,29 +336,27 @@ int MXC_SPI_SlaveTransactionDMA(mxc_spi_req_t* req)
             reqselTx = MXC_DMA_REQUEST_SPI2TX;
             break;
             
-        // case 3:
-        //     reqselTx = MXC_DMA_REQUEST_SPI3TX;
-        //     break;
+        default:
+            return E_BAD_PARAM;
         }
     }
     
     if (req->rxData != NULL) {
         switch (spi_num) {
         case 0:
-            reqselRx = MXC_DMA_REQUEST_SPI0TX;
+            reqselRx = MXC_DMA_REQUEST_SPI0RX;
             break;
             
         case 1:
-            reqselRx = MXC_DMA_REQUEST_SPI1TX;
+            reqselRx = MXC_DMA_REQUEST_SPI1RX;
             break;
             
         case 2:
-            reqselRx = MXC_DMA_REQUEST_SPI2TX;
+            reqselRx = MXC_DMA_REQUEST_SPI2RX;
             break;
             
-        // case 3:
-        //     reqselRx = MXC_DMA_REQUEST_SPI3TX;
-        //     break;
+        default:
+            return E_BAD_PARAM;
         }
     }
     return MXC_SPI_RevA_SlaveTransactionDMA ((mxc_spi_reva_req_t*) req, reqselTx, reqselRx);
