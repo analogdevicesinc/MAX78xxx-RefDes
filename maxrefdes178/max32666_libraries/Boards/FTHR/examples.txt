@@ -1,5 +1,0 @@
-BLE_beacon
-BLE_scanner
-DualCore
-Hello_World
-SDHC_Raw
