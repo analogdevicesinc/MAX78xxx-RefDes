@@ -76,9 +76,9 @@ SRCS += max32666_i2c.c
 SRCS += max32666_lcd.c
 SRCS += max32666_max20303.c
 SRCS += max32666_qspi.c
-#SRCS += max32666_sdcard.c
+SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
-SRCS += sla_header.c
+#SRCS += sla_header.c
 
 # Where to find source files for this test
 VPATH = ./src

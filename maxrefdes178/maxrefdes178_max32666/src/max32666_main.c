@@ -37,6 +37,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <board.h>
+#include <core1.h>
 #include <dma.h>
 #include <string.h>
 
@@ -48,7 +49,7 @@
 #include "max32666_lcd_data.h"
 #include "max32666_max20303.h"
 #include "max32666_qspi.h"
-//#include "max32666_sdcard.h"
+#include "max32666_sdcard.h"
 #include "maxrefdes178_definitions.h"
 #include "version.h"
 
@@ -150,12 +151,14 @@ int main(void)
 //        max20303_led_red(1);
 //        while(1);
 //    }
-//
-//    ret = sdcard_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("sdhc_init failed %d", ret);
-//    }
 
+    ret = sdcard_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("sdcard_init failed %d", ret);
+    }
+
+    // Enable Core1
+    Core1_Start();
 
     PR_INFO("init completed");
     max20303_led_green(1);
@@ -226,6 +229,22 @@ int main(void)
             }
         }
     }
+}
+
+// Similar to Core 0, the entry point for Core 1
+// is Core1Main()
+// Execution begins when the CPU1 Clock is enabled
+int Core1_Main(void) {
+    PR_INFO("maxrefdes178_max32666 core1");
+
+    //  __asm__("BKPT");
+
+    while (1) {
+
+    }
+
+    /* Quiet GCC warnings */
+    return -1;
 }
 
 void HardFault_Handler(void)

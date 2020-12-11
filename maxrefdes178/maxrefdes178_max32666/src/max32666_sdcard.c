@@ -46,16 +46,14 @@
 //-----------------------------------------------------------------------------
 #include <ff.h>
 #include <gpio.h>
-#include <mxc_config.h>
 #include <mxc_sys.h>
 #include <sdhc_lib.h>
 #include <sdhc_regs.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tmr_utils.h>
 
 #include "max32666_debug.h"
+#include "max32666_sdcard.h"
 #include "maxrefdes178_definitions.h"
 
 
@@ -89,19 +87,23 @@ DWORD clusters_free = 0, sectors_free = 0, sectors_total = 0, volume_sn = 0;
 UINT bytes_written = 0, bytes_read = 0, mounted = 0;
 BYTE work[WORKING_BUFFER_LEN];
 static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";
-const sys_cfg_tmr_t sys_tmr_cfg = NULL; /* No system specific configuration needed. */
-gpio_cfg_t SDPowerEnablePin = MAX32666_SD_EN_PIN;
+mxc_gpio_cfg_t SDPowerEnablePin = MAX32666_SD_EN_PIN;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static void sdcard_generateMessage(unsigned length);
+static int sdcard_mount(void);
+static int sdcard_umount(void);
+static int sdcard_formatSDHC(void);
+static int sdcard_example(void);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void sdcard_generateMessage(unsigned length)
+static void sdcard_generateMessage(unsigned length)
 {
     for(int i = 0 ; i < length; i++) {
         /*Generate some random data to put in file*/
@@ -109,7 +111,8 @@ void sdcard_generateMessage(unsigned length)
     }
 }
 
-int sdcard_mount() {
+static int sdcard_mount(void)
+{
     fs = &fs_obj;
     if((err = f_mount(fs, "", 1)) != FR_OK) {           //Mount the default drive to fs now
         PR_ERROR("Error opening SD card: %s", FF_ERRORS[err]);
@@ -125,7 +128,8 @@ int sdcard_mount() {
     return err;
 }
 
-int sdcard_umount() {
+static int sdcard_umount(void)
+{
     if((err = f_mount(NULL, "", 0)) != FR_OK){          //Unmount the default drive from its mount point
         PR_ERROR("Error unmounting volume: %s", FF_ERRORS[err]);
     }
@@ -137,7 +141,8 @@ int sdcard_umount() {
     return err;
 }
 
-int sdcard_formatSDHC() {
+static int sdcard_formatSDHC(void)
+{
     printf("FORMATTING DRIVE\n");
 
     if((err = f_mkfs("", FM_ANY, 0, work, sizeof(work))) != FR_OK) {    //Format the default drive to FAT32
@@ -159,7 +164,7 @@ int sdcard_formatSDHC() {
     return err;
 }
 
-int example()
+static int sdcard_example(void)
 {
     unsigned int length = 256;
 
@@ -279,9 +284,9 @@ int example()
     return 0;
 }
 
-int sdcard_init(void) {
-    const sys_cfg_sdhc_t sys_sdhc_cfg = NULL; /* No system specific configuration needed. */
-    sdhc_cfg_t cfg;
+int sdcard_init(void)
+{
+    mxc_sdhc_cfg_t cfg;
 
     FF_ERRORS[0] = "FR_OK";
     FF_ERRORS[1] = "FR_DISK_ERR";
@@ -306,20 +311,20 @@ int sdcard_init(void) {
     srand(12347439);
 
     // Enable Power To Card
-    GPIO_Config(&SDPowerEnablePin);
-    GPIO_OutClr(&SDPowerEnablePin);
+    MXC_GPIO_Config(&SDPowerEnablePin);
+    GPIO_CLR(SDPowerEnablePin);
 
     // Initialize SDHC peripheral
     cfg.bus_voltage = MAX32666_SD_BUS_VOLTAGE;
     cfg.block_gap = 0;
     cfg.clk_div = MAX32666_SD_CLK_DIV; // Maximum divide ratio, frequency must be >= 400 kHz during Card Identification phase
-    if(SDHC_Init(&cfg, &sys_sdhc_cfg) != E_NO_ERROR) {
+    if(MXC_SDHC_Init(&cfg) != E_NO_ERROR) {
         PR_ERROR("Unable to initialize SDHC driver.");
         return 1;
     }
 
-    // wait for card to be inserted
-    if (!SDHC_Card_Inserted()) {
+    // Check if card is inserted
+    if (!MXC_SDHC_Card_Inserted()) {
         PR_ERROR("Card is not inserted.");
         return 1;
     } else {
@@ -327,14 +332,14 @@ int sdcard_init(void) {
     }
 
     // set up card to get it ready for a transaction
-    if (SDHC_Lib_InitCard(MAX32666_SD_INIT_RETRY) == E_NO_ERROR) {
+    if (MXC_SDHC_Lib_InitCard(MAX32666_SD_INIT_RETRY) == E_NO_ERROR) {
         PR_INFO("Card Initialized.");
     } else {
         PR_ERROR("No card response! Remove card, reset EvKit, and try again.");
         return -1;
     }
 
-    if (SDHC_Lib_Get_Card_Type() == CARD_SDHC) {
+    if (MXC_SDHC_Lib_Get_Card_Type() == CARD_SDHC) {
         PR_INFO("Card type: SDHC");
     } else {
         PR_INFO("Card type: MMC/eMMC");
@@ -343,13 +348,13 @@ int sdcard_init(void) {
     /* Configure for fastest possible clock, must not exceed 52 MHz for eMMC */
     if (SystemCoreClock > 96000000)  {
         PR_INFO("SD clock ratio (at card) 4:1");
-        SDHC_Set_Clock_Config(1);
+        MXC_SDHC_Set_Clock_Config(1);
     } else {
         PR_INFO("SD clock ratio (at card) 2:1");
-        SDHC_Set_Clock_Config(0);
+        MXC_SDHC_Set_Clock_Config(0);
     }
 
-    if(example() != E_NO_ERROR) {
+    if(sdcard_example() != E_NO_ERROR) {
         PR_ERROR("SD CARD example failed");
         return 1;
     }

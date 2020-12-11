@@ -152,7 +152,7 @@
 #define MAX32666_QSPI_MAP                  MAP_B
 
 // MAX32666 SD CARD
-#define MAX32666_SD_BUS_VOLTAGE            SDHC_Bus_Voltage_3_3
+#define MAX32666_SD_BUS_VOLTAGE            MXC_SDHC_Bus_Voltage_3_3
 #define MAX32666_SD_CLK_DIV                0x0b0  // Maximum divide ratio
 #define MAX32666_SD_INIT_RETRY             10
 
