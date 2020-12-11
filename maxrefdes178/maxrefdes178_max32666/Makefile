@@ -55,7 +55,7 @@ BOARD=MAXREFDES178
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=./../../MAXREFDES178_sdk/Libraries
+LIBS_DIR=./../Libraries
 
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 SECURE_BOOT_TOOLS_DIR=$(LIBS_DIR)/../Tools/SBT
