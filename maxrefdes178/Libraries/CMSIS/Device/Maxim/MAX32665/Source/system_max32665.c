@@ -110,6 +110,11 @@ __weak int Board_Init(void)
     return 0;
 }
 
+__weak void PalSysInit(void)
+{
+
+}
+
 /* This function is called just before control is transferred to main().
  *
  * You may over-ride this function in your program by defining a custom 
@@ -171,6 +176,8 @@ __weak void SystemInit(void)
     MXC_GPIO1->pad_cfg2 &= ~(0xFFFFFFFF);
 
     Board_Init();
+	
+	PalSysInit();
 }
 
 #if defined ( __CC_ARM )

@@ -59,6 +59,14 @@
     .equ    SDMA_DATA_SIZE, __SDMA_DATA_SIZE
 #endif
 
+    /* Flash storage for PAL layer */
+#ifdef PAL_NVM_SIZE
+    .equ    _PAL_NVM_SIZE, PAL_NVM_SIZE
+#else
+    .equ    _PAL_NVM_SIZE, 0x0
+#endif
+    .globl    _PAL_NVM_SIZE
+
     .globl  Stack_Size
 #ifdef __STACK_SIZE
     .equ    Stack_Size, __STACK_SIZE
