@@ -37,6 +37,7 @@
 #include <math.h>
 #include "camera.h"
 #include "sccb.h"
+#include "board.h"
 #include "ov7692_regs.h"
 #include "mxc_delay.h"
 #include "mxc_device.h"
@@ -256,30 +257,11 @@ static int get_pixformat(pixformat_t *pixformat)
 static int set_framesize(int width, int height)
 {
     int ret = 0;
-    uint8_t input_factor_large[4] = { 0 };
     // Default input factor for large images
-    if ((width < 320) || (height < 240)) { // check if size is QVGA or less
-        input_factor_large[0] = 0x02;
-        input_factor_large[1] = 0x80;
-        input_factor_large[2] = 0x00;
-        input_factor_large[3] = 0xf0;
-        uint8_t value;
-        ret |= cambus_readb(REG12, &value);
-        ret |= cambus_writeb(REG12, (value | 0x40)); // enable skip mode
-        ret |= cambus_writeb(0x17, 0x65); // Horizontal Window Start Point Control (LSBs), default is 0x69
-        ret |= cambus_writeb(0x18, 0xa4); // Horizontal sensor size (default)
-        ret |= cambus_writeb(0x19, 0x06); // Vertical Window Start Line Control
-        ret |= cambus_writeb(0x1a, 0x7b); // Vertical sensor size
-    } else {
-        input_factor_large[0] = 0x02;
-        input_factor_large[1] = 0x80;
-        input_factor_large[2] = 0x01;
-        input_factor_large[3] = 0xe0;
-    }
-
-    uint8_t input_factor_small[] = { 0x01, 0xbf, 0x00, 0xf0 };
+    uint8_t input_factor_large[] = { 0x02, 0x80, 0x01, 0xe0 };
+    uint8_t input_factor_small[] = { 0x01, 0xbf, 0x01, 0xbf };
     uint8_t *input_factor_ptr = input_factor_large;
-
+    
     // Image typically outputs one line short, add a line to account.
     height = height + 1;
     // Apply passed in resolution as output resolution.
@@ -298,6 +280,35 @@ static int set_framesize(int width, int height)
     ret |= cambus_writeb(0xc9, input_factor_ptr[1]);
     ret |= cambus_writeb(0xca, input_factor_ptr[2]);
     ret |= cambus_writeb(0xcb, input_factor_ptr[3]);
+
+#ifdef BOARD_MAXREFDES178_REVA
+    // center adjustment
+    ret |= cambus_writeb(0x11, 0x0);
+    ret |= cambus_writeb(0x51, 0x7f);
+    ret |= cambus_writeb(0x50, 0x99);
+    ret |= cambus_writeb(0x21, 0x23);
+    ret |= cambus_writeb(0x20, 0x0);
+
+    //output 240*240
+    ret |= cambus_writeb(0xcc, 0x0);
+    ret |= cambus_writeb(0xcd, 0xf0);
+    ret |= cambus_writeb(0xce, 0x0);
+    ret |= cambus_writeb(0xcf, 0xf0);
+    //input 480*480
+    ret |= cambus_writeb(0xc8, 0x01);
+    ret |= cambus_writeb(0xc9, 0xe0);
+    ret |= cambus_writeb(0xca, 0x01);
+    ret |= cambus_writeb(0xcb, 0xe0);
+
+    ret |= cambus_writeb(0x9, 0x10);
+    ret |= cambus_writeb(0x17, 0x55);
+    ret |= cambus_writeb(0x19, 0xc2);
+
+    ret |= cambus_writeb(0x9, 0x00);
+    ret |= cambus_writeb(0x17, 0x81);
+    ret |= cambus_writeb(0x19, 0x10);
+#endif
+
     return ret;
 }
 

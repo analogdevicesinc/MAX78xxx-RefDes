@@ -55,7 +55,7 @@ BOARD=MAXREFDES178
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=../max78000_libraries
+LIBS_DIR=../Libraries
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 #Use this for other library make files so they are all based off the same as root as the project

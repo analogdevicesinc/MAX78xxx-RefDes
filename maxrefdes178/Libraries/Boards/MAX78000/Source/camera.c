@@ -62,6 +62,7 @@ static int g_framesize_height = 64;
 static int g_pixel_format = PIXFORMAT_RGB888;
 static fifomode_t g_fifo_mode = FIFO_THREE_BYTE;
 static dmamode_t g_dma_mode = NO_DMA;
+static int g_dma_channel = 0;
 static camera_t camera;
 extern int sensor_register(camera_t* camera);
 
@@ -151,20 +152,18 @@ void __attribute__((interrupt("machine")))  PCIF_IRQHandler(void)
 
 static void setup_dma(void)
 {
-    int dma_handle = 0;
-    MXC_DMA->ch[dma_handle].status = MXC_F_DMA_STATUS_CTZ_IF; // Clear CTZ status flag
-    MXC_DMA->inten = 0x0;
+    MXC_DMA->ch[g_dma_channel].status = MXC_F_DMA_STATUS_CTZ_IF; // Clear CTZ status flag
 
-    MXC_DMA->ch[dma_handle].dst = (uint32_t) rx_data; // Cast Pointer
+    MXC_DMA->ch[g_dma_channel].dst = (uint32_t) rx_data; // Cast Pointer
     
     if (PCIF_DATA_BUS_WITH == MXC_V_CAMERAIF_CTRL_DATA_WIDTH_8BIT) {
-        MXC_DMA->ch[dma_handle].cnt = g_total_img_size;
+        MXC_DMA->ch[g_dma_channel].cnt = g_total_img_size;
     }
     else {
-        MXC_DMA->ch[dma_handle].cnt = g_total_img_size * 2; // 10 and 12 bit use 2 bytes per word in the fifo
+        MXC_DMA->ch[g_dma_channel].cnt = g_total_img_size * 2; // 10 and 12 bit use 2 bytes per word in the fifo
     }
     
-    MXC_DMA->ch[dma_handle].ctrl = ((0x1 << MXC_F_DMA_CTRL_CTZ_IE_POS)  +
+    MXC_DMA->ch[g_dma_channel].ctrl = ((0x1 << MXC_F_DMA_CTRL_CTZ_IE_POS)  +
                                     (0x0 << MXC_F_DMA_CTRL_DIS_IE_POS)  +
                                     (0x3 << MXC_F_DMA_CTRL_BURST_SIZE_POS)    +
                                     (0x1 << MXC_F_DMA_CTRL_DSTINC_POS)  +
@@ -179,7 +178,7 @@ static void setup_dma(void)
                                     (0x1 << MXC_F_DMA_CTRL_EN_POS)
                                    );
 
-    MXC_DMA->inten = MXC_F_DMA_INTEN_CH0;
+    MXC_DMA->inten |= (1 << g_dma_channel);
 }
 
 /******************************** Public Functions ***************************/
@@ -187,7 +186,7 @@ int camera_init(void)
 {
     int ret = 0;
 	
-	Camera_Power(1);
+    Camera_Power(1);
     
     // initialize XCLK for camera
     MXC_PT_Init(MXC_PT_CLK_DIV1);
@@ -243,7 +242,7 @@ int camera_reset(void)
     return camera.reset();
 }
 
-int camera_setup(int xres, int yres, pixformat_t pixformat, fifomode_t fifo_mode, dmamode_t dma_mode)
+int camera_setup(int xres, int yres, pixformat_t pixformat, fifomode_t fifo_mode, dmamode_t dma_mode, int dma_channel)
 {
     int ret = STATUS_OK;
     int bytes_per_pixel = 2;
@@ -304,7 +303,7 @@ int camera_setup(int xres, int yres, pixformat_t pixformat, fifomode_t fifo_mode
     memset((uint8_t*)rx_data, 0xff, g_total_img_size);
 
     if (g_dma_mode == USE_DMA) {
-        MXC_DMA_Init();
+        g_dma_channel = dma_channel;
         setup_dma();
         MXC_SETFIELD(MXC_PCIF->ctrl, MXC_F_CAMERAIF_CTRL_RX_DMA_THRSH, (0x1 << MXC_F_CAMERAIF_CTRL_RX_DMA_THRSH_POS));
         MXC_SETFIELD(MXC_PCIF->ctrl, MXC_F_CAMERAIF_CTRL_RX_DMA, MXC_F_CAMERAIF_CTRL_RX_DMA);

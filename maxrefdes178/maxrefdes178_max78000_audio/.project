@@ -25,9 +25,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>max78000_libraries</name>
+			<name>Libraries</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/max78000_libraries</locationURI>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Libraries</locationURI>
 		</link>
 		<link>
 			<name>maxrefdes178_common</name>

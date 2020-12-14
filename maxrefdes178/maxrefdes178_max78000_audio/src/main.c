@@ -36,10 +36,10 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <bbfc_regs.h>
 #include <board.h>
 #include <dma.h>
 #include <fcr_regs.h>
+#include <gcfr_regs.h>
 #include <i2s.h>
 #include <i2s_regs.h>
 #include <icc.h>
@@ -183,12 +183,14 @@ int main(void)
     MXC_SYS_Clock_Select(MXC_SYS_CLOCK_IPO);
     SystemCoreClockUpdate();
 
+    Microphone_Power(POWER_ON);
+
     /* Reset all domains, restore power to CNN */
-    MXC_BBFC->reg3 = 0xf; // Reset
-    MXC_BBFC->reg1 = 0xf; // Mask
-    MXC_BBFC->reg0 = 0xf; // Power
-    MXC_BBFC->reg2 = 0x0; // Iso
-    MXC_BBFC->reg3 = 0x0; // Reset
+    MXC_GCFR->reg3 = 0xf; // Reset
+    MXC_GCFR->reg1 = 0xf; // Mask
+    MXC_GCFR->reg0 = 0xf; // Power
+    MXC_GCFR->reg2 = 0x0; // Iso
+    MXC_GCFR->reg3 = 0x0; // Reset
 
     MXC_GCR->pclkdiv &= ~(MXC_F_GCR_PCLKDIV_CNNCLKDIV
             | MXC_F_GCR_PCLKDIV_CNNCLKSEL);

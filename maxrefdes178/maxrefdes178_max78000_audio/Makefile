@@ -55,7 +55,7 @@ BOARD=MAXREFDES178
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=../max78000_libraries
+LIBS_DIR=../Libraries
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 #Use this for other library make files so they are all based off the same as root as the project
@@ -110,8 +110,8 @@ MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
 # Point this variable to a linker file to override the default file
-#LINKER=$(TARGET_LC).ld
-#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+LINKER=$(TARGET_LC).ld
+LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
 
 ################################################################################
 # Include external library makefiles here

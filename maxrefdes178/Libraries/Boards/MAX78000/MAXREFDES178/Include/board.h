@@ -46,7 +46,7 @@
 extern "C" {
 #endif
 
-#define BOARD_FTHR_REVA
+#define BOARD_MAXREFDES178_REVA
 
 #ifndef CONSOLE_UART
 #define CONSOLE_UART    0      /// UART instance to use for console
@@ -57,34 +57,23 @@ extern "C" {
 #endif
 
 #define SCCB_SCL_PORT    MXC_GPIO0        /// SCCB clock port
-#define SCCB_SCL_PIN     MXC_GPIO_PIN_30  /// SCCB clock pin
+#define SCCB_SCL_PIN     MXC_GPIO_PIN_16  /// SCCB clock pin
 #define SCCB_SDA_PORT    MXC_GPIO0        /// SCCB data port
-#define SCCB_SDA_PIN     MXC_GPIO_PIN_31  /// SCCB data pin
+#define SCCB_SDA_PIN     MXC_GPIO_PIN_17  /// SCCB data pin
 
 #define LED_OFF         1       /// Inactive state of LEDs
 #define LED_ON          0       /// Active state of LEDs
 
 /**
- *  A reference to LED1 (RED LED in the RGB LED) of the board.
+ *  References to LEDs on the board.
  *  Can be used with the LED_On, LED_Off, and LED_Toggle functions.
  */
-#define LED1            0
-#define LED_RED         LED1
-
-/**
- *  A reference to LED2 (GREEN LED in the RGB LED) of the board.
- *  Can be used with the LED_On, LED_Off, and LED_Toggle functions.
- */
-#define LED2            1
-#define LED_GREEN       LED2
-
-/**
- *  A reference to LED2 (BLUE LED in the RGB LED) of the board.
- *  Can be used with the LED_On, LED_Off, and LED_Toggle functions.
- */
-#define LED3            2
-#define LED_BLUE        LED3
-
+#define LED_RED         0
+#define LED_BLUE        1
+#define LED_GREEN       2
+#define LED1            LED_RED
+#define LED2            LED_GREEN
+#define LED3            LED_BLUE
 
 /**
  * \brief   Initialize the BSP and board interfaces.

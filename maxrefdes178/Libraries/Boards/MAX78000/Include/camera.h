@@ -38,7 +38,7 @@
 #include <stdint.h>
 
 // Defines
-#define CAMERA_FREQ     (10 * 1000 * 1000)
+#define CAMERA_FREQ     (20 * 1000 * 1000)
 
 #include "ov7692_regs.h"
 
@@ -142,7 +142,7 @@ int camera_write_reg(uint8_t reg_addr, uint8_t reg_data);
 int camera_set_frame_info(int width, int height, pixformat_t pixformat);
 
 // Setup the camera resolution, pixel format, expand bits option, fifo byte mode and dma option.
-int camera_setup(int xres, int yres, pixformat_t pixformat, fifomode_t fifo_mode, dmamode_t dma_mode);
+int camera_setup(int xres, int yres, pixformat_t pixformat, fifomode_t fifo_mode, dmamode_t dma_mode, int dma_channel);
 
 // Set the sensor contrast level (from -3 to +3).
 int camera_set_contrast(int level);
