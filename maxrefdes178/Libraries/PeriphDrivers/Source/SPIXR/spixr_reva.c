@@ -198,7 +198,7 @@ int MXC_SPIXR_RevA_SetFrequency(mxc_spixr_reva_regs_t *spixr, int hz)
     int freq_div, hi_clk, lo_clk, scale;
     
     // Check if frequency is too high
-    if(hz > PeripheralClock) {
+    if(hz > (int)PeripheralClock) {
         return E_BAD_PARAM;
     }
     

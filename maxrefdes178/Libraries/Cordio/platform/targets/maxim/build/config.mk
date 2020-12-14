@@ -22,36 +22,38 @@
 #     Project
 #--------------------------------------------------------------------------------------------------
 
-# Chip
+# Default options
+CHIP            ?= max32655
+COMPILER        ?= GCC
+BOARD           ?= EvKit_V1
+BAUD            ?= 1000000
+HWFC            ?= 0
+TARGET_REV      ?= 0x4131 	# A1 in ASCII
+
+# CPU options
 ifeq ($(RISCV_CORE),)
 CPU             := cortex-m4
+MFLOAT          := softfp
+MFPU            := fpv4-sp-d16
 else
 CPU             := riscv
 endif
-MFLOAT          := softfp
-MFPU            := fpv4-sp-d16
-CHIP            := max32655
-COMPILER        := GCC
+
+BSP_DIR         := $(ROOT_DIR)/..
+LIBS_DIR        := $(BSP_DIR)
+CMSIS_ROOT      := $(LIBS_DIR)/CMSIS
 
 CHIP_UC         := $(shell echo $(CHIP) | tr a-z A-Z)
 CHIP_LC         := $(shell echo $(CHIP) | tr A-Z a-z)
 TARGET          := $(CHIP_UC)
 TARGET_NUM      := $(shell echo $(TARGET) | tr -dc '0-9')
-TARGET_REV      := 0x4131
-
-# Board
-BOARD           := EvKit_V1
-BSP_DIR         := $(ROOT_DIR)/..
-LIBS_DIR        := $(BSP_DIR)
-CMSIS_ROOT      := $(LIBS_DIR)/CMSIS
-
-# Options
-BAUD            := 1000000
-HWFC            := 0
 
 #--------------------------------------------------------------------------------------------------
 #     Configuration
 #--------------------------------------------------------------------------------------------------
+
+# Include chip specific config
+include $(ROOT_DIR)/platform/targets/maxim/$(CHIP_LC)/build/config.mk
 
 # Peripherals
 CFG_DEV         += BB_CLK_RATE_HZ=1000000
@@ -61,13 +63,12 @@ CFG_DEV         += UART_BAUD=$(BAUD)
 CFG_DEV         += UART_HWFC=$(HWFC)
 CFG_DEV         += BB_ENABLE_INLINE_ENC_TX=1
 CFG_DEV         += BB_ENABLE_INLINE_DEC_RX=1
-CFG_DEV         += HCI_UART=2
-CFG_DEV         += TERMINAL_UART=0
-CFG_DEV         += CONSOLE_UART=0 # TODO: Deconflict this definition
 CFG_DEV         += TARGET=$(TARGET_NUM)
 CFG_DEV         += TARGET_REV=$(TARGET_REV)
 CFG_DEV         += PAL_MAX_RTC_COUNTER_VAL=0xFFFFFFFF
 CFG_DEV         += LL_WW_RX_DEVIATION_USEC=0
+
+# Third party software config
 ifneq ($(RISCV_CORE),)
 CFG_DEV         += uECC_PLATFORM=uECC_arch_other
 endif
@@ -82,9 +83,9 @@ CFG_DEV         += BOARD=$(BOARD)
 # Linker file
 ifeq ($(LD_FILE),)
 ifeq ($(RISCV_CORE),)
-LD_FILE         := $(BSP_DIR)/CMSIS/Device/Maxim/$(CHIP_UC)/Source/$(COMPILER)/$(CHIP).ld
+LD_FILE         := $(BSP_DIR)/CMSIS/Device/Maxim/$(CHIP_UC)/Source/$(COMPILER)/$(CHIP_LC).ld
 else
-LD_FILE         := $(BSP_DIR)/CMSIS/Device/Maxim/$(CHIP_UC)/Source/$(COMPILER)/$(CHIP)_riscv.ld
+LD_FILE         := $(BSP_DIR)/CMSIS/Device/Maxim/$(CHIP_UC)/Source/$(COMPILER)/$(CHIP_LC)_riscv.ld
 endif
 endif
 

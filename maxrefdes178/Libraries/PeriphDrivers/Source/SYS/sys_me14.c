@@ -69,7 +69,7 @@
 /* ************************************************************************** */
 int MXC_SYS_GetUSN (uint8_t* serialNumber, int len)
 {
-    if (len != 13) {
+    if (len != MXC_SYS_USN_LEN) {
         return E_BAD_PARAM;
     }
 
@@ -359,6 +359,14 @@ int MXC_SYS_Clock_Select (mxc_sys_system_clock_t clock)
     return E_NO_ERROR;
 }
 
+/* ************************************************************************** */
+void MXC_SYS_Clock_Div (mxc_sys_system_div_t div)
+{
+    MXC_SETFIELD(MXC_GCR->clk_ctrl, MXC_F_GCR_CLK_CTRL_SYSCLK_PRESCALE, div);
+
+    // Update the system core clock
+    SystemCoreClockUpdate();
+}
 
 /* ************************************************************************** */
 void MXC_SYS_Reset_Periph (mxc_sys_reset_t reset)

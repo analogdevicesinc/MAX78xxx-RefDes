@@ -40,11 +40,11 @@
   * @brief  Structure used to set up CRC request
   *
   */
-struct _mxc_crc_reva_req_t {
+typedef struct _mxc_crc_reva_req_t {
     uint32_t* dataBuffer;     ///< Pointer to the data 
     uint32_t dataLen;         ///< Length of the data
     uint32_t resultCRC;       ///< Calculated CRC value
-} typedef mxc_crc_reva_req_t;
+} mxc_crc_reva_req_t;
 
 /** 
  * @brief CRC data bit order

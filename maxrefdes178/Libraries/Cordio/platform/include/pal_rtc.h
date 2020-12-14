@@ -46,9 +46,6 @@ extern "C" {
 /*! \brief  Clock frequency of the RTC timer used. */
 #define PAL_RTC_TICKS_PER_SEC       (32768) /* RTC ticks per second (with prescaler) */
 
-/*! \brief  23 RTC ticks time(700us) for xtal start up befor scheduler load. */
-#define PAL_HFCLK_OSC_SETTLE_TICKS  (23)
-
 /*! \brief  Platform RTC callback. */
 typedef void (*palRtcIrqCback_t)(void);
 

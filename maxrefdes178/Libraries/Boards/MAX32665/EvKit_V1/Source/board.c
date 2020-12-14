@@ -53,14 +53,14 @@ mxc_uart_regs_t * ConsoleUart = MXC_UART_GET_UART(CONSOLE_UART);
 extern uint32_t SystemCoreClock;
 
 const mxc_gpio_cfg_t pb_pin[] = {
-    {MXC_GPIO1, MXC_GPIO_PIN_6, MXC_GPIO_FUNC_IN, MXC_GPIO_PAD_PULL_UP},
-    {MXC_GPIO1, MXC_GPIO_PIN_7, MXC_GPIO_FUNC_IN, MXC_GPIO_PAD_PULL_UP},
+    {MXC_GPIO1, MXC_GPIO_PIN_6, MXC_GPIO_FUNC_IN, MXC_GPIO_PAD_PULL_UP, MXC_GPIO_VSSEL_VDDIO},
+    {MXC_GPIO1, MXC_GPIO_PIN_7, MXC_GPIO_FUNC_IN, MXC_GPIO_PAD_PULL_UP, MXC_GPIO_VSSEL_VDDIO},
 };
 const unsigned int num_pbs = (sizeof(pb_pin) / sizeof(mxc_gpio_cfg_t));
 
 const mxc_gpio_cfg_t led_pin[] = {
-    {MXC_GPIO1, MXC_GPIO_PIN_14, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE},
-	{MXC_GPIO1, MXC_GPIO_PIN_15, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE},
+    {MXC_GPIO1, MXC_GPIO_PIN_14, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO},
+	{MXC_GPIO1, MXC_GPIO_PIN_15, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO},
 };
 const unsigned int num_leds = (sizeof(led_pin) / sizeof(mxc_gpio_cfg_t));
 
@@ -146,7 +146,7 @@ int MX25_Board_Read(uint8_t* read, unsigned len, unsigned deassert, mxc_spixf_wi
 
     mxc_spixf_req_t req = {deassert,0,NULL,read, width,len,0,0,NULL};
 	
-    if(MXC_SPIXF_Transaction(&req) != len){
+    if((unsigned)MXC_SPIXF_Transaction(&req) != len){
         return E_COMM_ERR;
     }
     return E_NO_ERROR;
@@ -157,7 +157,7 @@ int MX25_Board_Write(const uint8_t* write, unsigned len, unsigned deassert, mxc_
 {
 	
     mxc_spixf_req_t req = {deassert,0,write,NULL, width,len,0,0,NULL};
-    if(MXC_SPIXF_Transaction(&req) != len){
+    if((unsigned)MXC_SPIXF_Transaction(&req) != len){
         return E_COMM_ERR;
     }
     return E_NO_ERROR;

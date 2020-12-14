@@ -61,7 +61,6 @@
 static mxc_adc_monitor_req_t * states[MXC_MONITOR_NUM];
 static mxc_adc_complete_cb_t async_callback;
 static mxc_adc_conversion_req_t * async_req;
-volatile uint32_t data;
 volatile uint8_t flag;      //indicates  to irqhandler where to store data
 
 int MXC_ADC_RevA_Init (mxc_adc_reva_regs_t* adc_regs)
@@ -463,7 +462,7 @@ int  MXC_ADC_RevA_Convert (mxc_adc_reva_regs_t* adc_regs, mxc_adc_conversion_req
     //set selction its to next channel to convert
     adc_regs->ctrl |= (req->channel << MXC_F_ADC_REVA_CTRL_CH_SEL_POS) & MXC_F_ADC_REVA_CTRL_CH_SEL;
     
-    if (req->channel <= MXC_S_ADC_REVA_CTRL_CH_SEL_AIN7) {
+    if (req->channel <= MXC_ADC_CH_7) {
         MXC_ADC_RevA_SetExtScale (adc_regs, req->scale);
     }
     
@@ -496,7 +495,7 @@ int MXC_ADC_RevA_ConvertAsync (mxc_adc_reva_regs_t* adc_regs, mxc_adc_conversion
     //set selction its to next channel to convert
     adc_regs->ctrl |= (req.channel << MXC_F_ADC_REVA_CTRL_CH_SEL_POS) & MXC_F_ADC_REVA_CTRL_CH_SEL;
     
-    if (req.channel <= MXC_S_ADC_REVA_CTRL_CH_SEL_AIN7) {
+    if (req.channel <= MXC_ADC_CH_7) {
         MXC_ADC_RevA_SetExtScale (adc_regs, req.scale);
     }
     

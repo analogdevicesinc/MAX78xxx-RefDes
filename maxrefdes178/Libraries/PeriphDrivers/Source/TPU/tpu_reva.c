@@ -48,7 +48,28 @@
 /* **** Global Data **** */
 
 /* **** Functions **** */
+
 static int MXC_TPU_RevA_TRNG_Read_Status(mxc_trng_revc_regs_t *trng);
+/* ************************************************************************ */
+static void memset32(uint32_t * dst, uint32_t value, unsigned int len)
+{
+    while (len) {
+        *dst = value;
+        dst++;
+        len -= 4;
+    }
+}
+
+/* ************************************************************************ */
+static void memcpy32(uint32_t * dst, uint32_t * src, unsigned int len)
+{
+    while (len) {
+        *dst = *src;
+        dst++;
+        src++;
+        len -= 4;
+    }
+}
 
 /* ************************************************************************* */
 /* Global Control/Configuration functions                                    */
@@ -72,7 +93,7 @@ void MXC_TPU_RevA_Reset(mxc_tpu_reva_regs_t *tpu)
     // Reset Crypto Accelerator
     tpu->ctrl = MXC_F_TPU_REVA_CTRL_RST;
 
-    memset((uint32_t *)tpu, 0, sizeof(mxc_tpu_reva_regs_t));
+    memset32((uint32_t *)tpu, 0, sizeof(mxc_tpu_reva_regs_t));
 
     // Set the legacy bit so done bits are W1C.
     tpu->ctrl |= MXC_F_TPU_REVA_CTRL_FLAG_MODE;
@@ -276,11 +297,11 @@ int MXC_TPU_RevA_Cipher_DoOperation(mxc_tpu_reva_regs_t *tpu, const char *src, c
     dataLength = MXC_TPU_Cipher_Get_Block_Size(cipher);
 
     // Load key into cipher key register
-    memcpy((void *)&tpu->cipher_key[0], (void *)key, keyLength);
+    memcpy32((void *)&tpu->cipher_key[0], (void *)key, keyLength);
 
     // Load Initial Vector if necessary
     if (mode != MXC_TPU_MODE_ECB) {
-        memcpy((void *)&tpu->cipher_init[0], (void *)iv, dataLength);
+        memcpy32((void *)&tpu->cipher_init[0], (void *)iv, dataLength);
     }
 
     for (i = 0; i < numBlocks; i++) {
@@ -290,14 +311,14 @@ int MXC_TPU_RevA_Cipher_DoOperation(mxc_tpu_reva_regs_t *tpu, const char *src, c
         }
 
         // Load plaintext into data in register to start the operation
-        memcpy((void *)&tpu->data_in[0], (void *)src, dataLength);
+        memcpy32((void *)&tpu->data_in[0], (void *)src, dataLength);
 
         // Wait until operation is complete
         while (!(tpu->ctrl & MXC_F_TPU_REVA_CTRL_CPH_DONE)) {
         }
 
         // Copy data out
-        memcpy((void *)outptr, (void *)&tpu->data_out[0], dataLength);
+        memcpy32((void *)outptr, (void *)&tpu->data_out[0], dataLength);
 
         src += dataLength;
         outptr += dataLength;
@@ -404,7 +425,8 @@ void MXC_TPU_RevA_Hash_SHA_Size(unsigned int *blocks, unsigned int *length, unsi
 // ********************************** Function to Configure SHA Algorithm *************************************
 int MXC_TPU_RevA_Hash_Config(mxc_tpu_reva_regs_t *tpu, mxc_tpu_hashfunsel_t func)
 {
-    if((func < MXC_V_TPU_REVA_HASH_CTRL_HASH_DIS) || (func > MXC_V_TPU_REVA_HASH_CTRL_HASH_SHA512))
+    int  funcInt = (int)func;
+    if((funcInt < (int)MXC_V_TPU_REVA_HASH_CTRL_HASH_DIS) || (funcInt > (int)MXC_V_TPU_REVA_HASH_CTRL_HASH_SHA512))
     {
         return E_BAD_PARAM;
     }

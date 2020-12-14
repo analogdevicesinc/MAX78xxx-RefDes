@@ -123,6 +123,37 @@ static int palUartGetNum(PalUartId_t uartId)
   return uartNum;
 }
 
+/*************************************************************************************************/
+/*!
+ *  \brief      Get UART instance number from UART ID.
+ *
+ *  \param      uartId           UART ID.
+ *
+ *  \return     UART instance number.
+ */
+/*************************************************************************************************/
+static sys_map_t palUartGetMap(PalUartId_t uartId)
+{
+  sys_map_t uartMap;
+  switch (uartId) {
+    case PAL_UART_ID_CHCI:
+      uartMap = HCI_UART_MAP;
+      break;
+    case PAL_UART_ID_TERMINAL:
+      uartMap = TERMINAL_UART_MAP;
+      break;
+    case PAL_UART_ID_USER:
+      uartMap = USER_UART_MAP;
+      break;
+    default:
+      PAL_SYS_ASSERT(0);
+      return -1;
+      break;
+  }
+
+  return uartMap;
+}
+
 /**************************************************************************************************
   Global Functions
 **************************************************************************************************/
@@ -141,6 +172,7 @@ static int palUartGetNum(PalUartId_t uartId)
 void PalUartInit(PalUartId_t id, const PalUartConfig_t *pCfg)
 {
   int uartNum = palUartGetNum(id);
+  sys_map_t uartMap = palUartGetMap(id);
   int result;
   mxc_uart_regs_t *uart = MXC_UART_GET_UART(uartNum);
 
@@ -157,9 +189,9 @@ void PalUartInit(PalUartId_t id, const PalUartConfig_t *pCfg)
   palUartCb[uartNum].writeCh = -1;
 
   /* Initialize the UART */
-  result = MXC_UART_Init(uart, pCfg->baud, MXC_UART_8M_CLK);
+  result = MXC_UART_Init(uart, pCfg->baud, uartMap);
   (void)result;
-  PAL_SYS_ASSERT(result > 0);
+  PAL_SYS_ASSERT(result >= 0);
   
   /* Disable UART interrupts */
   MXC_UART_DisableInt(uart, 0xFFFFFFFF);
@@ -168,7 +200,7 @@ void PalUartInit(PalUartId_t id, const PalUartConfig_t *pCfg)
   MXC_UART_SetDataSize(uart, 8);
   MXC_UART_SetStopBits(uart, MXC_UART_STOP_1);
   MXC_UART_SetParity(uart, MXC_UART_PARITY_DISABLE);
-  MXC_UART_SetFlowCtrl(uart, pCfg->hwFlow ? MXC_UART_FLOW_EN : MXC_UART_FLOW_DIS, 1);
+  MXC_UART_SetFlowCtrl(uart, pCfg->hwFlow ? MXC_UART_FLOW_EN_LOW : MXC_UART_FLOW_DIS, 1, uartMap);
 
   palUartCb[uartNum].state = PAL_UART_STATE_READY;
 }
@@ -305,8 +337,8 @@ void PalUartReadData(PalUartId_t id, uint8_t *pData, uint16_t len)
   MXC_DMA_SetCallback(dmaCh, palUartCallback);
   MXC_DMA_EnableInt(dmaCh);
 
-  MXC_DMA->ch[dmaCh].ctrl |= MXC_F_DMA_CTRL_CTZ_IE;
-  uart->dma |= ((1 << MXC_F_UART_DMA_RX_THD_VAL_POS) | MXC_F_UART_DMA_RX_EN);
+  MXC_DMA->ch[dmaCh].cfg |= MXC_F_DMA_CFG_CTZIEN;
+  uart->dma |= ((1 << MXC_F_UART_DMA_RXDMA_LVL_POS) | MXC_F_UART_DMA_RXDMA_EN);
 
   /* Start the transfer */
   MXC_DMA_Start(dmaCh);
@@ -388,8 +420,8 @@ void PalUartWriteData(PalUartId_t id, const uint8_t *pData, uint16_t len)
   MXC_DMA_SetCallback(dmaCh, palUartCallback);
   MXC_DMA_EnableInt(dmaCh);
 
-  MXC_DMA->ch[dmaCh].ctrl |= MXC_F_DMA_CTRL_CTZ_IE;
-  uart->dma |= ((2 << MXC_F_UART_DMA_TX_THD_VAL_POS) | MXC_F_UART_DMA_TX_EN);
+  MXC_DMA->ch[dmaCh].cfg |= MXC_F_DMA_CFG_CTZIEN;
+  uart->dma |= ((2 << MXC_F_UART_DMA_TXDMA_LVL_POS) | MXC_F_UART_DMA_TXDMA_EN);
 
   /* Start the transfer */
   MXC_DMA_Start(dmaCh);

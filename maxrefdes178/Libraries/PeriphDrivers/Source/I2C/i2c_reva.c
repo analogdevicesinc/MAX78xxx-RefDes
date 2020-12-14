@@ -56,9 +56,9 @@ typedef struct {
 
 static mxc_i2c_reva_req_state_t states[MXC_I2C_INSTANCES];
 
-void*      AsyncRequests[MXC_I2C_INSTANCES];
-int        AsyncWritten[MXC_I2C_INSTANCES];
-int        AsyncRead[MXC_I2C_INSTANCES];
+void*           AsyncRequests[MXC_I2C_INSTANCES];
+unsigned int    AsyncWritten[MXC_I2C_INSTANCES];
+unsigned int    AsyncRead[MXC_I2C_INSTANCES];
 
 /* **** Function Prototypes **** */
 void MXC_I2C_RevA_AsyncCallback (mxc_i2c_reva_regs_t* i2c, int retVal);
@@ -579,6 +579,7 @@ void MXC_I2C_RevA_DisableInt (mxc_i2c_reva_regs_t* i2c, unsigned int flags0, uns
 int MXC_I2C_RevA_Recover (mxc_i2c_reva_regs_t* i2c, unsigned int retries)
 {
     int err;
+    unsigned int i;
     
     if(i2c == NULL) {
         return E_NULL_PTR;
@@ -597,7 +598,7 @@ int MXC_I2C_RevA_Recover (mxc_i2c_reva_regs_t* i2c, unsigned int retries)
     
     // Follow the procedure detailed in the header file
     // Delay 10uS between each step to give the line/slaves time to react
-    for (int i = 0; i < retries; i++) {
+    for (i = 0; i < retries; i++) {
         MXC_Delay (10);
         i2c->ctrl &= ~MXC_F_I2C_REVA_CTRL_SCL_OUT;
         
@@ -1003,7 +1004,7 @@ int MXC_I2C_RevA_SlaveTransactionAsync (mxc_i2c_reva_regs_t* i2c, mxc_i2c_reva_s
 
 int MXC_I2C_RevA_SetRXThreshold (mxc_i2c_reva_regs_t* i2c, unsigned int numBytes)
 {
-    int rxFIFOlen = (i2c->fifolen & MXC_F_I2C_REVA_FIFOLEN_RX_DEPTH) >> MXC_F_I2C_REVA_FIFOLEN_RX_DEPTH_POS;
+    unsigned int rxFIFOlen = (i2c->fifolen & MXC_F_I2C_REVA_FIFOLEN_RX_DEPTH) >> MXC_F_I2C_REVA_FIFOLEN_RX_DEPTH_POS;
     
     if (numBytes > rxFIFOlen) {
         return E_BAD_PARAM;
@@ -1020,7 +1021,7 @@ unsigned int MXC_I2C_RevA_GetRXThreshold (mxc_i2c_reva_regs_t* i2c)
 
 int MXC_I2C_RevA_SetTXThreshold (mxc_i2c_reva_regs_t* i2c, unsigned int numBytes)
 {
-    int txFIFOlen = (i2c->fifolen & MXC_F_I2C_REVA_FIFOLEN_TX_DEPTH) >> MXC_F_I2C_REVA_FIFOLEN_TX_DEPTH_POS;
+    unsigned int txFIFOlen = (i2c->fifolen & MXC_F_I2C_REVA_FIFOLEN_TX_DEPTH) >> MXC_F_I2C_REVA_FIFOLEN_TX_DEPTH_POS;
     
     if (numBytes > txFIFOlen) {
         return E_BAD_PARAM;
@@ -1066,8 +1067,8 @@ void MXC_I2C_RevA_AbortAsync (mxc_i2c_reva_regs_t* i2c)
 
 void MXC_I2C_RevA_MasterAsyncHandler(int i2cNum)
 {
-    int written = AsyncWritten[i2cNum];
-    int read = AsyncRead[i2cNum];
+    unsigned int written = AsyncWritten[i2cNum];
+    unsigned int read = AsyncRead[i2cNum];
     mxc_i2c_reva_regs_t* i2c = (mxc_i2c_reva_regs_t*) MXC_I2C_GET_BASE (i2cNum);
     mxc_i2c_reva_req_t* req = (mxc_i2c_reva_req_t*) AsyncRequests[i2cNum];
     

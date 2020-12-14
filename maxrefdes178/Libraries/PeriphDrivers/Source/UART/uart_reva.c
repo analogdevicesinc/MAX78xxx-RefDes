@@ -495,7 +495,7 @@ int MXC_UART_RevA_Write (mxc_uart_reva_regs_t* uart, uint8_t* byte, int* len)
 
 unsigned int MXC_UART_RevA_ReadRXFIFO (mxc_uart_reva_regs_t* uart, unsigned char* bytes, unsigned int len)
 {
-    int read = 0;
+    unsigned int read = 0;
     
     for (; read < len; read++) {
         if (uart->status & MXC_F_UART_REVA_STATUS_RX_EMPTY) {
@@ -558,7 +558,7 @@ unsigned int MXC_UART_RevA_GetRXFIFOAvailable (mxc_uart_reva_regs_t* uart)
 
 unsigned int MXC_UART_RevA_WriteTXFIFO (mxc_uart_reva_regs_t* uart, unsigned char* bytes, unsigned int len)
 {
-    int written = 0;
+    unsigned int written = 0;
     
     for (; written < len; written++) {
         if (uart->status & MXC_F_UART_REVA_STATUS_TX_FULL) {
@@ -751,7 +751,7 @@ int MXC_UART_RevA_Busy(mxc_uart_reva_regs_t* uart)
 
 int MXC_UART_RevA_Transaction (mxc_uart_reva_req_t* req)
 {
-    int numToWrite, numToRead;
+    unsigned int numToWrite, numToRead;
 
     if (MXC_UART_GET_IDX ((mxc_uart_regs_t*)(req->uart)) < 0) {
         return E_BAD_PARAM;
@@ -811,7 +811,7 @@ int MXC_UART_RevA_Transaction (mxc_uart_reva_req_t* req)
 
 int MXC_UART_RevA_TransactionAsync (mxc_uart_reva_req_t* req)
 {
-    int numToWrite, numToRead;
+    unsigned int numToWrite, numToRead;
 
     if (MXC_UART_GET_IDX ((mxc_uart_regs_t*)(req->uart)) < 0) {
         return E_BAD_PARAM;
@@ -947,7 +947,7 @@ int MXC_UART_RevA_AbortAsync (mxc_uart_reva_regs_t* uart)
 int MXC_UART_RevA_AsyncHandler (mxc_uart_reva_regs_t* uart)
 {
     int uartNum = MXC_UART_GET_IDX ((mxc_uart_regs_t*) uart);
-    int flags, numToWrite, numToRead;
+    unsigned int flags, numToWrite, numToRead;
     mxc_uart_reva_req_t* req;
     
     if (MXC_UART_GET_IDX ((mxc_uart_regs_t*) uart) < 0) {

@@ -146,6 +146,17 @@ typedef enum {
 } mxc_sys_periph_clock_t;
 
 typedef enum {
+	MXC_SYS_SYSTEM_DIV_1 							= MXC_S_GCR_CLK_CTRL_SYSCLK_PRESCALE_DIV1,
+	MXC_SYS_SYSTEM_DIV_2 							= MXC_S_GCR_CLK_CTRL_SYSCLK_PRESCALE_DIV2,
+	MXC_SYS_SYSTEM_DIV_4 							= MXC_S_GCR_CLK_CTRL_SYSCLK_PRESCALE_DIV4,
+	MXC_SYS_SYSTEM_DIV_8 							= MXC_S_GCR_CLK_CTRL_SYSCLK_PRESCALE_DIV8,
+	MXC_SYS_SYSTEM_DIV_16 						= MXC_S_GCR_CLK_CTRL_SYSCLK_PRESCALE_DIV16,
+	MXC_SYS_SYSTEM_DIV_32 						= MXC_S_GCR_CLK_CTRL_SYSCLK_PRESCALE_DIV32,
+	MXC_SYS_SYSTEM_DIV_64 						= MXC_S_GCR_CLK_CTRL_SYSCLK_PRESCALE_DIV64,
+	MXC_SYS_SYSTEM_DIV_128 						= MXC_S_GCR_CLK_CTRL_SYSCLK_PRESCALE_DIV128,
+}mxc_sys_system_div_t;
+
+typedef enum {
 	MXC_SYS_CLOCK_HIRC96    = MXC_V_GCR_CLK_CTRL_SYSOSC_SEL_HIRC96,
 	MXC_SYS_CLOCK_HIRC8     = MXC_V_GCR_CLK_CTRL_SYSOSC_SEL_HIRC8,
 	MXC_SYS_CLOCK_HIRC      = MXC_V_GCR_CLK_CTRL_SYSOSC_SEL_HIRC,
@@ -156,6 +167,8 @@ typedef enum {
 
 #define MXC_SYS_SCACHE_CLK 1  // Enable SCACHE CLK
 #define MXC_SYS_CTB_CLK 1     // Enable CTB CLK
+
+#define MXC_SYS_USN_LEN    13
   
 /***** Function Prototypes *****/
 
@@ -211,6 +224,12 @@ int MXC_SYS_ClockSourceDisable (mxc_sys_system_clock_t clock);
  * @returns         E_NO_ERROR if everything is successful.
  */
 int MXC_SYS_Clock_Select (mxc_sys_system_clock_t clock);
+
+/**
+ * @brief Select the system clock divider.
+ * @param clock     Enumeration for desired system clock divider.
+ */
+void MXC_SYS_Clock_Div (mxc_sys_system_div_t div);
 
 /**
  * @brief Wait for a clock to enable with timeout

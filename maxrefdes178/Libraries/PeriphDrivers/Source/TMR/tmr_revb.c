@@ -230,9 +230,11 @@ uint32_t MXC_TMR_RevB_GetCount(mxc_tmr_revb_regs_t* tmr)
     return tmr->cnt;
 }
 
-uint32_t MXC_TMR_RevB_GetPeriod(mxc_tmr_revb_regs_t* tmr, uint32_t prescalar, uint32_t frequency, uint32_t clk_frequency)
+uint32_t MXC_TMR_RevB_GetPeriod(mxc_tmr_revb_regs_t* tmr, uint32_t clk_frequency, uint32_t prescalar, uint32_t frequency)
 {
     uint32_t periodTicks;
+
+    MXC_ASSERT(MXC_TMR_GET_IDX((mxc_tmr_regs_t*) tmr) >= 0);
 
     periodTicks = clk_frequency /(frequency * prescalar);
     

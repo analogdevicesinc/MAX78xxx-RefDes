@@ -49,6 +49,7 @@ int MXC_SPI_Init (mxc_spi_regs_t* spi, int masterMode, int quadModeUsed, int num
     int spi_num;
     
     spi_num = MXC_SPI_GET_IDX (spi);
+    (void)spi_num;
     MXC_ASSERT (spi_num >= 0);
     
     if (numSlaves > MXC_SPI_SS_INSTANCES) {
@@ -95,6 +96,7 @@ int MXC_SPI_Shutdown (mxc_spi_regs_t* spi)
 {
     int spi_num;
     spi_num = MXC_SPI_GET_IDX (spi);
+    (void)spi_num;
     MXC_ASSERT (spi_num >= 0);
     
     MXC_SPI_RevA_Shutdown ((mxc_spi_reva_regs_t*)spi);

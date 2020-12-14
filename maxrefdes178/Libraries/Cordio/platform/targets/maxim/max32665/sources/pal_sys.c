@@ -76,7 +76,7 @@ unsigned long __stack_top__;
 #ifdef  DEBUG
 #define PAL_SYS_ENABLE_DS           0
 #else
-#define PAL_SYS_ENABLE_DS           1
+#define PAL_SYS_ENABLE_DS           0
 #endif
 #endif
 
@@ -176,10 +176,8 @@ void PalSysInit(void)
   PalSysAssertTrapEnable = TRUE;
   palSysBusyCount = 0;
 
-  /* Switch to ISO clock */
-  MXC_SETFIELD(MXC_GCR->clkctrl, MXC_F_GCR_CLKCTRL_SYSCLK_DIV, MXC_S_GCR_CLKCTRL_SYSCLK_DIV_DIV1);
-  MXC_SYS_Clock_Select(MXC_SYS_CLOCK_ISO);
-  MXC_SYS_ClockSourceDisable(MXC_SYS_CLOCK_IPO);
+  /* Divide 96 MHz system clock to 48 MHz */
+  MXC_SYS_Clock_Div(MXC_SYS_SYSTEM_DIV_2);
 
   PalLedInit();
   PalLedOff(PAL_LED_ID_ERROR);
@@ -337,7 +335,7 @@ void PalSysSleep(void)
   /* Re-enable interrupts for wakeup */
   PalExitCs();
 
-  MXC_LP_EnterStandbyMode();
+  MXC_LP_EnterDeepSleepMode();
 
   /* Disable interrupts until we complete the recovery */
   PalEnterCs();
@@ -349,7 +347,7 @@ void PalSysSleep(void)
 
     /* restore BB clock from WUT */
     MXC_WUT_Edge();
-    rtcElapsed = MXC_WUT->cnt + targetTick - rtcCount;
+    rtcElapsed = MXC_WUT->cnt - rtcCount;
 
     MXC_WUT->preset = palBbSnap + ((uint64_t)rtcElapsed * (uint64_t)BB_CLK_RATE_HZ / (uint64_t)PAL_RTC_TICKS_PER_SEC);
     MXC_WUT->reload = 1;
@@ -358,12 +356,9 @@ void PalSysSleep(void)
 
   /* Update the scheduler timer */
   MXC_WUT_Edge();
-  rtcElapsed = MXC_WUT->cnt + targetTick - rtcCount;
+  rtcElapsed = MXC_WUT->cnt - rtcCount;
   schUsecElapsed = (uint64_t)rtcElapsed * (uint64_t)1000000 / (uint64_t)PAL_RTC_TICKS_PER_SEC;
   PalTimerRestore(schUsec - schUsecElapsed);
-
-  /* Reset RTC compare value to prevent unintended rollover */
-  MXC_WUT->cmp = PAL_MAX_RTC_COUNTER_VAL;
 }
 
 /*************************************************************************************************/

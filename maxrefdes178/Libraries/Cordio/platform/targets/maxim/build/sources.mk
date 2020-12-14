@@ -45,7 +45,7 @@ else
 A_FILES 	+= $(BSP_DIR)/CMSIS/Device/Maxim/$(CHIP_UC)/Source/$(COMPILER)/startup_riscv_$(CHIP_LC).S
 endif
 
-include $(BSP_DIR)/CMSIS/Device/Maxim/$(CHIP_UC)/Source/$(COMPILER)/$(CHIP_LC)_memory.mk
+-include $(BSP_DIR)/CMSIS/Device/Maxim/$(CHIP_UC)/Source/$(COMPILER)/$(CHIP_LC)_memory.mk
 A_FLAGS += $(PROJ_AFLAGS)
 
 C_FILES   += \
@@ -57,6 +57,9 @@ include $(BSP_DIR)/PeriphDrivers/$(CHIP_LC)_files.mk
 
 C_FILES 	+= \
 	$(PERIPH_DRIVER_C_FILES)
+
+A_FILES 	+= \
+	$(PERIPH_DRIVER_A_FILES)
 
 INC_DIRS 	+= \
 	$(PERIPH_DRIVER_INCLUDE_DIR)

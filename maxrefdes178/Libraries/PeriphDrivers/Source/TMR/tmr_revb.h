@@ -58,7 +58,7 @@ int MXC_TMR_RevB_SetPWM (mxc_tmr_revb_regs_t* tmr, uint32_t pwm);
 uint32_t MXC_TMR_RevB_GetCompare (mxc_tmr_revb_regs_t* tmr);
 uint32_t MXC_TMR_RevB_GetCapture (mxc_tmr_revb_regs_t* tmr);
 uint32_t MXC_TMR_RevB_GetCount (mxc_tmr_revb_regs_t* tmr);
-uint32_t MXC_TMR_RevB_GetPeriod (mxc_tmr_revb_regs_t* tmr, uint32_t prescalar, uint32_t frequency, uint32_t clk_frequency);
+uint32_t MXC_TMR_RevB_GetPeriod (mxc_tmr_revb_regs_t* tmr, uint32_t clk_frequency, uint32_t prescalar, uint32_t frequency);
 void MXC_TMR_RevB_ClearFlags (mxc_tmr_revb_regs_t* tmr);
 uint32_t MXC_TMR_RevB_GetFlags (mxc_tmr_revb_regs_t* tmr);
 void MXC_TMR_RevB_EnableInt (mxc_tmr_revb_regs_t* tmr);
