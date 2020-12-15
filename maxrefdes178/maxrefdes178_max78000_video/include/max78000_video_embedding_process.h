@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-#ifndef _EMBEDDINGS_PROCESS_H_
-#define _EMBEDDINGS_PROCESS_H_
+#ifndef _MAX78000_VIDEO_EMBEDDINGS_PROCESS_H_
+#define _MAX78000_VIDEO_EMBEDDINGS_PROCESS_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -79,4 +79,4 @@ void get_min_dist_counter(uint8_t **counter, uint8_t *counter_len);
 
 tsMinDistance *get_min_distance();
 
-#endif /* _EMBEDDINGS_PROCESS_H_ */
+#endif /* _MAX78000_VIDEO_EMBEDDINGS_PROCESS_H_ */

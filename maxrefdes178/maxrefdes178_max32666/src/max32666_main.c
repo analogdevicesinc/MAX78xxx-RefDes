@@ -51,7 +51,7 @@
 #include "max32666_qspi.h"
 #include "max32666_sdcard.h"
 #include "maxrefdes178_definitions.h"
-#include "version.h"
+#include "maxrefdes178_version.h"
 
 
 //-----------------------------------------------------------------------------

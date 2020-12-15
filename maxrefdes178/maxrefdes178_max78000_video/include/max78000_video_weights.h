@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-#ifndef _WEIGHTS_H_
-#define _WEIGHTS_H_
+#ifndef _MAX78000_VIDEO_WEIGHTS_H_
+#define _MAX78000_VIDEO_WEIGHTS_H_
 
 #define KERNELS_0 { \
   0xfb00f2fa, 0xff040208, 0x00fffbfe, 0xfe0c01f0, 0xf8fb0dfc, 0x03fffdfb, 0x0707f609, 0x06f5ff02, \
@@ -5861,4 +5861,4 @@
   0x0e000000 \
 }
 
-#endif // _WEIGHTS_H_
+#endif // _MAX78000_VIDEO_WEIGHTS_H_

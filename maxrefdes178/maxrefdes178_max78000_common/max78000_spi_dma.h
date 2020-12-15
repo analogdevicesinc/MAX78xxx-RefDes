@@ -33,12 +33,13 @@
  *******************************************************************************
  */
 
-#ifndef _CNN_H_
-#define _CNN_H_
+#ifndef _MAX78000_SPI_DMA_H_
+#define _MAX78000_SPI_DMA_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <spi.h>
 
 
 //-----------------------------------------------------------------------------
@@ -52,30 +53,12 @@
 
 
 //-----------------------------------------------------------------------------
-// Global variables
-//-----------------------------------------------------------------------------
-extern uint32_t cnn_time;
-
-
-//-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-// Data input: HWC (little data): 3x160x120
-void load_input(const uint8_t *buffer);
+void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi);
+void spi_dma_slave_init(mxc_spi_regs_t *spi, mxc_spi_pins_t spi_pins);
+void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mxc_gpio_cfg_t *spi_int, void (*callback)(void));
+int spi_dma_wait(uint8_t ch);
+void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, uint8_t data_type, mxc_gpio_cfg_t *spi_int);
 
-void cnn_start(void);
-
-int cnn_load(void);
-
-void cnn_wait(void);
-
-int cnn_check(void);
-
-// Custom unload for this network:
-// 8-bit data, shape: (512, 1, 1)
-void cnn_unload(uint8_t *out_buf);
-
-// Initialize CNN accelerator
-int initCNN(void);
-
-#endif /* _CNN_H_ */
+#endif /* _MAX78000_SPI_DMA_H_ */

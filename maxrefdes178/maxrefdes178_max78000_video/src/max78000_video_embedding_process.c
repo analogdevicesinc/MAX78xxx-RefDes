@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+
 #include <board.h>
 #include <math.h>
 #include <mxc_device.h>
@@ -43,9 +44,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "embedding_process.h"
-#include "embeddings.h"
 #include "max78000_debug.h"
+#include "max78000_video_embedding_process.h"
+#include "max78000_video_embeddings.h"
 
 
 //-----------------------------------------------------------------------------

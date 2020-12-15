@@ -33,13 +33,14 @@
  *******************************************************************************
  */
 
-#ifndef _SPI_DMA_H_
-#define _SPI_DMA_H_
+#ifndef _MAX78000_AUDIO_CNN_H_
+#define _MAX78000_AUDIO_CNN_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <spi.h>
+#include "max78000_audio_weights.h"
+#include "max78000_tornadocnn.h"
 
 
 //-----------------------------------------------------------------------------
@@ -53,12 +54,20 @@
 
 
 //-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+extern uint32_t cnn_time;
+
+
+//-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi);
-void spi_dma_slave_init(mxc_spi_regs_t *spi, mxc_spi_pins_t spi_pins);
-void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mxc_gpio_cfg_t *spi_int, void (*callback)(void));
-int spi_dma_wait(uint8_t ch);
-void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, uint8_t data_type, mxc_gpio_cfg_t *spi_int);
+uint8_t cnn_load_kernel(void);
+uint8_t cnn_load_data(uint8_t *pIn);
+void cnn_unload(uint32_t *out_buf);
+uint8_t cnn_start(void);
+void cnn_wait(void);
+void memcpy32(uint32_t *dst, const uint32_t *src, int n);
+void load_kernels(void);
 
-#endif /* _SPI_DMA_H_ */
+#endif  /* _MAX78000_AUDIO_CNN_H_ */

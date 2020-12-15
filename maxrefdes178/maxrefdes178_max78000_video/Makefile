@@ -62,22 +62,20 @@ CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
-SRCS  = main.c
-SRCS += cnn.c
-SRCS += embedding_process.c
-SRCS += spi_dma.c
+SRCS  = max78000_video_main.c
+SRCS += max78000_video_cnn.c
+SRCS += max78000_video_embedding_process.c
+SRCS += max78000_spi_dma.c
 
 # Where to find source files for this test
-VPATH=.
-VPATH += ./src
-VPATH += ./../maxrefdes178_max78000_common
+VPATH += src
+VPATH += ../maxrefdes178_max78000_common
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 
 # Where to find header files for this test
-IPATH = .
-IPATH += ./include
-IPATH += ./../maxrefdes178_common
-IPATH += ./../maxrefdes178_max78000_common
+IPATH += include
+IPATH += ../maxrefdes178_common
+IPATH += ../maxrefdes178_max78000_common
 
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE

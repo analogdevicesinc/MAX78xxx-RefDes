@@ -61,8 +61,8 @@
 #include <string.h>
 #include <tmr.h>
 
-#include "cnn.h"
-#include "weights.h"
+#include "max78000_video_cnn.h"
+#include "max78000_video_weights.h"
 
 
 //-----------------------------------------------------------------------------

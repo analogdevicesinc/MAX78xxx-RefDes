@@ -20,8 +20,8 @@
  * Portions Copyright (C) 2020 Maxim Integrated Products, Inc.
  */
 
-#ifndef _TORNADOCNN_H_
-#define _TORNADOCNN_H_
+#ifndef _MAX78000_TORNADOCNN_H_
+#define _MAX78000_TORNADOCNN_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -46,4 +46,4 @@ typedef int16_t q15_t;
 //-----------------------------------------------------------------------------
 void softmax_q17p14_q15(const q31_t * vec_in, const uint16_t dim_vec, q15_t * p_out);
 
-#endif /* _TORNADOCNN_H_ */
+#endif /* _MAX78000_TORNADOCNN_H_ */

@@ -33,20 +33,20 @@
 *******************************************************************************
 */
 
-#ifndef _VERSION_H_
-#define _VERSION_H_
+#ifndef _MAXREFDES178_VERSION_H_
+#define _MAXREFDES178_VERSION_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "build_info.h"
+#include "maxrefdes178_build_info.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
 #define S_VERSION_MAJOR 0
-#define S_VERSION_MINOR 2
+#define S_VERSION_MINOR 3
 #define S_VERSION_BUILD S_BUILD_NUMBER
 
-#endif /* _VERSION_H_ */
+#endif /* _MAXREFDES178_VERSION_H_ */

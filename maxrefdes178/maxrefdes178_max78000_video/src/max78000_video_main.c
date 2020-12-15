@@ -48,13 +48,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "cnn.h"
-#include "embedding_process.h"
 #include "max78000_debug.h"
+#include "max78000_spi_dma.h"
+#include "max78000_video_cnn.h"
+#include "max78000_video_embedding_process.h"
+#include "max78000_video_weights.h"
 #include "maxrefdes178_definitions.h"
-#include "spi_dma.h"
-#include "version.h"
-#include "weights.h"
+#include "maxrefdes178_version.h"
 
 
 //-----------------------------------------------------------------------------

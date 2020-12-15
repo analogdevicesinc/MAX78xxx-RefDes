@@ -46,8 +46,8 @@
 #include <stdio.h>
 
 #include "max78000_debug.h"
+#include "max78000_spi_dma.h"
 #include "maxrefdes178_definitions.h"
-#include "spi_dma.h"
 
 
 //-----------------------------------------------------------------------------

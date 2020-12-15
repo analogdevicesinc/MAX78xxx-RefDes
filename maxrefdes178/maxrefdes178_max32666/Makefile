@@ -55,7 +55,7 @@ BOARD=MAXREFDES178
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=./../Libraries
+LIBS_DIR=../Libraries
 
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 SECURE_BOOT_TOOLS_DIR=$(LIBS_DIR)/../Tools/SBT
@@ -81,12 +81,12 @@ SRCS += max32666_spi_dma.c
 #SRCS += sla_header.c
 
 # Where to find source files for this test
-VPATH = ./src
+VPATH = src
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 
 # Where to find header files for this test
-IPATH  = ./include
-IPATH += ./../maxrefdes178_common
+IPATH  = include
+IPATH += ../maxrefdes178_common
 
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE 

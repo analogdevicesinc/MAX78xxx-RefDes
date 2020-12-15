@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-#ifndef _WEIGHTS_H_
-#define _WEIGHTS_H_
+#ifndef _MAX78000_AUDIO_WEIGHTS_H_
+#define _MAX78000_AUDIO_WEIGHTS_H_
 
 #define KERNELS_0 { \
   0xf10a070d, 0x0f060c06, 0xf8eaf003, 0x110ffaf5, 0x1efc0104, 0xf40ad6ea, 0x0a05f30f, 0xfce2f210, \
@@ -5428,4 +5428,4 @@
   0x0f0af9b4, 0xfdeba8e4, 0xe6bfedef, 0xf0ddf229, 0xf2fd57e0, 0x1168c821, 0x1bb82c0b, 0xa7260b00 \
 }
 
-#endif // _WEIGHTS_H_
+#endif // _MAX78000_AUDIO_WEIGHTS_H_

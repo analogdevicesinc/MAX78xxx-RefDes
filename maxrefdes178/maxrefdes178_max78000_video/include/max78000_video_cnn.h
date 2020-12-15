@@ -33,14 +33,12 @@
  *******************************************************************************
  */
 
-#ifndef _CNN_H_
-#define _CNN_H_
+#ifndef _MAX78000_VIDEO_CNN_H_
+#define _MAX78000_VIDEO_CNN_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "tornadocnn.h"
-#include "weights.h"
 
 
 //-----------------------------------------------------------------------------
@@ -62,12 +60,22 @@ extern uint32_t cnn_time;
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-uint8_t cnn_load_kernel(void);
-uint8_t cnn_load_data(uint8_t *pIn);
-void cnn_unload(uint32_t *out_buf);
-uint8_t cnn_start(void);
-void cnn_wait(void);
-void memcpy32(uint32_t *dst, const uint32_t *src, int n);
-void load_kernels(void);
+// Data input: HWC (little data): 3x160x120
+void load_input(const uint8_t *buffer);
 
-#endif  /* _CNN_H_ */
+void cnn_start(void);
+
+int cnn_load(void);
+
+void cnn_wait(void);
+
+int cnn_check(void);
+
+// Custom unload for this network:
+// 8-bit data, shape: (512, 1, 1)
+void cnn_unload(uint8_t *out_buf);
+
+// Initialize CNN accelerator
+int initCNN(void);
+
+#endif /* _MAX78000_VIDEO_CNN_H_ */

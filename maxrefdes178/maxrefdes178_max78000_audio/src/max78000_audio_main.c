@@ -53,11 +53,11 @@
 #include <string.h>
 #include <tmr.h>
 
-#include "cnn.h"
+#include "max78000_audio_cnn.h"
 #include "max78000_debug.h"
+#include "max78000_spi_dma.h"
 #include "maxrefdes178_definitions.h"
-#include "spi_dma.h"
-#include "version.h"
+#include "maxrefdes178_version.h"
 
 
 //-----------------------------------------------------------------------------
