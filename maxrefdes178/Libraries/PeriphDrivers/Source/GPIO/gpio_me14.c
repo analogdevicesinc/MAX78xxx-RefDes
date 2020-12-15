@@ -93,7 +93,52 @@ int MXC_GPIO_Reset (uint32_t portmask)
 
 int MXC_GPIO_Config (const mxc_gpio_cfg_t *cfg)
 {
-    return MXC_GPIO_RevA_Config (cfg, MXC_GPIO_PS_NONE);
+    int error;
+    mxc_gpio_regs_t *gpio = cfg->port;
+
+    error = MXC_GPIO_RevA_SetAF ((mxc_gpio_reva_regs_t*)gpio, cfg->func, cfg->mask);
+    
+    if(error != E_NO_ERROR) {
+        return error;
+    }
+
+    // Configure the pad
+    switch (cfg->pad) {
+    case MXC_GPIO_PAD_NONE:
+    	gpio->pad_cfg1 &= ~cfg->mask;
+    	gpio->pad_cfg2 &= ~cfg->mask;
+        break;
+
+    case MXC_GPIO_PAD_WEAK_PULL_UP:
+    	gpio->pad_cfg1 |=  cfg->mask;
+    	gpio->pad_cfg2 &= ~cfg->mask;
+        gpio->ps &= ~cfg->mask;
+        break;
+
+    case MXC_GPIO_PAD_PULL_UP:
+    	gpio->pad_cfg1 |=  cfg->mask;
+    	gpio->pad_cfg2 &= ~cfg->mask;
+        gpio->ps |= cfg->mask;
+        break;
+
+    case MXC_GPIO_PAD_WEAK_PULL_DOWN:
+    	gpio->pad_cfg1 &= ~cfg->mask;
+    	gpio->pad_cfg2 |=  cfg->mask;
+        gpio->ps &= ~cfg->mask;
+        break;
+
+    case MXC_GPIO_PAD_PULL_DOWN:
+    	gpio->pad_cfg1 &= ~cfg->mask;
+    	gpio->pad_cfg2 |=  cfg->mask;
+        gpio->ps |= cfg->mask;
+        break;
+        
+    default:
+        return E_BAD_PARAM;
+    }
+    
+    // Configure the vssel
+    return MXC_GPIO_SetVSSEL (gpio, cfg->vssel, cfg->mask);
 }
 
 /* ************************************************************************** */

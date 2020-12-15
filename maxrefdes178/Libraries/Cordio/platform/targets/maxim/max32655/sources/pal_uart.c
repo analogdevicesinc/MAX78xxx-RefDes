@@ -159,7 +159,7 @@ void PalUartInit(PalUartId_t id, const PalUartConfig_t *pCfg)
   /* Initialize the UART */
   result = MXC_UART_Init(uart, pCfg->baud, MXC_UART_8M_CLK);
   (void)result;
-  PAL_SYS_ASSERT(result > 0);
+  PAL_SYS_ASSERT(result >= 0);
   
   /* Disable UART interrupts */
   MXC_UART_DisableInt(uart, 0xFFFFFFFF);

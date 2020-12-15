@@ -151,11 +151,11 @@ int main(void)
 //        max20303_led_red(1);
 //        while(1);
 //    }
-
-    ret = sdcard_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("sdcard_init failed %d", ret);
-    }
+//
+//    ret = sdcard_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("sdcard_init failed %d", ret);
+//    }
 
     // Enable Core1
     Core1_Start();

@@ -118,19 +118,15 @@ int MXC_GPIO_Config(const mxc_gpio_cfg_t *cfg)
     switch(cfg->pad) {
     case MXC_GPIO_PAD_NONE:
         gpio->pad_cfg1 &= ~cfg->mask;
-        gpio->pad_cfg2 &= ~cfg->mask;
-        gpio->ps &= ~cfg->mask;
         break;
         
     case MXC_GPIO_PAD_PULL_UP:
         gpio->pad_cfg1 |=  cfg->mask;
-        gpio->pad_cfg2 &= ~cfg->mask;
         gpio->ps |= cfg->mask;
         break;
         
     case MXC_GPIO_PAD_PULL_DOWN:
-        gpio->pad_cfg1 &= ~cfg->mask;
-        gpio->pad_cfg2 |=  cfg->mask;
+        gpio->pad_cfg1 |=  cfg->mask;
         gpio->ps &= ~cfg->mask;
         break;
         
