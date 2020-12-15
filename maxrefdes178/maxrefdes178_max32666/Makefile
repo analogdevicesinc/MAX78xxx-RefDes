@@ -118,8 +118,9 @@ MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
 # Point this variable to a linker file to override the default file
-LINKER=$(TARGET_LC).ld
-LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+#LINKER=$(TARGET_LC).ld
+#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+LINKERFILE=max32665_non_sla.ld
 
 ################################################################################
 # Include external library makefiles here
