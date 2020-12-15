@@ -124,7 +124,7 @@ open class BluetoothScannerActivity : AppCompatActivity(), OnBluetoothDeviceClic
         else -> super.onOptionsItemSelected(item)
     }
 
-    override fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice) {
+    override fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice?) {
         // will be overridden
     }
 }

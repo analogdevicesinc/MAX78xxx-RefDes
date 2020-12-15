@@ -82,6 +82,6 @@ abstract class BluetoothDeviceModel : EpoxyModelWithHolder<BluetoothDeviceHolder
 }
 
 interface OnBluetoothDeviceClickListener {
-    fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice)
+    fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice?)
 }
 

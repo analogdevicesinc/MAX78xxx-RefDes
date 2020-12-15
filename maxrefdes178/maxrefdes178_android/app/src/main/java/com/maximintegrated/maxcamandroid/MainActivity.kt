@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         private const val KEY_BLUETOOTH_DEVICE =
             "com.maximintegrated.maxcamandroid.BLUETOOTH_DEVICE"
 
-        fun start(context: Context, bluetoothDevice: BluetoothDevice) {
+        fun start(context: Context, bluetoothDevice: BluetoothDevice?) {
             context.startActivity(
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         super.onDestroy()
     }
 
-    override fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice) {
+    override fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice?) {
         val fragment = (getCurrentFragment() as? OnBluetoothDeviceClickListener)
         fragment?.onBluetoothDeviceClicked(bluetoothDevice)
     }

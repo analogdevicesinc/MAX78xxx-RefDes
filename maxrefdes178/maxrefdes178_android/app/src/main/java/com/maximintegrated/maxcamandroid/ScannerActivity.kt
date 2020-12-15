@@ -5,7 +5,7 @@ import com.maximintegrated.bluetooth.ble.BleScannerActivity
 
 class ScannerActivity : BleScannerActivity() {
 
-    override fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice) {
+    override fun onBluetoothDeviceClicked(bluetoothDevice: BluetoothDevice?) {
         MainActivity.start(this, bluetoothDevice)
     }
 

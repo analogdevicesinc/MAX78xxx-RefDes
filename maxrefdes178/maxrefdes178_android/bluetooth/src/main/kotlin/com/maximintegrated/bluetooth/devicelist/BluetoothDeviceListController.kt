@@ -87,7 +87,12 @@ class BluetoothDeviceListController : EpoxyController() {
                         }
                 )
             } else {
-                add(noAvailableDevicesMessage)
+                val device = ExtendedBluetoothDevice(null, 0, "DEMO", "00:11:22:33:AA:BB")
+                add(BluetoothDeviceModel_()
+                    .id(device.address)
+                    .device(device)
+                    .deviceClickListener(deviceClickListener))
+                //add(noAvailableDevicesMessage)
             }
         }
 
