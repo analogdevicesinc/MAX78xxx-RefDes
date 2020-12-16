@@ -51,7 +51,7 @@ extern "C" {
 #endif
 
 #ifndef CONSOLE_UART
-#define CONSOLE_UART    2      /// UART instance to use for console
+#define CONSOLE_UART    2       /// UART instance to use for console
 #endif
 
 #ifndef CONSOLE_BAUD
@@ -63,12 +63,12 @@ extern "C" {
 #endif
 
 #ifndef MX25_BAUD
-#define MX25_BAUD 		4000000
+#define MX25_BAUD       4000000
 #endif
 
-#define MX25_SPI                    MXC_SPIXFC
-#define MX25_SSEL                   0
-#define SPI_CHAR_BITS               8
+#define MX25_SPI        MXC_SPIXFC
+#define MX25_SSEL       0
+#define SPI_CHAR_BITS   8
 
 
 /**
@@ -102,11 +102,11 @@ int MX25_Board_Init(void);
  * @param   read        Pointer to where master will store data.
  * @param   len         Number of characters to send.
  * @param   deassert    Deassert slave select at the end of the transaction.
- * @param   width       spi_width_t for how many data lines to use 
+ * @param   width       spi_width_t for how many data lines to use
  * \returns #E_NO_ERROR if successful, !=0 otherwise
  */
-
 int MX25_Board_Read(uint8_t* read, unsigned len, unsigned deassert, mxc_spixf_width_t width);
+
 /**
  * \brief   Translation function to implement SPI Write transaction
  * @param   write       Pointer to data master will write.
@@ -115,7 +115,6 @@ int MX25_Board_Read(uint8_t* read, unsigned len, unsigned deassert, mxc_spixf_wi
  * @param   width       spi_width_t for how many data lines to use
  * \returns #E_NO_ERROR if successful, !=0 otherwise
  */
-
 int MX25_Board_Write(const uint8_t* write, unsigned len, unsigned deassert, mxc_spixf_width_t width);
 
 /**

@@ -85,7 +85,7 @@ typedef enum {
 	MXC_SYS_RESET_SDHC      = (MXC_F_GCR_RST1_SDHC_POS + 32),        /**< Reset SDHC */
 	MXC_SYS_RESET_OWIRE     = (MXC_F_GCR_RST1_OWIRE_POS + 32),       /**< Reset OWIRE */
 	MXC_SYS_RESET_WDT1      = (MXC_F_GCR_RST1_WDT1_POS+32),         /**< Reset WDT1 */
-	MXC_SYS_RESET_SPI3      = (MXC_F_GCR_RST1_SPI3_POS+32),       	 /**< Reset SPI2 */
+	MXC_SYS_RESET_SPI0      = (MXC_F_GCR_RST1_SPI0_POS+32),       	 /**< Reset SPI2 */
 	MXC_SYS_RESET_XIPR      = (MXC_F_GCR_RST1_XIPR_POS+32),       	 /**< Reset XIPR */
 	MXC_SYS_RESET_SEMA      = (MXC_F_GCR_RST1_SEMA_POS+32),       	 /**< Reset SEMA */
 	MXC_SYS_RESET_WDT2      = (MXC_F_GCR_RST1_WDT2_POS + 32),        /**< Reset WDT1 */
@@ -105,8 +105,8 @@ typedef enum {
 	MXC_SYS_PERIPH_CLOCK_GPIO1       = MXC_F_GCR_PCLK_DIS0_GPIO1_POS,                    /**< Disable MXC_F_GCR_PERCKCN0_GPIO1D clock */
 	MXC_SYS_PERIPH_CLOCK_USB         = MXC_F_GCR_PCLK_DIS0_USB_POS,                      /**< Disable MXC_F_GCR_PERCKCN0_USBD clock */
 	MXC_SYS_PERIPH_CLOCK_DMA         = MXC_F_GCR_PCLK_DIS0_DMA0_POS,                      /**< Disable MXC_F_GCR_PERCKCN0_DMAD clock */
-	MXC_SYS_PERIPH_CLOCK_SPI1        = MXC_F_GCR_PCLK_DIS0_SPI0_POS,                     /**< Disable MXC_F_GCR_PERCKCN0_SPI1D clock */
-	MXC_SYS_PERIPH_CLOCK_SPI2        = MXC_F_GCR_PCLK_DIS0_SPI1_POS,                     /**< Disable MXC_F_GCR_PERCKCN0_SPI2D clock */
+	MXC_SYS_PERIPH_CLOCK_SPI1        = MXC_F_GCR_PCLK_DIS0_SPI1_POS,                     /**< Disable MXC_F_GCR_PERCKCN0_SPI1D clock */
+	MXC_SYS_PERIPH_CLOCK_SPI2        = MXC_F_GCR_PCLK_DIS0_SPI2_POS,                     /**< Disable MXC_F_GCR_PERCKCN0_SPI2D clock */
 	MXC_SYS_PERIPH_CLOCK_UART0       = MXC_F_GCR_PCLK_DIS0_UART0_POS,                    /**< Disable MXC_F_GCR_PERCKCN0_UART0D clock */
 	MXC_SYS_PERIPH_CLOCK_UART1       = MXC_F_GCR_PCLK_DIS0_UART1_POS,                    /**< Disable MXC_F_GCR_PERCKCN0_UART1D clock */
 	MXC_SYS_PERIPH_CLOCK_I2C0        = MXC_F_GCR_PCLK_DIS0_I2C0_POS,                     /**< Disable MXC_F_GCR_PERCKCN0_I2C0D clock */
@@ -132,7 +132,7 @@ typedef enum {
 	MXC_SYS_PERIPH_CLOCK_SDHC        =(MXC_F_GCR_PCLK_DIS1_SDHC_POS + 32),             /**<Disable MXC_F_GCR_PERCKCN1_SDHCD clock */
 	MXC_SYS_PERIPH_CLOCK_ICACHEXIP   =(MXC_F_GCR_PCLK_DIS1_ICACHEXIP_POS + 32),        /**<Disable MXC_F_GCR_PERCKCN1_ICACHEXIPD clock */
 	MXC_SYS_PERIPH_CLOCK_OWIRE       =(MXC_F_GCR_PCLK_DIS1_OW_POS + 32),            /**<Disable MXC_F_GCR_PERCKCN1_OWIRED clock */
-	MXC_SYS_PERIPH_CLOCK_SPI0        =(MXC_F_GCR_PCLK_DIS1_SPI3_POS + 32),             /**< Disable QSPI Clock (API Calls QSPI SPI0) */
+	MXC_SYS_PERIPH_CLOCK_SPI0        =(MXC_F_GCR_PCLK_DIS1_SPI0_POS + 32),             /**< Disable QSPI Clock (API Calls QSPI SPI0) */
 	MXC_SYS_PERIPH_CLOCK_SPIXIPD     =(MXC_F_GCR_PCLK_DIS1_SPIXIPR_POS + 32),
 	MXC_SYS_PERIPH_CLOCK_DMA1        =(MXC_F_GCR_PCLK_DIS1_DMA1_POS + 32),
 	MXC_SYS_PERIPH_CLOCK_AUDIO       =(MXC_F_GCR_PCLK_DIS1_AUDIO_POS + 32),

@@ -216,7 +216,8 @@ void MXC_LP_EnterShutdownMode(void)
     MXC_GCR->pm |= MXC_S_GCR_PM_MODE_SHUTDOWN;
     while(1);
 }
-void MXC_LP_SetOperatingVoltage(mxc_lp_ovr_t ovr)
+
+int MXC_LP_SetOperatingVoltage(mxc_lp_ovr_t ovr)
 {
     uint32_t current_clock, div;
     int error;
@@ -227,32 +228,32 @@ void MXC_LP_SetOperatingVoltage(mxc_lp_ovr_t ovr)
     }
 
     // Select the 8KHz nanoring (no guarantee 32KHz is attached) as system clock source
-    current_clock = MXC_GCR->clkcn & MXC_F_GCR_CLKCN_CLKSEL;
-    if(current_clock == SYS_CLOCK_HIRC) {
-        error = SYS_Clock_Select(SYS_CLOCK_NANORING, MXC_TMR0);
+    current_clock = MXC_GCR->clk_ctrl & MXC_F_GCR_CLK_CTRL_CLKSEL;
+    if(current_clock == MXC_SYS_CLOCK_HIRC) {
+        error = MXC_SYS_Clock_Select(MXC_SYS_CLOCK_NANORING);
         if(error != E_NO_ERROR) {
             return error;
         }
     }
 
     // Set flash wait state for any clock so its not to low after clock changes.
-    MXC_GCR->memckcn = (MXC_GCR->memckcn & ~(MXC_F_GCR_MEMCKCN_FWS)) | (0x5UL << MXC_F_GCR_MEMCKCN_FWS_POS);
+    MXC_GCR->mem_ctrl = (MXC_GCR->mem_ctrl & ~(MXC_F_GCR_MEM_CTRL_FWS)) | (0x5UL << MXC_F_GCR_MEM_CTRL_FWS_POS);
 
     // Set the OVR bits
     MXC_PWRSEQ->lp_ctrl &= ~(MXC_F_PWRSEQ_LP_CTRL_OVR);
     MXC_PWRSEQ->lp_ctrl |= ovr;
 
     // Set LVE bit
-    if(ovr == LP_OVR_0_9) {
-        MXC_FLC->cn |= MXC_F_FLC_CN_LVE;
+    if(ovr == MXC_LP_OVR_0_9) {
+        MXC_FLC->ctrl |= MXC_F_FLC_CTRL_LVE;
 
     } else {
-        MXC_FLC->cn &= ~(MXC_F_FLC_CN_LVE);
+        MXC_FLC->ctrl &= ~(MXC_F_FLC_CTRL_LVE);
     }
 
     // Revert the clock to original state if it was HIRC
-    if(current_clock == SYS_CLOCK_HIRC) {
-       error = SYS_Clock_Select(SYS_CLOCK_HIRC, MXC_TMR0);
+    if(current_clock == MXC_SYS_CLOCK_HIRC) {
+       error = MXC_SYS_Clock_Select(MXC_SYS_CLOCK_HIRC);
        if(error != E_NO_ERROR) {
            return error;
        }
@@ -262,34 +263,34 @@ void MXC_LP_SetOperatingVoltage(mxc_lp_ovr_t ovr)
     SystemCoreClockUpdate();
 
     // Get the clock divider
-    div = (MXC_GCR->clkcn & MXC_F_GCR_CLKCN_PSC) >> MXC_F_GCR_CLKCN_PSC_POS;
+    div = (MXC_GCR->clk_ctrl & MXC_F_GCR_CLK_CTRL_PSC) >> MXC_F_GCR_CLK_CTRL_PSC_POS;
 
     // Set Flash Wait States
-    if(ovr == LP_OVR_0_9) {
+    if(ovr == MXC_LP_OVR_0_9) {
         if(div == 0) {
-            MXC_GCR->memckcn = (MXC_GCR->memckcn & ~(MXC_F_GCR_MEMCKCN_FWS)) | (0x2UL << MXC_F_GCR_MEMCKCN_FWS_POS);
+            MXC_GCR->mem_ctrl = (MXC_GCR->mem_ctrl & ~(MXC_F_GCR_MEM_CTRL_FWS)) | (0x2UL << MXC_F_GCR_MEM_CTRL_FWS_POS);
 
         } else {
-            MXC_GCR->memckcn = (MXC_GCR->memckcn & ~(MXC_F_GCR_MEMCKCN_FWS)) | (0x1UL << MXC_F_GCR_MEMCKCN_FWS_POS);
+            MXC_GCR->mem_ctrl = (MXC_GCR->mem_ctrl & ~(MXC_F_GCR_MEM_CTRL_FWS)) | (0x1UL << MXC_F_GCR_MEM_CTRL_FWS_POS);
         }
 
-    } else if(ovr == LP_OVR_1_0) {  
+    } else if(ovr == MXC_LP_OVR_1_0) {  
         if(div == 0) {
-            MXC_GCR->memckcn = (MXC_GCR->memckcn & ~(MXC_F_GCR_MEMCKCN_FWS)) | (0x2UL << MXC_F_GCR_MEMCKCN_FWS_POS);
+            MXC_GCR->mem_ctrl = (MXC_GCR->mem_ctrl & ~(MXC_F_GCR_MEM_CTRL_FWS)) | (0x2UL << MXC_F_GCR_MEM_CTRL_FWS_POS);
 
         } else {
-            MXC_GCR->memckcn = (MXC_GCR->memckcn & ~(MXC_F_GCR_MEMCKCN_FWS)) | (0x1UL << MXC_F_GCR_MEMCKCN_FWS_POS);
+            MXC_GCR->mem_ctrl = (MXC_GCR->mem_ctrl & ~(MXC_F_GCR_MEM_CTRL_FWS)) | (0x1UL << MXC_F_GCR_MEM_CTRL_FWS_POS);
         }
 
     } else {
         if(div == 0) {
-            MXC_GCR->memckcn = (MXC_GCR->memckcn & ~(MXC_F_GCR_MEMCKCN_FWS)) | (0x4UL << MXC_F_GCR_MEMCKCN_FWS_POS);
+            MXC_GCR->mem_ctrl = (MXC_GCR->mem_ctrl & ~(MXC_F_GCR_MEM_CTRL_FWS)) | (0x4UL << MXC_F_GCR_MEM_CTRL_FWS_POS);
         
         } else if(div == 1) {
-            MXC_GCR->memckcn = (MXC_GCR->memckcn & ~(MXC_F_GCR_MEMCKCN_FWS)) | (0x2UL << MXC_F_GCR_MEMCKCN_FWS_POS);
+            MXC_GCR->mem_ctrl = (MXC_GCR->mem_ctrl & ~(MXC_F_GCR_MEM_CTRL_FWS)) | (0x2UL << MXC_F_GCR_MEM_CTRL_FWS_POS);
 
         } else {
-            MXC_GCR->memckcn = (MXC_GCR->memckcn & ~(MXC_F_GCR_MEMCKCN_FWS)) | (0x1UL << MXC_F_GCR_MEMCKCN_FWS_POS);
+            MXC_GCR->mem_ctrl = (MXC_GCR->mem_ctrl & ~(MXC_F_GCR_MEM_CTRL_FWS)) | (0x1UL << MXC_F_GCR_MEM_CTRL_FWS_POS);
         }
     }
 

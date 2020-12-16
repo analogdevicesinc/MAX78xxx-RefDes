@@ -63,26 +63,29 @@ int MXC_SPI_Init (mxc_spi_regs_t* spi, int masterMode, int quadModeUsed, int num
     
     // Configure GPIO for spi
     if (spi == MXC_SPI0) {
-        MXC_GCR->rst1 |= MXC_F_GCR_RST1_SPI3;
-        while (MXC_GCR->rst1 & MXC_F_GCR_RST1_SPI3);
-        MXC_GCR->pclk_dis1 &= ~(MXC_F_GCR_PCLK_DIS1_SPI3);
+        MXC_GCR->rst1 |= MXC_F_GCR_RST1_SPI0;
+        while (MXC_GCR->rst1 & MXC_F_GCR_RST1_SPI0);
+        MXC_GCR->pclk_dis1 &= ~(MXC_F_GCR_PCLK_DIS1_SPI0);
         if(map==MAP_A){
         	MXC_GPIO_Config (&gpio_cfg_spi0a);
         }
         else if(map==MAP_B){
         	MXC_GPIO_Config (&gpio_cfg_spi0b);
         }
+        else{
+            return E_BAD_PARAM;
+        }
     }
     else if (spi == MXC_SPI1) {
         MXC_GCR->rst0 |= MXC_F_GCR_RST0_SPI1;
         while (MXC_GCR->rst0 & MXC_F_GCR_RST0_SPI1);
-        MXC_GCR->pclk_dis0 &= ~ (MXC_F_GCR_PCLK_DIS0_SPI0);
+        MXC_GCR->pclk_dis0 &= ~(MXC_F_GCR_PCLK_DIS0_SPI1);
         MXC_GPIO_Config (&gpio_cfg_spi1);
     }
     else if (spi == MXC_SPI2) {
         MXC_GCR->rst0 |= MXC_F_GCR_RST0_SPI2;
         while (MXC_GCR->rst0 & MXC_F_GCR_RST0_SPI2);
-        MXC_GCR->pclk_dis0 &= ~ (MXC_F_GCR_PCLK_DIS0_SPI1);
+        MXC_GCR->pclk_dis0 &= ~(MXC_F_GCR_PCLK_DIS0_SPI2);
         MXC_GPIO_Config (&gpio_cfg_spi2);
     }
     else {
@@ -102,13 +105,13 @@ int MXC_SPI_Shutdown (mxc_spi_regs_t* spi)
     MXC_SPI_RevA_Shutdown ((mxc_spi_reva_regs_t*)spi);
     
     if (spi == MXC_SPI0) {
-        MXC_GCR->pclk_dis0 |= (MXC_F_GCR_PCLK_DIS1_SPI3);
+        MXC_GCR->pclk_dis0 |= (MXC_F_GCR_PCLK_DIS1_SPI0);
     }
     else if (spi == MXC_SPI1) {
-        MXC_GCR->pclk_dis0 |= (MXC_F_GCR_PCLK_DIS0_SPI0);
+        MXC_GCR->pclk_dis0 |= (MXC_F_GCR_PCLK_DIS0_SPI1);
     }
     else if (spi == MXC_SPI2) {
-        MXC_GCR->pclk_dis0 |= (MXC_F_GCR_PCLK_DIS0_SPI1);
+        MXC_GCR->pclk_dis0 |= (MXC_F_GCR_PCLK_DIS0_SPI2);
     }
     else {
         return E_INVALID;

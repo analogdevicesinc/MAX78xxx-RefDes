@@ -885,13 +885,13 @@
             <bitWidth>1</bitWidth>
           </field>
           <field derivedFrom="GPIO0D">
-            <name>SPI0</name>
+            <name>SPI1</name>
             <description>SPI 1 Disable.</description>
             <bitOffset>6</bitOffset>
             <bitWidth>1</bitWidth>
           </field>
           <field derivedFrom="GPIO0D">
-            <name>SPI1</name>
+            <name>SPI2</name>
             <description>SPI 2 Disable.</description>
             <bitOffset>7</bitOffset>
             <bitWidth>1</bitWidth>
@@ -1347,7 +1347,7 @@
             <bitWidth>1</bitWidth>
           </field>
           <field derivedFrom="I2C1">
-            <name>SPI3</name>
+            <name>SPI0</name>
             <description>SPI0 Reset.</description>
             <bitOffset>9</bitOffset>
             <bitWidth>1</bitWidth>
@@ -1504,7 +1504,7 @@
             <bitWidth>1</bitWidth>
           </field>
           <field derivedFrom="UART2D">
-            <name>SPI3</name>
+            <name>SPI0</name>
             <description>SPI0 Clock Disable.</description>
             <bitOffset>14</bitOffset>
             <bitWidth>1</bitWidth>

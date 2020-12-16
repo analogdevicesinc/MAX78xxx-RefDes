@@ -118,40 +118,6 @@ typedef struct {
     __IO uint32_t apb_async;            /**< <tt>\b 0x84:</tt> GCR APB_ASYNC Register */
 } mxc_gcr_regs_t;
 
-/* Register offsets for module GCR */
-/**
- * @ingroup    gcr_registers
- * @defgroup   GCR_Register_Offsets Register Offsets
- * @brief      GCR Peripheral Register Offsets from the GCR Base Peripheral Address. 
- * @{
- */
- #define MXC_R_GCR_SCON                     ((uint32_t)0x00000000UL) /**< Offset from GCR Base Address: <tt> 0x0000</tt> */ 
- #define MXC_R_GCR_RST0                     ((uint32_t)0x00000004UL) /**< Offset from GCR Base Address: <tt> 0x0004</tt> */ 
- #define MXC_R_GCR_CLK_CTRL                 ((uint32_t)0x00000008UL) /**< Offset from GCR Base Address: <tt> 0x0008</tt> */ 
- #define MXC_R_GCR_PMR                      ((uint32_t)0x0000000CUL) /**< Offset from GCR Base Address: <tt> 0x000C</tt> */ 
- #define MXC_R_GCR_PCLK_DIV                 ((uint32_t)0x00000018UL) /**< Offset from GCR Base Address: <tt> 0x0018</tt> */ 
- #define MXC_R_GCR_PCLK_DIS0                ((uint32_t)0x00000024UL) /**< Offset from GCR Base Address: <tt> 0x0024</tt> */ 
- #define MXC_R_GCR_MEM_CLK                  ((uint32_t)0x00000028UL) /**< Offset from GCR Base Address: <tt> 0x0028</tt> */ 
- #define MXC_R_GCR_MEM_ZERO                 ((uint32_t)0x0000002CUL) /**< Offset from GCR Base Address: <tt> 0x002C</tt> */ 
- #define MXC_R_GCR_SCCK                     ((uint32_t)0x00000034UL) /**< Offset from GCR Base Address: <tt> 0x0034</tt> */ 
- #define MXC_R_GCR_MPRI0                    ((uint32_t)0x00000038UL) /**< Offset from GCR Base Address: <tt> 0x0038</tt> */ 
- #define MXC_R_GCR_MPRI1                    ((uint32_t)0x0000003CUL) /**< Offset from GCR Base Address: <tt> 0x003C</tt> */ 
- #define MXC_R_GCR_SYS_STAT                 ((uint32_t)0x00000040UL) /**< Offset from GCR Base Address: <tt> 0x0040</tt> */ 
- #define MXC_R_GCR_RST1                     ((uint32_t)0x00000044UL) /**< Offset from GCR Base Address: <tt> 0x0044</tt> */ 
- #define MXC_R_GCR_PCLK_DIS1                ((uint32_t)0x00000048UL) /**< Offset from GCR Base Address: <tt> 0x0048</tt> */ 
- #define MXC_R_GCR_EVENT_EN                 ((uint32_t)0x0000004CUL) /**< Offset from GCR Base Address: <tt> 0x004C</tt> */ 
- #define MXC_R_GCR_REVISION                 ((uint32_t)0x00000050UL) /**< Offset from GCR Base Address: <tt> 0x0050</tt> */ 
- #define MXC_R_GCR_SYS_STAT_IE              ((uint32_t)0x00000054UL) /**< Offset from GCR Base Address: <tt> 0x0054</tt> */ 
- #define MXC_R_GCR_ECC_ER                   ((uint32_t)0x00000064UL) /**< Offset from GCR Base Address: <tt> 0x0064</tt> */ 
- #define MXC_R_GCR_ECC_NDED                 ((uint32_t)0x00000068UL) /**< Offset from GCR Base Address: <tt> 0x0068</tt> */ 
- #define MXC_R_GCR_ECC_IRQEN                ((uint32_t)0x0000006CUL) /**< Offset from GCR Base Address: <tt> 0x006C</tt> */ 
- #define MXC_R_GCR_ECC_ERRAD                ((uint32_t)0x00000070UL) /**< Offset from GCR Base Address: <tt> 0x0070</tt> */ 
- #define MXC_R_GCR_BTLE_LDOCR               ((uint32_t)0x00000074UL) /**< Offset from GCR Base Address: <tt> 0x0074</tt> */ 
- #define MXC_R_GCR_BTLE_LDODCR              ((uint32_t)0x00000078UL) /**< Offset from GCR Base Address: <tt> 0x0078</tt> */ 
- #define MXC_R_GCR_GPR0                     ((uint32_t)0x00000080UL) /**< Offset from GCR Base Address: <tt> 0x0080</tt> */ 
- #define MXC_R_GCR_APB_ASYNC                ((uint32_t)0x00000084UL) /**< Offset from GCR Base Address: <tt> 0x0084</tt> */ 
-/**@} end of group gcr_registers */
-
 /**
  * @ingroup  gcr_registers
  * @defgroup GCR_SCON GCR_SCON
@@ -477,11 +443,11 @@ typedef struct {
  #define MXC_F_GCR_PCLK_DIS0_DMA0_POS                   5 /**< PCLK_DIS0_DMA0 Position */
  #define MXC_F_GCR_PCLK_DIS0_DMA0                       ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS0_DMA0_POS)) /**< PCLK_DIS0_DMA0 Mask */
 
- #define MXC_F_GCR_PCLK_DIS0_SPI0_POS                   6 /**< PCLK_DIS0_SPI0 Position */
- #define MXC_F_GCR_PCLK_DIS0_SPI0                       ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS0_SPI0_POS)) /**< PCLK_DIS0_SPI0 Mask */
-
- #define MXC_F_GCR_PCLK_DIS0_SPI1_POS                   7 /**< PCLK_DIS0_SPI1 Position */
+ #define MXC_F_GCR_PCLK_DIS0_SPI1_POS                   6 /**< PCLK_DIS0_SPI1 Position */
  #define MXC_F_GCR_PCLK_DIS0_SPI1                       ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS0_SPI1_POS)) /**< PCLK_DIS0_SPI1 Mask */
+
+ #define MXC_F_GCR_PCLK_DIS0_SPI2_POS                   7 /**< PCLK_DIS0_SPI2 Position */
+ #define MXC_F_GCR_PCLK_DIS0_SPI2                       ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS0_SPI2_POS)) /**< PCLK_DIS0_SPI2 Mask */
 
  #define MXC_F_GCR_PCLK_DIS0_UART0_POS                  9 /**< PCLK_DIS0_UART0 Position */
  #define MXC_F_GCR_PCLK_DIS0_UART0                      ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS0_UART0_POS)) /**< PCLK_DIS0_UART0 Mask */
@@ -680,8 +646,8 @@ typedef struct {
  #define MXC_F_GCR_RST1_WDT1_POS                        8 /**< RST1_WDT1 Position */
  #define MXC_F_GCR_RST1_WDT1                            ((uint32_t)(0x1UL << MXC_F_GCR_RST1_WDT1_POS)) /**< RST1_WDT1 Mask */
 
- #define MXC_F_GCR_RST1_SPI3_POS                        9 /**< RST1_SPI3 Position */
- #define MXC_F_GCR_RST1_SPI3                            ((uint32_t)(0x1UL << MXC_F_GCR_RST1_SPI3_POS)) /**< RST1_SPI3 Mask */
+ #define MXC_F_GCR_RST1_SPI0_POS                        9 /**< RST1_SPI0 Position */
+ #define MXC_F_GCR_RST1_SPI0                            ((uint32_t)(0x1UL << MXC_F_GCR_RST1_SPI0_POS)) /**< RST1_SPI0 Mask */
 
  #define MXC_F_GCR_RST1_XIPR_POS                        15 /**< RST1_XIPR Position */
  #define MXC_F_GCR_RST1_XIPR                            ((uint32_t)(0x1UL << MXC_F_GCR_RST1_XIPR_POS)) /**< RST1_XIPR Mask */
@@ -751,8 +717,8 @@ typedef struct {
  #define MXC_F_GCR_PCLK_DIS1_OW_POS                     13 /**< PCLK_DIS1_OW Position */
  #define MXC_F_GCR_PCLK_DIS1_OW                         ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS1_OW_POS)) /**< PCLK_DIS1_OW Mask */
 
- #define MXC_F_GCR_PCLK_DIS1_SPI3_POS                   14 /**< PCLK_DIS1_SPI3 Position */
- #define MXC_F_GCR_PCLK_DIS1_SPI3                       ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS1_SPI3_POS)) /**< PCLK_DIS1_SPI3 Mask */
+ #define MXC_F_GCR_PCLK_DIS1_SPI0_POS                   14 /**< PCLK_DIS1_SPI0 Position */
+ #define MXC_F_GCR_PCLK_DIS1_SPI0                       ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS1_SPI0_POS)) /**< PCLK_DIS1_SPI0 Mask */
 
  #define MXC_F_GCR_PCLK_DIS1_SPIXIPR_POS                20 /**< PCLK_DIS1_SPIXIPR Position */
  #define MXC_F_GCR_PCLK_DIS1_SPIXIPR                    ((uint32_t)(0x1UL << MXC_F_GCR_PCLK_DIS1_SPIXIPR_POS)) /**< PCLK_DIS1_SPIXIPR Mask */

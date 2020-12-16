@@ -55,7 +55,7 @@ SRAM_ADDR = SDMA_CODE_ADDR + SDMA_CODE_LEN;
 SRAM_LEN = SRAM_SIZE - OTP_LEN - SHARED_LEN - SDMA_LEN;
 
 /* Make room for PAL_NVM_DB */
-FLASH_MEM_SIZE = 0x100000 - 0x200 - _PAL_NVM_SIZE;
+FLASH_MEM_SIZE = 0x100000 - _PAL_NVM_SIZE;
 PAL_NVM_ORIGIN = 0x100000 - _PAL_NVM_SIZE + 0x10000000;
 
 /* SPID and SPIX Sections here are maximum possible sizes */
@@ -63,8 +63,7 @@ PAL_NVM_ORIGIN = 0x100000 - _PAL_NVM_SIZE + 0x10000000;
 MEMORY {
 
     SPIX (rx)  : ORIGIN = 0x08000000,                           LENGTH = 128M
-    HEADER (rx): ORIGIN = 0x10000000,                           LENGTH = 0x200
-    FLASH (rx) : ORIGIN = 0x10000200,                           LENGTH = FLASH_MEM_SIZE
+    FLASH (rx) : ORIGIN = 0x10000000,                           LENGTH = FLASH_MEM_SIZE
     PAL_NVM_DB (r)  : ORIGIN = PAL_NVM_ORIGIN,                  LENGTH = _PAL_NVM_SIZE
 
     OTP (rwx)       : ORIGIN = OTP_ADDR,                        LENGTH = OTP_LEN
@@ -77,22 +76,8 @@ MEMORY {
     SPID (rw)       : ORIGIN = 0x80000000,                      LENGTH = 512M
 }
 
-/* Added Oct 9, 2018 to go to correct reset vector. */
-ENTRY(Reset_Handler)
-PROVIDE( _start_SWAP = (((Reset_Handler) >> 24) | (((Reset_Handler) & 0x00FF0000) >> 8) | (((Reset_Handler) & 0x0000FF00) << 8) | ((Reset_Handler) << 24)));
-PROVIDE_HIDDEN( _SLA_Size = _endimage - __end_header );
-PROVIDE( _SLA_Size_SWAP = (((_SLA_Size) >> 24) | (((_SLA_Size) & 0x00FF0000) >> 8) | (((_SLA_Size) & 0x0000FF00) << 8) | ((_SLA_Size) << 24)));
-
 /* Sections Definitions */
 SECTIONS {
-     .sb_sla_header : ALIGN(4)
-    {
-       FILL(0xFF)
-        KEEP(*(.sb_sla_header)) /* Header for ROM code */ 
-         __end_header = . ;
-        . = ALIGN(512);
-    } > HEADER
-
     .text :
     {
         _text = .;
@@ -159,24 +144,6 @@ SECTIONS {
         _edata = ALIGN(., 4);
     } > SRAM AT>FLASH
     __load_data = LOADADDR(.data);
-    _enddata = LOADADDR(.data)+SIZEOF(.data);
-
-    .sb_sla_trailer : AT(_enddata)
-    {
-        KEEP(*(.sb_sla_trailer))
-        /* Align image with 16 byte boundary to conform to flash encryption block size. */
-        FILL(0xDEADC0DE);
-        /* NOTE: The FILL and ALIGN will not work unless something is written to the section.  So, we use LONG. */
-        LONG(0xDEADC0DE);
-        . = ALIGN(16);
-    }  > FLASH
-    _endimage = LOADADDR(.sb_sla_trailer)+SIZEOF(.sb_sla_trailer);
-    .sig :
-    {
-        KEEP(*(.sig))
-        LONG(0xDEADBEEF);
-
-    }  > FLASH
 
     .pal_nvm_db :
     {

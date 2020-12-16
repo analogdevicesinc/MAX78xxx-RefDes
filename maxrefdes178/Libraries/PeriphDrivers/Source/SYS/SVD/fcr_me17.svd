@@ -284,6 +284,56 @@
      </field>
     </fields>
    </register>
+   <register>
+    <name>ERFOKS</name>
+    <description>ERFO Kick Start Register.</description>
+    <addressOffset>0x18</addressOffset>
+    <access>read-write</access>
+    <fields>
+     <field>
+      <name>KSERFO_CNT</name>
+      <description>Kick Start ERFO Counter.</description>
+      <bitOffset>0</bitOffset>
+      <bitWidth>7</bitWidth>
+     </field>
+     <field>
+      <name>KSERFO_EN</name>
+      <description>Kick Start ERFO Enable.</description>
+      <bitOffset>7</bitOffset>
+      <bitWidth>1</bitWidth>
+     </field>
+     <field>
+      <name>KSERFODRIVER</name>
+      <description>Kick Start ERFO Driver.</description>
+      <bitOffset>8</bitOffset>
+      <bitWidth>3</bitWidth>
+     </field>
+     <field>
+      <name>KSERFO2X</name>
+      <description>Kick Start ERFO 2X Pulse.</description>
+      <bitOffset>11</bitOffset>
+      <bitWidth>1</bitWidth>
+     </field>
+     <field>
+      <name>KSCLKSEL</name>
+      <description>Kick Start Clock Select for ERFO.</description>
+      <bitOffset>12</bitOffset>
+      <bitWidth>2</bitWidth>
+      <enumeratedValues>
+       <enumeratedValue>
+        <name>ISO</name>
+        <description>ISO.</description>
+        <value>2</value>
+       </enumeratedValue>
+       <enumeratedValue>
+        <name>IPO</name>
+        <description>IPO.</description>
+        <value>3</value>
+       </enumeratedValue>
+      </enumeratedValues>      
+     </field>                
+    </fields>
+   </register>   
   </registers>
  </peripheral>
 </device>

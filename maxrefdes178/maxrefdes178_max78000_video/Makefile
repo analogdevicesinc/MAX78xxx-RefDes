@@ -61,6 +61,8 @@ CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 #Use this for other library make files so they are all based off the same as root as the project
 export CMSIS_ROOT
 
+# LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/max78000_arm.ld
+
 # Source files for this test (add path to VPATH below)
 SRCS  = max78000_video_main.c
 SRCS += max78000_video_cnn.c
@@ -107,13 +109,6 @@ else
 MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
-# Point this variable to a linker file to override the default file
-LINKER=$(TARGET_LC).ld
-LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
-
-# Run bitmap converter to produce tft resource header and resource file
-#$(shell $(LIBS_DIR)/Tools/BitmapConverter/maxim_bitmap_converter ./resources)
-
 ################################################################################
 # Include external library makefiles here
 
@@ -145,3 +140,4 @@ distclean: clean libclean
 sla: all
 #	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -O binary $(BUILD_DIR)/$(PROJECT).sbin
 #	$(BUILD_SESSION) $(BUILD_DIR)/$(PROJECT).sbin scp_packets $(TEST_KEY)
+

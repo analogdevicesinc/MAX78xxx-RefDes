@@ -184,13 +184,13 @@
                   <value>0x00</value>
                 </enumeratedValue>
                 <enumeratedValue>
-                  <name>SPI0RX</name>
-                  <description>SPI0 RX</description>
+                  <name>SPI1RX</name>
+                  <description>SPI1 RX</description>
                   <value>0x01</value>
                 </enumeratedValue>
                 <enumeratedValue>
-                  <name>SPI1RX</name>
-                  <description>SPI1 RX</description>
+                  <name>SPI2RX</name>
+                  <description>SPI2 RX</description>
                   <value>0x02</value>
                 </enumeratedValue>
                 <enumeratedValue>
@@ -229,8 +229,8 @@
                   <value>0x0E</value>
                 </enumeratedValue>
                 <enumeratedValue>
-                  <name>SPI2RX</name>
-                  <description>SPI2 RX</description>
+                  <name>SPI0RX</name>
+                  <description>SPI0 RX</description>
                   <value>0x0F</value>
                 </enumeratedValue>
                 <enumeratedValue>
@@ -289,13 +289,13 @@
                   <value>0x1B</value>
                 </enumeratedValue>
                 <enumeratedValue>
-                  <name>SPI0TX</name>
-                  <description>SPI0 TX</description>
+                  <name>SPI1TX</name>
+                  <description>SPI1 TX</description>
                   <value>0x21</value>
                 </enumeratedValue>
                 <enumeratedValue>
-                  <name>SPI1TX</name>
-                  <description>SPI1 TX</description>
+                  <name>SPI2TX</name>
+                  <description>SPI2 TX</description>
                   <value>0x22</value>
                 </enumeratedValue>
                 <enumeratedValue>
@@ -329,8 +329,8 @@
                   <value>0x2E</value>
                 </enumeratedValue>
                 <enumeratedValue>
-                  <name>SPI2TX</name>
-                  <description>SPI2 TX</description>
+                  <name>SPI0TX</name>
+                  <description>SPI0 TX</description>
                   <value>0x2F</value>
                 </enumeratedValue>
                 <enumeratedValue>

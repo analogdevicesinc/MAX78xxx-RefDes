@@ -163,6 +163,7 @@ int MXC_GPIO_Config(const mxc_gpio_cfg_t* cfg)
         MXC_GPIO_Init(1 << port);
     }
 
+    // Configure alternate function
     error = MXC_GPIO_RevA_SetAF ((mxc_gpio_reva_regs_t*)gpio, cfg->func, cfg->mask);
     
     if(error != E_NO_ERROR) {
