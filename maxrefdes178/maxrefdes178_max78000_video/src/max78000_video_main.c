@@ -64,6 +64,7 @@
 
 #define EMBEDDING_RESULT_LEN   512
 //#define PRINT_TIME
+#define CAMERA_FREQ     (20 * 1000 * 1000)
 
 
 //-----------------------------------------------------------------------------
@@ -326,7 +327,7 @@ int main(void)
     NVIC_EnableIRQ(MAX78000_VIDEO_QSPI_DMA_IRQ);
 
     // Initialize the camera driver.
-    if (camera_init() != E_NO_ERROR) {
+    if (camera_init(CAMERA_FREQ) != E_NO_ERROR) {
         PR_ERROR("Camera init failed!");
         fail();
     }

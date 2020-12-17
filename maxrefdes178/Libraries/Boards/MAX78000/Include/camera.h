@@ -37,9 +37,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-// Defines
-#define CAMERA_FREQ     (20 * 1000 * 1000)
-
 #include "ov7692_regs.h"
 
 #define STATUS_OK               (0)
@@ -109,7 +106,7 @@ typedef struct _camera {
 
 /******************************** Public Functions ***************************/
 // Initialize the sensor hardware and probe the image sensor.
-int camera_init();
+int camera_init(uint32_t freq);
 
 // Return sensor i2c slave address.
 int camera_get_slave_address();
