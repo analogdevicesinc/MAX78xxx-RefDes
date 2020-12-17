@@ -39,7 +39,9 @@
 #include <board.h>
 #include <core1.h>
 #include <dma.h>
+#include <stdint.h>
 #include <string.h>
+#include <rtc.h>
 
 #include "max32666_debug.h"
 //#include "max32666_ble.h"
@@ -73,6 +75,7 @@
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static uint32_t utils_get_time_ms(void);
 
 
 //-----------------------------------------------------------------------------
@@ -81,11 +84,14 @@
 int main(void)
 {
     int ret = 0;
-    uint16_t resultColor = 0;
-    uint16_t frameColor = 0;
-    uint8_t runFaceId = 0;
-    uint8_t printAudioResultCnt = 0;
+    uint16_t result_color = 0;
+    uint16_t frame_color = 0;
+    uint8_t run_faceid = 0;
+    uint8_t print_audio_result_cnt = 0;
+    uint32_t lcd_draw_time = 0;
+    double fps = 0;
     char version[10] = {0};
+    char fps_string[10] = {0};
 
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel =  0x00;
@@ -157,6 +163,18 @@ int main(void)
 //        PR_ERROR("sdcard_init failed %d", ret);
 //    }
 
+    ret = MXC_RTC_Init(0, 0);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_RTC_Init failed %d", ret);
+        max20303_led_red(1);
+    }
+
+    ret = MXC_RTC_Start();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_RTC_Start failed %d", ret);
+        max20303_led_red(1);
+    }
+
     // Enable Core1
     Core1_Start();
 
@@ -173,55 +191,62 @@ int main(void)
             switch(ret)
             {
             case QSPI_TYPE_RESPONSE_VIDEO_DATA:
-                if (runFaceId) {
+                if (run_faceid) {
                     if (strcmp(lcd_subtitle, "nothing")) {
-                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_subtitle, Font_16x26, resultColor, lcd_data);
+                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_subtitle, Font_16x26, result_color, lcd_data);
                     } else {
-                        frameColor = WHITE;
+                        frame_color = WHITE;
                     }
 
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
-                            FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, frameColor, lcd_data);
+                            FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, frame_color, lcd_data);
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1,
-                            FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, frameColor, lcd_data);
+                            FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, frame_color, lcd_data);
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2,
                             FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data);
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3,
                             FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data);
                 }
 
-                if (printAudioResultCnt) {
+                if (print_audio_result_cnt) {
                     fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_toptitle, Font_16x26, YELLOW, lcd_data);
-                    printAudioResultCnt--;
+                    print_audio_result_cnt--;
+                }
+
+                fps = (double) 1000.0 / (double)(utils_get_time_ms() - lcd_draw_time);
+                lcd_draw_time = utils_get_time_ms();
+                if (1) { // Enable FPS on LCD
+                    snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", fps);
+                    fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 37, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data);
                 }
 
                 lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data);
                 break;
             case QSPI_TYPE_RESPONSE_VIDEO_RESULT:
                 if (strcmp(lcd_subtitle, "Unknown") == 0) {
-                    resultColor = RED;
-                    frameColor = RED;
+                    result_color = RED;
+                    frame_color = RED;
                 } else if(strcmp(lcd_subtitle, "Adjust Face") == 0) {
-                    resultColor = YELLOW;
-                    frameColor = YELLOW;
+                    result_color = YELLOW;
+                    frame_color = YELLOW;
                 } else {
-                    resultColor = GREEN;
-                    frameColor = GREEN;
+                    result_color = GREEN;
+                    frame_color = GREEN;
                 }
                 break;
             case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
-                printAudioResultCnt = 10;
+                print_audio_result_cnt = 10;
 
                 if (strcmp(lcd_toptitle, "OFF") == 0) {
                     lcd_backlight(0);
-                    printAudioResultCnt = 0;
+                    print_audio_result_cnt = 0;
                 } else if(strcmp(lcd_toptitle, "ON") == 0) {
                     lcd_backlight(1);
-                    printAudioResultCnt = 0;
+                    print_audio_result_cnt = 0;
                 } else if (strcmp(lcd_toptitle, "GO") == 0) {
-                    runFaceId = 1;
+                    run_faceid = 1;
                 } else if(strcmp(lcd_toptitle, "STOP") == 0) {
-                    runFaceId = 0;
+                    run_faceid = 0;
                 }
                 break;
             default:
@@ -258,4 +283,18 @@ void HardFault_Handler(void)
         }
         cnt++;
     }
+}
+
+static uint32_t utils_get_time_ms(void)
+{
+    int sec;
+    double subsec;
+    uint32_t ms;
+
+    subsec = MXC_RTC_GetSubSecond() / 4096.0;
+    sec = MXC_RTC_GetSecond();
+
+    ms = (sec*1000) +  (int)(subsec*1000);
+
+    return ms;
 }

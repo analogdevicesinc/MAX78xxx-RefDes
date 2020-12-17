@@ -64,6 +64,7 @@
 
 #define EMBEDDING_RESULT_LEN   512
 //#define PRINT_TIME
+//#define PRINT_TIME_CNN
 #define CAMERA_FREQ     (20 * 1000 * 1000)
 
 
@@ -214,10 +215,9 @@ static const uint8_t camera_settings[][2] = {
 static int8_t prev_decision = -2;
 static int8_t decision = -2;
 
-
-#ifdef PRINT_TIME
-    uint32_t timer_counter = 0;
-#define PR_TIMER(fmt, args...)    if(timer_counter%10==0) printf("T[%-10s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
+#if defined(PRINT_TIME) || defined(PRINT_TIME_CNN)
+static uint32_t timer_counter = 0;
+#define PR_TIMER(fmt, args...) if((timer_counter % 10) == 0) printf("T[%-5s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
 #endif
 
 
@@ -225,7 +225,7 @@ static int8_t decision = -2;
 // Local function declarations
 //-----------------------------------------------------------------------------
 static void fail(void);
-static void process_img(void);
+static void send_img(void);
 static void run_cnn(int x_offset, int y_offset);
 static void run_demo(void);
 
@@ -387,12 +387,15 @@ static void fail(void)
 
 static void run_demo(void)
 {
+    uint8_t run_count = 0;
+
     camera_start_capture_image();
-    uint32_t run_count = 0;
+
 #ifdef PRINT_TIME
-    /* Get current time */
-    uint32_t process_time = utils_get_time_ms();
-    uint32_t total_time = utils_get_time_ms();
+    uint32_t capture_started_time = utils_get_time_ms();
+    uint32_t cnn_completed_time;
+    uint32_t qspi_completed_time;
+    uint32_t capture_completed_time;
 #endif
 
     while (1) { //Capture image and run CNN
@@ -400,10 +403,12 @@ static void run_demo(void)
         if (camera_is_image_rcv()) { // Check whether image is ready
 
 #ifdef PRINT_TIME
-            process_time = utils_get_time_ms();
+            capture_completed_time = utils_get_time_ms();
 #endif
+
             run_cnn(0, 0);
             if ((run_count % 2) == 0){
+                run_count = 0;
                 run_cnn(-10, -10);
                 run_cnn(10, 10);
             } else {
@@ -412,27 +417,33 @@ static void run_demo(void)
             }
             run_count++;
 
-            process_img();
+#ifdef PRINT_TIME
+            cnn_completed_time = utils_get_time_ms();
+#endif
 
+            send_img();
 
 #ifdef PRINT_TIME
-            PR_TIMER("Process Time Total : %dms", utils_get_time_ms()-process_time);
+            qspi_completed_time = utils_get_time_ms();
+
+            PR_TIMER("Capture : %d", capture_completed_time - capture_started_time);
+            PR_TIMER("CNN     : %d", cnn_completed_time - capture_completed_time);
+            PR_TIMER("QSPI    : %d", qspi_completed_time - cnn_completed_time);
+            PR_TIMER("Total   : %d\n\n\n", qspi_completed_time - capture_started_time);
+            timer_counter++;
 #endif
 
             camera_start_capture_image();
 
 #ifdef PRINT_TIME
-            PR_TIMER("Capture Time : %dms", process_time - total_time);
-            PR_TIMER("Total Time : %dms\n\n\n", utils_get_time_ms()-total_time);
-            total_time = utils_get_time_ms();
-            timer_counter++;
+            capture_started_time = utils_get_time_ms();
 #endif
 
         }
     }
 }
 
-static void process_img(void)
+static void send_img(void)
 {
     uint8_t   *raw;
     uint32_t  imgLen;
@@ -441,18 +452,9 @@ static void process_img(void)
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &imgLen, &w, &h);
 
-#ifdef PRINT_TIME
-    uint32_t pass_time = 0;
-    pass_time = utils_get_time_ms();
-#endif
-
     spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, raw, imgLen,
             QSPI_TYPE_RESPONSE_VIDEO_DATA, &qspi_int);
-    MXC_Delay(MXC_DELAY_MSEC(3)); // Yield SPI DMA RAM read
-
-#ifdef PRINT_TIME
-    PR_TIMER("QSPI transfer duration : %d", utils_get_time_ms() - pass_time);
-#endif
+//    MXC_Delay(MXC_DELAY_MSEC(3)); // Yield SPI DMA RAM read
 }
 
 static void run_cnn(int x_offset, int y_offset)
@@ -464,7 +466,7 @@ static void run_cnn(int x_offset, int y_offset)
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &imgLen, &w, &h);
 
-#ifdef PRINT_TIME
+#ifdef PRINT_TIME_CNN
     uint32_t pass_time = utils_get_time_ms();
 #endif
 
@@ -474,12 +476,10 @@ static void run_cnn(int x_offset, int y_offset)
 
     uint8_t * data = raw;
 
-#ifdef PRINT_TIME
-    PR_TIMER("CNN initialization duration : %d", utils_get_time_ms() - pass_time);
+#ifdef PRINT_TIME_CNN
+    PR_TIMER("CNN init : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
-
-//    int counter = 0;
 
     data =  raw + ((LCD_HEIGHT - (FACEID_HEIGHT))/2)*LCD_WIDTH*LCD_BYTE_PER_PIXEL;
     for (int i = y_offset; i<FACEID_HEIGHT+y_offset; i++) {
@@ -494,10 +494,6 @@ static void run_cnn(int x_offset, int y_offset)
             ug = (uint8_t)((data[j*LCD_BYTE_PER_PIXEL]<<5) | ((data[j*LCD_BYTE_PER_PIXEL+1]&0xE0)>>3));
             ur = (uint8_t)(data[j*LCD_BYTE_PER_PIXEL]&0xF8);
 
-//            raw[counter++] = ur;
-//            raw[counter++] = ug;
-//            raw[counter++] = ub;
-
             b = ub - 128;
             g = ug - 128;
             r = ur - 128;
@@ -511,28 +507,28 @@ static void run_cnn(int x_offset, int y_offset)
         }
     }
 
-#ifdef PRINT_TIME
-    PR_TIMER("CNN load data duration : %d", utils_get_time_ms() - pass_time);
+#ifdef PRINT_TIME_CNN
+    PR_TIMER("CNN load : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
     cnn_wait();
 
-#ifdef PRINT_TIME
-    PR_TIMER("CNN wait duration : %d", utils_get_time_ms() - pass_time);
+#ifdef PRINT_TIME_CNN
+    PR_TIMER("CNN wait : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
 
     cnn_unload(embedding_result);
 
-#ifdef PRINT_TIME
-    PR_TIMER("CNN unload duration : %d", utils_get_time_ms() - pass_time);
+#ifdef PRINT_TIME_CNN
+    PR_TIMER("CNN unload : %d", utils_get_time_ms() - pass_time);
     pass_time = utils_get_time_ms();
 #endif
 
     int pResult = calculate_minDistance(embedding_result);
 
-#ifdef PRINT_TIME
-    PR_TIMER("Embedding calculation duration : %d", utils_get_time_ms() - pass_time);
+#ifdef PRINT_TIME_CNN
+    PR_TIMER("Embedding calc : %d", utils_get_time_ms() - pass_time);
 #endif
 
     if ( pResult == 0 ) {
