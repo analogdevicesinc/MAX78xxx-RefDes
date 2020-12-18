@@ -70,6 +70,7 @@
 #define LCD_SUBTITLE_SIZE                  32
 #define LCD_TOPTITLE_SIZE                  32
 #define LCD_ROTATION                       2  // 0-3
+#define LCD_FPS_ENABLE                     1  // 0-1
 
 // Common Camera
 #define CAMERA_WIDTH                       LCD_WIDTH
@@ -84,6 +85,9 @@
 #define FACEID_RECTANGLE_Y1                ((LCD_HEIGHT - FACEID_HEIGHT) / 2)
 #define FACEID_RECTANGLE_X2                FACEID_RECTANGLE_X1 + FACEID_WIDTH
 #define FACEID_RECTANGLE_Y2                FACEID_RECTANGLE_Y1 + FACEID_HEIGHT
+
+// Common KWS
+#define KWS_PRINT_DURATION                 1000
 
 // Common BLE
 #define BLE_MAX_MTU_SIZE                   252

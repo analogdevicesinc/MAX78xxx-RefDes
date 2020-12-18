@@ -87,7 +87,7 @@ int main(void)
     uint16_t result_color = 0;
     uint16_t frame_color = 0;
     uint8_t run_faceid = 0;
-    uint8_t print_audio_result_cnt = 0;
+    uint32_t audio_result_time = 0;
     uint32_t lcd_draw_time = 0;
     double fps = 0;
     char version[10] = {0};
@@ -208,16 +208,15 @@ int main(void)
                             FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data);
                 }
 
-                if (print_audio_result_cnt) {
-                    fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_toptitle, Font_16x26, YELLOW, lcd_data);
-                    print_audio_result_cnt--;
-                }
-
                 fps = (double) 1000.0 / (double)(utils_get_time_ms() - lcd_draw_time);
                 lcd_draw_time = utils_get_time_ms();
-                if (1) { // Enable FPS on LCD
+                if (LCD_FPS_ENABLE) {
                     snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", fps);
                     fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 37, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data);
+                }
+
+                if (lcd_draw_time - audio_result_time < KWS_PRINT_DURATION) {
+                    fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_toptitle, Font_16x26, YELLOW, lcd_data);
                 }
 
                 lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data);
@@ -235,14 +234,12 @@ int main(void)
                 }
                 break;
             case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
-                print_audio_result_cnt = 10;
+                audio_result_time = utils_get_time_ms();
 
                 if (strcmp(lcd_toptitle, "OFF") == 0) {
                     lcd_backlight(0);
-                    print_audio_result_cnt = 0;
                 } else if(strcmp(lcd_toptitle, "ON") == 0) {
                     lcd_backlight(1);
-                    print_audio_result_cnt = 0;
                 } else if (strcmp(lcd_toptitle, "GO") == 0) {
                     run_faceid = 1;
                 } else if(strcmp(lcd_toptitle, "STOP") == 0) {

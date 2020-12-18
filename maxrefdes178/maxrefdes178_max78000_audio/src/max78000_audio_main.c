@@ -448,20 +448,20 @@ int main(void)
                 /* find detected class with max probability */
                 ret = check_inference(ml_softmax, ml_data, &out_class, &probability);
 
-                if (!ret)
-                    PR_WARN("LOW CONFIDENCE!: ");
+                if (!ret) {
+                    PR_INFO("Low confidence: %s (%0.1f%%)", keywords[out_class], probability);
+                } else {
+                    PR_INFO("Detected: %s (%0.1f%%)", keywords[out_class], probability);
 
-                PR_INFO("Detected word: %s (%0.1f%%)", keywords[out_class],
-                        probability);
-
-                if (ret) {
                     spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI,
                             (uint8_t *) keywords[out_class],
                             sizeof(keywords[out_class]),
                             QSPI_TYPE_RESPONSE_AUDIO_RESULT, &qspi_int);
                 }
 
+#ifdef ENABLE_CLASSIFICATION_DISPLAY
                 printf("\n----------------------------------------- \n");
+#endif
 
                 Max = 0;
                 Min = 0;
