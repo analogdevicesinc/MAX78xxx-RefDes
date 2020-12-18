@@ -258,7 +258,14 @@ static int set_framesize(int width, int height)
     int ret = 0;
     uint8_t input_factor_large[4] = { 0 };
     // Default input factor for large images
-    if ((width < 320) || (height < 240)) { // check if size is QVGA or less
+    if ((width == 240) && (height == 240)) {
+        //input 480*480
+        input_factor_large[0] = 0x01;
+        input_factor_large[1] = 0xe0;
+        input_factor_large[2] = 0x01;
+        input_factor_large[3] = 0xe0;
+    } else if ((width < 320) || (height < 240)) { // check if size is QVGA or less
+        //input 640*240
         input_factor_large[0] = 0x02;
         input_factor_large[1] = 0x80;
         input_factor_large[2] = 0x00;
@@ -271,6 +278,7 @@ static int set_framesize(int width, int height)
         ret |= cambus_writeb(0x19, 0x06); // Vertical Window Start Line Control
         ret |= cambus_writeb(0x1a, 0x7b); // Vertical sensor size
     } else {
+        //input 640*480
         input_factor_large[0] = 0x02;
         input_factor_large[1] = 0x80;
         input_factor_large[2] = 0x01;

@@ -100,10 +100,7 @@ static const uint8_t camera_settings[][2] = {
     {0x18, 0xa4}, // Horizontal sensor size (default)
     {0x19, 0x0c}, // Vertical Window Start Line Control (default)
     {0x1a, 0xf6}, // Vertical sensor size (default)
-    {0x30, 0x05},
-    {0x31, 0x03},
-    {0x37, 0x0C}, // PCLK is double system clock (default is 0x0c)
-    {0x38, 0x10},
+    {0x37, 0x04}, // PCLK is double system clock (default is 0x0c)
     {0x3e, 0x20}, // (default)
     {0x81, 0x3f}, // sde_en, uv_adj_en, scale_v_en, scale_h_en, uv_avg_en, cmx_en
     {0xcc, 0x02}, // High 2 bits of horizontal output size (default)
@@ -128,7 +125,7 @@ static const uint8_t camera_settings[][2] = {
     {0x7a, 0x4e},
     {0x7b, 0x1f},
     {0x7c, 0x00},
-    {0x11, 0xC0}, // CLKRC, Internal clock pre-scalar divide by 2 (default divide by 1)
+    {0x11, 0x01}, // CLKRC, Internal clock pre-scalar divide by 2 (default divide by 1)
     {0x20, 0x00}, // Banding filter (default)
     {0x21, 0x57}, // Banding filter (default is 0x44)
     {0x50, 0x4d},
@@ -184,7 +181,7 @@ static const uint8_t camera_settings[][2] = {
     {0x0e, 0x00},
     {0x0c, 0xd6},
     {0x82, 0x3},
-    {0x11, 0xc0},   // Set clock prescaler
+    {0x11, 0x00},   // Set clock prescaler
     {0x12, 0x6},
     {0x61, 0x0},
     {0x64, 0x11},
