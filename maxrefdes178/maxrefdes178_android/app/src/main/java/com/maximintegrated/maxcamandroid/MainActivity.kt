@@ -6,18 +6,19 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.observe
 import com.maximintegrated.bluetooth.devicelist.OnBluetoothDeviceClickListener
 import com.maximintegrated.communication.MaxCamViewModel
-import com.maximintegrated.maxcamandroid.utils.ROOT_FRAGMENT
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.exts.getCurrentFragment
 import com.maximintegrated.maxcamandroid.main.LandingPage
 import com.maximintegrated.maxcamandroid.main.MainFragment
 import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
+import com.maximintegrated.maxcamandroid.utils.ROOT_FRAGMENT
 import com.maximintegrated.maxcamandroid.view.BleConnectionInfo
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_layout.*
@@ -132,5 +133,9 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         payload?.let {
             mainViewModel.onPayloadReceived(payload)
         }
+    }
+
+    fun changeVisibilityOfTheBottomView(visible: Boolean) {
+        bottomView.isVisible = visible
     }
 }
