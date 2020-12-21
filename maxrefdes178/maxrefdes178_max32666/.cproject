@@ -47,14 +47,12 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1576427906" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1576427906" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="true" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/arm-none-eabi/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/arm-none-eabi/include/sys&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Toolchain/lib/gcc/arm-none-eabi/6.3.1/include&quot;"/>
-									<listOptionValue builtIn="false" value="../../Libraries/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../Libraries/CMSIS/Device/Maxim/MAX32665/Include"/>
-									<listOptionValue builtIn="false" value="../../Libraries/Boards/MAX32665/Include"/>
-									<listOptionValue builtIn="false" value="../../Libraries/PeriphDrivers/Include/MAX32665"/>
-									<listOptionValue builtIn="false" value="../../Libraries/Boards/MAX32665/MAXREFDES178/Include"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/CMSIS/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/CMSIS/Device/Maxim/MAX32665/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/Boards/MAX32665/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/PeriphDrivers/Include/MAX32665&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/Boards/MAX32665/MAXREFDES178/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Tools/GNUTools/arm-none-eabi/include&quot;"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.68945223" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
