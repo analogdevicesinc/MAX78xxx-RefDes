@@ -55,7 +55,12 @@ BOARD=MAXREFDES178
 endif
 
 # This is the path to the CMSIS root directory
-LIBS_DIR=../Libraries
+ifeq "$(MAXIM_PATH)" ""
+LIBS_DIR=../../msdk/Libraries
+else
+LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
+endif
+
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 #Use this for other library make files so they are all based off the same as root as the project
