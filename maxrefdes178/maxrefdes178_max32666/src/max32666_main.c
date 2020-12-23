@@ -44,7 +44,7 @@
 #include <rtc.h>
 
 #include "max32666_debug.h"
-//#include "max32666_ble.h"
+#include "max32666_ble.h"
 #include "max32666_expander.h"
 #include "max32666_i2c.h"
 #include "max32666_lcd.h"
@@ -155,9 +155,8 @@ int main(void)
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("ble_init failed %d", ret);
 //        max20303_led_red(1);
-//        while(1);
 //    }
-//
+
 //    ret = sdcard_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("sdcard_init failed %d", ret);
@@ -186,6 +185,8 @@ int main(void)
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, image_data_rsz_maxim_logo);
 
     while (1) {
+//    	ble_worker();
+
         ret = qspi_worker();
         if (ret > QSPI_TYPE_NO_DATA) {
             switch(ret)

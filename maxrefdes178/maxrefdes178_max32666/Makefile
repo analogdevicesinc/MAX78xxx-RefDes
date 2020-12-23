@@ -75,7 +75,7 @@ export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
 SRCS  = max32666_main.c
-#SRCS += max32666_ble.c
+SRCS += max32666_ble.c
 SRCS += max32666_expander.c
 SRCS += max32666_fonts.c
 SRCS += max32666_i2c.c
@@ -135,6 +135,20 @@ ifeq ($(MAKECMDGOALS),sla)
 LINKER=$(TARGET_LC)_sla.ld
 LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
 endif
+
+################################################################################
+# Cordio Library Options
+DEBUG           := 1
+TRACE           := 1
+BT_VER          := 8
+WDXS_INCLUDED   := 1
+INIT_PERIPHERAL := 1
+INIT_ENCRYPTED  := 1
+
+# Select either option, or both for combined Host and Controller on single core
+BLE_HOST        := 1
+BLE_CONTROLLER  := 1
+
 ################################################################################
 # Include external library makefiles here
 
@@ -151,6 +165,10 @@ SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
 FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
 include $(FAT32_DRIVER_DIR)/fat32.mk
 include $(SDHC_DRIVER_DIR)/sdhc.mk
+
+# Include the Cordio Library
+CORDIO_DIR=Cordio
+include $(CORDIO_DIR)/platform/targets/maxim/build/cordio.mk
 
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be

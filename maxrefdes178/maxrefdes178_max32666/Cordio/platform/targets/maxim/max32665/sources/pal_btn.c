@@ -47,34 +47,34 @@ struct {
 /*************************************************************************************************/
 void palBtnCallback(void* pb)
 {
-  unsigned i;
-  int button = -1;
-  PalBtnState_t btnState = PAL_BTN_POS_UP;
-
-  /* Figure out which button caused this interrupt */
-  for(i = 0; i < num_pbs; i++) {
-
-    /* This is the button */
-    if((void*)&pb_pin[i] == pb) {
-      button = (int)i;
-      if(PB_Get(i)) {
-        btnState = PAL_BTN_POS_DOWN;
-      } else {
-        btnState = PAL_BTN_POS_UP;
-      }
-      break;
-    }
-  }
-
-  /* We didn't find the button */
-  if(button == -1) {
-    return;
-  }
-
-  /* Call the registered callback */
-  if(palBtnCb.actionCback != NULL) {
-    palBtnCb.actionCback((uint8_t)button, btnState);
-  }
+//  unsigned i;
+//  int button = -1;
+//  PalBtnState_t btnState = PAL_BTN_POS_UP;
+//
+//  /* Figure out which button caused this interrupt */
+//  for(i = 0; i < num_pbs; i++) {
+//
+//    /* This is the button */
+//    if((void*)&pb_pin[i] == pb) {
+//      button = (int)i;
+//      if(PB_Get(i)) {
+//        btnState = PAL_BTN_POS_DOWN;
+//      } else {
+//        btnState = PAL_BTN_POS_UP;
+//      }
+//      break;
+//    }
+//  }
+//
+//  /* We didn't find the button */
+//  if(button == -1) {
+//    return;
+//  }
+//
+//  /* Call the registered callback */
+//  if(palBtnCb.actionCback != NULL) {
+//    palBtnCb.actionCback((uint8_t)button, btnState);
+//  }
 }
 
 /*************************************************************************************************/
@@ -90,20 +90,20 @@ void palBtnCallback(void* pb)
 /*************************************************************************************************/
 void PalBtnInit(PalBtnActionCback_t actCback)
 {
-  unsigned i;
-
-  PB_Init();
-
-  /* Initialize callback */
-  palBtnCb.actionCback = actCback;
-
-  /* Register the callback for all of the buttons */
-  for(i = 0; i < num_pbs; i++) {
-    /* TODO: Implement dual edge interrupt */
-    // PB_RegisterRiseFallCallback(i, palBtnCallback);
-    PB_RegisterCallback(i, palBtnCallback);
-    PB_IntEnable(i);
-  }
+//  unsigned i;
+//
+//  PB_Init();
+//
+//  /* Initialize callback */
+//  palBtnCb.actionCback = actCback;
+//
+//  /* Register the callback for all of the buttons */
+//  for(i = 0; i < num_pbs; i++) {
+//    /* TODO: Implement dual edge interrupt */
+//    // PB_RegisterRiseFallCallback(i, palBtnCallback);
+//    PB_RegisterCallback(i, palBtnCallback);
+//    PB_IntEnable(i);
+//  }
 
   palBtnCb.state = PAL_BTN_STATE_READY;
 }
@@ -119,15 +119,15 @@ void PalBtnInit(PalBtnActionCback_t actCback)
 /*************************************************************************************************/
 void PalBtnDeInit(void)
 {
-  unsigned i;
-
-  /* Initialize callback */
-  palBtnCb.actionCback = NULL;
-
-  /* Register the callback for all of the buttons */
-  for(i = 0; i < num_pbs; i++) {
-    PB_IntDisable(i);
-  }
+//  unsigned i;
+//
+//  /* Initialize callback */
+//  palBtnCb.actionCback = NULL;
+//
+//  /* Register the callback for all of the buttons */
+//  for(i = 0; i < num_pbs; i++) {
+//    PB_IntDisable(i);
+//  }
 
   palBtnCb.state = PAL_BTN_STATE_UNINIT;
 }
@@ -160,5 +160,6 @@ PalBtnState_t PalBtnGetState(void)
 /*************************************************************************************************/
 PalBtnPos_t PalBtnGetPosition(uint8_t btnId)
 {
-  return PB_Get(btnId);
+//  return PB_Get(btnId);
+	return PAL_BTN_POS_INVALID;
 }

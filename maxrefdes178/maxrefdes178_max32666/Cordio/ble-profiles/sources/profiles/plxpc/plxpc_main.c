@@ -395,7 +395,7 @@ void plxpcPlxsProcRacp(uint8_t *pValue, uint16_t len)
 /*************************************************************************************************/
 void plxpcPlxParsePlxf(uint8_t *pValue, uint16_t len)
 {
-  int16_t   features;
+  int16_t   features = 0;
   int16_t   measStatusSupport;
   int16_t   sensorStatusSupport;
 

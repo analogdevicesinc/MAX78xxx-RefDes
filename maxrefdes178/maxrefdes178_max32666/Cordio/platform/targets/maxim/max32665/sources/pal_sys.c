@@ -105,26 +105,26 @@ static uint32_t palSysBusyCount;
  *  \brief  DMA interrupt handlers.
  */
 /*************************************************************************************************/
-void DMA0_IRQHandler(void)
-{
-  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
-  MXC_DMA_Handler();
-}
-void DMA1_IRQHandler(void)
-{
-  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
-  MXC_DMA_Handler();
-}
-void DMA2_IRQHandler(void)
-{
-  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
-  MXC_DMA_Handler();
-}
-void DMA3_IRQHandler(void)
-{
-  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
-  MXC_DMA_Handler();
-}
+//void DMA0_IRQHandler(void)
+//{
+//  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
+//  MXC_DMA_Handler();
+//}
+//void DMA1_IRQHandler(void)
+//{
+//  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
+//  MXC_DMA_Handler();
+//}
+//void DMA2_IRQHandler(void)
+//{
+//  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
+//  MXC_DMA_Handler();
+//}
+//void DMA3_IRQHandler(void)
+//{
+//  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
+//  MXC_DMA_Handler();
+//}
 
 /*************************************************************************************************/
 /*!
@@ -177,22 +177,22 @@ void PalSysInit(void)
   palSysBusyCount = 0;
 
   /* Divide 96 MHz system clock to 48 MHz */
-  MXC_SYS_Clock_Div(MXC_SYS_SYSTEM_DIV_2);
+//  MXC_SYS_Clock_Div(MXC_SYS_SYSTEM_DIV_2);
 
   PalLedInit();
   PalLedOff(PAL_LED_ID_ERROR);
   PalLedOn(PAL_LED_ID_CPU_ACTIVE);
-  PalCryptoInit();
-  PalRtcInit();
+//  PalCryptoInit();
+//  PalRtcInit();
 
-  MXC_DMA_Init();
-  NVIC_EnableIRQ(DMA0_IRQn);
-  NVIC_EnableIRQ(DMA1_IRQn);
-  NVIC_EnableIRQ(DMA2_IRQn);
-  NVIC_EnableIRQ(DMA3_IRQn);
+//  MXC_DMA_Init();
+//  NVIC_EnableIRQ(DMA0_IRQn);
+//  NVIC_EnableIRQ(DMA1_IRQn);
+//  NVIC_EnableIRQ(DMA2_IRQn);
+//  NVIC_EnableIRQ(DMA3_IRQn);
 
   /* Reset free memory. */
-  memset(SystemHeapStart, 0, SystemHeapSize);
+//  memset(SystemHeapStart, 0, SystemHeapSize);
 }
 
 /*************************************************************************************************/

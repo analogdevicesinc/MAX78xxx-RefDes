@@ -34,7 +34,7 @@
 /*************************************************************************************************/
 void PalLedInit(void)
 {
-  LED_Init();
+//  LED_Init();
 }
 
 /**************************************************************************************************
@@ -54,10 +54,10 @@ void PalLedOn(uint8_t ledId)
 {
   switch (ledId) {
     case PAL_LED_ID_CPU_ACTIVE:
-      LED_On(1);    /* D2: green */
+//      LED_On(1);    /* D2: green */
       break;
     case PAL_LED_ID_ERROR:
-      LED_On(0);    /* D1: red */
+//      LED_On(0);    /* D1: red */
       break;
     default:
       break;
@@ -77,10 +77,10 @@ void PalLedOff(uint8_t ledId)
 {
   switch (ledId) {
     case PAL_LED_ID_CPU_ACTIVE:
-      LED_Off(1);   /* D2: green */
+//      LED_Off(1);   /* D2: green */
       break;
     case PAL_LED_ID_ERROR:
-      LED_Off(0);   /* D1: red */
+//      LED_Off(0);   /* D1: red */
       break;
     default:
       break;
