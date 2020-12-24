@@ -78,7 +78,7 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi)
 {
     uint32_t cnt;
 
-    if (MXC_DMA->intfl & (0x1 << ch)) {
+    if (MXC_DMA->intr & (0x1 << ch)) {
         if (MXC_DMA->ch[ch].st & (MXC_F_DMA_ST_TO_ST | MXC_F_DMA_ST_BUS_ERR)) {
             PR_ERROR("dma error %08x", MXC_DMA->ch[ch].st);
         }
@@ -95,7 +95,7 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi)
             }
 
             // Reload occurred, start the SPI transaction
-            spi->ctrl0 |= (MXC_F_SPI_CTRL0_ENABLE | MXC_F_SPI_CTRL0_START);
+            spi->ctrl0 |= (MXC_F_SPI_CTRL0_EN | MXC_F_SPI_CTRL0_START);
         } else {
             if (MXC_DMA->ch[ch].cnt) {
                 PR_WARN("dma is not empty %d", MXC_DMA->ch[ch].cnt);
@@ -107,7 +107,7 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi)
                 MXC_DMA->ch[ch].cfg &= ~MXC_F_DMA_CFG_CHEN;
 
                 // Stop SPI
-                spi->ctrl0 &= ~MXC_F_SPI_CTRL0_ENABLE;
+                spi->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
 
                 // Disable SPI DMA, flush FIFO
                 spi->dma = (MXC_F_SPI_DMA_TX_FIFO_CLEAR | MXC_F_SPI_DMA_RX_FIFO_CLEAR);
@@ -136,7 +136,7 @@ void spi_dma_master_init(mxc_spi_regs_t *spi, sys_map_t map, uint32_t speed, uin
     }
 
     // Switch SPI to master mode, else the state of the SS pin could cause the SPI periph to appear 'BUSY';
-    spi->ctrl0 |= MXC_F_SPI_CTRL0_MM_EN;
+    spi->ctrl0 |= MXC_F_SPI_CTRL0_MASTER;
 
     // Initialize the CTRL2 register
     if (quad) {
@@ -157,7 +157,7 @@ void spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_i
     }
 
     // Stop SPI
-    spi->ctrl0 &= ~(MXC_F_SPI_CTRL0_ENABLE | MXC_F_SPI_CTRL0_START);
+    spi->ctrl0 &= ~(MXC_F_SPI_CTRL0_EN | MXC_F_SPI_CTRL0_START);
 
     // Initialize the CTRL1 register
     spi->ctrl1 = 0;
@@ -268,7 +268,7 @@ void spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_i
     }
 
     // Start the SPI transaction
-    spi->ctrl0 |= (MXC_F_SPI_CTRL0_ENABLE | MXC_F_SPI_CTRL0_START);
+    spi->ctrl0 |= (MXC_F_SPI_CTRL0_EN | MXC_F_SPI_CTRL0_START);
 }
 
 int spi_dma_wait(uint8_t ch, mxc_spi_regs_t *spi)
@@ -279,7 +279,7 @@ int spi_dma_wait(uint8_t ch, mxc_spi_regs_t *spi)
         cnt--;
     }
 
-    if (spi->ctrl0 & MXC_F_SPI_CTRL0_ENABLE) {
+    if (spi->ctrl0 & MXC_F_SPI_CTRL0_EN) {
         while((spi->stat & MXC_F_SPI_STAT_BUSY) && cnt) {
             cnt--;
         }

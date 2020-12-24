@@ -49,13 +49,13 @@
 #define S_MODULE_NAME   "i2c"
 
 // Interrupt flags that signal an error
-#define MXC_I2C_ERROR (MXC_F_I2C_INT_FL0_ARBERI  | \
-                       MXC_F_I2C_INT_FL0_TOERI   | \
-                       MXC_F_I2C_INT_FL0_ADRERI  | \
-                       MXC_F_I2C_INT_FL0_DATERI  | \
-                       MXC_F_I2C_INT_FL0_DNRERI  | \
-                       MXC_F_I2C_INT_FL0_STRTERI | \
-                       MXC_F_I2C_INT_FL0_STOPERI)
+#define MXC_I2C_ERROR (MXC_F_I2C_INT_FL0_ARB_ER         | \
+                       MXC_F_I2C_INT_FL0_TO_ER          | \
+                       MXC_F_I2C_INT_FL0_ADDR_NACK_ER   | \
+                       MXC_F_I2C_INT_FL0_DATA_ER        | \
+                       MXC_F_I2C_INT_FL0_DO_NOT_RESP_ER | \
+                       MXC_F_I2C_INT_FL0_START_ER       | \
+                       MXC_F_I2C_INT_FL0_STOP_ER)
 
 
 //-----------------------------------------------------------------------------
@@ -81,8 +81,8 @@ static inline void i2c_flush(mxc_i2c_regs_t *i2c)
 {
     i2c->int_fl0 = i2c->int_fl0;
     i2c->int_fl1 = i2c->int_fl1;
-    i2c->tx_ctrl0 |= MXC_F_I2C_TX_CTRL0_TXFSH; while (i2c->tx_ctrl0 & MXC_F_I2C_TX_CTRL0_TXFSH);
-    i2c->rx_ctrl0 |= MXC_F_I2C_RX_CTRL0_RXFSH; while (i2c->rx_ctrl0 & MXC_F_I2C_RX_CTRL0_RXFSH);
+    i2c->tx_ctrl0 |= MXC_F_I2C_TX_CTRL0_TX_FLUSH; while (i2c->tx_ctrl0 & MXC_F_I2C_TX_CTRL0_TX_FLUSH);
+    i2c->rx_ctrl0 |= MXC_F_I2C_RX_CTRL0_RX_FLUSH; while (i2c->rx_ctrl0 & MXC_F_I2C_RX_CTRL0_RX_FLUSH);
 }
 
 int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t val)
@@ -90,13 +90,13 @@ int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t
     i2c_flush(i2c);
 
     i2c->fifo = addr;
-    i2c->mstr_mode |= MXC_F_I2C_MSTR_MODE_START;
+    i2c->m |= MXC_F_I2C_M_START;
     i2c->fifo = reg;
     i2c->fifo = val;
-    i2c->mstr_mode |= MXC_F_I2C_MSTR_MODE_STOP;
+    i2c->m |= MXC_F_I2C_M_STOP;
 
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOPI));
-    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOPI;
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
@@ -113,17 +113,17 @@ int i2c_master_reg_write_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uin
     i2c_flush(i2c);
 
     i2c->fifo = addr;
-    i2c->mstr_mode |= MXC_F_I2C_MSTR_MODE_START;
+    i2c->m |= MXC_F_I2C_M_START;
     i2c->fifo = reg;
 
     while (len--) {
         i2c->fifo = *buf++;
     }
 
-    i2c->mstr_mode |= MXC_F_I2C_MSTR_MODE_STOP;
+    i2c->m |= MXC_F_I2C_M_STOP;
 
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOPI));
-    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOPI;
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
@@ -133,21 +133,21 @@ int i2c_master_reg_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t 
     i2c_flush(i2c);
 
     i2c->fifo = addr;
-    i2c->mstr_mode = MXC_F_I2C_MSTR_MODE_START;
+    i2c->m = MXC_F_I2C_M_START;
     i2c->fifo = reg;
 
     i2c->rx_ctrl1 = 1;
-    i2c->mstr_mode = MXC_F_I2C_MSTR_MODE_RESTART;
-    while (i2c->mstr_mode & MXC_F_I2C_MSTR_MODE_RESTART);
+    i2c->m = MXC_F_I2C_M_RESTART;
+    while (i2c->m & MXC_F_I2C_M_RESTART);
     i2c->fifo = addr | 0x01;
 
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_RXTHI));
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_RX_THRESH));
     *buf = i2c->fifo;
-    i2c->int_fl0 = MXC_F_I2C_INT_FL0_RXTHI;
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_RX_THRESH;
 
-    i2c->mstr_mode = MXC_F_I2C_MSTR_MODE_STOP;
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOPI));
-    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOPI;
+    i2c->m = MXC_F_I2C_M_STOP;
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
