@@ -2,7 +2,6 @@ package com.maximintegrated.maxcamandroid.utils
 
 import android.os.Environment
 import com.maximintegrated.maxcamandroid.FileWriter
-import com.maximintegrated.maxcamandroid.faceId.FaceIdViewModel
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -79,13 +78,3 @@ fun getMaxCamFile(fileName: String): File {
     )
 }
 
-fun getMaxCamScenarioFile(fileName: String): File {
-    return File(
-        Environment.getExternalStorageDirectory().toString() + FaceIdViewModel.SCENARIO_FOLDER_NAME,
-        fileName
-    )
-}
-
-fun getMaxCamConfigFolder(): File {
-    return File(Environment.getExternalStorageDirectory(), FaceIdViewModel.CONFIG_FOLDER_NAME)
-}

@@ -41,4 +41,9 @@ data class DbModel(
             }
         }
     }
+
+    fun findEmbeddingsFile() {
+        val list = dbFile.listFiles()?.toList() ?: emptyList()
+        embeddingsFile = list.find { it.extension == "bin" }
+    }
 }

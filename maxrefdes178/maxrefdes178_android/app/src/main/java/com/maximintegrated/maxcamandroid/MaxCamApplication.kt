@@ -1,11 +1,11 @@
 package com.maximintegrated.maxcamandroid
 
-import android.app.Application
+import com.chaquo.python.android.PyApplication
 import com.chibatching.kotpref.Kotpref
 import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
 import timber.log.Timber
 
-class MaxCamApplication : Application(){
+class MaxCamApplication : PyApplication() {
 
     val maxCamNativeLibrary: IMaxCamNativeLibrary
         get() = ServiceLocator.provideMaxCamNativeLibrary()

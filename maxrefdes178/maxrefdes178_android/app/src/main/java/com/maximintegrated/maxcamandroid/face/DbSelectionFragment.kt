@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.maximintegrated.maxcamandroid.MainActivity
 import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.utils.EventObserver
 import kotlinx.android.synthetic.main.edit_text_alert_dialog.view.*
 import kotlinx.android.synthetic.main.fragment_db_selection.*
@@ -49,7 +50,7 @@ class DbSelectionFragment : Fragment(), DbListener {
             Snackbar.make(view, it, Snackbar.LENGTH_SHORT).show()
         })
         faceIdViewModel.databaseSelectedEvent.observe(viewLifecycleOwner, EventObserver {
-            //TODO go to next fragment
+            requireActivity().addFragment(DbEditFragment.newInstance())
         })
         faceIdViewModel.getDatabaseList()
         newDatabaseFab.setOnClickListener {

@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.chaquo.python.Python
 import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.utils.Event
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,12 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _warningEvent = MutableLiveData<Event<Int>>()
     val warningEvent: LiveData<Event<Int>> = _warningEvent
+
+    private val _goToDemoFragment = MutableLiveData<Event<Unit>>()
+    val goToDemoFragment: LiveData<Event<Unit>> = _goToDemoFragment
+
+    private val _embeddingsFileEvent = MutableLiveData<Event<File>>()
+    val embeddingsFileEvent: LiveData<Event<File>> = _embeddingsFileEvent
 
     var selectedDatabase: DbModel? = null
         private set
@@ -107,5 +114,40 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
     fun selectDatabase(db: DbModel) {
         selectedDatabase = db
         _databaseSelectedEvent.value = Event(Unit)
+    }
+
+    fun onDemoFragmentRequested() {
+        _goToDemoFragment.value = Event(Unit)
+    }
+
+    fun getEmbeddingsFile() {
+        selectedDatabase?.findEmbeddingsFile()
+        selectedDatabase?.embeddingsFile?.let {
+            _embeddingsFileEvent.value = Event(it)
+        }
+    }
+
+    fun onCreateSignatureButtonClicked() {
+        val python = Python.getInstance()
+        val script = python.getModule("db_gen.generate_face_db")
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                selectedDatabase?.let {
+                    script.callAttr("create_db", it.dbFile.path, "embeddings")
+                    /*val obj1 = script.callAttr("get_current_dir")
+                    val obj2 = script.callAttr("get_file_dir", it.dbFile.path)
+                    val obj3 = script.callAttr("get_include_dir")
+                    Timber.d("obj1: $obj1")
+                    Timber.d("obj2: $obj2")
+                    Timber.d("obj3: $obj3")*/
+                    /*
+                        obj1: /data/user/0/com.maximintegrated.maxcamandroid/files/chaquopy/AssetFinder/app/db_gen
+                        obj2: /storage/emulated/0/Android/data/com.maximintegrated.maxcamandroid/files/Databases/Database #1
+                        obj3: /data/user/0/com.maximintegrated.maxcamandroid/files/chaquopy/AssetFinder/app/include
+                    */
+                }
+            }
+            getEmbeddingsFile()
+        }
     }
 }

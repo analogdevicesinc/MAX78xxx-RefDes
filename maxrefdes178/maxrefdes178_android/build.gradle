@@ -99,12 +99,13 @@ buildscript {
     repositories {
         google()
         jcenter()
-        
+        maven { url "https://chaquo.com/maven" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.2'
         classpath deps.kotlinGradlePlugin
         classpath "org.jacoco:org.jacoco.core:$jacocoVersion"
+        classpath "com.chaquo.python:gradle:9.0.0"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }

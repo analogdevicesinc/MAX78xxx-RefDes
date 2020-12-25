@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'org.jetbrains.kotlin.android.extensions'
+apply plugin: 'com.chaquo.python'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'jacoco'
 
@@ -78,6 +79,33 @@ android {
             cmake {
                 cppFlags ""
             }
+        }
+
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
+
+        sourceSets {
+            main {
+                python.srcDir "src/main/python/db_gen"
+            }
+        }
+
+        python {
+            pip {
+                install "numpy"
+                install "scipy"
+                install "opencv-python"
+                install "pyserial"
+                install "matplotlib"
+                install "torch"
+                install "torchvision"
+            }
+            /*pyc {
+                src false // pip, stdlib
+            }*/
+            //staticProxy "module.one", "module.two"
+            //buildPython "C:/path/to/python.exe"
         }
     }
     buildTypes {

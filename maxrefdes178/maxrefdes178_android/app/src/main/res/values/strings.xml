@@ -89,4 +89,8 @@
     <string name="no_available_databases">There are no available databases.</string>
     <string name="db_selection">DB Selection</string>
     <string name="db_edit">DB Edit</string>
+    <string name="create_signature_text">Click the below button to create the signature from the database you selected.</string>
+    <string name="send_signature_text">Click the below button to send the signature to the device.</string>
+    <string name="create_signature">Create Signature</string>
+    <string name="send_signature">Send Signature</string>
 </resources>
