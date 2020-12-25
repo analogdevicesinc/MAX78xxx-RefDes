@@ -48,9 +48,11 @@
 #endif
 
 /*! Default device name */
-#define CORE_DEFAULT_DEV_NAME       "Packetcraft"
+//ty#define CORE_DEFAULT_DEV_NAME       "Packetcraft"
+#define CORE_DEFAULT_DEV_NAME       "MAXCAM"
 
 /*! Length of default device name */
+//ty#define CORE_DEFAULT_DEV_NAME_LEN   11
 #define CORE_DEFAULT_DEV_NAME_LEN   6
 
 /**************************************************************************************************

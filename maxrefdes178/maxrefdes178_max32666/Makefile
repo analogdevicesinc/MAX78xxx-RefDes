@@ -84,6 +84,7 @@ SRCS += max32666_max20303.c
 SRCS += max32666_qspi.c
 SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
+SRCS += max32666_utils.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
 endif
@@ -141,9 +142,7 @@ endif
 DEBUG           := 1
 TRACE           := 1
 BT_VER          := 8
-WDXS_INCLUDED   := 1
 INIT_PERIPHERAL := 1
-INIT_ENCRYPTED  := 1
 
 # Select either option, or both for combined Host and Controller on single core
 BLE_HOST        := 1

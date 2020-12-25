@@ -354,15 +354,12 @@ int sdcard_init(void)
         MXC_SDHC_Set_Clock_Config(0);
     }
 
+if (0) { // TODO: remove
     if(sdcard_example() != E_NO_ERROR) {
         PR_ERROR("SD CARD example failed");
         return 1;
     }
-
-    if(err >= 0 && err <= 20) {
-        PR_ERROR("Function Returned with code: %d", FF_ERRORS[err]);
-        return 1;
-    }
+}
 
     return 0;
 }

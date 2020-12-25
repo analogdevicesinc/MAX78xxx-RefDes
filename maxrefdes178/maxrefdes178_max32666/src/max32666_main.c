@@ -52,6 +52,7 @@
 #include "max32666_max20303.h"
 #include "max32666_qspi.h"
 #include "max32666_sdcard.h"
+#include "max32666_utils.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_version.h"
 
@@ -75,7 +76,6 @@
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static uint32_t utils_get_time_ms(void);
 
 
 //-----------------------------------------------------------------------------
@@ -83,12 +83,12 @@ static uint32_t utils_get_time_ms(void);
 //-----------------------------------------------------------------------------
 int main(void)
 {
-    int ret = 0;
+    uint8_t run_faceid = 0;
     uint16_t result_color = 0;
     uint16_t frame_color = 0;
-    uint8_t run_faceid = 0;
     uint32_t audio_result_time = 0;
     uint32_t lcd_draw_time = 0;
+    int ret = 0;
     double fps = 0;
     char version[10] = {0};
     char fps_string[10] = {0};
@@ -97,7 +97,11 @@ int main(void)
     MXC_GPIO0->vssel =  0x00;
     MXC_GPIO1->vssel =  0x00;
 
-    MXC_SEMA_Init();
+    ret = MXC_SEMA_Init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_SEMA_Init failed %d", ret);
+        while(1);
+    }
 
     snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version, S_BUILD_TIMESTAMP);
@@ -113,6 +117,7 @@ int main(void)
         PR_ERROR("max20303_init failed %d", ret);
         while(1);
     }
+    max20303_led_green(1);
 
     ret = expander_init();
     if (ret != E_NO_ERROR) {
@@ -151,16 +156,11 @@ int main(void)
         while(1);
     }
 
-//    ret = ble_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("ble_init failed %d", ret);
-//        max20303_led_red(1);
-//    }
-
-//    ret = sdcard_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("sdcard_init failed %d", ret);
-//    }
+    ret = sdcard_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("sdcard_init failed %d", ret);
+        max20303_led_red(1);
+    }
 
     ret = MXC_RTC_Init(0, 0);
     if (ret != E_NO_ERROR) {
@@ -174,18 +174,23 @@ int main(void)
         max20303_led_red(1);
     }
 
+//    ret = ble_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("ble_init failed %d", ret);
+//        max20303_led_red(1);
+//    }
+
     // Enable Core1
     Core1_Start();
 
     PR_INFO("init completed");
-    max20303_led_green(1);
 
     // Print logo and version
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version, Font_16x26, RED, image_data_rsz_maxim_logo);
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, image_data_rsz_maxim_logo);
 
     while (1) {
-//    	ble_worker();
+//        ble_worker();
 
         ret = qspi_worker();
         if (ret > QSPI_TYPE_NO_DATA) {
@@ -281,18 +286,4 @@ void HardFault_Handler(void)
         }
         cnt++;
     }
-}
-
-static uint32_t utils_get_time_ms(void)
-{
-    int sec;
-    double subsec;
-    uint32_t ms;
-
-    subsec = MXC_RTC_GetSubSecond() / 4096.0;
-    sec = MXC_RTC_GetSecond();
-
-    ms = (sec*1000) +  (int)(subsec*1000);
-
-    return ms;
 }

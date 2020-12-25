@@ -130,6 +130,15 @@ typedef void (*wsfEventHandler_t)(wsfEventMask_t event, wsfMsgHdr_t *pMsg);
 
 /*************************************************************************************************/
 /*!
+ *  \brief  Check if the WSF OS is active.
+ *
+ *  \return TRUE if active, FALSE if inactive.
+ */
+/*************************************************************************************************/
+bool_t WsfOsActive(void);
+
+/*************************************************************************************************/
+/*!
  *  \brief  Set an event for an event handler.
  *
  *  \param  handlerId   Handler ID.

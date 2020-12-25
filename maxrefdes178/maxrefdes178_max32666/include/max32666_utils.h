@@ -33,12 +33,13 @@
  *******************************************************************************
  */
 
-#ifndef _MAX32666_BLE_H_
-#define _MAX32666_BLE_H_
+#ifndef _MAX32666_UTILS_H_
+#define _MAX32666_UTILS_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <stdint.h>
 
 
 //-----------------------------------------------------------------------------
@@ -55,12 +56,7 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int ble_mtu_size(void);
-int ble_packet_size(void);
-int ble_connected(void);
-int ble_send_notification(uint16_t dataLen, uint8_t *data);
-int ble_send_indication(uint16_t dataLen, uint8_t *data);
-int ble_init(void);
-int ble_worker(void);
+uint32_t utils_get_time_ms(void);
 
-#endif /* _MAX32666_BLE_H_ */
+
+#endif /* _MAX32666_UTILS_H_ */

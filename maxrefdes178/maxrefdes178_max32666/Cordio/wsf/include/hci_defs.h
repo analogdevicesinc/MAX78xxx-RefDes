@@ -1648,7 +1648,8 @@ extern "C" {
  *
  */
 /**@{*/
-#define HCI_ID_PACKETCRAFT                           0x07E8  /*!< Packetcraft Inc. company ID */
+//ty#define HCI_ID_PACKETCRAFT                           0x07E8  /*!< Packetcraft Inc. company ID */
+#define HCI_ID_PACKETCRAFT                           0x058B  /*!< Maxim Integrated Products company ID */
 /**@}*/
 
 /** \name Manufacturer location in Local version

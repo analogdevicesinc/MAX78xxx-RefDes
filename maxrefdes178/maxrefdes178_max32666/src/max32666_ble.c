@@ -52,12 +52,16 @@
 #include <hci_handler.h>
 #include <l2c_api.h>
 #include <l2c_handler.h>
+#if defined(HCI_TR_EXACTLE) && (HCI_TR_EXACTLE == 1)
+#include <ll_init_api.h>
+#endif
 #include <pal_bb.h>
 #include <pal_cfg.h>
 #include <sec_api.h>
 #include <smp_api.h>
 #include <smp_handler.h>
-#include <smp_handler.h>
+#include <sema.h>
+#include <stdio.h>
 #include <string.h>
 #include <svc_ch.h>
 #include <svc_core.h>
@@ -78,21 +82,10 @@
 #include <wsf_trace.h>
 #include <wsf_types.h>
 
-#if defined(HCI_TR_EXACTLE) && (HCI_TR_EXACTLE == 1)
-#include <ll_init_api.h>
-#endif
-
-#if WDXS_INCLUDED  == TRUE
-#include <svc_wdxs.h>
-#include <wdxs/wdxs_api.h>
-#include <wdxs/wdxs_main.h>
-#include <wdxs/wdxs_stream.h>
-#include <wsf_efs.h>
-#endif
-
 #include "max32666_ble.h"
 #include "max32666_debug.h"
 #include "maxrefdes178_definitions.h"
+
 
 //-----------------------------------------------------------------------------
 // Defines
@@ -102,16 +95,6 @@
 /*! \brief UART TX buffer size */
 #define PLATFORM_UART_TERMINAL_BUFFER_SIZE      2048U
 
-#if (BT_VER > 8)
-/* PHY Test Modes */
-#define DATS_PHY_1M                       1
-#define DATS_PHY_2M                       2
-#define DATS_PHY_CODED                    3
-#endif /* BT_VER */
-
-#ifndef WDXS_INCLUDED
-#define WDXS_INCLUDED              FALSE
-#endif
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -119,676 +102,343 @@
 /*! Enumeration of client characteristic configuration descriptors */
 enum
 {
-#if WDXS_INCLUDED == TRUE
-  WDXS_DC_CH_CCC_IDX,             /*! WDXS DC service, service changed characteristic */
-  WDXS_FTC_CH_CCC_IDX,            /*! WDXS FTC  service, service changed characteristic */
-  WDXS_FTD_CH_CCC_IDX,            /*! WDXS FTD service, service changed characteristic */
-  WDXS_AU_CH_CCC_IDX,             /*! WDXS AU service, service changed characteristic */
-#endif /* WDXS_INCLUDED */
-  DATS_GATT_SC_CCC_IDX,           /*! GATT service, service changed characteristic */
-  DATS_WP_DAT_CCC_IDX,            /*! Arm Ltd. proprietary service, data transfer characteristic */
-  DATS_NUM_CCC_IDX
+    PERIPH_GATT_SC_CCC_IDX,           /*! GATT service, service changed characteristic */
+    PERIPH_WP_DAT_CCC_IDX,            /*! Arm Ltd. proprietary service, data transfer characteristic */
+    PERIPH_NUM_CCC_IDX
 };
 
 
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-/*! \brief  Pool runtime configuration. */
-static wsfBufPoolDesc_t mainPoolDesc[] =
-{
-  { 16,              8 },
-  { 32,              4 },
-  { 192,             8 },
-  { 256,             8 }
-};
-
 #if defined(HCI_TR_EXACTLE) && (HCI_TR_EXACTLE == 1)
 static LlRtCfg_t mainLlRtCfg;
 #endif
 
-/*! configurable parameters for advertising */
-static const appAdvCfg_t datsAdvCfg =
+/*! \brief  Pool runtime configuration. */
+static wsfBufPoolDesc_t mainPoolDesc[] =
 {
-  {30000,     0,     0},                  /*! Advertising durations in ms */
-  {   96,  1600,     0}                   /*! Advertising intervals in 0.625 ms units */
+    { 16,              8 },
+    { 32,              4 },
+    { 192,             8 },
+    { 256,             8 }
+};
+
+/*! configurable parameters for advertising */
+static const appAdvCfg_t periphAdvCfg =
+{
+    {30000,     0,     0},                  /*! Advertising durations in ms, 0 corresponds to infinite */
+    {   96,  1600,     0}                   /*! Advertising intervals in 0.625 ms units */
 };
 
 /*! configurable parameters for slave */
-static const appSlaveCfg_t datsSlaveCfg =
+static const appSlaveCfg_t periphSlaveCfg =
 {
-  1,                                      /*! Maximum connections */
-};
-
-/*! configurable parameters for security */
-static const appSecCfg_t datsSecCfg =
-{
-  DM_AUTH_BOND_FLAG | DM_AUTH_SC_FLAG,    /*! Authentication and bonding flags */
-  DM_KEY_DIST_IRK,                        /*! Initiator key distribution flags */
-  DM_KEY_DIST_LTK | DM_KEY_DIST_IRK,      /*! Responder key distribution flags */
-  FALSE,                                  /*! TRUE if Out-of-band pairing data is present */
-  TRUE                                    /*! TRUE to initiate security upon connection */
-};
-
-/*! TRUE if Out-of-band pairing data is to be sent */
-static const bool_t datsSendOobData = FALSE;
-
-/*! SMP security parameter configuration */
-static const smpCfg_t datsSmpCfg =
-{
-  500,                                    /*! 'Repeated attempts' timeout in msec */
-  SMP_IO_NO_IN_NO_OUT,                    /*! I/O Capability */
-  7,                                      /*! Minimum encryption key length */
-  16,                                     /*! Maximum encryption key length */
-  1,                                      /*! Attempts to trigger 'repeated attempts' timeout */
-  0,                                      /*! Device authentication requirements */
-  64000,                                  /*! Maximum repeated attempts timeout in msec */
-  64000,                                  /*! Time msec before attemptExp decreases */
-  2                                       /*! Repeated attempts multiplier exponent */
-};
-
-/*! configurable parameters for connection parameter update */
-static const appUpdateCfg_t datsUpdateCfg =
-{
-  0,                                      /*! Connection idle period in ms before attempting
-                                              connection parameter update; set to zero to disable */
-  640,                                    /*! Minimum connection interval in 1.25ms units */
-  800,                                    /*! Maximum connection interval in 1.25ms units */
-  3,                                      /*! Connection latency */
-  900,                                    /*! Supervision timeout in 10ms units */
-  5                                       /*! Number of update attempts before giving up */
+    1,                                      /*! Maximum connections */
 };
 
 /*! ATT configurable parameters (increase MTU) */
-static const attCfg_t datsAttCfg =
+static const attCfg_t periphAttCfg =
 {
-  15,                               /* ATT server service discovery connection idle timeout in seconds */
-  241,                              /* desired ATT MTU */
-  ATT_MAX_TRANS_TIMEOUT,            /* transcation timeout in seconds */
-  4                                 /* number of queued prepare writes supported by server */
-};
-
-/*! local IRK */
-static uint8_t localIrk[] =
-{
-  0x95, 0xC8, 0xEE, 0x6F, 0xC5, 0x0D, 0xEF, 0x93, 0x35, 0x4E, 0x7C, 0x57, 0x08, 0xE2, 0xA3, 0x85
+    15,                               /* ATT server service discovery connection idle timeout in seconds */
+//ty  241,                              /* desired ATT MTU */
+    BLE_MAX_MTU_SIZE,                 /* desired ATT MTU */
+    ATT_MAX_TRANS_TIMEOUT,            /* transcation timeout in seconds */
+    4                                 /* number of queued prepare writes supported by server */
 };
 
 /*! advertising data, discoverable mode */
-static const uint8_t datsAdvDataDisc[] =
+static const uint8_t periphAdvDataDisc[] =
 {
-  /*! flags */
-  2,                                      /*! length */
-  DM_ADV_TYPE_FLAGS,                      /*! AD type */
-  DM_FLAG_LE_GENERAL_DISC |               /*! flags */
-  DM_FLAG_LE_BREDR_NOT_SUP,
-
-  /*! manufacturer specific data */
-  3,                                      /*! length */
-  DM_ADV_TYPE_MANUFACTURER,               /*! AD type */
-  UINT16_TO_BYTES(HCI_ID_PACKETCRAFT)     /*! company ID */
-};
-
-/*! scan data, discoverable mode */
-static const uint8_t datsScanDataDisc[] =
-{
-  /*! device name */
-  8,                                      /*! length */
-  DM_ADV_TYPE_LOCAL_NAME,                 /*! AD type */
-  'D',
-  'a',
-  't',
-  'a',
-  ' ',
-  'T',
-  'X'
+    /*! flags */
+    2,                                      /*! length */
+    DM_ADV_TYPE_FLAGS,                      /*! AD type */
+    DM_FLAG_LE_GENERAL_DISC |               /*! flags */
+    DM_FLAG_LE_BREDR_NOT_SUP,
+    /*! device name */
+    7,                                      /*! length */
+    DM_ADV_TYPE_LOCAL_NAME,                 /*! AD type */
+    'M',
+    'A',
+    'X',
+    'C',
+    'A',
+    'M'
 };
 
 /*! client characteristic configuration descriptors settings, indexed by above enumeration */
-static const attsCccSet_t datsCccSet[DATS_NUM_CCC_IDX] =
+static const attsCccSet_t periphCccSet[PERIPH_NUM_CCC_IDX] =
 {
-  /* cccd handle          value range               security level */
-#if WDXS_INCLUDED == TRUE
-  {WDXS_DC_CH_CCC_HDL,    ATT_CLIENT_CFG_NOTIFY,    DM_SEC_LEVEL_NONE},   /* WDXS_DC_CH_CCC_IDX */
-  {WDXS_FTC_CH_CCC_HDL,   ATT_CLIENT_CFG_NOTIFY,    DM_SEC_LEVEL_NONE},   /* WDXS_FTC_CH_CCC_IDX */
-  {WDXS_FTD_CH_CCC_HDL,   ATT_CLIENT_CFG_NOTIFY,    DM_SEC_LEVEL_NONE},   /* WDXS_FTD_CH_CCC_IDX */
-  {WDXS_AU_CH_CCC_HDL,    ATT_CLIENT_CFG_NOTIFY,    DM_SEC_LEVEL_NONE},   /* WDXS_AU_CH_CCC_IDX */
-#endif /* WDXS_INCLUDED */
-  {GATT_SC_CH_CCC_HDL,    ATT_CLIENT_CFG_INDICATE,  DM_SEC_LEVEL_NONE},   /* DATS_GATT_SC_CCC_IDX */
-  {WP_DAT_CH_CCC_HDL,     ATT_CLIENT_CFG_NOTIFY,    DM_SEC_LEVEL_NONE}    /* DATS_WP_DAT_CCC_IDX */
+    /* cccd handle          value range               security level */
+    {GATT_SC_CH_CCC_HDL,    ATT_CLIENT_CFG_INDICATE,  DM_SEC_LEVEL_NONE},   /* PERIPH_GATT_SC_CCC_IDX */
+//ty  {WP_DAT_CH_CCC_HDL,     ATT_CLIENT_CFG_NOTIFY,    DM_SEC_LEVEL_NONE}    /* DATS_WP_DAT_CCC_IDX */
+    {WP_DAT_CH_CCC_HDL,     ATT_CLIENT_CFG_NOTIFY | ATT_CLIENT_CFG_INDICATE,    DM_SEC_LEVEL_NONE}    /* DATS_WP_DAT_CCC_IDX */
 };
 
 /*! application control block */
 static struct
 {
-  wsfHandlerId_t    handlerId;          /* WSF handler ID */
-#if (BT_VER > 8)
-  uint8_t           phyMode;            /*! PHY Test Mode */
-#endif /* BT_VER */
-  appDbHdl_t        resListRestoreHdl;  /*! Resolving List last restored handle */
-  bool_t            restoringResList;   /*! Restoring resolving list from NVM */
-} datsCb;
+    wsfHandlerId_t    handlerId;          /* WSF handler ID */
+    dmConnId_t        connId;             /* Connection ID */
+    bool_t            connected;          /* Connection state */
+    uint8_t           indicationStatus;   /* Connection state */
+} periphCb;
 
-/* LESC OOB configuration */
-static dmSecLescOobCfg_t *datsOobCfg;
 
 //-----------------------------------------------------------------------------
-// Local function declarations
+// Local Function declarations
 //-----------------------------------------------------------------------------
-static void StackInitDats(void);
+static void periphDmCback(dmEvt_t *pDmEvt);
+static void periphAttCback(attEvt_t *pEvt);
+static void periphCccCback(attsCccEvt_t *pEvt);
+static uint8_t periphWpWriteCback(dmConnId_t connId, uint16_t handle, uint8_t operation,
+                          uint16_t offset, uint16_t len, uint8_t *pValue, attsAttr_t *pAttr);
+static void periphSetup(dmEvt_t *pMsg);
+static void periphProcMsg(dmEvt_t *pMsg);
+static void PeriphHandlerInit(wsfHandlerId_t handlerId);
+static void PeriphHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg);
+static void PeriphStart(void);
+static void StackInitPeriph(void);
 static void mainWsfInit(void);
-static void DatsStart(void);
-static void DatsHandlerInit(wsfHandlerId_t handlerId);
-static void DatsHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg);
+static void ble_receive(uint16_t dataLen, uint8_t *data);
+
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-static void datsSendData(dmConnId_t connId)
+// Application DM callback.
+static void periphDmCback(dmEvt_t *pDmEvt)
 {
-  uint8_t str[] = "hello back";
+    dmEvt_t   *pMsg;
+    uint16_t  len;
 
-  if (AttsCccEnabled(connId, DATS_WP_DAT_CCC_IDX))
-  {
-    /* send notification */
-    AttsHandleValueNtf(connId, WP_DAT_HDL, sizeof(str), str);
-  }
-}
+    PR_INFO("Event: 0x%02hhX", pDmEvt->hdr.event);
 
-static void datsDmCback(dmEvt_t *pDmEvt)
-{
-  dmEvt_t   *pMsg;
-  uint16_t  len;
-
-  if (pDmEvt->hdr.event == DM_SEC_ECC_KEY_IND)
-  {
-    DmSecSetEccKey(&pDmEvt->eccMsg.data.key);
-
-    /* If the local device sends OOB data. */
-    if (datsSendOobData)
-    {
-      uint8_t oobLocalRandom[SMP_RAND_LEN];
-      SecRand(oobLocalRandom, SMP_RAND_LEN);
-      DmSecCalcOobReq(oobLocalRandom, pDmEvt->eccMsg.data.key.pubKey_x);
-    }
-  }
-  else if (pDmEvt->hdr.event == DM_SEC_CALC_OOB_IND)
-  {
-    if (datsOobCfg == NULL)
-    {
-      datsOobCfg = WsfBufAlloc(sizeof(dmSecLescOobCfg_t));
-    }
-
-    if (datsOobCfg)
-    {
-      Calc128Cpy(datsOobCfg->localConfirm, pDmEvt->oobCalcInd.confirm);
-      Calc128Cpy(datsOobCfg->localRandom, pDmEvt->oobCalcInd.random);
-    }
-  }
-  else
-  {
     len = DmSizeOfEvt(pDmEvt);
 
     if ((pMsg = WsfMsgAlloc(len)) != NULL)
     {
-      memcpy(pMsg, pDmEvt, len);
-      WsfMsgSend(datsCb.handlerId, pMsg);
+        memcpy(pMsg, pDmEvt, len);
+        WsfMsgSend(periphCb.handlerId, pMsg);
     }
-  }
 }
 
-static void datsAttCback(attEvt_t *pEvt)
+// Application ATT callback.
+static void periphAttCback(attEvt_t *pEvt)
 {
-  attEvt_t  *pMsg;
+    attEvt_t  *pMsg;
 
-  if ((pMsg = WsfMsgAlloc(sizeof(attEvt_t) + pEvt->valueLen)) != NULL)
-  {
-    memcpy(pMsg, pEvt, sizeof(attEvt_t));
-    pMsg->pValue = (uint8_t *)(pMsg + 1);
-    memcpy(pMsg->pValue, pEvt->pValue, pEvt->valueLen);
-    WsfMsgSend(datsCb.handlerId, pMsg);
-  }
-
-#if WDXS_INCLUDED == TRUE
-  WdxsAttCback(pEvt);
-#endif /* WDXS_INCLUDED */
-}
-
-static void datsCccCback(attsCccEvt_t *pEvt)
-{
-  appDbHdl_t    dbHdl;
-
-  /* If CCC not set from initialization and there's a device record and currently bonded */
-  if ((pEvt->handle != ATT_HANDLE_NONE) &&
-      ((dbHdl = AppDbGetHdl((dmConnId_t) pEvt->hdr.param)) != APP_DB_HDL_NONE) &&
-      AppCheckBonded((dmConnId_t)pEvt->hdr.param))
-  {
-    /* Store value in device database. */
-    AppDbSetCccTblValue(dbHdl, pEvt->idx, pEvt->value);
-    AppDbNvmStoreCccTbl(dbHdl);
-  }
-}
-
-uint8_t datsWpWriteCback(dmConnId_t connId, uint16_t handle, uint8_t operation,
-                          uint16_t offset, uint16_t len, uint8_t *pValue, attsAttr_t *pAttr)
-{
-  /* print received data */
-  APP_TRACE_INFO0((const char*) pValue);
-
-  /* send back some data */
-  datsSendData(connId);
-
-  return ATT_SUCCESS;
-}
-
-static void datsPrivAddDevToResList(appDbHdl_t dbHdl)
-{
-  dmSecKey_t *pPeerKey;
-
-  /* if peer IRK present */
-  if ((pPeerKey = AppDbGetKey(dbHdl, DM_KEY_IRK, NULL)) != NULL)
-  {
-    /* set advertising peer address */
-    AppSetAdvPeerAddr(pPeerKey->irk.addrType, pPeerKey->irk.bdAddr);
-  }
-}
-
-static void datsPrivRemDevFromResListInd(dmEvt_t *pMsg)
-{
-  if (pMsg->hdr.status == HCI_SUCCESS)
-  {
-    if (AppDbGetHdl((dmConnId_t) pMsg->hdr.param) != APP_DB_HDL_NONE)
+    switch(pEvt->hdr.event)
     {
-      uint8_t addrZeros[BDA_ADDR_LEN] = { 0 };
+    case ATTS_HANDLE_VALUE_CNF:
+        PR_DEBUG("ATTS_HANDLE_VALUE_CNF");
 
-      /* clear advertising peer address and its type */
-      AppSetAdvPeerAddr(HCI_ADDR_TYPE_PUBLIC, addrZeros);
-    }
-  }
-}
-
-void datsDisplayStackVersion(const char *pVersion)
-{
-  APP_TRACE_INFO1("Stack Version: %s", pVersion);
-}
-
-static void datsSetup(dmEvt_t *pMsg)
-{
-
-  /* Initialize control information */
-  datsCb.restoringResList = FALSE;
-
-  /* set advertising and scan response data for discoverable mode */
-  AppAdvSetData(APP_ADV_DATA_DISCOVERABLE, sizeof(datsAdvDataDisc), (uint8_t *) datsAdvDataDisc);
-  AppAdvSetData(APP_SCAN_DATA_DISCOVERABLE, sizeof(datsScanDataDisc), (uint8_t *) datsScanDataDisc);
-
-  /* set advertising and scan response data for connectable mode */
-  AppAdvSetData(APP_ADV_DATA_CONNECTABLE, sizeof(datsAdvDataDisc), (uint8_t *) datsAdvDataDisc);
-  AppAdvSetData(APP_SCAN_DATA_CONNECTABLE, sizeof(datsScanDataDisc), (uint8_t *) datsScanDataDisc);
-
-  /* start advertising; automatically set connectable/discoverable mode and bondable mode */
-  AppAdvStart(APP_MODE_AUTO_INIT);
-}
-
-static void datsRestoreResolvingList(dmEvt_t *pMsg)
-{
-  /* Restore first device to resolving list in Controller. */
-  datsCb.resListRestoreHdl = AppAddNextDevToResList(APP_DB_HDL_NONE);
-
-  if (datsCb.resListRestoreHdl == APP_DB_HDL_NONE)
-  {
-    /* No device to restore.  Setup application. */
-    datsSetup(pMsg);
-  }
-  else
-  {
-    datsCb.restoringResList = TRUE;
-  }
-}
-
-static void datsPrivAddDevToResListInd(dmEvt_t *pMsg)
-{
-  /* Check if in the process of restoring the Device List from NV */
-  if (datsCb.restoringResList)
-  {
-    /* Set the advertising peer address. */
-    datsPrivAddDevToResList(datsCb.resListRestoreHdl);
-
-    /* Retore next device to resolving list in Controller. */
-    datsCb.resListRestoreHdl = AppAddNextDevToResList(datsCb.resListRestoreHdl);
-
-    if (datsCb.resListRestoreHdl == APP_DB_HDL_NONE)
-    {
-      /* No additional device to restore. Setup application. */
-      datsSetup(pMsg);
-    }
-  }
-  else
-  {
-    datsPrivAddDevToResList(AppDbGetHdl((dmConnId_t) pMsg->hdr.param));
-  }
-}
-
-static void datsProcMsg(dmEvt_t *pMsg)
-{
-  uint8_t uiEvent = APP_UI_NONE;
-
-  switch(pMsg->hdr.event)
-  {
-    case DM_RESET_CMPL_IND:
-      AttsCalculateDbHash();
-      DmSecGenerateEccKeyReq();
-      AppDbNvmReadAll();
-      datsRestoreResolvingList(pMsg);
-      uiEvent = APP_UI_RESET_CMPL;
-      break;
-
-    case DM_ADV_START_IND:
-      uiEvent = APP_UI_ADV_START;
-      break;
-
-    case DM_ADV_STOP_IND:
-      uiEvent = APP_UI_ADV_STOP;
-      break;
-
-    case DM_CONN_OPEN_IND:
-      uiEvent = APP_UI_CONN_OPEN;
-#if (BT_VER > 8)
-      datsCb.phyMode = DATS_PHY_1M;
-#endif /* BT_VER */
-      break;
-
-    case DM_CONN_CLOSE_IND:
-      uiEvent = APP_UI_CONN_CLOSE;
-      break;
-
-    case DM_SEC_PAIR_CMPL_IND:
-      DmSecGenerateEccKeyReq();
-      AppDbNvmStoreBond(AppDbGetHdl((dmConnId_t) pMsg->hdr.param));
-      uiEvent = APP_UI_SEC_PAIR_CMPL;
-      break;
-
-    case DM_SEC_PAIR_FAIL_IND:
-      DmSecGenerateEccKeyReq();
-      uiEvent = APP_UI_SEC_PAIR_FAIL;
-      break;
-
-    case DM_SEC_ENCRYPT_IND:
-      uiEvent = APP_UI_SEC_ENCRYPT;
-      break;
-
-    case DM_SEC_ENCRYPT_FAIL_IND:
-      uiEvent = APP_UI_SEC_ENCRYPT_FAIL;
-      break;
-
-    case DM_SEC_AUTH_REQ_IND:
-
-      if (pMsg->authReq.oob)
-      {
-        dmConnId_t connId = (dmConnId_t) pMsg->hdr.param;
-
-        /* TODO: Perform OOB Exchange with the peer. */
-
-
-        /* TODO: Fill datsOobCfg peerConfirm and peerRandom with value passed out of band */
-
-        if (datsOobCfg != NULL)
-        {
-          DmSecSetOob(connId, datsOobCfg);
+        if (pEvt->handle == WP_DAT_HDL) {
+            periphCb.indicationStatus = pEvt->hdr.status;
         }
 
-        DmSecAuthRsp(connId, 0, NULL);
-      }
-      else
-      {
-        AppHandlePasskey(&pMsg->authReq);
-      }
-      break;
-
-    case DM_SEC_COMPARE_IND:
-      AppHandleNumericComparison(&pMsg->cnfInd);
-      break;
-
-    case DM_PRIV_ADD_DEV_TO_RES_LIST_IND:
-      datsPrivAddDevToResListInd(pMsg);
-      break;
-
-    case DM_PRIV_REM_DEV_FROM_RES_LIST_IND:
-      datsPrivRemDevFromResListInd(pMsg);
-      break;
-
-    case DM_ADV_NEW_ADDR_IND:
-      break;
-
-    case DM_PRIV_CLEAR_RES_LIST_IND:
-      APP_TRACE_INFO1("Clear resolving list status 0x%02x", pMsg->hdr.status);
-      break;
-
-#if (BT_VER > 8)
-    case DM_PHY_UPDATE_IND:
-      APP_TRACE_INFO2("DM_PHY_UPDATE_IND - RX: %d, TX: %d", pMsg->phyUpdate.rxPhy, pMsg->phyUpdate.txPhy);
-      datsCb.phyMode = pMsg->phyUpdate.rxPhy;
-      break;
-#endif /* BT_VER */
+        if (pEvt->hdr.status == ATT_SUCCESS) {
+            PR_DEBUG("Handle %d confirmation success", pEvt->handle);
+        } else if (pEvt->hdr.status == ATT_ERR_OVERFLOW) {
+            PR_ERROR("Handle %d confirmation overflow", pEvt->handle);
+        } else {
+            PR_ERROR("Handle %d confirmation fail 0x%02hhX", pEvt->handle, pEvt->hdr.status);
+        }
+        break;
 
     default:
-      break;
-  }
-
-  if (uiEvent != APP_UI_NONE)
-  {
-    AppUiAction(uiEvent);
-  }
-}
-
-static void datsBtnCback(uint8_t btn)
-{
-#if WDXS_INCLUDED == TRUE
-  static uint8_t waveform = WDXS_STREAM_WAVEFORM_SINE;
-#endif /* WDXS_INCLUDED */
-
-#if (BT_VER > 8)
-  dmConnId_t      connId;
-  if ((connId = AppConnIsOpen()) != DM_CONN_ID_NONE)
-#else
-  if (AppConnIsOpen() != DM_CONN_ID_NONE)
-#endif /* BT_VER */
-  {
-    switch (btn)
-    {
-#if (BT_VER > 8)
-      case APP_UI_BTN_2_SHORT:
-
-        /* Toggle PHY Test Mode */
-        if (datsCb.phyMode == DATS_PHY_1M)
-        {
-          APP_TRACE_INFO0("2 MBit TX and RX PHY Requested");
-          DmSetPhy(connId, HCI_ALL_PHY_ALL_PREFERENCES, HCI_PHY_LE_2M_BIT, HCI_PHY_LE_2M_BIT, HCI_PHY_OPTIONS_NONE);
-        }
-        else if (datsCb.phyMode == DATS_PHY_2M)
-        {
-          APP_TRACE_INFO0("LE Coded TX and RX PHY Requested");
-          DmSetPhy(connId, HCI_ALL_PHY_ALL_PREFERENCES, HCI_PHY_LE_CODED_BIT, HCI_PHY_LE_CODED_BIT, HCI_PHY_OPTIONS_NONE);
-        }
-        else
-        {
-          APP_TRACE_INFO0("1 MBit TX and RX PHY Requested");
-          DmSetPhy(connId, HCI_ALL_PHY_ALL_PREFERENCES, HCI_PHY_LE_1M_BIT, HCI_PHY_LE_1M_BIT, HCI_PHY_OPTIONS_NONE);
-        }
-        break;
-
-#endif /* BT_VER */
-
-#if WDXS_INCLUDED == TRUE
-      case APP_UI_BTN_1_SHORT:
-        /* Change stream waveform */
-        waveform++;
-
-        if (waveform > WDXS_STREAM_WAVEFORM_SAWTOOTH)
-          waveform = WDXS_STREAM_WAVEFORM_SINE;
-
-        wdxsSetStreamWaveform(waveform);
-        break;
-#endif /* WDXS_INCLUDED */
-
-      default:
+        PR_INFO("Event: 0x%02hhX Status: 0x%02hhX Handle: %d", pEvt->hdr.event, pEvt->hdr.status, pEvt->handle);
         break;
     }
-  }
-  else
-  {
-    switch (btn)
+
+    if ((pMsg = WsfMsgAlloc(sizeof(attEvt_t) + pEvt->valueLen)) != NULL)
     {
-      case APP_UI_BTN_1_SHORT:
-        /* start advertising */
-        AppAdvStart(APP_MODE_AUTO_INIT);
+        memcpy(pMsg, pEvt, sizeof(attEvt_t));
+        pMsg->pValue = (uint8_t *)(pMsg + 1);
+        memcpy(pMsg->pValue, pEvt->pValue, pEvt->valueLen);
+        WsfMsgSend(periphCb.handlerId, pMsg);
+    }
+}
+
+// Application ATTS client characteristic configuration callback.
+static void periphCccCback(attsCccEvt_t *pEvt)
+{
+    PR_INFO("Event: 0x%02hhX idx: %d Value: %d", pEvt->hdr.event, pEvt->idx, pEvt->value);
+}
+
+// ATTS write callback for proprietary data service.
+static uint8_t periphWpWriteCback(dmConnId_t connId, uint16_t handle, uint8_t operation,
+                          uint16_t offset, uint16_t len, uint8_t *pValue, attsAttr_t *pAttr)
+{
+//  PR_DEBUG("connId: 0x%02hhX", connId);
+
+    ble_receive(len, pValue);
+
+    return ATT_SUCCESS;
+}
+
+// ATTS read callback for proprietary data service.
+static uint8_t periphWpReadCback(dmConnId_t connId, uint16_t handle, uint8_t operation,
+                                  uint16_t offset, attsAttr_t *pAttr)
+{
+    PR_DEBUG("connId: 0x%02hhX", connId);
+
+    *(pAttr->pLen) = 1;
+    for (int i = 0; i < 1; i++ ){
+        pAttr->pValue[i] = i + 5;
+    }
+    return ATT_SUCCESS;
+}
+
+// Set up advertising and other procedures that need to be performed after device reset.
+static void periphSetup(dmEvt_t *pMsg)
+{
+    /* set advertising data for discoverable mode */
+    AppAdvSetData(APP_ADV_DATA_DISCOVERABLE, sizeof(periphAdvDataDisc), (uint8_t *) periphAdvDataDisc);
+
+    /* set advertising data or connectable mode */
+    AppAdvSetData(APP_ADV_DATA_CONNECTABLE, sizeof(periphAdvDataDisc), (uint8_t *) periphAdvDataDisc);
+
+    /* start advertising; automatically set connectable/discoverable mode and bondable mode */
+    AppAdvStart(APP_MODE_AUTO_INIT);
+}
+
+// Process messages from the event handler.
+static void periphProcMsg(dmEvt_t *pMsg)
+{
+    uint8_t uiEvent = APP_UI_NONE;
+
+    switch(pMsg->hdr.event)
+    {
+    case DM_RESET_CMPL_IND:
+        periphSetup(pMsg);
+        uiEvent = APP_UI_RESET_CMPL;
         break;
 
-      case APP_UI_BTN_1_MED:
-        /* Enter bondable mode */
-        AppSetBondable(TRUE);
+    case DM_ADV_START_IND:
+        uiEvent = APP_UI_ADV_START;
         break;
 
-      case APP_UI_BTN_1_LONG:
-        /* clear all bonding info */
-        AppSlaveClearAllBondingInfo();
-        AppDbNvmDeleteAll();
+    case DM_ADV_STOP_IND:
+        uiEvent = APP_UI_ADV_STOP;
         break;
 
-      case APP_UI_BTN_1_EX_LONG:
+    case DM_CONN_OPEN_IND:
+        /* Save connId  */
+        periphCb.connId = (dmConnId_t) pMsg->hdr.param;
+        periphCb.connected = TRUE;
+
+        PR_INFO("Connection opened");
+        PR_INFO("connId: %d", pMsg->connOpen.hdr.param);
+        PR_INFO("peerAddr: %02X:%02X:%02X:%02X:%02X:%02X",
+                pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
+                pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
+        PR_INFO("MTU: %d", AttGetMtu(periphCb.connId));
+
+        uiEvent = APP_UI_CONN_OPEN;
+        break;
+
+    case DM_CONN_CLOSE_IND:
+        periphCb.connected = FALSE;
+
+        PR_INFO("Connection closed status 0x%02hhX, reason 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
+        switch (pMsg->connClose.reason)
         {
-          const char *pVersion;
-          StackGetVersionNumber(&pVersion);
-          datsDisplayStackVersion(pVersion);
+        case HCI_ERR_CONN_TIMEOUT:      PR_INFO(" TIMEOUT");         break;
+        case HCI_ERR_LOCAL_TERMINATED:  PR_INFO(" LOCAL TERM");      break;
+        case HCI_ERR_REMOTE_TERMINATED: PR_INFO(" REMOTE TERM");     break;
+        case HCI_ERR_CONN_FAIL:         PR_INFO(" FAIL ESTABLISH");  break;
+        case HCI_ERR_MIC_FAILURE:       PR_INFO(" MIC FAILURE");     break;
         }
+
+        uiEvent = APP_UI_CONN_CLOSE;
         break;
 
-      case APP_UI_BTN_2_SHORT:
-        /* stop advertising */
-        AppAdvStop();
-        break;
+     case DM_CONN_DATA_LEN_CHANGE_IND:
+         PR_INFO("Data len changed maxTxOctets: %d, maxRxOctets: %d", pMsg->dataLenChange.maxTxOctets, pMsg->dataLenChange.maxRxOctets);
+         PR_INFO("MTU: %d", AttGetMtu(periphCb.connId));
+         uiEvent = DM_CONN_DATA_LEN_CHANGE_IND;
+         break;
 
-      default:
-        break;
+     default:
+         PR_INFO("Event 0x%02hhX", pMsg->hdr.event);
+         break;
     }
-  }
-}
 
-static void datsWsfBufDiagnostics(WsfBufDiag_t *pInfo)
-{
-  if (pInfo->type == WSF_BUF_ALLOC_FAILED)
-  {
-    APP_TRACE_INFO2("Dats got WSF Buffer Allocation Failure - Task: %d Len: %d",
-                     pInfo->param.alloc.taskId, pInfo->param.alloc.len);
-  }
-}
-
-void DatsHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
-{
-  if (pMsg != NULL)
-  {
-    APP_TRACE_INFO1("Dats got evt %d", pMsg->event);
-
-    /* process ATT messages */
-    if (pMsg->event >= ATT_CBACK_START && pMsg->event <= ATT_CBACK_END)
+    if (uiEvent != APP_UI_NONE)
     {
-      /* process server-related ATT messages */
-      AppServerProcAttMsg(pMsg);
+        AppUiAction(uiEvent);
     }
-    /* process DM messages */
-    else if (pMsg->event >= DM_CBACK_START && pMsg->event <= DM_CBACK_END)
+}
+
+// Application handler init function called during system initialization.
+static void PeriphHandlerInit(wsfHandlerId_t handlerId)
+{
+    APP_TRACE_INFO0("PeriphHandlerInit");
+
+    /* store handler ID */
+    periphCb.handlerId = handlerId;
+
+    /* Set configuration pointers */
+    pAppSlaveCfg = (appSlaveCfg_t *) &periphSlaveCfg;
+    pAppAdvCfg = (appAdvCfg_t *) &periphAdvCfg;
+    pAttCfg = (attCfg_t *) &periphAttCfg;
+
+    /* Initialize application framework */
+    AppSlaveInit();
+    AppServerInit();
+}
+
+// WSF event handler for application.
+static void PeriphHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
+{
+    if (pMsg != NULL)
     {
-      /* process advertising and connection-related messages */
-      AppSlaveProcDmMsg((dmEvt_t *) pMsg);
+        APP_TRACE_INFO1("Periph got evt %d", pMsg->event);
 
-      /* process security-related messages */
-      AppSlaveSecProcDmMsg((dmEvt_t *) pMsg);
+        /* process ATT messages */
+        if (pMsg->event >= ATT_CBACK_START && pMsg->event <= ATT_CBACK_END)
+        {
+            /* process server-related ATT messages */
+            AppServerProcAttMsg(pMsg);
+        }
+        /* process DM messages */
+        else if (pMsg->event >= DM_CBACK_START && pMsg->event <= DM_CBACK_END)
+        {
+            /* process advertising and connection-related messages */
+            AppSlaveProcDmMsg((dmEvt_t *) pMsg);
+        }
 
-#if WDXS_INCLUDED == TRUE
-      /* process WDXS-related messages */
-      WdxsProcDmMsg((dmEvt_t*) pMsg);
-#endif /* WDXS_INCLUDED */
+        /* perform profile and user interface-related operations */
+        periphProcMsg((dmEvt_t *) pMsg);
     }
-
-    /* perform profile and user interface-related operations */
-    datsProcMsg((dmEvt_t *) pMsg);
-  }
 }
 
-void DatsStart(void)
+// Start the application.
+static void PeriphStart(void)
 {
-  /* Register for stack callbacks */
-  DmRegister(datsDmCback);
-  DmConnRegister(DM_CLIENT_ID_APP, datsDmCback);
-  AttRegister(datsAttCback);
-  AttConnRegister(AppServerConnCback);
-  AttsCccRegister(DATS_NUM_CCC_IDX, (attsCccSet_t *) datsCccSet, datsCccCback);
+    /* Register for stack callbacks */
+    DmRegister(periphDmCback);
+    DmConnRegister(DM_CLIENT_ID_APP, periphDmCback);
+    AttRegister(periphAttCback);
+    AttConnRegister(AppServerConnCback);
+    AttsCccRegister(PERIPH_NUM_CCC_IDX, (attsCccSet_t *) periphCccSet, periphCccCback);
 
-  /* Initialize attribute server database */
-  SvcCoreGattCbackRegister(GattReadCback, GattWriteCback);
-  SvcCoreAddGroup();
-  SvcWpCbackRegister(NULL, datsWpWriteCback);
-  SvcWpAddGroup();
+    /* Initialize attribute server database */
+    SvcCoreGattCbackRegister(GattReadCback, GattWriteCback);
+    SvcCoreAddGroup();
+    SvcWpCbackRegister(periphWpReadCback, periphWpWriteCback);
+    SvcWpAddGroup();
 
-  /* Set Service Changed CCCD index. */
-  GattSetSvcChangedIdx(DATS_GATT_SC_CCC_IDX);
+    /* Set Service Changed CCCD index. */
+    GattSetSvcChangedIdx(PERIPH_GATT_SC_CCC_IDX);
 
-  /* Register for app framework button callbacks */
-  AppUiBtnRegister(datsBtnCback);
-
-#if WDXS_INCLUDED == TRUE
-
-  /* Initialize the OTA File Media */
-  WdxsOtaMediaInit();
-
-  /* Initialize the WDXS Stream */
-  wdxsStreamInit();
-
-  /* Set the WDXS CCC Identifiers */
-  WdxsSetCccIdx(WDXS_DC_CH_CCC_IDX, WDXS_AU_CH_CCC_IDX, WDXS_FTC_CH_CCC_IDX, WDXS_FTD_CH_CCC_IDX);
-
-#if (BT_VER > 8)
-  WdxsPhyInit();
-#endif /* BT_VER */
-
-#endif /* WDXS_INCLUDED */
-
-#if (BT_VER > 8)
-  DmPhyInit();
-#endif /* BT_VER */
-
-  WsfNvmInit();
-
-  WsfBufDiagRegister(datsWsfBufDiagnostics);
-
-  /* Reset the device */
-  DmDevReset();
+    /* Reset the device */
+    DmDevReset();
 }
 
-void DatsHandlerInit(wsfHandlerId_t handlerId)
-{
-  APP_TRACE_INFO0("DatsHandlerInit");
-
-  /* store handler ID */
-  datsCb.handlerId = handlerId;
-
-  /* Set configuration pointers */
-  pAppSlaveCfg = (appSlaveCfg_t *) &datsSlaveCfg;
-  pAppAdvCfg = (appAdvCfg_t *) &datsAdvCfg;
-  pAppSecCfg = (appSecCfg_t *) &datsSecCfg;
-  pAppUpdateCfg = (appUpdateCfg_t *) &datsUpdateCfg;
-  pSmpCfg = (smpCfg_t *) &datsSmpCfg;
-  pAttCfg = (attCfg_t *) &datsAttCfg;
-
-  /* Initialize application framework */
-  AppSlaveInit();
-  AppServerInit();
-
-  /* Set IRK for the local device */
-  DmSecSetLocalIrk(localIrk);
-}
-
-static void StackInitDats(void)
+// Initialize stack.
+static void StackInitPeriph(void)
 {
     wsfHandlerId_t handlerId;
 
@@ -829,27 +479,22 @@ static void StackInitDats(void)
     handlerId = WsfOsSetNextHandler(AppHandler);
     AppHandlerInit(handlerId);
 
-    handlerId = WsfOsSetNextHandler(DatsHandler);
-    DatsHandlerInit(handlerId);
-
-#if WDXS_INCLUDED == TRUE
-    handlerId = WsfOsSetNextHandler(WdxsHandler);
-    WdxsHandlerInit(handlerId);
-#endif
+    handlerId = WsfOsSetNextHandler(PeriphHandler);
+    PeriphHandlerInit(handlerId);
 }
 
 #ifdef WSF_TRACE_ENABLED
-static bool_t myTrace(const uint8_t *pBuf, uint32_t len)
+static bool_t max32666_trace(const uint8_t *pBuf, uint32_t len)
 {
     extern uint8_t wsfCsNesting;
 
     if (wsfCsNesting == 0)
     {
         WsfTaskLock();
-//        while(SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {}
+        while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {};
         fwrite(pBuf, len, 1, stdout);
         fflush(stdout);
-//        SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT);
+        MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT);
         WsfTaskUnlock();
         return TRUE;
     }
@@ -858,8 +503,22 @@ static bool_t myTrace(const uint8_t *pBuf, uint32_t len)
 }
 #endif
 
+// Initialize WSF.
 static void mainWsfInit(void)
 {
+#if defined(HCI_TR_EXACTLE) && (HCI_TR_EXACTLE == 1)
+    /* Configurations must be persistent. */
+    static BbRtCfg_t mainBbRtCfg;
+
+    PalBbLoadCfg((PalBbCfg_t *)&mainBbRtCfg);
+    LlGetDefaultRunTimeCfg(&mainLlRtCfg);
+    PalCfgLoadData(PAL_CFG_ID_LL_PARAM, &mainLlRtCfg.maxAdvSets, sizeof(LlRtCfg_t) - 9);
+#endif
+
+    uint32_t memUsed;
+    memUsed = WsfBufIoUartInit(WsfHeapGetFreeStartAddress(), PLATFORM_UART_TERMINAL_BUFFER_SIZE);
+    WsfHeapAlloc(memUsed);
+
 #if defined(HCI_TR_EXACTLE) && (HCI_TR_EXACTLE == 1)
     /* +12 for message headroom, + 2 event header, +255 maximum parameter length. */
     const uint16_t maxRptBufSize = 12 + 2 + 255;
@@ -876,52 +535,28 @@ static void mainWsfInit(void)
 
     const uint8_t numPools = sizeof(mainPoolDesc) / sizeof(mainPoolDesc[0]);
 
-    uint16_t memUsed;
     memUsed = WsfBufInit(numPools, mainPoolDesc);
     WsfHeapAlloc(memUsed);
     WsfOsInit();
     WsfTimerInit();
 #if (WSF_TOKEN_ENABLED == TRUE) || (WSF_TRACE_ENABLED == TRUE)
-    WsfTraceRegisterHandler(myTrace);
+    //ty  WsfTraceRegisterHandler(WsfBufIoWrite);
+    WsfTraceRegisterHandler(max32666_trace);
     WsfTraceEnable(TRUE);
 #endif
-}
 
-int ble_init(void)
-{
-#if defined(HCI_TR_EXACTLE) && (HCI_TR_EXACTLE == 1)
-    /* Configurations must be persistent. */
-    static BbRtCfg_t mainBbRtCfg;
-
-    PalBbLoadCfg((PalBbCfg_t *)&mainBbRtCfg);
-    LlGetDefaultRunTimeCfg(&mainLlRtCfg);
-#if (BT_VER >= LL_VER_BT_CORE_SPEC_5_0)
-    /* Set 5.0 requirements. */
-    mainLlRtCfg.btVer = LL_VER_BT_CORE_SPEC_5_0;
-#endif
-    PalCfgLoadData(PAL_CFG_ID_LL_PARAM, &mainLlRtCfg.maxAdvSets, sizeof(LlRtCfg_t) - 9);
-#if (BT_VER >= LL_VER_BT_CORE_SPEC_5_0)
-    PalCfgLoadData(PAL_CFG_ID_BLE_PHY, &mainLlRtCfg.phy2mSup, 4);
-#endif
-#endif
-
-    uint32_t memUsed;
-    memUsed = WsfBufIoUartInit(WsfHeapGetFreeStartAddress(), PLATFORM_UART_TERMINAL_BUFFER_SIZE);
-    WsfHeapAlloc(memUsed);
-
-    mainWsfInit();
     AppTerminalInit();
 
 #if defined(HCI_TR_EXACTLE) && (HCI_TR_EXACTLE == 1)
     LlInitRtCfg_t llCfg =
     {
-            .pBbRtCfg     = &mainBbRtCfg,
-            .wlSizeCfg    = 4,
-            .rlSizeCfg    = 4,
-            .plSizeCfg    = 4,
-            .pLlRtCfg     = &mainLlRtCfg,
-            .pFreeMem     = WsfHeapGetFreeStartAddress(),
-            .freeMemAvail = WsfHeapCountAvailable()
+        .pBbRtCfg     = &mainBbRtCfg,
+        .wlSizeCfg    = 4,
+        .rlSizeCfg    = 4,
+        .plSizeCfg    = 4,
+        .pLlRtCfg     = &mainLlRtCfg,
+        .pFreeMem     = WsfHeapGetFreeStartAddress(),
+        .freeMemAvail = WsfHeapCountAvailable()
     };
 
     memUsed = LlInit(&llCfg);
@@ -929,12 +564,118 @@ int ble_init(void)
 
     bdAddr_t bdAddr;
     PalCfgLoadData(PAL_CFG_ID_BD_ADDR, bdAddr, sizeof(bdAddr_t));
+    PR_INFO("Setting address -- MAC %02X:%02X:%02X:%02X:%02X:%02X", bdAddr[5], bdAddr[4], bdAddr[3], bdAddr[2], bdAddr[1], bdAddr[0]);
     LlSetBdAddr((uint8_t *)&bdAddr);
     LlMathSetSeed((uint32_t *)&bdAddr);
 #endif
 
-    StackInitDats();
-    DatsStart();
+    StackInitPeriph();
+    PeriphStart();
+}
+
+static void ble_receive(uint16_t dataLen, uint8_t *data)
+{
+    PR_INFO("RX len: %d", dataLen);
+    for (int i = 0; i < dataLen; i++) {
+      PR("0x%02hhX ", data[i]);
+    }
+    PR("\n");
+
+    // Increase every byte by 1 and send it back
+    for (uint16_t i = 0; i < dataLen; i++) {
+        data[i] = data[i] + 1;
+    }
+    ble_send_indication(dataLen, data);
+}
+
+int ble_mtu_size(void)
+{
+    if (!periphCb.connected) {
+        return 0;
+    }
+
+    return AttGetMtu(periphCb.connId);
+}
+
+int ble_packet_size(void)
+{
+    if (!periphCb.connected) {
+        return 0;
+    }
+
+    return AttGetMtu(periphCb.connId) - 3;
+}
+
+int ble_connected(void)
+{
+    return periphCb.connected;
+}
+
+int ble_send_notification(uint16_t dataLen, uint8_t *data)
+{
+    if (!periphCb.connected) {
+      PR_ERROR("No connection");
+      return E_NO_DEVICE;
+    }
+
+    if (!AttsCccEnabled(periphCb.connId, PERIPH_WP_DAT_CCC_IDX)) {
+      PR_ERROR("Notification is not enabled");
+      return E_BAD_STATE;
+    }
+
+    PR_INFO("TX notification len: %d, data:", dataLen);
+    for (int i = 0; i < dataLen; i++) {
+        PR("0x%02hhX ", data[i]);
+    }
+    PR("\n");
+
+    AttsHandleValueNtf(periphCb.connId, WP_DAT_HDL, dataLen, data);
+
+    for (int i = 0; i < 10000; i++) {
+        wsfOsDispatcher();
+    }
+
+    return E_SUCCESS;
+}
+
+int ble_send_indication(uint16_t dataLen, uint8_t *data)
+{
+    if (!periphCb.connected) {
+      PR_ERROR("No connection");
+      return E_NO_DEVICE;
+    }
+
+    if (!AttsCccEnabled(periphCb.connId, PERIPH_WP_DAT_CCC_IDX)) {
+      PR_ERROR("Indications is not enabled");
+      return E_BAD_STATE;
+    }
+
+    PR_INFO("TX indication len: %d", dataLen);
+    for (int i = 0; i < dataLen; i++) {
+        PR("0x%02hhX ", data[i]);
+    }
+    PR("\n");
+
+    for (int try = 0; try < 3; try++) {
+        periphCb.indicationStatus = ATT_RSP_PENDING;
+
+        AttsHandleValueInd(periphCb.connId, WP_DAT_HDL, dataLen, data);
+
+        for (int i = 0; (i < 1000000) && (periphCb.indicationStatus == ATT_RSP_PENDING); i++) {
+            wsfOsDispatcher();
+        }
+
+        if (periphCb.indicationStatus == ATT_SUCCESS) {
+            return E_SUCCESS;
+        }
+    }
+
+    return E_COMM_ERR;
+}
+
+int ble_init(void)
+{
+    mainWsfInit();
 
     PR_INFO("BLE init completed");
 
@@ -943,6 +684,12 @@ int ble_init(void)
 
 int ble_worker(void)
 {
+    /* Run the WSF OS */
     wsfOsDispatcher();
+
+    if(!WsfOsActive()) {
+      /* No WSF tasks are active, optionally sleep */
+    }
+
     return E_NO_ERROR;
 }

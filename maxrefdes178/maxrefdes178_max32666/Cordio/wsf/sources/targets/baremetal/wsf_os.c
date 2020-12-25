@@ -111,6 +111,28 @@ static osThreadId_t wsfOsThreadId;
 
 /*************************************************************************************************/
 /*!
+ *  \brief  Check if the WSF OS is active.
+ *
+ *  \return TRUE if active, FALSE if inactive.
+ */
+/*************************************************************************************************/
+bool_t WsfOsActive(void)
+{
+  bool_t activeFlag = FALSE;
+
+  for (unsigned int i = 0; i < wsfOs.numFunc; i++)
+  {
+    if (wsfOs.sleepCheckFuncs[i])
+    {
+      activeFlag |= wsfOs.sleepCheckFuncs[i]();
+    }
+  }
+
+  return activeFlag;
+}
+
+/*************************************************************************************************/
+/*!
  *  \brief  Lock task scheduling.
  */
 /*************************************************************************************************/
@@ -319,23 +341,11 @@ void wsfOsDispatcher(void)
 /*************************************************************************************************/
 void osRtxIdleThread(void *pArg)
 {
-  bool_t activeFlag = FALSE;
-
   (void) pArg;
 
   while(TRUE)
   {
-    activeFlag = FALSE;
-
-    for (unsigned int i = 0; i < wsfOs.numFunc; i++)
-    {
-      if (wsfOs.sleepCheckFuncs[i])
-      {
-        activeFlag |= wsfOs.sleepCheckFuncs[i]();
-      }
-    }
-
-    if (!activeFlag)
+    if (!WsfOsActive())
     {
       WsfTimerSleep();
     }
@@ -382,24 +392,12 @@ void WsfOsRegisterSleepCheckFunc(WsfOsIdleCheckFunc_t func)
 /*************************************************************************************************/
 void WsfOsEnterMainLoop(void)
 {
-  bool_t activeFlag = FALSE;
-
   while (TRUE)
   {
     WsfTimerSleepUpdate();
     wsfOsDispatcher();
 
-    activeFlag = FALSE;
-
-    for (unsigned int i = 0; i < wsfOs.numFunc; i++)
-    {
-      if (wsfOs.sleepCheckFuncs[i])
-      {
-        activeFlag |= wsfOs.sleepCheckFuncs[i]();
-      }
-    }
-
-    if (!activeFlag)
+    if (!WsfOsActive())
     {
       WsfTimerSleep();
     }

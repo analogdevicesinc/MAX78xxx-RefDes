@@ -338,7 +338,7 @@ void PalUartReadData(PalUartId_t id, uint8_t *pData, uint16_t len)
   MXC_DMA_EnableInt(dmaCh);
 
   MXC_DMA->ch[dmaCh].cfg |= MXC_F_DMA_CFG_CTZIEN;
-  uart->dma |= ((1 << MXC_F_UART_DMA_RXDMA_LVL_POS) | MXC_F_UART_DMA_RXDMA_EN);
+  uart->dma |= ((1 << MXC_F_UART_DMA_RXDMA_LEVEL_POS) | MXC_F_UART_DMA_RXDMA_EN);
 
   /* Start the transfer */
   MXC_DMA_Start(dmaCh);
@@ -421,7 +421,7 @@ void PalUartWriteData(PalUartId_t id, const uint8_t *pData, uint16_t len)
   MXC_DMA_EnableInt(dmaCh);
 
   MXC_DMA->ch[dmaCh].cfg |= MXC_F_DMA_CFG_CTZIEN;
-  uart->dma |= ((2 << MXC_F_UART_DMA_TXDMA_LVL_POS) | MXC_F_UART_DMA_TXDMA_EN);
+  uart->dma |= ((2 << MXC_F_UART_DMA_TXDMA_LEVEL_POS) | MXC_F_UART_DMA_TXDMA_EN);
 
   /* Start the transfer */
   MXC_DMA_Start(dmaCh);
