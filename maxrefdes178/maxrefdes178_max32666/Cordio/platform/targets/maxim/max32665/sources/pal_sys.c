@@ -269,96 +269,96 @@ uint32_t PalSysGetStackUsage(void)
 /*************************************************************************************************/
 void PalSysSleep(void)
 {
-  uint32_t rtcCount, schUsec, palBbSnap, targetTick, rtcElapsed, schUsecElapsed;
-  bool_t palBbSnapValid = FALSE;
-
-  if (palSysBusyCount) {
-    /* Work pending; do not sleep yet. */
-    return;
-  }
-
-  /* Figure out if the UART is active */
-  if(PalUartGetState(PAL_UART_ID_TERMINAL) == PAL_UART_STATE_BUSY) {
-    MXC_LP_EnterSleepMode();
-    return;
-  }
-
-  /* Prevent characters from being corrupted if still transmitting, 
-    UART will shutdown in deep sleep  */
-  if(MXC_UART_GetActive(MXC_UART_GET_UART(TERMINAL_UART)) != E_NO_ERROR) {
-    MXC_LP_EnterSleepMode();
-    return;
-  }
-
-  /* Figure out if the scheduler timer is active */
-  if(PalTimerGetState() != PAL_TIMER_STATE_BUSY) {
-    MXC_LP_EnterSleepMode();
-    return;
-  }
-
-  if(!PAL_SYS_ENABLE_DS) {
-    MXC_LP_EnterSleepMode();
-    return;
-  }
-
-  /* Get the time until the next event */
-  MXC_WUT_Edge();
-  rtcCount = MXC_WUT->cnt;
-  palBbSnapValid = PalBbGetTimestamp(&palBbSnap);
-  schUsec = PalTimerGetExpTime();
-
-  /* TODO: Figure out if RTC is active */
-
-  /* Regular sleep if we don't have time for deep sleep */
-  if (schUsec < PAL_SYS_MIN_DS_USEC) {
-    MXC_LP_EnterSleepMode();
-    return;
-  }
-
-  /* Arm WUT for wakeup from scheduler timer */
-  targetTick = rtcCount;
-  targetTick += (uint64_t)(schUsec - PAL_SYS_DS_WAKEUP_USEC) * (uint64_t)PAL_RTC_TICKS_PER_SEC / (uint64_t)1000000;
-  MXC_WUT->cmp = targetTick;
-
-  /* Enable wakeup from WUT */
-  NVIC_EnableIRQ(WUT_IRQn);
-  MXC_LP_EnableWUTAlarmWakeup();
-
-  /* Stop the scheduler timer */
-  PalTimerStop();
-
-  /* Shutdown PalBb */
-  if(palBbSnapValid) {
-    PalBbDisable();
-  }
-  
-  /* Re-enable interrupts for wakeup */
-  PalExitCs();
-
-  MXC_LP_EnterDeepSleepMode();
-
-  /* Disable interrupts until we complete the recovery */
-  PalEnterCs();
-
-  /* Reset the BB counter */
-  if(palBbSnapValid) {
-    PalBbEnable();
-    PalBbRestore();
-
-    /* restore BB clock from WUT */
-    MXC_WUT_Edge();
-    rtcElapsed = MXC_WUT->cnt - rtcCount;
-
-    MXC_WUT->preset = palBbSnap + ((uint64_t)rtcElapsed * (uint64_t)BB_CLK_RATE_HZ / (uint64_t)PAL_RTC_TICKS_PER_SEC);
-    MXC_WUT->reload = 1;
-    MXC_WUT_Edge();
-  }
-
-  /* Update the scheduler timer */
-  MXC_WUT_Edge();
-  rtcElapsed = MXC_WUT->cnt - rtcCount;
-  schUsecElapsed = (uint64_t)rtcElapsed * (uint64_t)1000000 / (uint64_t)PAL_RTC_TICKS_PER_SEC;
-  PalTimerRestore(schUsec - schUsecElapsed);
+//  uint32_t rtcCount, schUsec, palBbSnap, targetTick, rtcElapsed, schUsecElapsed;
+//  bool_t palBbSnapValid = FALSE;
+//
+//  if (palSysBusyCount) {
+//    /* Work pending; do not sleep yet. */
+//    return;
+//  }
+//
+//  /* Figure out if the UART is active */
+//  if(PalUartGetState(PAL_UART_ID_TERMINAL) == PAL_UART_STATE_BUSY) {
+//    MXC_LP_EnterSleepMode();
+//    return;
+//  }
+//
+//  /* Prevent characters from being corrupted if still transmitting,
+//    UART will shutdown in deep sleep  */
+//  if(MXC_UART_GetActive(MXC_UART_GET_UART(TERMINAL_UART)) != E_NO_ERROR) {
+//    MXC_LP_EnterSleepMode();
+//    return;
+//  }
+//
+//  /* Figure out if the scheduler timer is active */
+//  if(PalTimerGetState() != PAL_TIMER_STATE_BUSY) {
+//    MXC_LP_EnterSleepMode();
+//    return;
+//  }
+//
+//  if(!PAL_SYS_ENABLE_DS) {
+//    MXC_LP_EnterSleepMode();
+//    return;
+//  }
+//
+//  /* Get the time until the next event */
+//  MXC_WUT_Edge();
+//  rtcCount = MXC_WUT->cnt;
+//  palBbSnapValid = PalBbGetTimestamp(&palBbSnap);
+//  schUsec = PalTimerGetExpTime();
+//
+//  /* TODO: Figure out if RTC is active */
+//
+//  /* Regular sleep if we don't have time for deep sleep */
+//  if (schUsec < PAL_SYS_MIN_DS_USEC) {
+//    MXC_LP_EnterSleepMode();
+//    return;
+//  }
+//
+//  /* Arm WUT for wakeup from scheduler timer */
+//  targetTick = rtcCount;
+//  targetTick += (uint64_t)(schUsec - PAL_SYS_DS_WAKEUP_USEC) * (uint64_t)PAL_RTC_TICKS_PER_SEC / (uint64_t)1000000;
+//  MXC_WUT->cmp = targetTick;
+//
+//  /* Enable wakeup from WUT */
+//  NVIC_EnableIRQ(WUT_IRQn);
+//  MXC_LP_EnableWUTAlarmWakeup();
+//
+//  /* Stop the scheduler timer */
+//  PalTimerStop();
+//
+//  /* Shutdown PalBb */
+//  if(palBbSnapValid) {
+//    PalBbDisable();
+//  }
+//
+//  /* Re-enable interrupts for wakeup */
+//  PalExitCs();
+//
+//  MXC_LP_EnterDeepSleepMode();
+//
+//  /* Disable interrupts until we complete the recovery */
+//  PalEnterCs();
+//
+//  /* Reset the BB counter */
+//  if(palBbSnapValid) {
+//    PalBbEnable();
+//    PalBbRestore();
+//
+//    /* restore BB clock from WUT */
+//    MXC_WUT_Edge();
+//    rtcElapsed = MXC_WUT->cnt - rtcCount;
+//
+//    MXC_WUT->preset = palBbSnap + ((uint64_t)rtcElapsed * (uint64_t)BB_CLK_RATE_HZ / (uint64_t)PAL_RTC_TICKS_PER_SEC);
+//    MXC_WUT->reload = 1;
+//    MXC_WUT_Edge();
+//  }
+//
+//  /* Update the scheduler timer */
+//  MXC_WUT_Edge();
+//  rtcElapsed = MXC_WUT->cnt - rtcCount;
+//  schUsecElapsed = (uint64_t)rtcElapsed * (uint64_t)1000000 / (uint64_t)PAL_RTC_TICKS_PER_SEC;
+//  PalTimerRestore(schUsec - schUsecElapsed);
 }
 
 /*************************************************************************************************/

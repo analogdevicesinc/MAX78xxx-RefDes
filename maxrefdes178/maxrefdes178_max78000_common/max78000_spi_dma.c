@@ -200,8 +200,8 @@ void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mx
     }
 
     // Send interrupt to master
-    spi_int->port->out_clr = spi_int->mask;
-    spi_int->port->out_set = spi_int->mask;
+    MXC_GPIO_OutClr(spi_int->port, spi_int->mask);
+    MXC_GPIO_OutSet(spi_int->port, spi_int->mask);
 }
 
 int spi_dma_wait(uint8_t ch)

@@ -39,9 +39,10 @@
 #include <board.h>
 #include <core1.h>
 #include <dma.h>
+#include <mxc_delay.h>
+#include <rtc.h>
 #include <stdint.h>
 #include <string.h>
-#include <rtc.h>
 
 #include "max32666_debug.h"
 #include "max32666_ble.h"
@@ -134,6 +135,14 @@ int main(void)
         while(1);
     }
 
+    // BLE should init first since it is mischievous
+    // BLE somehow damage GPIO settings for P0.0, P0.23
+    ret = ble_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("ble_init failed %d", ret);
+        max20303_led_red(1);
+    }
+
     // Initialize DMA peripheral
     ret = MXC_DMA_Init();
     if (ret != E_NO_ERROR) {
@@ -174,12 +183,6 @@ int main(void)
         max20303_led_red(1);
     }
 
-//    ret = ble_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("ble_init failed %d", ret);
-//        max20303_led_red(1);
-//    }
-
     // Enable Core1
     Core1_Start();
 
@@ -190,7 +193,7 @@ int main(void)
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, image_data_rsz_maxim_logo);
 
     while (1) {
-//        ble_worker();
+        ble_worker();
 
         ret = qspi_worker();
         if (ret > QSPI_TYPE_NO_DATA) {
@@ -268,7 +271,8 @@ int Core1_Main(void) {
     //  __asm__("BKPT");
 
     while (1) {
-
+        MXC_Delay(MXC_DELAY_SEC(1));
+        PR_INFO("core1");
     }
 
     /* Quiet GCC warnings */
