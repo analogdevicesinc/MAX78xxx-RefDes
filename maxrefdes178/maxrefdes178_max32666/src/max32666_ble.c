@@ -677,7 +677,7 @@ int ble_init(void)
 {
     mainWsfInit();
 
-    PR_INFO("BLE init completed");
+    PR_INFO("ble_init completed");
 
     return E_NO_ERROR;
 }

@@ -39,7 +39,6 @@
 #include <board.h>
 #include <core1.h>
 #include <dma.h>
-#include <mxc_delay.h>
 #include <rtc.h>
 #include <stdint.h>
 #include <string.h>
@@ -77,6 +76,8 @@
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static void core0_irq_init(void);
+static void core1_irq_init(void);
 
 
 //-----------------------------------------------------------------------------
@@ -135,14 +136,6 @@ int main(void)
         while(1);
     }
 
-    // BLE should init first since it is mischievous
-    // BLE somehow damage GPIO settings for P0.0, P0.23
-    ret = ble_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("ble_init failed %d", ret);
-        max20303_led_red(1);
-    }
-
     // Initialize DMA peripheral
     ret = MXC_DMA_Init();
     if (ret != E_NO_ERROR) {
@@ -183,6 +176,8 @@ int main(void)
         max20303_led_red(1);
     }
 
+    core0_irq_init();
+
     // Enable Core1
     Core1_Start();
 
@@ -193,8 +188,6 @@ int main(void)
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, image_data_rsz_maxim_logo);
 
     while (1) {
-        ble_worker();
-
         ret = qspi_worker();
         if (ret > QSPI_TYPE_NO_DATA) {
             switch(ret)
@@ -265,18 +258,73 @@ int main(void)
 // Similar to Core 0, the entry point for Core 1
 // is Core1Main()
 // Execution begins when the CPU1 Clock is enabled
-int Core1_Main(void) {
-    PR_INFO("maxrefdes178_max32666 core1");
-
+int Core1_Main(void)
+{
     //  __asm__("BKPT");
 
+    int ret = 0;
+
+    PR_INFO("maxrefdes178_max32666 core1");
+
+    core1_irq_init();
+
+    ret = ble_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("ble_init %d", ret);
+    }
+
     while (1) {
-        MXC_Delay(MXC_DELAY_SEC(1));
-        PR_INFO("core1");
+        ble_worker();
     }
 
     /* Quiet GCC warnings */
     return -1;
+}
+
+static void core0_irq_init(void)
+{
+    NVIC_DisableIRQ(BTLE_TX_DONE_IRQn);
+    NVIC_DisableIRQ(BTLE_RX_RCVD_IRQn);
+    NVIC_DisableIRQ(BTLE_RX_ENG_DET_IRQn);
+    NVIC_DisableIRQ(BTLE_SFD_DET_IRQn);
+    NVIC_DisableIRQ(BTLE_SFD_TO_IRQn);
+    NVIC_DisableIRQ(BTLE_GP_EVENT_IRQn);
+    NVIC_DisableIRQ(BTLE_CFO_IRQn);
+    NVIC_DisableIRQ(BTLE_SIG_DET_IRQn);
+    NVIC_DisableIRQ(BTLE_AGC_EVENT_IRQn); // Disabled
+    NVIC_DisableIRQ(BTLE_RFFE_SPIM_IRQn);
+    NVIC_DisableIRQ(BTLE_TX_AES_IRQn); // Disabled
+    NVIC_DisableIRQ(BTLE_RX_AES_IRQn); // Disabled
+    NVIC_DisableIRQ(BTLE_INV_APB_ADDR_IRQn); // Disabled
+    NVIC_DisableIRQ(BTLE_IQ_DATA_VALID_IRQn); // Disabled
+
+    NVIC_DisableIRQ(TMR0_IRQn);
+    NVIC_DisableIRQ(TMR1_IRQn);
+
+    NVIC_DisableIRQ(WUT_IRQn);
+}
+
+static void core1_irq_init(void)
+{
+//    NVIC_EnableIRQ(BTLE_TX_DONE_IRQn);
+//    NVIC_EnableIRQ(BTLE_RX_RCVD_IRQn);
+//    NVIC_EnableIRQ(BTLE_RX_ENG_DET_IRQn);
+//    NVIC_EnableIRQ(BTLE_SFD_DET_IRQn);
+//    NVIC_EnableIRQ(BTLE_SFD_TO_IRQn);
+//    NVIC_EnableIRQ(BTLE_GP_EVENT_IRQn);
+//    NVIC_EnableIRQ(BTLE_CFO_IRQn);
+//    NVIC_EnableIRQ(BTLE_SIG_DET_IRQn);
+//    NVIC_DisableIRQ(BTLE_AGC_EVENT_IRQn); // Disabled
+//    NVIC_EnableIRQ(BTLE_RFFE_SPIM_IRQn);
+//    NVIC_DisableIRQ(BTLE_TX_AES_IRQn); // Disabled
+//    NVIC_DisableIRQ(BTLE_RX_AES_IRQn); // Disabled
+//    NVIC_DisableIRQ(BTLE_INV_APB_ADDR_IRQn); // Disabled
+//    NVIC_DisableIRQ(BTLE_IQ_DATA_VALID_IRQn); // Disabled
+//
+//    NVIC_EnableIRQ(TMR0_IRQn);
+//    NVIC_EnableIRQ(TMR1_IRQn);
+//
+//    NVIC_EnableIRQ(WUT_IRQn);
 }
 
 void HardFault_Handler(void)
@@ -284,7 +332,7 @@ void HardFault_Handler(void)
     unsigned int cnt = 0;
     while(1) {
         if (cnt % 100000000 == 0) {
-            PR("\n\n\n\n!!!!!\n Core0 FaultISR: CFSR %08X, BFAR %08x, MMFAR %08x, HFSR %08x\n!!!!!\n\n\n",
+            PR("\n\n\n\n!!!!!\n FaultISR: CFSR %08X, BFAR %08x, MMFAR %08x, HFSR %08x\n!!!!!\n\n\n",
                     (unsigned int)SCB->CFSR, (unsigned int)SCB->BFAR, (unsigned int)SCB->MMFAR, (unsigned int)SCB->HFSR);
             cnt = 1;
         }
