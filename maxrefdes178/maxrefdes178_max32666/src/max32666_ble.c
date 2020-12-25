@@ -474,7 +474,7 @@ static void StackInitPeriph(void)
     SmpHandlerInit(handlerId);
     SmprInit();
     SmprScInit();
-    HciSetMaxRxAclLen(100);
+    HciSetMaxRxAclLen(BLE_MAX_MTU_SIZE);
 
     handlerId = WsfOsSetNextHandler(AppHandler);
     AppHandlerInit(handlerId);
