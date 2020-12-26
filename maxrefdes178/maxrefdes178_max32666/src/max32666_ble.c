@@ -172,7 +172,7 @@ static const attsCccSet_t periphCccSet[PERIPH_NUM_CCC_IDX] =
     /* cccd handle          value range               security level */
     {GATT_SC_CH_CCC_HDL,    ATT_CLIENT_CFG_INDICATE,  DM_SEC_LEVEL_NONE},   /* PERIPH_GATT_SC_CCC_IDX */
 //ty  {WP_DAT_CH_CCC_HDL,     ATT_CLIENT_CFG_NOTIFY,    DM_SEC_LEVEL_NONE}    /* DATS_WP_DAT_CCC_IDX */
-    {WP_DAT_CH_CCC_HDL,     ATT_CLIENT_CFG_NOTIFY | ATT_CLIENT_CFG_INDICATE,    DM_SEC_LEVEL_NONE}    /* DATS_WP_DAT_CCC_IDX */
+    {WP_DAT_CH_CCC_HDL,     ATT_CLIENT_CFG_INDICATE,    DM_SEC_LEVEL_NONE}    /* DATS_WP_DAT_CCC_IDX */
 };
 
 /*! application control block */
@@ -609,33 +609,6 @@ int ble_packet_size(void)
 int ble_connected(void)
 {
     return periphCb.connected;
-}
-
-int ble_send_notification(uint16_t dataLen, uint8_t *data)
-{
-    if (!periphCb.connected) {
-      PR_ERROR("No connection");
-      return E_NO_DEVICE;
-    }
-
-    if (!AttsCccEnabled(periphCb.connId, PERIPH_WP_DAT_CCC_IDX)) {
-      PR_ERROR("Notification is not enabled");
-      return E_BAD_STATE;
-    }
-
-    PR_INFO("TX notification len: %d, data:", dataLen);
-    for (int i = 0; i < dataLen; i++) {
-        PR("0x%02hhX ", data[i]);
-    }
-    PR("\n");
-
-    AttsHandleValueNtf(periphCb.connId, WP_DAT_HDL, dataLen, data);
-
-    for (int i = 0; i < 10000; i++) {
-        wsfOsDispatcher();
-    }
-
-    return E_SUCCESS;
 }
 
 int ble_send_indication(uint16_t dataLen, uint8_t *data)

@@ -61,7 +61,7 @@ static const uint16_t wpLenSvc = sizeof(wpValSvc);
 
 /* Proprietary data characteristic */
 //tystatic const uint8_t wpValDatCh[] = {ATT_PROP_NOTIFY | ATT_PROP_WRITE_NO_RSP, UINT16_TO_BYTES(WP_DAT_HDL), ATT_UUID_D1_DATA};
-static const uint8_t wpValDatCh[] = {ATT_PROP_NOTIFY | ATT_PROP_INDICATE | ATT_PROP_WRITE, UINT16_TO_BYTES(WP_DAT_HDL), ATT_UUID_D1_DATA};
+static const uint8_t wpValDatCh[] = {ATT_PROP_INDICATE | ATT_PROP_WRITE, UINT16_TO_BYTES(WP_DAT_HDL), ATT_UUID_D1_DATA};
 static const uint16_t wpLenDatCh = sizeof(wpValDatCh);
 
 /* Proprietary data */

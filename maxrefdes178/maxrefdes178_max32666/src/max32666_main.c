@@ -303,7 +303,7 @@ static void core0_irq_init(void)
 
     NVIC_DisableIRQ(WUT_IRQn);
 
-//    NVIC_DisableIRQ(SDMA_IRQn); // ?
+    NVIC_DisableIRQ(SDMA_IRQn); // ?
 }
 
 static void core1_irq_init(void)
