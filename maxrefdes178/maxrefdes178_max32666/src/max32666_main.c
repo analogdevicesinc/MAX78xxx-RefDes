@@ -302,29 +302,13 @@ static void core0_irq_init(void)
     NVIC_DisableIRQ(TMR1_IRQn);
 
     NVIC_DisableIRQ(WUT_IRQn);
+
+//    NVIC_DisableIRQ(SDMA_IRQn); // ?
 }
 
 static void core1_irq_init(void)
 {
-//    NVIC_EnableIRQ(BTLE_TX_DONE_IRQn);
-//    NVIC_EnableIRQ(BTLE_RX_RCVD_IRQn);
-//    NVIC_EnableIRQ(BTLE_RX_ENG_DET_IRQn);
-//    NVIC_EnableIRQ(BTLE_SFD_DET_IRQn);
-//    NVIC_EnableIRQ(BTLE_SFD_TO_IRQn);
-//    NVIC_EnableIRQ(BTLE_GP_EVENT_IRQn);
-//    NVIC_EnableIRQ(BTLE_CFO_IRQn);
-//    NVIC_EnableIRQ(BTLE_SIG_DET_IRQn);
-//    NVIC_DisableIRQ(BTLE_AGC_EVENT_IRQn); // Disabled
-//    NVIC_EnableIRQ(BTLE_RFFE_SPIM_IRQn);
-//    NVIC_DisableIRQ(BTLE_TX_AES_IRQn); // Disabled
-//    NVIC_DisableIRQ(BTLE_RX_AES_IRQn); // Disabled
-//    NVIC_DisableIRQ(BTLE_INV_APB_ADDR_IRQn); // Disabled
-//    NVIC_DisableIRQ(BTLE_IQ_DATA_VALID_IRQn); // Disabled
-//
-//    NVIC_EnableIRQ(TMR0_IRQn);
-//    NVIC_EnableIRQ(TMR1_IRQn);
-//
-//    NVIC_EnableIRQ(WUT_IRQn);
+
 }
 
 void HardFault_Handler(void)
@@ -332,9 +316,11 @@ void HardFault_Handler(void)
     unsigned int cnt = 0;
     while(1) {
         if (cnt % 100000000 == 0) {
-            PR("\n\n\n\n!!!!!\n FaultISR: CFSR %08X, BFAR %08x, MMFAR %08x, HFSR %08x\n!!!!!\n\n\n",
+            PR("\n\n\n\n!!!!!\n Core %d FaultISR: CFSR %08X, BFAR %08x, MMFAR %08x, HFSR %08x\n!!!!!\n\n\n",
+                    (SCB->VTOR == (unsigned long)&__isr_vector_core1),
                     (unsigned int)SCB->CFSR, (unsigned int)SCB->BFAR, (unsigned int)SCB->MMFAR, (unsigned int)SCB->HFSR);
             cnt = 1;
+//            __asm__("BKPT");
         }
         cnt++;
     }

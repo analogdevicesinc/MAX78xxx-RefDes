@@ -83,7 +83,9 @@ extern uint32_t __isr_vector_core1;
 }
 
 #define PR(fmt, args...) \
+    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
     printf(fmt , ##args); \
     fflush(stdout); \
+    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
 
 #endif /* _MAX32666_DEBUG_H_ */
