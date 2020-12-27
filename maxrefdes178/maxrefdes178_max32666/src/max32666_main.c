@@ -39,6 +39,7 @@
 #include <board.h>
 #include <core1.h>
 #include <dma.h>
+#include <mxc_delay.h>
 #include <rtc.h>
 #include <stdint.h>
 #include <string.h>
@@ -71,6 +72,7 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
+volatile int core1_init_done = 0;
 
 
 //-----------------------------------------------------------------------------
@@ -120,6 +122,19 @@ int main(void)
         while(1);
     }
     max20303_led_green(1);
+
+   // BLE should init first since it is mischievous
+   // BLE init somehow damages GPIO settings for P0.0, P0.23
+    core0_irq_init();
+    Core1_Start();
+
+    for(uint32_t cnt = 20000000; !core1_init_done && cnt; cnt--) {
+        if (cnt == 1) {
+            PR_ERROR("timeout, reset");
+            MXC_Delay(MXC_DELAY_MSEC(100));
+            MXC_GCR->rstr0 = 0xffffffff;
+        }
+    }
 
     ret = expander_init();
     if (ret != E_NO_ERROR) {
@@ -176,12 +191,8 @@ int main(void)
         max20303_led_red(1);
     }
 
-    core0_irq_init();
+    PR_INFO("core 0 init completed");
 
-    // Enable Core1
-    Core1_Start();
-
-    PR_INFO("init completed");
 
     // Print logo and version
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version, Font_16x26, RED, image_data_rsz_maxim_logo);
@@ -273,6 +284,10 @@ int Core1_Main(void)
         PR_ERROR("ble_init %d", ret);
     }
 
+    core1_init_done = 1;
+
+    PR_INFO("core 1 init completed");
+
     while (1) {
         ble_worker();
     }
@@ -283,6 +298,7 @@ int Core1_Main(void)
 
 static void core0_irq_init(void)
 {
+    // Disable all interrupts used by core1
     NVIC_DisableIRQ(BTLE_TX_DONE_IRQn);
     NVIC_DisableIRQ(BTLE_RX_RCVD_IRQn);
     NVIC_DisableIRQ(BTLE_RX_ENG_DET_IRQn);
@@ -308,7 +324,10 @@ static void core0_irq_init(void)
 
 static void core1_irq_init(void)
 {
-
+    // Disable all interrupts
+//    for (IRQn_Type irq = PF_IRQn; irq < MXC_IRQ_EXT_COUNT; irq++) {
+//        NVIC_DisableIRQ(irq);
+//    }
 }
 
 void HardFault_Handler(void)
@@ -316,9 +335,9 @@ void HardFault_Handler(void)
     unsigned int cnt = 0;
     while(1) {
         if (cnt % 100000000 == 0) {
-            PR("\n\n\n\n!!!!!\n Core %d FaultISR: CFSR %08X, BFAR %08x, MMFAR %08x, HFSR %08x\n!!!!!\n\n\n",
+            PR("\n\n\n\n!!!!!\n Core %d FaultISR: CFSR %p, BFAR %p, MMFAR %p, HFSR %p\n!!!!!\n\n\n",
                     (SCB->VTOR == (unsigned long)&__isr_vector_core1),
-                    (unsigned int)SCB->CFSR, (unsigned int)SCB->BFAR, (unsigned int)SCB->MMFAR, (unsigned int)SCB->HFSR);
+                    SCB->CFSR, SCB->BFAR, SCB->MMFAR, SCB->HFSR);
             cnt = 1;
 //            __asm__("BKPT");
         }

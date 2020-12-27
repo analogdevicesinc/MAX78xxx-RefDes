@@ -90,8 +90,9 @@
 #define KWS_PRINT_DURATION                 1000
 
 // Common BLE
-#define BLE_MAX_MTU_SIZE                   252
-#define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_SIZE - 3)
+#define BLE_MAX_MTU_SIZE                   256
+#define BLE_MAX_MTU_REQUEST_SIZE           (BLE_MAX_MTU_SIZE - 4)
+#define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_REQUEST_SIZE - 3)
 
 /*** MAX32666 ***/
 // MAX32666 PINS
