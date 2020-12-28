@@ -148,9 +148,9 @@ void palCfgLoadBdAddress(uint8_t *pDevAddr)
   pDevAddr[3] = 0x80;
 
   /* TODO: Need to hash the ID */
-  pDevAddr[2] = id[2];
-  pDevAddr[1] = id[1];
-  pDevAddr[0] = id[0];
+  pDevAddr[2] = id[8];
+  pDevAddr[1] = id[7];
+  pDevAddr[0] = id[6];
 }
 
 /*************************************************************************************************/

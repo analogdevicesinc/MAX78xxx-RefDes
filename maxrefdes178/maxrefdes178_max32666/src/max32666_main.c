@@ -40,6 +40,7 @@
 #include <core1.h>
 #include <dma.h>
 #include <mxc_delay.h>
+#include <mxc_sys.h>
 #include <rtc.h>
 #include <stdint.h>
 #include <string.h>
@@ -96,6 +97,7 @@ int main(void)
     double fps = 0;
     char version[10] = {0};
     char fps_string[10] = {0};
+    uint8_t usn[MXC_SYS_USN_LEN] = {0};
 
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel =  0x00;
@@ -132,7 +134,8 @@ int main(void)
         if (cnt == 1) {
             PR_ERROR("timeout, reset");
             MXC_Delay(MXC_DELAY_MSEC(100));
-            MXC_GCR->rstr0 = 0xffffffff;
+            MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
+//            MXC_GCR->rstr0 = 0xffffffff;
         }
     }
 
@@ -191,8 +194,17 @@ int main(void)
         max20303_led_red(1);
     }
 
-    PR_INFO("core 0 init completed");
+    ret = MXC_SYS_GetUSN(usn, MXC_SYS_USN_LEN);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_SYS_GetUSN failed %d", ret);
+        max20303_led_red(1);
+    }
 
+    PR_INFO("USN: %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+            usn[0], usn[1], usn[2], usn[3], usn[4], usn[5], usn[6], usn[7],
+            usn[8], usn[9], usn[10], usn[11], usn[12]);
+
+    PR_INFO("core 0 init completed");
 
     // Print logo and version
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version, Font_16x26, RED, image_data_rsz_maxim_logo);
