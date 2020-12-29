@@ -47,11 +47,14 @@
 
 #include "max32666_ble.h"
 #include "max32666_commbuf.h"
+#include "max32666_commhandler.h"
+#include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
+#include "max32666_fonts.h"
 #include "max32666_i2c.h"
 #include "max32666_lcd.h"
-#include "max32666_lcd_data.h"
+#include "max32666_lcd_images.h"
 #include "max32666_max20303.h"
 #include "max32666_qspi.h"
 #include "max32666_sdcard.h"
@@ -89,17 +92,13 @@ static void core1_irq_init(void);
 //-----------------------------------------------------------------------------
 int main(void)
 {
-    uint8_t run_faceid = 0;
-    uint16_t result_color = 0;
-    uint16_t frame_color = 0;
     uint32_t audio_result_time = 0;
     uint32_t lcd_draw_time = 0;
     int ret = 0;
-    double fps = 0;
-    char version[10] = {0};
+    char version_string[10] = {0};
     char fps_string[10] = {0};
-    uint8_t usn[MXC_SYS_USN_LEN] = {0};
     packet_container_t ble_packet_container = {0};
+    lcd_data.toptitle_color = YELLOW;
 
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel =  0x00;
@@ -111,8 +110,8 @@ int main(void)
         while(1);
     }
 
-    snprintf(version, sizeof(version) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version, S_BUILD_TIMESTAMP);
+    snprintf(version_string, sizeof(version_string) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version_string, S_BUILD_TIMESTAMP);
 
     ret = i2c_master_init(MAX32666_I2C, I2C_SPEED);
     if (ret != E_NO_ERROR) {
@@ -196,6 +195,12 @@ int main(void)
         max20303_led_red(1);
     }
 
+    ret = commhandler_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("commhandler_init failed %d", ret);
+        max20303_led_red(1);
+    }
+
     ret = MXC_RTC_Init(0, 0);
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_RTC_Init failed %d", ret);
@@ -208,23 +213,22 @@ int main(void)
         max20303_led_red(1);
     }
 
-    ret = MXC_SYS_GetUSN(usn, MXC_SYS_USN_LEN);
+    ret = MXC_SYS_GetUSN(device_info.max32666_serial_num, MXC_SYS_USN_LEN);
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_SYS_GetUSN failed %d", ret);
         max20303_led_red(1);
     }
-
-    PR_INFO("USN: %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-            usn[0], usn[1], usn[2], usn[3], usn[4], usn[5], usn[6], usn[7],
-            usn[8], usn[9], usn[10], usn[11], usn[12]);
+    PR_INFO("Serial number: ");
+    for (int i = 0; i < MXC_SYS_USN_LEN; i++) {
+        PR("%02X", device_info.max32666_serial_num[i]);
+    }
+    PR("\n");
 
     PR_INFO("core 0 init completed");
 
-
-
     // Print logo and version
-    fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version, Font_16x26, RED, image_data_rsz_maxim_logo);
-    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, image_data_rsz_maxim_logo);
+    fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
+    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
 
     while (1) {
         ret = qspi_worker();
@@ -232,59 +236,63 @@ int main(void)
             switch(ret)
             {
             case QSPI_TYPE_RESPONSE_VIDEO_DATA:
-                if (run_faceid) {
-                    if (strcmp(lcd_subtitle, "nothing")) {
-                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_subtitle, Font_16x26, result_color, lcd_data);
+                if (device_settings.enable_max78000_video_cnn) {
+                    if (strcmp(lcd_data.subtitle, "nothing")) {
+                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
                     } else {
-                        frame_color = WHITE;
+                        lcd_data.frame_color = WHITE;
                     }
 
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
-                            FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, frame_color, lcd_data);
+                            FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, lcd_data.frame_color, lcd_data.buffer);
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1,
-                            FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, frame_color, lcd_data);
+                            FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, lcd_data.frame_color, lcd_data.buffer);
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2,
-                            FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data);
+                            FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3,
-                            FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data);
+                            FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
                 }
 
-                fps = (double) 1000.0 / (double)(utils_get_time_ms() - lcd_draw_time);
-                lcd_draw_time = utils_get_time_ms();
-                if (LCD_FPS_ENABLE) {
-                    snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", fps);
-                    fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 37, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data);
-                }
+                if (device_settings.enable_lcd) {
+                    device_statistics.lcd_fps = (float) 1000.0 / (float)(utils_get_time_ms() - lcd_draw_time);
+                    lcd_draw_time = utils_get_time_ms();
+                    if (device_settings.enable_show_statistics_lcd) {
+                        snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", (double)device_statistics.lcd_fps);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 37, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                    }
 
-                if (lcd_draw_time - audio_result_time < KWS_PRINT_DURATION) {
-                    fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_toptitle, Font_16x26, YELLOW, lcd_data);
-                }
+                    if (lcd_draw_time - audio_result_time < KWS_PRINT_DURATION) {
+                        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+                    }
 
-                lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data);
+                    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data.buffer);
+                }
                 break;
             case QSPI_TYPE_RESPONSE_VIDEO_RESULT:
-                if (strcmp(lcd_subtitle, "Unknown") == 0) {
-                    result_color = RED;
-                    frame_color = RED;
-                } else if(strcmp(lcd_subtitle, "Adjust Face") == 0) {
-                    result_color = YELLOW;
-                    frame_color = YELLOW;
+                if (strcmp(lcd_data.subtitle, "Unknown") == 0) {
+                    lcd_data.subtitle_color = RED;
+                    lcd_data.frame_color = RED;
+                } else if(strcmp(lcd_data.subtitle, "Adjust Face") == 0) {
+                    lcd_data.subtitle_color = YELLOW;
+                    lcd_data.frame_color = YELLOW;
                 } else {
-                    result_color = GREEN;
-                    frame_color = GREEN;
+                    lcd_data.subtitle_color = GREEN;
+                    lcd_data.frame_color = GREEN;
                 }
                 break;
             case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
                 audio_result_time = utils_get_time_ms();
 
-                if (strcmp(lcd_toptitle, "OFF") == 0) {
+                if (strcmp(lcd_data.toptitle, "OFF") == 0) {
+                    device_settings.enable_lcd = 0;
                     lcd_backlight(0);
-                } else if(strcmp(lcd_toptitle, "ON") == 0) {
+                } else if(strcmp(lcd_data.toptitle, "ON") == 0) {
+                    device_settings.enable_lcd = 1;
                     lcd_backlight(1);
-                } else if (strcmp(lcd_toptitle, "GO") == 0) {
-                    run_faceid = 1;
-                } else if(strcmp(lcd_toptitle, "STOP") == 0) {
-                    run_faceid = 0;
+                } else if (strcmp(lcd_data.toptitle, "GO") == 0) {
+                    device_settings.enable_max78000_video_cnn = 1;
+                } else if(strcmp(lcd_data.toptitle, "STOP") == 0) {
+                    device_settings.enable_max78000_video_cnn = 0;
                 }
                 break;
             default:

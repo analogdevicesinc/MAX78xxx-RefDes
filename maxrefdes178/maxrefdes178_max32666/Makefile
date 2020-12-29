@@ -76,10 +76,12 @@ export CMSIS_ROOT
 # Source files for this test (add path to VPATH below)
 SRCS  = max32666_main.c
 SRCS += max32666_ble.c
+SRCS += max32666_commbuf.c
+SRCS += max32666_commhandler.c
+SRCS += max32666_data.c
 SRCS += max32666_expander.c
 SRCS += max32666_fonts.c
 SRCS += max32666_i2c.c
-SRCS += max32666_commbuf.c
 SRCS += max32666_lcd.c
 SRCS += max32666_max20303.c
 SRCS += max32666_qspi.c

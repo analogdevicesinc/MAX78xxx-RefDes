@@ -70,7 +70,6 @@
 #define LCD_SUBTITLE_SIZE                  32
 #define LCD_TOPTITLE_SIZE                  32
 #define LCD_ROTATION                       2  // 0-3
-#define LCD_FPS_ENABLE                     1  // 0-1
 
 // Common Camera
 #define CAMERA_WIDTH                       LCD_WIDTH
@@ -94,7 +93,7 @@
 #define BLE_MAX_MTU_REQUEST_SIZE           (BLE_MAX_MTU_SIZE - 4)
 #define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_REQUEST_SIZE - 3)
 
-// Common commnucation
+// Common communication
 #define COMMUNICATION_MAX_PACKET_SIZE      BLE_MAX_PACKET_SIZE
 
 
@@ -238,7 +237,7 @@
 #define MAX78000_VIDEO_CAMERA_DMA_IRQ      DMA0_IRQn
 #define MAX78000_VIDEO_CAMERA_DMA_IRQ_HAND DMA0_IRQHandler
 
-/*** UTILITY ***/
+// UTILITY
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
@@ -293,5 +292,15 @@ typedef struct __attribute__((packed)) {
         payload_packet_t payload_packet;
     } packet;
 } packet_container_t;
+
+typedef struct {
+    float max78000_video_power;
+    float max78000_audio_power;
+    float max78000_video_cnn_duration;
+    float max78000_audio_cnn_duration;
+    float max78000_video_capture_duration;
+    float lcd_fps;
+    float battery_level;
+} statistics_t;
 
 #endif /* _MAXREFDES178_DEFINTIIONS_H_ */

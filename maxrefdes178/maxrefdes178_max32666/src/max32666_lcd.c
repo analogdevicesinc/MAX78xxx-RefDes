@@ -119,9 +119,6 @@ static const mxc_gpio_cfg_t lcd_dc_pin    = MAX32666_LCD_DC_PIN;
 static const mxc_gpio_cfg_t lcd_reset_pin = MAX32666_LCD_RESET_PIN;
 static const mxc_gpio_cfg_t lcd_cs_pin    = MAX32666_LCD_CS_PIN;
 
-uint8_t lcd_data[LCD_DATA_SIZE];
-char lcd_subtitle[LCD_SUBTITLE_SIZE];
-char lcd_toptitle[LCD_TOPTITLE_SIZE];
 
 
 //-----------------------------------------------------------------------------

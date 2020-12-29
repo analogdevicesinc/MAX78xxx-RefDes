@@ -40,6 +40,7 @@
 #include <string.h>
 
 #include "max32666_debug.h"
+#include "max32666_data.h"
 #include "max32666_lcd.h"
 #include "max32666_qspi.h"
 #include "max32666_spi_dma.h"
@@ -147,7 +148,7 @@ int qspi_worker(void)
             }
 
             GPIO_CLR(video_cs_pin);
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.buffer, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
@@ -155,19 +156,19 @@ int qspi_worker(void)
 
             return QSPI_TYPE_RESPONSE_VIDEO_DATA;
         } else if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_RESULT) {
-            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(lcd_subtitle))) {
+            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(lcd_data.subtitle))) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_header.data_len);
                 return E_BAD_PARAM;
             }
 
-            memset(lcd_subtitle, 0, sizeof(lcd_subtitle));
+            memset(lcd_data.subtitle, 0, sizeof(lcd_data.subtitle));
 
             GPIO_CLR(video_cs_pin);
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_subtitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.subtitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_INFO("video result %u %s", qspi_header.data_len, lcd_subtitle);
+            PR_INFO("video result %u %s", qspi_header.data_len, lcd_data.subtitle);
 
             return QSPI_TYPE_RESPONSE_VIDEO_RESULT;
         }
@@ -192,19 +193,19 @@ int qspi_worker(void)
         qspi_audio_int_flag = 0;
 
         if (qspi_header.data_type == QSPI_TYPE_RESPONSE_AUDIO_RESULT) {
-            memset(lcd_toptitle, 0, sizeof(lcd_toptitle));
+            memset(lcd_data.toptitle, 0, sizeof(lcd_data.toptitle));
 
-            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(lcd_toptitle))) {
+            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(lcd_data.toptitle))) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_header.data_len);
                 return E_BAD_PARAM;
             }
 
             GPIO_CLR(audio_cs_pin);
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_toptitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.toptitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
-            PR_INFO("audio result %u %s", qspi_header.data_len, lcd_toptitle);
+            PR_INFO("audio result %u %s", qspi_header.data_len, lcd_data.toptitle);
 
             return QSPI_TYPE_RESPONSE_AUDIO_RESULT;
         }
