@@ -60,10 +60,10 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-const mxc_gpio_cfg_t video_int_pin = MAX32666_VIDEO_INT_PIN;
-const mxc_gpio_cfg_t video_cs_pin  = MAX32666_VIDEO_CS_PIN;
-const mxc_gpio_cfg_t audio_int_pin = MAX32666_AUDIO_INT_PIN;
-const mxc_gpio_cfg_t audio_cs_pin  = MAX32666_AUDIO_CS_PIN;
+static const mxc_gpio_cfg_t video_int_pin = MAX32666_VIDEO_INT_PIN;
+static const mxc_gpio_cfg_t video_cs_pin  = MAX32666_VIDEO_CS_PIN;
+static const mxc_gpio_cfg_t audio_int_pin = MAX32666_AUDIO_INT_PIN;
+static const mxc_gpio_cfg_t audio_cs_pin  = MAX32666_AUDIO_CS_PIN;
 
 static volatile int qspi_video_int_flag;
 static volatile int qspi_audio_int_flag;

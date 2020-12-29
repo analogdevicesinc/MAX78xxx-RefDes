@@ -94,6 +94,10 @@
 #define BLE_MAX_MTU_REQUEST_SIZE           (BLE_MAX_MTU_SIZE - 4)
 #define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_REQUEST_SIZE - 3)
 
+// Common commnucation
+#define COMMUNICATION_MAX_PACKET_SIZE      BLE_MAX_PACKET_SIZE
+
+
 /*** MAX32666 ***/
 // MAX32666 PINS
 #define MAX32666_VIDEO_INT_PIN             {MXC_GPIO0, MXC_GPIO_PIN_30, MXC_GPIO_FUNC_IN, MXC_GPIO_PAD_PULL_UP, MXC_GPIO_VSSEL_VDDIO}
@@ -112,6 +116,10 @@
 #define MAX32666_LCD_TOUCH_INT_MODE        MXC_GPIO_INT_FALLING                                                                     // TODO
 
 #define MAX32666_SD_EN_PIN                 {MXC_GPIO1, MXC_GPIO_PIN_12, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO}
+
+#define MAX32666_CORE0_INT_PIN             {MXC_GPIO0, MXC_GPIO_PIN_16, MXC_GPIO_FUNC_IN, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO}  // TODO
+#define MAX32666_CORE0_INT_MODE            MXC_GPIO_INT_FALLING                                                                     // TODO
+#define MAX32666_CORE1_INT_PIN             {MXC_GPIO0, MXC_GPIO_PIN_18, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO} // TODO
 
 #define MAX32666_VIDEO_IO_PIN              {MXC_GPIO0, MXC_GPIO_PIN_20, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO} // TODO
 #define MAX32666_AUDIO_IO_PIN              {MXC_GPIO0, MXC_GPIO_PIN_21, MXC_GPIO_FUNC_OUT, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO} // TODO
@@ -163,6 +171,10 @@
 
 // MAX32666 Hardware semaphores
 #define MAX32666_SEMAPHORE_PRINT           1
+#define MAX32666_COMMBUF_BUFFER            2
+
+// Communication buffer
+#define MAX32666_COMMBUF_ARRAY_SIZE        10
 
 /*** MAX78000 AUDIO ***/
 // MAX78000 AUDIO PINS
@@ -230,6 +242,7 @@
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
+
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
@@ -240,11 +253,45 @@ typedef enum {
     QSPI_TYPE_RESPONSE_AUDIO_RESULT
 } teQspiDataType;
 
+typedef enum {
+    PACKET_TYPE_COMMAND = 0,
+    PACKET_TYPE_PAYLOAD
+} packet_type_t;
+
 typedef struct __attribute__((packed)) {
     uint32_t start_symbol;
     uint32_t data_len;
     uint8_t data_type;
 } qspi_header_t;
 
+typedef struct __attribute__((packed)) {
+    uint8_t packet_info;
+    uint8_t command;
+    uint32_t command_size;
+} command_packet_header_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t packet_info;
+} payload_packet_header_t;
+
+typedef struct __attribute__((packed)) {
+    command_packet_header_t header;
+    uint8_t payload[COMMUNICATION_MAX_PACKET_SIZE - sizeof(command_packet_header_t)];
+} command_packet_t;
+
+typedef struct __attribute__((packed)) {
+    payload_packet_header_t header;
+    uint8_t payload[COMMUNICATION_MAX_PACKET_SIZE - sizeof(payload_packet_header_t)];
+} payload_packet_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t size;
+    uint8_t status;
+    union {
+        uint8_t packet_info;
+        command_packet_t command_packet;
+        payload_packet_t payload_packet;
+    } packet;
+} packet_container_t;
 
 #endif /* _MAXREFDES178_DEFINTIIONS_H_ */

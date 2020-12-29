@@ -83,6 +83,7 @@
 #include <wsf_types.h>
 
 #include "max32666_ble.h"
+#include "max32666_commbuf.h"
 #include "max32666_debug.h"
 #include "maxrefdes178_definitions.h"
 
@@ -490,12 +491,12 @@ static bool_t max32666_trace(const uint8_t *pBuf, uint32_t len)
 
     if (wsfCsNesting == 0)
     {
-        WsfTaskLock();
-        while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {};
+//        WsfTaskLock();
+//        while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {};
         fwrite(pBuf, len, 1, stdout);
         fflush(stdout);
-        MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT);
-        WsfTaskUnlock();
+//        MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT);
+//        WsfTaskUnlock();
         return TRUE;
     }
 
@@ -575,17 +576,22 @@ static void mainWsfInit(void)
 
 static void ble_receive(uint16_t dataLen, uint8_t *data)
 {
+    packet_container_t ble_packet_container;
+
     PR_INFO("RX len: %d", dataLen);
     for (int i = 0; i < dataLen; i++) {
       PR("0x%02hhX ", data[i]);
     }
     PR("\n");
 
-    // Increase every byte by 1 and send it back
-    for (uint16_t i = 0; i < dataLen; i++) {
-        data[i] = data[i] + 1;
+    if (dataLen > sizeof(ble_packet_container.packet)) {
+        PR_ERROR("invalid packet size %u", dataLen);
+        return;
     }
-    ble_send_indication(dataLen, data);
+
+    ble_packet_container.size = dataLen;
+    memcpy(&(ble_packet_container.packet), data, dataLen);
+    commbuf_push_rx_ble(&ble_packet_container);
 }
 
 int ble_mtu_size(void)
@@ -643,6 +649,8 @@ int ble_send_indication(uint16_t dataLen, uint8_t *data)
         }
     }
 
+    PR_ERROR("indication couldnt sent");
+
     return E_COMM_ERR;
 }
 
@@ -657,11 +665,19 @@ int ble_init(void)
 
 int ble_worker(void)
 {
+    packet_container_t ble_packet_container;
+
     /* Run the WSF OS */
     wsfOsDispatcher();
 
     if(!WsfOsActive()) {
       /* No WSF tasks are active, optionally sleep */
+    }
+
+    if (commbuf_pop_tx_ble(&ble_packet_container) == COMMBUF_STATUS_OK) {
+        if (ble_send_indication(ble_packet_container.size, (uint8_t *) &(ble_packet_container.packet)) != E_SUCCESS) {
+            PR_ERROR("ble_send_indication failed");
+        }
     }
 
     return E_NO_ERROR;

@@ -45,8 +45,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "max32666_debug.h"
 #include "max32666_ble.h"
+#include "max32666_commbuf.h"
+#include "max32666_debug.h"
 #include "max32666_expander.h"
 #include "max32666_i2c.h"
 #include "max32666_lcd.h"
@@ -73,7 +74,7 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-volatile int core1_init_done = 0;
+static volatile int core1_init_done = 0;
 
 
 //-----------------------------------------------------------------------------
@@ -98,6 +99,7 @@ int main(void)
     char version[10] = {0};
     char fps_string[10] = {0};
     uint8_t usn[MXC_SYS_USN_LEN] = {0};
+    packet_container_t ble_packet_container = {0};
 
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel =  0x00;
@@ -137,6 +139,12 @@ int main(void)
             MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
 //            MXC_GCR->rstr0 = 0xffffffff;
         }
+    }
+
+    ret = MXC_SEMA_Init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_SEMA_Init failed %d", ret);
+        while(1);
     }
 
     ret = expander_init();
@@ -182,6 +190,12 @@ int main(void)
         max20303_led_red(1);
     }
 
+    ret = commbuf_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("commbuf_init failed %d", ret);
+        max20303_led_red(1);
+    }
+
     ret = MXC_RTC_Init(0, 0);
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_RTC_Init failed %d", ret);
@@ -205,6 +219,8 @@ int main(void)
             usn[8], usn[9], usn[10], usn[11], usn[12]);
 
     PR_INFO("core 0 init completed");
+
+
 
     // Print logo and version
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version, Font_16x26, RED, image_data_rsz_maxim_logo);
@@ -275,6 +291,24 @@ int main(void)
                 break;
             }
         }
+        if (commbuf_pop_rx_ble(&ble_packet_container) == COMMBUF_STATUS_OK) {
+            PR_INFO("BLE RX packet size %d", ble_packet_container.size);
+            if (ble_packet_container.packet.packet_info == PACKET_TYPE_COMMAND) {
+                PR_INFO("Command %02X", ble_packet_container.packet.command_packet.header.command);
+                PR_INFO("Command size %d", ble_packet_container.packet.command_packet.header.command_size);
+                PR_INFO("Payload: ");
+                for (int i = 0; i < ble_packet_container.size - sizeof(payload_packet_header_t); i++) {
+                    PR("0x%02hhX ", ble_packet_container.packet.command_packet.payload[i]);
+                }
+                PR("\n");
+            } else if (ble_packet_container.packet.packet_info == PACKET_TYPE_PAYLOAD) {
+                PR_INFO("Payload: ");
+                for (int i = 0; i < ble_packet_container.size - sizeof(command_packet_header_t); i++) {
+                    PR("0x%02hhX ", ble_packet_container.packet.payload_packet.payload[i]);
+                }
+                PR("\n");
+            }
+        }
     }
 }
 
@@ -336,7 +370,7 @@ static void core0_irq_init(void)
 
 static void core1_irq_init(void)
 {
-    // Disable all interrupts
+//    // Disable all interrupts
 //    for (IRQn_Type irq = PF_IRQn; irq < MXC_IRQ_EXT_COUNT; irq++) {
 //        NVIC_DisableIRQ(irq);
 //    }
