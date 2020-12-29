@@ -84,7 +84,9 @@
 
 #include "max32666_ble.h"
 #include "max32666_commbuf.h"
+#include "max32666_data.h"
 #include "max32666_debug.h"
+#include "max32666_max20303.h"
 #include "maxrefdes178_definitions.h"
 
 
@@ -328,6 +330,9 @@ static void periphProcMsg(dmEvt_t *pMsg)
         /* Save connId  */
         periphCb.connId = (dmConnId_t) pMsg->hdr.param;
         periphCb.connected = TRUE;
+        device_status.ble_connected = 1;
+        max20303_led_green(0);
+        max20303_led_blue(1);
 
         PR_INFO("Connection opened");
         PR_INFO("connId: %d", pMsg->connOpen.hdr.param);
@@ -341,6 +346,9 @@ static void periphProcMsg(dmEvt_t *pMsg)
 
     case DM_CONN_CLOSE_IND:
         periphCb.connected = FALSE;
+        device_status.ble_connected = 0;
+        max20303_led_green(1);
+        max20303_led_blue(0);
 
         PR_INFO("Connection closed status 0x%02hhX, reason 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
         switch (pMsg->connClose.reason)

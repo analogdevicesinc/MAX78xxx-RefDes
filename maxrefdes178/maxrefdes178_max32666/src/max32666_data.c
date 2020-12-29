@@ -57,7 +57,7 @@
 //-----------------------------------------------------------------------------
 lcd_data_t lcd_data;
 
-statistics_t device_statistics = {0};
+device_status_t device_status = {0};
 
 device_info_t device_info = {0};
 

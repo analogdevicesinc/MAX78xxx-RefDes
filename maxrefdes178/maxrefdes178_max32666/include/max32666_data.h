@@ -74,6 +74,18 @@ typedef struct {
 } device_info_t;
 
 typedef struct {
+    float max78000_video_power;
+    float max78000_audio_power;
+    float max78000_video_cnn_duration;
+    float max78000_audio_cnn_duration;
+    float max78000_video_capture_duration;
+    float lcd_fps;
+    float battery_level;
+
+    uint8_t ble_connected;
+} device_status_t;
+
+typedef struct {
     uint8_t buffer[LCD_DATA_SIZE];
     char subtitle[LCD_SUBTITLE_SIZE];
     char toptitle[LCD_SUBTITLE_SIZE];
@@ -87,7 +99,7 @@ typedef struct {
 // Global variables
 //-----------------------------------------------------------------------------
 extern lcd_data_t lcd_data;
-extern statistics_t device_statistics;
+extern device_status_t device_status;
 extern device_settings_t device_settings;
 extern device_info_t device_info;
 

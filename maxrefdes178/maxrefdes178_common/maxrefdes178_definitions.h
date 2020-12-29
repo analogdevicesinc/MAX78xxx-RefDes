@@ -293,14 +293,5 @@ typedef struct __attribute__((packed)) {
     } packet;
 } packet_container_t;
 
-typedef struct {
-    float max78000_video_power;
-    float max78000_audio_power;
-    float max78000_video_cnn_duration;
-    float max78000_audio_cnn_duration;
-    float max78000_video_capture_duration;
-    float lcd_fps;
-    float battery_level;
-} statistics_t;
 
 #endif /* _MAXREFDES178_DEFINTIIONS_H_ */

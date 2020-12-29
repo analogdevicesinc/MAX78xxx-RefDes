@@ -186,7 +186,7 @@ int main(void)
     ret = sdcard_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("sdcard_init failed %d", ret);
-        max20303_led_red(1);
+//        max20303_led_red(1);
     }
 
     ret = commbuf_init();
@@ -254,10 +254,10 @@ int main(void)
                 }
 
                 if (device_settings.enable_lcd) {
-                    device_statistics.lcd_fps = (float) 1000.0 / (float)(utils_get_time_ms() - lcd_draw_time);
+                    device_status.lcd_fps = (float) 1000.0 / (float)(utils_get_time_ms() - lcd_draw_time);
                     lcd_draw_time = utils_get_time_ms();
                     if (device_settings.enable_show_statistics_lcd) {
-                        snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", (double)device_statistics.lcd_fps);
+                        snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", (double)device_status.lcd_fps);
                         fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 37, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
                     }
 
