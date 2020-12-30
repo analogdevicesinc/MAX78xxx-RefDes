@@ -248,11 +248,11 @@ static void run_application(void)
     uint32_t audio_result_show_time = 0;
     uint32_t lcd_draw_time = 0;
     qspi_packet_type_e qspi_packet_type = 0;
-    char fps_string[6] = {0};
-    char video_capture_string[6] = {0};
-    char video_cnn_string[6] = {0};
-    char video_qspi_string[6] = {0};
-    char audio_cnn_string[6] = {0};
+    char fps_string[12] = {0};
+    char video_capture_string[12] = {0};
+    char video_cnn_string[12] = {0};
+    char video_comm_string[12] = {0};
+    char audio_cnn_string[12] = {0};
 
     packet_container_t ble_packet_container = {0};
     lcd_data.toptitle_color = YELLOW;
@@ -283,21 +283,21 @@ static void run_application(void)
                     device_status.statistics.lcd_fps = (float) 1000.0 / (float)(GET_RTC_MS() - lcd_draw_time);
                     lcd_draw_time = GET_RTC_MS();
                     if (device_settings.enable_show_statistics_lcd) {
-                        snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", (double)device_status.statistics.lcd_fps);
-                        snprintf(video_capture_string, sizeof(video_capture_string) - 1, "%d",
+                        snprintf(fps_string, sizeof(fps_string) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
+                        snprintf(video_capture_string, sizeof(video_capture_string) - 1, "vCap:%d",
                                 device_status.statistics.max78000_video.capture_duration_ms);
-                        snprintf(video_cnn_string, sizeof(video_cnn_string) - 1, "%d",
+                        snprintf(video_cnn_string, sizeof(video_cnn_string) - 1, "vCNN:%d",
                                 device_status.statistics.max78000_video.cnn_duration_ms);
-                        snprintf(video_qspi_string, sizeof(video_qspi_string) - 1, "%d",
+                        snprintf(video_comm_string, sizeof(video_comm_string) - 1, "vCom:%d",
                                 device_status.statistics.max78000_video.communication_duration_ms);
-                        snprintf(audio_cnn_string, sizeof(audio_cnn_string) - 1, "%d",
+                        snprintf(audio_cnn_string, sizeof(audio_cnn_string) - 1, "aCNN:%d",
                                 device_status.statistics.max78000_audio.cnn_duration_ms);
 
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 37, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 20, 15, video_capture_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 20, 27, video_cnn_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 20, 39, video_qspi_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 20, 51, audio_cnn_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 15, video_capture_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 27, video_cnn_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 39, video_comm_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 51, audio_cnn_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
                     }
 
                     if (lcd_draw_time - audio_result_show_time < KWS_PRINT_DURATION) {
@@ -341,6 +341,14 @@ static void run_application(void)
                     device_settings.enable_max78000_video_cnn = 1;
                 } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
                     device_settings.enable_max78000_video_cnn = 0;
+                } else if (strcmp(device_status.classification_audio.result, "UP") == 0) {
+                    device_settings.enable_show_probabilty_lcd = 1;
+                } else if(strcmp(device_status.classification_audio.result, "DOWN") == 0) {
+                    device_settings.enable_show_probabilty_lcd = 0;
+                } else if (strcmp(device_status.classification_audio.result, "YES") == 0) {
+                    device_settings.enable_show_statistics_lcd = 1;
+                } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
+                    device_settings.enable_show_statistics_lcd = 0;
                 }
                 break;
             default:
