@@ -222,14 +222,14 @@ int spi_dma_wait(uint8_t ch)
 
 void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, uint8_t data_type, mxc_gpio_cfg_t *spi_int)
 {
-    qspi_header_t header;
-    header.start_symbol = QSPI_START_SYMBOL;
-    header.data_len = len;
-    header.data_type = data_type;
+    qspi_packet_header_t qspi_packet_header;
+    qspi_packet_header.start_symbol = QSPI_START_SYMBOL;
+    qspi_packet_header.packet_size = len;
+    qspi_packet_header.packet_type = data_type;
 
     PR_DEBUG("spi tx started %d", data_type);
 
-    spi_dma_tx(ch, spi, (uint8_t*) &header, sizeof(qspi_header_t), spi_int, NULL);
+    spi_dma_tx(ch, spi, (uint8_t*) &qspi_packet_header, sizeof(qspi_packet_header_t), spi_int, NULL);
     spi_dma_wait(ch);
 
     spi_dma_tx(ch, spi, data, len, spi_int, NULL);

@@ -65,10 +65,15 @@ device_settings_t device_settings = {
         .enable_ble = 1,
         .enable_lcd = 1,
         .enable_max78000_audio = 1,
+        .enable_max78000_audio_cnn = 1,
         .enable_max78000_video = 1,
         .enable_max78000_video_cnn = 1,
+        .enable_max78000_video_flash_led = 0,
+        .enable_max78000_video_and_audio_power = 1,
         .enable_show_statistics_lcd = 1,
+        .enable_show_probabilty_lcd = 1,
         .enable_send_statistics = 0,
+        .enable_send_classification = 0,
 };
 
 //-----------------------------------------------------------------------------

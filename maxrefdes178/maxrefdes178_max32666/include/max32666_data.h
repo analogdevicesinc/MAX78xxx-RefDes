@@ -55,28 +55,32 @@
 // Typedefs
 //-----------------------------------------------------------------------------
 typedef struct {
-    uint8_t enable_ble;  // TODO
+    uint8_t enable_ble;
     uint8_t enable_lcd;
-    uint8_t enable_max78000_audio;  // TODO
-    uint8_t enable_max78000_video;  // TODO
+    uint8_t enable_max78000_audio;       // TODO
+    uint8_t enable_max78000_audio_cnn;   // TODO
+    uint8_t enable_max78000_video;       // TODO
     uint8_t enable_max78000_video_cnn;
+    uint8_t enable_max78000_video_flash_led;        // TODO
+    uint8_t enable_max78000_video_and_audio_power;  // TODO
     uint8_t enable_show_statistics_lcd;
-    uint8_t enable_send_statistics;  // TODO
-    uint8_t enable_video_flash_led;  // TODO
+    uint8_t enable_show_probabilty_lcd;
+    uint8_t enable_send_statistics;      // TODO
+    uint8_t enable_send_classification;  // TODO
 } device_settings_t;
 
 typedef struct {
-    uint8_t max32666_serial_num[MXC_SYS_USN_LEN];
-    uint8_t max78000_video_serial_num[MXC_SYS_USN_LEN];  // TODO
-    uint8_t max78000_audio_serial_num[MXC_SYS_USN_LEN];  // TODO
+    device_serial_num_t device_serial_num; // TODO
+    device_version_t device_version;
     uint8_t ble_mac[6];
-    version_t version;
 } device_info_t;
 
 typedef struct {
-    statistics_t statistics;
+    device_statistics_t statistics;      // TODO
+    classification_result_t classification_video;
+    classification_result_t classification_audio;
     uint8_t ble_connected;
-    uint8_t ble_connected_peer[6];
+    uint8_t ble_connected_peer_mac[6];
 } device_status_t;
 
 typedef struct {

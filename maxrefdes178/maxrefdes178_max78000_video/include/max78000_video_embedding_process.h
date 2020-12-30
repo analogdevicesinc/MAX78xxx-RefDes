@@ -48,7 +48,7 @@
 // TODO
 #define thresh_for_unknown_subject 9993
 //#define thresh_for_unknown_subject 313600
-#define closest_sub_buffer_size 3*7
+#define closest_sub_buffer_size 3*7  // TODO ????
 
 
 //-----------------------------------------------------------------------------

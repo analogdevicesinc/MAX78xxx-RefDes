@@ -86,6 +86,7 @@ static volatile int core1_init_done = 0;
 //-----------------------------------------------------------------------------
 static void core0_irq_init(void);
 static void core1_irq_init(void);
+static void run_application(void);
 
 
 //-----------------------------------------------------------------------------
@@ -93,13 +94,8 @@ static void core1_irq_init(void);
 //-----------------------------------------------------------------------------
 int main(void)
 {
-    uint32_t audio_result_time = 0;
-    uint32_t lcd_draw_time = 0;
     int ret = 0;
     char version_string[10] = {0};
-    char fps_string[10] = {0};
-    packet_container_t ble_packet_container = {0};
-    lcd_data.toptitle_color = YELLOW;
 
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel =  0x00;
@@ -111,9 +107,9 @@ int main(void)
         while(1);
     }
 
-    device_info.version.max32666_major = S_VERSION_MAJOR;
-    device_info.version.max32666_minor = S_VERSION_MINOR;
-    device_info.version.max32666_build = S_VERSION_BUILD;
+    device_info.device_version.max32666.major = S_VERSION_MAJOR;
+    device_info.device_version.max32666.minor = S_VERSION_MINOR;
+    device_info.device_version.max32666.build = S_VERSION_BUILD;
     snprintf(version_string, sizeof(version_string) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version_string, S_BUILD_TIMESTAMP);
 
@@ -223,36 +219,49 @@ int main(void)
         max20303_led_red(1);
     }
 
-    ret = MXC_SYS_GetUSN(device_info.max32666_serial_num, MXC_SYS_USN_LEN);
+    ret = MXC_SYS_GetUSN(device_info.device_serial_num.max32666, sizeof(device_info.device_serial_num.max32666));
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_SYS_GetUSN failed %d", ret);
         max20303_led_red(1);
     }
-    PR_INFO("Serial number: ");
-    for (int i = 0; i < MXC_SYS_USN_LEN; i++) {
-        PR("%02X", device_info.max32666_serial_num[i]);
+    PR_INFO("MAX32666 Serial number: ");
+    for (int i = 0; i < sizeof(device_info.device_serial_num.max32666); i++) {
+        PR("%02X", device_info.device_serial_num.max32666[i]);
     }
     PR("\n");
 
     // TODO: get max78000_video and max78000_audio version and serial num
 
-    PR_INFO("core 0 init completed");
-
     // Print logo and version
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
 
+    PR_INFO("core 0 init completed");
+
+    run_application();
+
+    return -1;
+}
+
+static void run_application(void)
+{
+    uint32_t audio_result_time = 0;
+    uint32_t lcd_draw_time = 0;
+    qspi_packet_type_e qspi_packet_type = 0;
+    char fps_string[10] = {0};
+    packet_container_t ble_packet_container = {0};
+    lcd_data.toptitle_color = YELLOW;
+
     while (1) {
-        ret = qspi_worker();
-        if (ret > QSPI_TYPE_NO_DATA) {
-            switch(ret)
-            {
-            case QSPI_TYPE_RESPONSE_VIDEO_DATA:
+        // Handle QSPI RX
+        if (qspi_worker(&qspi_packet_type) == QSPI_STATUS_NEW_DATA) {
+            switch(qspi_packet_type) {
+            case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
                 if (device_settings.enable_max78000_video_cnn) {
-                    if (strcmp(lcd_data.subtitle, "nothing")) {
+                    if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
+                        // if (device_settings.enable_show_probabilty_lcd)
+                        strncpy(lcd_data.subtitle, device_status.classification_video.result, sizeof(lcd_data.subtitle) - 1);
                         fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
-                    } else {
-                        lcd_data.frame_color = WHITE;
                     }
 
                     fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
@@ -274,36 +283,45 @@ int main(void)
                     }
 
                     if (lcd_draw_time - audio_result_time < KWS_PRINT_DURATION) {
+                        if (device_settings.enable_show_probabilty_lcd) {
+                            snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "%s %0.1f",
+                                    device_status.classification_audio.result, (double) device_status.classification_audio.probabily);
+                        } else {
+                            strncpy(lcd_data.toptitle, device_status.classification_audio.result, sizeof(lcd_data.toptitle) - 1);
+                        }
+
                         fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
                     }
 
                     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data.buffer);
                 }
                 break;
-            case QSPI_TYPE_RESPONSE_VIDEO_RESULT:
-                if (strcmp(lcd_data.subtitle, "Unknown") == 0) {
+            case QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES:
+                if (device_status.classification_video.classification == CLASSIFICATION_UNKNOWN) {
                     lcd_data.subtitle_color = RED;
                     lcd_data.frame_color = RED;
-                } else if(strcmp(lcd_data.subtitle, "Adjust Face") == 0) {
+                } else if (device_status.classification_video.classification == CLASSIFICATION_LOW_CONFIDENCE) {
                     lcd_data.subtitle_color = YELLOW;
                     lcd_data.frame_color = YELLOW;
-                } else {
+                } else if (device_status.classification_video.classification == CLASSIFICATION_DETECTED) {
                     lcd_data.subtitle_color = GREEN;
                     lcd_data.frame_color = GREEN;
+                } else if (device_status.classification_video.classification == CLASSIFICATION_NOTHING) {
+                    lcd_data.frame_color = WHITE;
                 }
                 break;
-            case QSPI_TYPE_RESPONSE_AUDIO_RESULT:
+            case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
                 audio_result_time = utils_get_time_ms();
 
-                if (strcmp(lcd_data.toptitle, "OFF") == 0) {
+                if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
                     device_settings.enable_lcd = 0;
                     lcd_backlight(0);
-                } else if(strcmp(lcd_data.toptitle, "ON") == 0) {
+                } else if(strcmp(device_status.classification_audio.result, "ON") == 0) {
                     device_settings.enable_lcd = 1;
                     lcd_backlight(1);
-                } else if (strcmp(lcd_data.toptitle, "GO") == 0) {
+                } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
                     device_settings.enable_max78000_video_cnn = 1;
-                } else if(strcmp(lcd_data.toptitle, "STOP") == 0) {
+                } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
                     device_settings.enable_max78000_video_cnn = 0;
                 }
                 break;
@@ -311,23 +329,25 @@ int main(void)
                 break;
             }
         }
-        if (commbuf_pop_rx_ble(&ble_packet_container) == COMMBUF_STATUS_OK) {
-            PR_INFO("BLE RX packet size %d", ble_packet_container.size);
-            if (ble_packet_container.packet.packet_info == PACKET_TYPE_COMMAND) {
-                PR_INFO("Command %02X", ble_packet_container.packet.command_packet.header.command);
-                PR_INFO("Command size %d", ble_packet_container.packet.command_packet.header.command_size);
-                PR_INFO("Payload: ");
-                for (int i = 0; i < ble_packet_container.size - sizeof(payload_packet_header_t); i++) {
-                    PR("0x%02hhX ", ble_packet_container.packet.command_packet.payload[i]);
-                }
-                PR("\n");
-            } else if (ble_packet_container.packet.packet_info == PACKET_TYPE_PAYLOAD) {
-                PR_INFO("Payload: ");
-                for (int i = 0; i < ble_packet_container.size - sizeof(command_packet_header_t); i++) {
-                    PR("0x%02hhX ", ble_packet_container.packet.payload_packet.payload[i]);
-                }
-                PR("\n");
+    }
+
+    // Handle SPI RX
+    if (commbuf_pop_rx_ble(&ble_packet_container) == COMMBUF_STATUS_OK) {
+        PR_INFO("BLE RX packet size %d", ble_packet_container.size);
+        if (ble_packet_container.packet.packet_info == PACKET_TYPE_COMMAND) {
+            PR_INFO("Command %02X", ble_packet_container.packet.command_packet.header.command);
+            PR_INFO("Command size %d", ble_packet_container.packet.command_packet.header.command_size);
+            PR_INFO("Payload: ");
+            for (int i = 0; i < ble_packet_container.size - sizeof(payload_packet_header_t); i++) {
+                PR("0x%02hhX ", ble_packet_container.packet.command_packet.payload[i]);
             }
+            PR("\n");
+        } else if (ble_packet_container.packet.packet_info == PACKET_TYPE_PAYLOAD) {
+            PR_INFO("Payload: ");
+            for (int i = 0; i < ble_packet_container.size - sizeof(command_packet_header_t); i++) {
+                PR("0x%02hhX ", ble_packet_container.packet.payload_packet.payload[i]);
+            }
+            PR("\n");
         }
     }
 }
@@ -358,7 +378,6 @@ int Core1_Main(void)
         ble_worker();
     }
 
-    /* Quiet GCC warnings */
     return -1;
 }
 

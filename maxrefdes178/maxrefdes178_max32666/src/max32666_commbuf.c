@@ -74,8 +74,8 @@ static commbuf_buffer_t ble_tx_container;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static commbuf_status_t push_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container);
-static commbuf_status_t pop_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container);
+static commbuf_status_e push_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container);
+static commbuf_status_e pop_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container);
 
 
 //-----------------------------------------------------------------------------
@@ -86,7 +86,7 @@ static commbuf_status_t pop_buffer(commbuf_buffer_t *buffer, packet_container_t 
 //
 //}
 
-static commbuf_status_t push_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container)
+static commbuf_status_e push_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container)
 {
     int next;
 
@@ -110,7 +110,7 @@ static commbuf_status_t push_buffer(commbuf_buffer_t *buffer, packet_container_t
     return COMMBUF_STATUS_OK;
 }
 
-static commbuf_status_t pop_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container)
+static commbuf_status_e pop_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container)
 {
     int next;
 
@@ -134,42 +134,42 @@ static commbuf_status_t pop_buffer(commbuf_buffer_t *buffer, packet_container_t 
     return COMMBUF_STATUS_OK;
 }
 
-commbuf_status_t commbuf_pop_rx_ble(packet_container_t *ble_packet_container)
+commbuf_status_e commbuf_pop_rx_ble(packet_container_t *ble_packet_container)
 {
     return pop_buffer(&ble_rx_container, ble_packet_container);
 }
 
-commbuf_status_t commbuf_push_rx_ble(packet_container_t *ble_packet_container)
+commbuf_status_e commbuf_push_rx_ble(packet_container_t *ble_packet_container)
 {
     return push_buffer(&ble_rx_container, ble_packet_container);
 }
 
-commbuf_status_t commbuf_pop_tx_ble(packet_container_t *ble_packet_container)
+commbuf_status_e commbuf_pop_tx_ble(packet_container_t *ble_packet_container)
 {
     return pop_buffer(&ble_tx_container, ble_packet_container);
 }
 
-commbuf_status_t commbuf_push_tx_ble(packet_container_t *ble_packet_container)
+commbuf_status_e commbuf_push_tx_ble(packet_container_t *ble_packet_container)
 {
     return push_buffer(&ble_tx_container, ble_packet_container);
 }
 
-//commbuf_status_t commbuf_pop_rx_usb(packet_container_t *usb_packet_container)
+//commbuf_status_e commbuf_pop_rx_usb(packet_container_t *usb_packet_container)
 //{
 //    return pop_buffer(&usb_rx_container, usb_packet_container);
 //}
 //
-//commbuf_status_t commbuf_push_rx_usb(packet_container_t *usb_packet_container)
+//commbuf_status_e commbuf_push_rx_usb(packet_container_t *usb_packet_container)
 //{
 //    return push_buffer(&usb_rx_container, usb_packet_container);
 //}
 //
-//commbuf_status_t commbuf_pop_tx_usb(packet_container_t *usb_packet_container)
+//commbuf_status_e commbuf_pop_tx_usb(packet_container_t *usb_packet_container)
 //{
 //    return pop_buffer(&usb_tx_container, usb_packet_container);
 //}
 //
-//commbuf_status_t commbuf_push_tx_usb(packet_container_t *usb_packet_container)
+//commbuf_status_e commbuf_push_tx_usb(packet_container_t *usb_packet_container)
 //{
 //    return push_buffer(&usb_tx_container, usb_packet_container);
 //}

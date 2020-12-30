@@ -251,22 +251,236 @@
 // Typedefs
 //-----------------------------------------------------------------------------
 typedef enum {
-    QSPI_TYPE_NO_DATA = 0,
-    QSPI_TYPE_RESPONSE_VIDEO_DATA ,
-    QSPI_TYPE_RESPONSE_VIDEO_RESULT,
-    QSPI_TYPE_RESPONSE_AUDIO_RESULT
-} teQspiDataType;
+//  QSPI Packet                                 QSPI Packet Payload Description
+    QSPI_PACKET_TYPE_VIDEO_VERSION_CMD = 0,  // None
+    QSPI_PACKET_TYPE_VIDEO_VERSION_RES,      // version_t
+
+    QSPI_PACKET_TYPE_AUDIO_VERSION_CMD,      // None
+    QSPI_PACKET_TYPE_AUDIO_VERSION_RES,      // version_t
+
+    QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD,       // None
+    QSPI_PACKET_TYPE_VIDEO_SERIAL_RES,       // serial_num_t
+
+    QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD,       // None
+    QSPI_PACKET_TYPE_AUDIO_SERIAL_RES,       // serial_num_t
+
+    QSPI_PACKET_TYPE_VIDEO_DATA_RES,                // 240x240 RGB565 Image
+    QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES,      // classification_result_t
+    QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES,          // max78000_statistics_t
+
+    QSPI_PACKET_TYPE_AUDIO_DATA_RES,                // TODO
+    QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES,      // classification_result_t
+    QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES,          // max78000_statistics_t
+
+    QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD, // None
+    QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES, // faceid_embed_update_status_e
+
+    QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD,       // None
+    QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD,      // None
+    QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD,       // None
+    QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD,      // None
+
+    QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD,   // None
+    QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD,  // None
+    QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD,   // None
+    QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD,  // None
+
+    QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD,  // None
+    QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD, // None
+
+    QSPI_PACKET_TYPE_LAST
+} qspi_packet_type_e;
 
 typedef enum {
     PACKET_TYPE_COMMAND = 0,
     PACKET_TYPE_PAYLOAD
-} packet_type_t;
+} packet_type_e;
+
+typedef enum {
+//  Command                             Command Payload Description
+    // Communication
+    COMMAND_ABORT_CMD = 0,           // None
+    COMMAND_INVALID_RES,             // Invalid command code
+    COMMAND_NOP_CMD,                 // None
+
+    // Version
+    COMMAND_GET_VERSION_CMD,         // None
+    COMMAND_GET_VERSION_RES,         // device_version_t
+    COMMAND_GET_SERIAL_NUM_CMD,      // None
+    COMMAND_GET_SERIAL_NUM_RES,      // device_serial_num_t
+
+    // SD Card
+    COMMAND_GET_SD_INSERTED_CMD,     // None
+    COMMAND_GET_SD_INSERTED_RES,     // sd_status_e
+    COMMAND_WRITE_SD_FILE_CMD,       // File name size (uint8_t) + File name string + File content
+    COMMAND_WRITE_SD_FILE_RES,       // sd_status_e
+    COMMAND_READ_SD_FILE_CMD,        // File name string
+    COMMAND_READ_SD_FILE_RES,        // sd_status_e + File content
+    COMMAND_GET_SD_CONTENT_CMD,      // None
+    COMMAND_GET_SD_CONTENT_RES,      // (file_info_header_t + File name string) * Number of files
+    COMMAND_GET_SD_FREE_SPACE_CMD,   // None
+    COMMAND_GET_SD_FREE_SPACE_RES,   // Free space size (uint32_t)
+    COMMAND_DELETE_SD_FILE_CMD,      // File name string
+    COMMAND_DELETE_SD_FILE_RES,      // sd_status_e
+    COMMAND_FORMAT_SD_CMD,           // None
+    COMMAND_FORMAT_SD_RES,           // sd_status_e
+
+    // External Flash
+    COMMAND_WRITE_EXT_FILE_CMD,      // File name size (uint8_t) + File name string + File content
+    COMMAND_WRITE_EXT_FILE_RES,      // ext_status_e
+    COMMAND_READ_EXT_FILE_CMD,       // File name string
+    COMMAND_READ_EXT_FILE_RES,       // ext_status_e + File content
+    COMMAND_GET_EXT_CONTENT_CMD,     // None
+    COMMAND_GET_EXT_CONTENT_RES,     // (file_info_header_t + File name string) * Number of files
+    COMMAND_GET_EXT_FREE_SPACE_CMD,  // None
+    COMMAND_GET_EXT_FREE_SPACE_RES,  // Free space size (uint32_t)
+    COMMAND_DELETE_EXT_FILE_CMD,     // File name string
+    COMMAND_DELETE_EXT_FILE_RES,     // ext_status_e
+    COMMAND_FORMAT_EXT_CMD,          // None
+    COMMAND_FORMAT_EXT_RES,          // ext_status_e
+
+    // Firmware Update from SD Card
+    COMMAND_FW_UPDATE_MAX32666_SD_CMD,        // File name string
+    COMMAND_FW_UPDATE_MAX32666_SD_RES,        // fw_update_status_e
+    COMMAND_FW_UPDATE_MAX78000_SD_VIDEO_CMD,  // File name string
+    COMMAND_FW_UPDATE_MAX78000_SD_VIDEO_RES,  // fw_update_status_e
+    COMMAND_FW_UPDATE_MAX78000_SD_AUDIO_CMD,  // File name string
+    COMMAND_FW_UPDATE_MAX78000_SD_AUDIO_RES,  // fw_update_status_e
+    COMMAND_FW_UPDATE_COMBINED_SD_CMD,        // File name string
+    COMMAND_FW_UPDATE_COMBINED_SD_RES,        // fw_update_status_e
+
+    // Firmware Update from External Flash
+    COMMAND_FW_UPDATE_MAX32666_EXT_CMD,       // File name string
+    COMMAND_FW_UPDATE_MAX32666_EXT_RES,       // fw_update_status_e
+    COMMAND_FW_UPDATE_MAX78000_EXT_VIDEO_CMD, // File name string
+    COMMAND_FW_UPDATE_MAX78000_EXT_VIDEO_RES, // fw_update_status_e
+    COMMAND_FW_UPDATE_MAX78000_EXT_AUDIO_CMD, // File name string
+    COMMAND_FW_UPDATE_MAX78000_EXT_AUDIO_RES, // fw_update_status_e
+    COMMAND_FW_UPDATE_COMBINED_EXT_CMD,       // File name string
+    COMMAND_FW_UPDATE_COMBINED_EXT_RES,       // fw_update_status_e
+
+    // FaceID Embeddings Update
+    COMMAND_FACEID_EMBED_UPDATE_CMD,          // FaceID embeddings binary content
+    COMMAND_FACEID_EMBED_UPDATE_RES,          // faceid_embed_update_status_e
+    COMMAND_FACEID_EMBED_UPDATE_SD_CMD,       // File name string
+    COMMAND_FACEID_EMBED_UPDATE_SD_RES,       // faceid_embed_update_status_e
+    COMMAND_FACEID_EMBED_UPDATE_EXT_CMD,      // File name string
+    COMMAND_FACEID_EMBED_UPDATE_EXT_RES,      // faceid_embed_update_status_e
+
+    // Device Settings
+    COMMAND_ENABLE_BLE_CMD,                       // None
+    COMMAND_DISABLE_BLE_CMD,                      // None
+    COMMAND_SHUT_DOWN_DEVICE_CMD,                 // None
+    COMMAND_ENABLE_MAX78000_AUDIO_CMD,            // None
+    COMMAND_DISABLE_MAX78000_AUDIO_CMD,           // None
+    COMMAND_ENABLE_MAX78000_VIDEO_CMD,            // None
+    COMMAND_DISABLE_MAX78000_VIDEO_CMD,           // None
+    COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD,        // None
+    COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD,       // None
+    COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,  // None
+    COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD, // None
+    COMMAND_ENABLE_MAX78000_VIDEO_AUDIO_POWER,    // None
+    COMMAND_DISABLE_MAX78000_VIDEO_AUDIO_POWER,   // None
+    COMMAND_ENABLE_LCD_CMD,                       // None
+    COMMAND_DISABLE_LCD_CMD,                      // None
+    COMMAND_ENABLE_LCD_STATISCTICS_CMD,           // None
+    COMMAND_DISABLE_LCD_STATISCTICS_CMD,          // None
+    COMMAND_ENABLE_LCD_PROBABILITY_CMD,           // None
+    COMMAND_DISABLE_LCD_PROBABILITY_CMD,          // None
+    COMMAND_ENABLE_SEND_STATISTICS_CMD,           // None
+    COMMAND_DISABLE_SEND_STATISTICS_CMD,          // None
+    COMMAND_ENABLE_SEND_CLASSIFICATION_CMD,       // None
+    COMMAND_DISABLE_SEND_CLASSIFICATION_CMD,      // None
+
+    // Statistics
+    COMMAND_GET_STATISTICS_RES,      // device_statistics_t
+
+    // Classification
+    COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES, // classification_result_t
+    COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES, // classification_result_t
+
+    // Debugger Selection
+    COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
+    COMMAND_GET_DEBUGGER_CMD,        // None
+    COMMAND_GET_DEBUGGER_RES,        // debugger_select_e
+
+    COMMAND_LAST
+} command_e;
+
+typedef enum {
+    SD_STATUS_OK = 0,
+    SD_STATUS_DISK_ERR,
+    SD_STATUS_INT_ERR,
+    SD_STATUS_NOT_READY,
+    SD_STATUS_NO_FILE,
+    SD_STATUS_NO_PATH,
+    SD_STATUS_INVALID_NAME,
+    SD_STATUS_DENIED,
+    SD_STATUS_EXIST,
+    SD_STATUS_INVALID_OBJECT,
+    SD_STATUS_NOT_ENABLED,
+    SD_STATUS_NO_FILESYSTEM,
+    SD_STATUS_MKFS_ABORTED,
+    SD_STATUS_TIMEOUT,
+    SD_STATUS_LOCKED,
+    SD_STATUS_NOT_ENOUGH_CORE,
+    SD_STATUS_TOO_MANY_OPEN_FILES,
+    SD_STATUS_INVALID_PARAMETER,
+
+    SD_STATUS_LAST
+} sd_status_e;
+
+typedef enum {
+    EXT_STATUS_OK = 0,
+    //TODO
+
+    EXT_STATUS_LAST
+} ext_status_e;
+
+typedef enum {
+    FW_UPDATE_STATUS_ = 0,
+    FW_UPDATE_STATUS_SUCCESS,
+    FW_UPDATE_STATUS_NO_FILE,
+    FW_UPDATE_STATUS_MAX32666_FAIL,
+    FW_UPDATE_STATUS_MAX78000_VIDEO_FAIL,
+    FW_UPDATE_STATUS_MAX78000_AUDIO_FAIL,
+    FW_UPDATE_STATUS_COMBINED_FAIL,
+
+    FW_UPDATE_STATUS_LAST
+} fw_update_status_e;
+
+typedef enum {
+    FACEID_EMBED_UPDATE_STATUS_SUCCESS = 0,
+    FACEID_EMBED_UPDATE_STATUS_NO_FILE,
+    FACEID_EMBED_UPDATE_STATUS_FAIL,
+
+    FACEID_EMBED_UPDATE_STATUS_LAST
+} faceid_embed_update_status_e;
+
+typedef enum {
+    DEBUGGER_SELECT_MAX32666_CORE1 = 0,
+    DEBUGGER_SELECT_MAX78000_VIDEO,
+    DEBUGGER_SELECT_MAX78000_AUDIO,
+
+    DEBUGGER_SELECT_LAST
+} debugger_select_e;
+
+typedef enum {
+    CLASSIFICATION_NOTHING = 0,
+    CLASSIFICATION_UNKNOWN,
+    CLASSIFICATION_LOW_CONFIDENCE,
+    CLASSIFICATION_DETECTED,
+
+    CLASSIFICATION_LAST
+} classification_e;
+
+typedef uint8_t serial_num_t[13];
 
 typedef struct __attribute__((packed)) {
     uint32_t start_symbol;
-    uint32_t data_len;
-    uint8_t data_type;
-} qspi_header_t;
+    uint32_t packet_size;
+    uint8_t packet_type;
+} qspi_packet_header_t;
 
 typedef struct __attribute__((packed)) {
     uint8_t packet_info;
@@ -299,25 +513,46 @@ typedef struct __attribute__((packed)) {
 } packet_container_t;
 
 typedef struct __attribute__((packed)) {
-    uint8_t max32666_major;
-    uint8_t max32666_minor;
-    uint32_t max32666_build;
-    uint8_t max78000_video_major;
-    uint8_t max78000_video_minor;
-    uint32_t max78000_video_build;
-    uint8_t max78000_audio_major;
-    uint8_t max78000_audio_minor;
-    uint32_t max78000_audio_build;
+    uint8_t major;
+    uint8_t minor;
+    uint32_t build;
 } version_t;
 
 typedef struct __attribute__((packed)) {
-    float max78000_video_power;
-    float max78000_audio_power;
-    float max78000_video_cnn_duration;
-    float max78000_audio_cnn_duration;
-    float max78000_video_capture_duration;
+    version_t max32666;
+    version_t max78000_video;
+    version_t max78000_audio;
+} device_version_t;
+
+typedef struct __attribute__((packed)) {
+    serial_num_t max32666;
+    serial_num_t max78000_video;
+    serial_num_t max78000_audio;
+} device_serial_num_t;
+
+typedef struct __attribute__((packed)) {
+    float cnn_duration;
+    float capture_duration;
+    float communication_duration;
+} max78000_statistics_t;
+
+typedef struct __attribute__((packed)) {
+    max78000_statistics_t max78000_video;
+    max78000_statistics_t max78000_audio;
     float lcd_fps;
     float battery_level;
-} statistics_t;
+} device_statistics_t;
+
+typedef struct __attribute__((packed)) {
+    float probabily;
+    classification_e classification;
+    char result[15];
+} classification_result_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t file_name_size;
+    uint32_t file_size;
+    // char [] file_name
+} file_info_header_t;
 
 #endif /* _MAXREFDES178_DEFINTIIONS_H_ */

@@ -174,6 +174,8 @@ int main(void)
 
     uint16_t avgSilenceCounter = 0;
 
+    classification_result_t classification_result = {0};
+
     mic_processing_state procState = STOP;
 
     /* Enable cache */
@@ -294,6 +296,8 @@ int main(void)
 
         /* if we have not detected voice, check the average*/
         if (procState == SILENCE) {
+
+            classification_result.classification = CLASSIFICATION_NOTHING;
 
             /* compute average, proceed if greater than threshold */
             if (avg >= thresholdHigh) {
@@ -449,14 +453,18 @@ int main(void)
                 ret = check_inference(ml_softmax, ml_data, &out_class, &probability);
 
                 if (!ret) {
+                    classification_result.classification = CLASSIFICATION_LOW_CONFIDENCE;
                     PR_INFO("Low confidence: %s (%0.1f%%)", keywords[out_class], probability);
                 } else {
+                    classification_result.classification = CLASSIFICATION_DETECTED;
                     PR_INFO("Detected: %s (%0.1f%%)", keywords[out_class], probability);
 
+                    memcpy(classification_result.result, keywords[out_class], sizeof(classification_result.result));
+                    classification_result.probabily = probability;
+
                     spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI,
-                            (uint8_t *) keywords[out_class],
-                            sizeof(keywords[out_class]),
-                            QSPI_TYPE_RESPONSE_AUDIO_RESULT, &qspi_int);
+                            (uint8_t *) &classification_result, sizeof(classification_result),
+                            QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES, &qspi_int);
                 }
 
 #ifdef ENABLE_CLASSIFICATION_DISPLAY

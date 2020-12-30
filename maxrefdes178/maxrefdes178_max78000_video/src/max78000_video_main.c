@@ -450,7 +450,7 @@ static void send_img(void)
     camera_get_image(&raw, &imgLen, &w, &h);
 
     spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, raw, imgLen,
-            QSPI_TYPE_RESPONSE_VIDEO_DATA, &qspi_int);
+            QSPI_PACKET_TYPE_VIDEO_DATA_RES, &qspi_int);
 //    MXC_Delay(MXC_DELAY_MSEC(3)); // Yield SPI DMA RAM read
 }
 
@@ -529,33 +529,37 @@ static void run_cnn(int x_offset, int y_offset)
 #endif
 
     if ( pResult == 0 ) {
-        char name[LCD_SUBTITLE_SIZE] = "nothing";
+        classification_result_t classification_result = {0};
         uint8_t *counter;
         uint8_t counter_len;
         get_min_dist_counter(&counter, &counter_len);
+        classification_result.classification = CLASSIFICATION_NOTHING;
 
         prev_decision = decision;
         decision = -3;
         for(uint8_t id=0; id<counter_len; ++id){
             if (counter[id] >= (closest_sub_buffer_size-4)){
-                strncpy(name, get_subject(id), sizeof(name) - 1);
+                strncpy(classification_result.result, get_subject(id), sizeof(classification_result.result) - 1);
                 decision = id;
+                classification_result.classification = CLASSIFICATION_DETECTED;
                 break;
             } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
-                strncpy(name, "Adjust Face", sizeof(name) - 1);
+                strncpy(classification_result.result, "Adjust Face", sizeof(classification_result.result) - 1);
                 decision = -2;
+                classification_result.classification = CLASSIFICATION_LOW_CONFIDENCE;
                 break;
             } else if (counter[id] > 4){
-                strncpy(name, "Unknown", sizeof(name) - 1);
+                strncpy(classification_result.result, "Unknown", sizeof(classification_result.result) - 1);
                 decision = -1;
+                classification_result.classification = CLASSIFICATION_UNKNOWN;
                 break;
             }
         }
 
         if(decision != prev_decision){
-            spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, (uint8_t *)name,
-                    strlen(name), QSPI_TYPE_RESPONSE_VIDEO_RESULT, &qspi_int);
-            PR_DEBUG("Result : %s\n", name);
+            spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, (uint8_t *) &classification_result,
+                    sizeof(classification_result), QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES, &qspi_int);
+            PR_DEBUG("Result : %s\n", classification_result.result);
         }
     }
 }

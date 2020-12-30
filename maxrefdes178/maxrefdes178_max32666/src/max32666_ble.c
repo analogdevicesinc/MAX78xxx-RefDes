@@ -342,7 +342,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
                 pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
                 pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
         PR_INFO("MTU: %d", AttGetMtu(periphCb.connId));
-        memcpy(device_status.ble_connected_peer, pMsg->connOpen.peerAddr, sizeof(bdAddr_t));
+        memcpy(device_status.ble_connected_peer_mac, pMsg->connOpen.peerAddr, sizeof(device_status.ble_connected_peer_mac));
 
         uiEvent = APP_UI_CONN_OPEN;
         break;
@@ -350,7 +350,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
     case DM_CONN_CLOSE_IND:
         periphCb.connected = FALSE;
         device_status.ble_connected = 0;
-        memset(device_status.ble_connected_peer, 0x00, sizeof(bdAddr_t));
+        memset(device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
 
         PR_INFO("Connection closed status 0x%02hhX, reason 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
         switch (pMsg->connClose.reason)
@@ -691,7 +691,6 @@ int ble_worker(void)
         }
     }
 
-    // TODO: BLE core1 sleep
     if (!device_settings.enable_ble) {
         PR_INFO("Disable BLE");
 
@@ -705,6 +704,7 @@ int ble_worker(void)
 //        Core1_Stop();
         // sleep here, wake up from here
 
+        // TODO: BLE core1 sleep
         while(!device_settings.enable_ble);
 
         PR_INFO("Enable BLE");

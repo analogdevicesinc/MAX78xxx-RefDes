@@ -55,37 +55,27 @@ extern uint32_t __isr_vector_core1;
 // Defines
 //-----------------------------------------------------------------------------
 #define PR_DEBUG(fmt, args...)  if(0) { \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
     printf("D%d[%-8s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
     fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
 }
 
 #define PR_INFO(fmt, args...)  if(1) { \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
     printf("I%d[%-8s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
     fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
 }
 
 #define PR_WARN(fmt, args...)  if(1) { \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
     printf("W%d[%-8s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
     fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
 }
 
 #define PR_ERROR(fmt, args...)  if(1) { \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
     printf("E%d[%-8s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
     fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
 }
 
 #define PR(fmt, args...) \
-    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {} \
     printf(fmt , ##args); \
     fflush(stdout); \
-    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT); \
 
 #endif /* _MAX32666_DEBUG_H_ */

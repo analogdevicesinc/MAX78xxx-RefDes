@@ -49,13 +49,18 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+typedef enum {
+    QSPI_STATUS_NEW_DATA = 0,
+    QSPI_STATUS_NO_NEW_DATA,
+    QSPI_STATUS_FAIL
+} qspi_status_e;
 
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
 int qspi_init(void);
-int qspi_worker(void);
+qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type);
 
 
 #endif /* _MAX32666_QSPI_H_ */

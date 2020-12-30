@@ -51,12 +51,11 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
-typedef enum intercore_buffer_status
-{
+typedef enum {
     COMMBUF_STATUS_OK = 0,
     COMMBUF_STATUS_EMPTY,
     COMMBUF_STATUS_FULL
-} commbuf_status_t;
+} commbuf_status_e;
 
 
 //-----------------------------------------------------------------------------
@@ -64,13 +63,13 @@ typedef enum intercore_buffer_status
 //-----------------------------------------------------------------------------
 int commbuf_init(void);
 int commbuf_trigger_int(void);
-commbuf_status_t commbuf_pop_rx_ble(packet_container_t *ble_packet_container);
-commbuf_status_t commbuf_push_rx_ble(packet_container_t *ble_packet_container);
-commbuf_status_t commbuf_pop_tx_ble(packet_container_t *ble_packet_container);
-commbuf_status_t commbuf_push_tx_ble(packet_container_t *ble_packet_container);
-//commbuf_status_t commbuf_pop_rx_usb(packet_container_t *usb_packet_container);
-//commbuf_status_t commbuf_push_rx_usb(packet_container_t *usb_packet_container);
-//commbuf_status_t commbuf_pop_tx_usb(packet_container_t *usb_packet_container);
-//commbuf_status_t commbuf_push_tx_usb(packet_container_t *usb_packet_container);
+commbuf_status_e commbuf_pop_rx_ble(packet_container_t *ble_packet_container);
+commbuf_status_e commbuf_push_rx_ble(packet_container_t *ble_packet_container);
+commbuf_status_e commbuf_pop_tx_ble(packet_container_t *ble_packet_container);
+commbuf_status_e commbuf_push_tx_ble(packet_container_t *ble_packet_container);
+//commbuf_status_e commbuf_pop_rx_usb(packet_container_t *usb_packet_container);
+//commbuf_status_e commbuf_push_rx_usb(packet_container_t *usb_packet_container);
+//commbuf_status_e commbuf_pop_tx_usb(packet_container_t *usb_packet_container);
+//commbuf_status_e commbuf_push_tx_usb(packet_container_t *usb_packet_container);
 
 #endif /* _MAX32666_COMMBUF_H_ */

@@ -122,94 +122,92 @@ int qspi_init(void)
     return E_NO_ERROR;
 }
 
-int qspi_worker(void)
+qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 {
     if (qspi_video_int_flag) {
         qspi_video_int_flag = 0;
-        qspi_header_t qspi_header = {0};
+        qspi_packet_header_t qspi_packet_header = {0};
 
         GPIO_CLR(video_cs_pin);
-        spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_header, sizeof(qspi_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+        spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_packet_header, sizeof(qspi_packet_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(video_cs_pin);
+        *qspi_packet_type = qspi_packet_header.packet_type;
 
-        if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
-            PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_header.start_symbol);
-            return E_BAD_STATE;
+        if (qspi_packet_header.start_symbol != QSPI_START_SYMBOL) {
+            PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_packet_header.start_symbol);
+            return QSPI_STATUS_FAIL;
         }
 
         while(!qspi_video_int_flag);
         qspi_video_int_flag = 0;
 
-        if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_DATA) {
-            if ((qspi_header.data_len == 0) || (qspi_header.data_len > LCD_DATA_SIZE)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_header.data_len);
-                return E_BAD_PARAM;
+        if (qspi_packet_header.packet_type == QSPI_PACKET_TYPE_VIDEO_DATA_RES) {
+            if (qspi_packet_header.packet_size != LCD_DATA_SIZE) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
+                return QSPI_STATUS_FAIL;
             }
 
             GPIO_CLR(video_cs_pin);
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.buffer, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.buffer, qspi_packet_header.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_DEBUG("video %u", qspi_header.data_len);
+            PR_DEBUG("video %u", qspi_packet_header.packet_size);
 
-            return QSPI_TYPE_RESPONSE_VIDEO_DATA;
-        } else if (qspi_header.data_type == QSPI_TYPE_RESPONSE_VIDEO_RESULT) {
-            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(lcd_data.subtitle))) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_header.data_len);
-                return E_BAD_PARAM;
+            return QSPI_STATUS_NEW_DATA;
+        } else if (qspi_packet_header.packet_type == QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES) {
+            if (qspi_packet_header.packet_size != sizeof(classification_result_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
+                return QSPI_STATUS_FAIL;
             }
 
-            memset(lcd_data.subtitle, 0, sizeof(lcd_data.subtitle));
-
             GPIO_CLR(video_cs_pin);
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.subtitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.classification_video, qspi_packet_header.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_INFO("video result %u %s", qspi_header.data_len, lcd_data.subtitle);
+            PR_INFO("video result %s %d %0.1f", device_status.classification_video.result, device_status.classification_video.classification, (double)device_status.classification_video.probabily);
 
-            return QSPI_TYPE_RESPONSE_VIDEO_RESULT;
+            return QSPI_STATUS_NEW_DATA;
         }
     }
 
     if (qspi_audio_int_flag) {
         qspi_audio_int_flag = 0;
 
-        qspi_header_t qspi_header = {0};
+        qspi_packet_header_t qspi_packet_header = {0};
 
         GPIO_CLR(audio_cs_pin);
-        spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_header, sizeof(qspi_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+        spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_packet_header, sizeof(qspi_packet_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(audio_cs_pin);
+        *qspi_packet_type = qspi_packet_header.packet_type;
 
-        if (qspi_header.start_symbol != QSPI_START_SYMBOL) {
-            PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_header.start_symbol);
-            return E_BAD_STATE;
+        if (qspi_packet_header.start_symbol != QSPI_START_SYMBOL) {
+            PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_packet_header.start_symbol);
+            return QSPI_STATUS_FAIL;
         }
 
         while(!qspi_audio_int_flag);
         qspi_audio_int_flag = 0;
 
-        if (qspi_header.data_type == QSPI_TYPE_RESPONSE_AUDIO_RESULT) {
-            memset(lcd_data.toptitle, 0, sizeof(lcd_data.toptitle));
-
-            if ((qspi_header.data_len == 0) || (qspi_header.data_len > sizeof(lcd_data.toptitle))) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_header.data_len);
-                return E_BAD_PARAM;
+        if (qspi_packet_header.packet_type == QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES) {
+            if (qspi_packet_header.packet_size != sizeof(classification_result_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
+                return QSPI_STATUS_FAIL;
             }
 
             GPIO_CLR(audio_cs_pin);
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.toptitle, qspi_header.data_len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.classification_audio, qspi_packet_header.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
-            PR_INFO("audio result %u %s", qspi_header.data_len, lcd_data.toptitle);
+            PR_INFO("audio result %s %d %0.1f", device_status.classification_audio.result, device_status.classification_audio.classification, (double)device_status.classification_audio.probabily);
 
-            return QSPI_TYPE_RESPONSE_AUDIO_RESULT;
+            return QSPI_STATUS_NEW_DATA;
         }
     }
 
-    return QSPI_TYPE_NO_DATA;
+    return QSPI_STATUS_FAIL;
 }
