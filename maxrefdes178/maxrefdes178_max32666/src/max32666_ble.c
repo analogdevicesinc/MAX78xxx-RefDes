@@ -43,6 +43,7 @@
 #include <app_ui.h>
 #include <att_api.h>
 #include <att_handler.h>
+#include <core1.h>
 #include <dm_api.h>
 #include <dm_handler.h>
 #include <gatt/gatt_api.h>
@@ -86,7 +87,6 @@
 #include "max32666_commbuf.h"
 #include "max32666_data.h"
 #include "max32666_debug.h"
-#include "max32666_max20303.h"
 #include "maxrefdes178_definitions.h"
 
 
@@ -185,6 +185,7 @@ static struct
     dmConnId_t        connId;             /* Connection ID */
     bool_t            connected;          /* Connection state */
     uint8_t           indicationStatus;   /* Connection state */
+    uint16_t          connectionHandle;   /* Connection handle */
 } periphCb;
 
 
@@ -273,7 +274,8 @@ static void periphCccCback(attsCccEvt_t *pEvt)
 static uint8_t periphWpWriteCback(dmConnId_t connId, uint16_t handle, uint8_t operation,
                           uint16_t offset, uint16_t len, uint8_t *pValue, attsAttr_t *pAttr)
 {
-//  PR_DEBUG("connId: 0x%02hhX", connId);
+    PR_DEBUG("connId: 0x%02hhX", connId);
+    PR_DEBUG("handle: %d", handle);
 
     ble_receive(len, pValue);
 
@@ -330,16 +332,17 @@ static void periphProcMsg(dmEvt_t *pMsg)
         /* Save connId  */
         periphCb.connId = (dmConnId_t) pMsg->hdr.param;
         periphCb.connected = TRUE;
+        periphCb.connectionHandle = pMsg->connOpen.handle;
         device_status.ble_connected = 1;
-        max20303_led_green(0);
-        max20303_led_blue(1);
 
         PR_INFO("Connection opened");
         PR_INFO("connId: %d", pMsg->connOpen.hdr.param);
+        PR_INFO("handle: %d", pMsg->connOpen.handle);
         PR_INFO("peerAddr: %02X:%02X:%02X:%02X:%02X:%02X",
                 pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
                 pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
         PR_INFO("MTU: %d", AttGetMtu(periphCb.connId));
+        memcpy(device_status.ble_connected_peer, pMsg->connOpen.peerAddr, sizeof(bdAddr_t));
 
         uiEvent = APP_UI_CONN_OPEN;
         break;
@@ -347,8 +350,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
     case DM_CONN_CLOSE_IND:
         periphCb.connected = FALSE;
         device_status.ble_connected = 0;
-        max20303_led_green(1);
-        max20303_led_blue(0);
+        memset(device_status.ble_connected_peer, 0x00, sizeof(bdAddr_t));
 
         PR_INFO("Connection closed status 0x%02hhX, reason 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
         switch (pMsg->connClose.reason)
@@ -573,6 +575,7 @@ static void mainWsfInit(void)
 
     bdAddr_t bdAddr;
     PalCfgLoadData(PAL_CFG_ID_BD_ADDR, bdAddr, sizeof(bdAddr_t));
+    memcpy(device_info.ble_mac, bdAddr, sizeof(bdAddr_t));
     PR_INFO("Setting address -- MAC %02X:%02X:%02X:%02X:%02X:%02X", bdAddr[5], bdAddr[4], bdAddr[3], bdAddr[2], bdAddr[1], bdAddr[0]);
     LlSetBdAddr((uint8_t *)&bdAddr);
     LlMathSetSeed((uint32_t *)&bdAddr);
@@ -678,14 +681,34 @@ int ble_worker(void)
     /* Run the WSF OS */
     wsfOsDispatcher();
 
-    if(!WsfOsActive()) {
-      /* No WSF tasks are active, optionally sleep */
-    }
+//    if(!WsfOsActive()) {
+//      /* No WSF tasks are active, optionally sleep */
+//    }
 
     if (commbuf_pop_tx_ble(&ble_packet_container) == COMMBUF_STATUS_OK) {
         if (ble_send_indication(ble_packet_container.size, (uint8_t *) &(ble_packet_container.packet)) != E_SUCCESS) {
             PR_ERROR("ble_send_indication failed");
         }
+    }
+
+    // TODO: BLE core1 sleep
+    if (!device_settings.enable_ble) {
+        PR_INFO("Disable BLE");
+
+        if (device_status.ble_connected) {
+            LlDisconnect(periphCb.connectionHandle, LL_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_POWER_OFF);
+            while (device_status.ble_connected) {
+                wsfOsDispatcher();
+            }
+        }
+//        PalBbDisable();
+//        Core1_Stop();
+        // sleep here, wake up from here
+
+        while(!device_settings.enable_ble);
+
+        PR_INFO("Enable BLE");
+//        PalBbEnable();
     }
 
     return E_NO_ERROR;

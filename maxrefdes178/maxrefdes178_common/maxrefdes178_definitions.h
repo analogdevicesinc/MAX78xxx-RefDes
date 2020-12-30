@@ -172,6 +172,11 @@
 #define MAX32666_SEMAPHORE_PRINT           1
 #define MAX32666_COMMBUF_BUFFER            2
 
+// MAX32666 Timers
+#define MAX32666_BLE_TIMER                 MXC_TMR0
+#define MAX32666_BLE_SLEEP_TIMER           MXC_TMR1
+#define MAX32666_LED_TIMER                 MXC_TMR2
+
 // Communication buffer
 #define MAX32666_COMMBUF_ARRAY_SIZE        10
 
@@ -293,5 +298,26 @@ typedef struct __attribute__((packed)) {
     } packet;
 } packet_container_t;
 
+typedef struct __attribute__((packed)) {
+    uint8_t max32666_major;
+    uint8_t max32666_minor;
+    uint32_t max32666_build;
+    uint8_t max78000_video_major;
+    uint8_t max78000_video_minor;
+    uint32_t max78000_video_build;
+    uint8_t max78000_audio_major;
+    uint8_t max78000_audio_minor;
+    uint32_t max78000_audio_build;
+} version_t;
+
+typedef struct __attribute__((packed)) {
+    float max78000_video_power;
+    float max78000_audio_power;
+    float max78000_video_cnn_duration;
+    float max78000_audio_cnn_duration;
+    float max78000_video_capture_duration;
+    float lcd_fps;
+    float battery_level;
+} statistics_t;
 
 #endif /* _MAXREFDES178_DEFINTIIONS_H_ */

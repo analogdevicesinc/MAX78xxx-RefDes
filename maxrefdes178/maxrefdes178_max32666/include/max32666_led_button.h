@@ -33,17 +33,13 @@
 *******************************************************************************
 */
 
-#ifndef _MAX32666_DATA_H_
-#define _MAX32666_DATA_H_
+#ifndef _MAX32666_LED_BUTTON_H_
+#define _MAX32666_LED_BUTTON_H_
 
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <stdint.h>
-#include <mxc_sys.h>
-
-#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -54,54 +50,12 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
-typedef struct {
-    uint8_t enable_ble;  // TODO
-    uint8_t enable_lcd;
-    uint8_t enable_max78000_audio;  // TODO
-    uint8_t enable_max78000_video;  // TODO
-    uint8_t enable_max78000_video_cnn;
-    uint8_t enable_show_statistics_lcd;
-    uint8_t enable_send_statistics;  // TODO
-    uint8_t enable_video_flash_led;  // TODO
-} device_settings_t;
-
-typedef struct {
-    uint8_t max32666_serial_num[MXC_SYS_USN_LEN];
-    uint8_t max78000_video_serial_num[MXC_SYS_USN_LEN];  // TODO
-    uint8_t max78000_audio_serial_num[MXC_SYS_USN_LEN];  // TODO
-    uint8_t ble_mac[6];
-    version_t version;
-} device_info_t;
-
-typedef struct {
-    statistics_t statistics;
-    uint8_t ble_connected;
-    uint8_t ble_connected_peer[6];
-} device_status_t;
-
-typedef struct {
-    uint8_t buffer[LCD_DATA_SIZE];
-    char subtitle[LCD_SUBTITLE_SIZE];
-    char toptitle[LCD_SUBTITLE_SIZE];
-    uint16_t subtitle_color;
-    uint16_t toptitle_color;
-    uint16_t frame_color;
-} lcd_data_t;
-
-
-//-----------------------------------------------------------------------------
-// Global variables
-//-----------------------------------------------------------------------------
-extern lcd_data_t lcd_data;
-extern device_status_t device_status;
-extern device_settings_t device_settings;
-extern device_info_t device_info;
 
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
+int led_button_init(void);
 
 
-
-#endif /* _MAX32666_DATA_H_ */
+#endif /* _MAX32666_LED_BUTTON_H_ */

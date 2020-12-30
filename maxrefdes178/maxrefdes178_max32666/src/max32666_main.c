@@ -55,6 +55,7 @@
 #include "max32666_i2c.h"
 #include "max32666_lcd.h"
 #include "max32666_lcd_images.h"
+#include "max32666_led_button.h"
 #include "max32666_max20303.h"
 #include "max32666_qspi.h"
 #include "max32666_sdcard.h"
@@ -110,6 +111,9 @@ int main(void)
         while(1);
     }
 
+    device_info.version.max32666_major = S_VERSION_MAJOR;
+    device_info.version.max32666_minor = S_VERSION_MINOR;
+    device_info.version.max32666_build = S_VERSION_BUILD;
     snprintf(version_string, sizeof(version_string) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version_string, S_BUILD_TIMESTAMP);
 
@@ -189,6 +193,12 @@ int main(void)
 //        max20303_led_red(1);
     }
 
+    ret = led_button_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("led_button_init failed %d", ret);
+        max20303_led_red(1);
+    }
+
     ret = commbuf_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("commbuf_init failed %d", ret);
@@ -224,6 +234,8 @@ int main(void)
     }
     PR("\n");
 
+    // TODO: get max78000_video and max78000_audio version and serial num
+
     PR_INFO("core 0 init completed");
 
     // Print logo and version
@@ -254,10 +266,10 @@ int main(void)
                 }
 
                 if (device_settings.enable_lcd) {
-                    device_status.lcd_fps = (float) 1000.0 / (float)(utils_get_time_ms() - lcd_draw_time);
+                    device_status.statistics.lcd_fps = (float) 1000.0 / (float)(utils_get_time_ms() - lcd_draw_time);
                     lcd_draw_time = utils_get_time_ms();
                     if (device_settings.enable_show_statistics_lcd) {
-                        snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", (double)device_status.lcd_fps);
+                        snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", (double)device_status.statistics.lcd_fps);
                         fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 37, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
                     }
 
