@@ -170,6 +170,23 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
             PR_INFO("video result %s %d %0.1f", device_status.classification_video.result, device_status.classification_video.classification, (double)device_status.classification_video.probabily);
 
             return QSPI_STATUS_NEW_DATA;
+        } else if (qspi_packet_header.packet_type == QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES) {
+            if (qspi_packet_header.packet_size != sizeof(max78000_statistics_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
+                return QSPI_STATUS_FAIL;
+            }
+
+            GPIO_CLR(video_cs_pin);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.statistics.max78000_video, qspi_packet_header.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+            GPIO_SET(video_cs_pin);
+
+            PR_DEBUG("video capture : %lu", device_status.statistics.max78000_video.capture_duration_ms);
+            PR_DEBUG("video cnn     : %lu", device_status.statistics.max78000_video.cnn_duration_ms);
+            PR_DEBUG("video qspi    : %lu", device_status.statistics.max78000_video.communication_duration_ms);
+            PR_DEBUG("video total   : %lu", device_status.statistics.max78000_video.total_duration_ms);
+
+            return QSPI_STATUS_NEW_DATA;
         }
     }
 
@@ -204,6 +221,20 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
             GPIO_SET(audio_cs_pin);
 
             PR_INFO("audio result %s %d %0.1f", device_status.classification_audio.result, device_status.classification_audio.classification, (double)device_status.classification_audio.probabily);
+
+            return QSPI_STATUS_NEW_DATA;
+        } else if (qspi_packet_header.packet_type == QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES) {
+            if (qspi_packet_header.packet_size != sizeof(max78000_statistics_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
+                return QSPI_STATUS_FAIL;
+            }
+
+            GPIO_CLR(audio_cs_pin);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.statistics.max78000_audio, qspi_packet_header.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+            GPIO_SET(audio_cs_pin);
+
+            PR_DEBUG("audio cnn: %lu", device_status.statistics.max78000_audio.cnn_duration_ms);
 
             return QSPI_STATUS_NEW_DATA;
         }

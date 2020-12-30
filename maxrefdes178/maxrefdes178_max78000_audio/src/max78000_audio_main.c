@@ -117,6 +117,8 @@ static int32_t  y0, y1;
 volatile uint8_t i2s_flag = 0;
 int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
 
+max78000_statistics_t max78000_statistics = {0};
+
 /* **** Constants **** */
 typedef enum _mic_processing_state {
     STOP = 0,     /* No processing  */
@@ -466,6 +468,10 @@ int main(void)
                             (uint8_t *) &classification_result, sizeof(classification_result),
                             QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES, &qspi_int);
                 }
+
+                max78000_statistics.cnn_duration_ms = cnn_time / 1000;
+                spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI, (uint8_t *) &max78000_statistics,
+                                    sizeof(max78000_statistics), QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES, &qspi_int);
 
 #ifdef ENABLE_CLASSIFICATION_DISPLAY
                 printf("\n----------------------------------------- \n");

@@ -245,10 +245,15 @@ int main(void)
 
 static void run_application(void)
 {
-    uint32_t audio_result_time = 0;
+    uint32_t audio_result_show_time = 0;
     uint32_t lcd_draw_time = 0;
     qspi_packet_type_e qspi_packet_type = 0;
-    char fps_string[10] = {0};
+    char fps_string[6] = {0};
+    char video_capture_string[6] = {0};
+    char video_cnn_string[6] = {0};
+    char video_qspi_string[6] = {0};
+    char audio_cnn_string[6] = {0};
+
     packet_container_t ble_packet_container = {0};
     lcd_data.toptitle_color = YELLOW;
 
@@ -275,14 +280,27 @@ static void run_application(void)
                 }
 
                 if (device_settings.enable_lcd) {
-                    device_status.statistics.lcd_fps = (float) 1000.0 / (float)(utils_get_time_ms() - lcd_draw_time);
-                    lcd_draw_time = utils_get_time_ms();
+                    device_status.statistics.lcd_fps = (float) 1000.0 / (float)(GET_RTC_MS() - lcd_draw_time);
+                    lcd_draw_time = GET_RTC_MS();
                     if (device_settings.enable_show_statistics_lcd) {
                         snprintf(fps_string, sizeof(fps_string) - 1, "%5.2f", (double)device_status.statistics.lcd_fps);
+                        snprintf(video_capture_string, sizeof(video_capture_string) - 1, "%d",
+                                device_status.statistics.max78000_video.capture_duration_ms);
+                        snprintf(video_cnn_string, sizeof(video_cnn_string) - 1, "%d",
+                                device_status.statistics.max78000_video.cnn_duration_ms);
+                        snprintf(video_qspi_string, sizeof(video_qspi_string) - 1, "%d",
+                                device_status.statistics.max78000_video.communication_duration_ms);
+                        snprintf(audio_cnn_string, sizeof(audio_cnn_string) - 1, "%d",
+                                device_status.statistics.max78000_audio.cnn_duration_ms);
+
                         fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 37, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 20, 15, video_capture_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 20, 27, video_cnn_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 20, 39, video_qspi_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 20, 51, audio_cnn_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
                     }
 
-                    if (lcd_draw_time - audio_result_time < KWS_PRINT_DURATION) {
+                    if (lcd_draw_time - audio_result_show_time < KWS_PRINT_DURATION) {
                         if (device_settings.enable_show_probabilty_lcd) {
                             snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "%s %0.1f",
                                     device_status.classification_audio.result, (double) device_status.classification_audio.probabily);
@@ -311,7 +329,7 @@ static void run_application(void)
                 }
                 break;
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
-                audio_result_time = utils_get_time_ms();
+                audio_result_show_time = GET_RTC_MS();
 
                 if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
                     device_settings.enable_lcd = 0;

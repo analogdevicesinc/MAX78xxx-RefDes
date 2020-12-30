@@ -63,7 +63,6 @@
 #define S_MODULE_NAME          "main"
 
 #define EMBEDDING_RESULT_LEN   512
-//#define PRINT_TIME
 //#define PRINT_TIME_CNN
 #define CAMERA_FREQ     (20 * 1000 * 1000)
 
@@ -211,10 +210,10 @@ static const uint8_t camera_settings[][2] = {
 // *****************************************************************************
 static int8_t prev_decision = -2;
 static int8_t decision = -2;
+static uint32_t time_counter = 0;
 
-#if defined(PRINT_TIME) || defined(PRINT_TIME_CNN)
-static uint32_t timer_counter = 0;
-#define PR_TIMER(fmt, args...) if((timer_counter % 10) == 0) printf("T[%-5s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
+#ifdef PRINT_TIME_CNN
+#define PR_TIMER(fmt, args...) if((time_counter % 10) == 0) printf("T[%-5s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
 #endif
 
 
@@ -237,20 +236,6 @@ void MAX78000_VIDEO_CAMERA_DMA_IRQ_HAND(void)
 void MAX78000_VIDEO_QSPI_DMA_IRQ_HAND(void)
 {
     spi_dma_int_handler(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI);
-}
-
-uint32_t utils_get_time_ms(void)
-{
-    int sec;
-    double subsec;
-    uint32_t ms;
-
-    subsec = MXC_RTC_GetSubSecond() / 4096.0;
-    sec = MXC_RTC_GetSecond();
-
-    ms = (sec*1000) +  (int)(subsec*1000);
-
-    return ms;
 }
 
 int main(void)
@@ -388,20 +373,16 @@ static void run_demo(void)
 
     camera_start_capture_image();
 
-#ifdef PRINT_TIME
-    uint32_t capture_started_time = utils_get_time_ms();
+    uint32_t capture_started_time = GET_RTC_MS();
     uint32_t cnn_completed_time;
     uint32_t qspi_completed_time;
     uint32_t capture_completed_time;
-#endif
+    max78000_statistics_t max78000_statistics;
 
     while (1) { //Capture image and run CNN
 
         if (camera_is_image_rcv()) { // Check whether image is ready
-
-#ifdef PRINT_TIME
-            capture_completed_time = utils_get_time_ms();
-#endif
+            capture_completed_time = GET_RTC_MS();
 
             run_cnn(0, 0);
             if ((run_count % 2) == 0){
@@ -414,27 +395,31 @@ static void run_demo(void)
             }
             run_count++;
 
-#ifdef PRINT_TIME
-            cnn_completed_time = utils_get_time_ms();
-#endif
+            cnn_completed_time = GET_RTC_MS();
 
             send_img();
 
-#ifdef PRINT_TIME
-            qspi_completed_time = utils_get_time_ms();
+            qspi_completed_time = GET_RTC_MS();
 
-            PR_TIMER("Capture : %d", capture_completed_time - capture_started_time);
-            PR_TIMER("CNN     : %d", cnn_completed_time - capture_completed_time);
-            PR_TIMER("QSPI    : %d", qspi_completed_time - cnn_completed_time);
-            PR_TIMER("Total   : %d\n\n\n", qspi_completed_time - capture_started_time);
-            timer_counter++;
-#endif
+            if (time_counter % 10 == 0) {
+                max78000_statistics.capture_duration_ms = (capture_completed_time - capture_started_time);
+                max78000_statistics.cnn_duration_ms = (cnn_completed_time - capture_completed_time);
+                max78000_statistics.communication_duration_ms = (qspi_completed_time - cnn_completed_time);
+                max78000_statistics.total_duration_ms = (qspi_completed_time - capture_started_time);
+
+                PR_DEBUG("Capture : %lu", max78000_statistics.capture_duration_ms);
+                PR_DEBUG("CNN     : %lu", max78000_statistics.cnn_duration_ms);
+                PR_DEBUG("QSPI    : %lu", max78000_statistics.communication_duration_ms);
+                PR_DEBUG("Total   : %lu\n\n", max78000_statistics.total_duration_ms);
+
+                spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, (uint8_t *) &max78000_statistics,
+                                    sizeof(max78000_statistics), QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES, &qspi_int);
+            }
+
+            time_counter++;
 
             camera_start_capture_image();
-
-#ifdef PRINT_TIME
-            capture_started_time = utils_get_time_ms();
-#endif
+            capture_started_time = GET_RTC_MS();
 
         }
     }
@@ -464,7 +449,7 @@ static void run_cnn(int x_offset, int y_offset)
     camera_get_image(&raw, &imgLen, &w, &h);
 
 #ifdef PRINT_TIME_CNN
-    uint32_t pass_time = utils_get_time_ms();
+    uint32_t pass_time = GET_RTC_MS();
 #endif
 
     cnn_load();
@@ -474,8 +459,8 @@ static void run_cnn(int x_offset, int y_offset)
     uint8_t * data = raw;
 
 #ifdef PRINT_TIME_CNN
-    PR_TIMER("CNN init : %d", utils_get_time_ms() - pass_time);
-    pass_time = utils_get_time_ms();
+    PR_TIMER("CNN init : %d", GET_RTC_MS() - pass_time);
+    pass_time = GET_RTC_MS();
 #endif
 
     data =  raw + ((LCD_HEIGHT - (FACEID_HEIGHT))/2)*LCD_WIDTH*LCD_BYTE_PER_PIXEL;
@@ -505,27 +490,27 @@ static void run_cnn(int x_offset, int y_offset)
     }
 
 #ifdef PRINT_TIME_CNN
-    PR_TIMER("CNN load : %d", utils_get_time_ms() - pass_time);
-    pass_time = utils_get_time_ms();
+    PR_TIMER("CNN load : %d", GET_RTC_MS() - pass_time);
+    pass_time = GET_RTC_MS();
 #endif
     cnn_wait();
 
 #ifdef PRINT_TIME_CNN
-    PR_TIMER("CNN wait : %d", utils_get_time_ms() - pass_time);
-    pass_time = utils_get_time_ms();
+    PR_TIMER("CNN wait : %d", GET_RTC_MS() - pass_time);
+    pass_time = GET_RTC_MS();
 #endif
 
     cnn_unload(embedding_result);
 
 #ifdef PRINT_TIME_CNN
-    PR_TIMER("CNN unload : %d", utils_get_time_ms() - pass_time);
-    pass_time = utils_get_time_ms();
+    PR_TIMER("CNN unload : %d", GET_RTC_MS() - pass_time);
+    pass_time = GET_RTC_MS();
 #endif
 
     int pResult = calculate_minDistance(embedding_result);
 
 #ifdef PRINT_TIME_CNN
-    PR_TIMER("Embedding calc : %d", utils_get_time_ms() - pass_time);
+    PR_TIMER("Embedding calc : %d", GET_RTC_MS() - pass_time);
 #endif
 
     if ( pResult == 0 ) {

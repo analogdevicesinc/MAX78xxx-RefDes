@@ -246,6 +246,8 @@
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
+#define GET_RTC_MS()  ((MXC_RTC_GetSecond() * 1000) + (( MXC_RTC_GetSubSecond() / 4096.0)*1000))
+
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -531,9 +533,10 @@ typedef struct __attribute__((packed)) {
 } device_serial_num_t;
 
 typedef struct __attribute__((packed)) {
-    float cnn_duration;
-    float capture_duration;
-    float communication_duration;
+    uint32_t cnn_duration_ms;
+    uint32_t capture_duration_ms;
+    uint32_t communication_duration_ms;
+    uint32_t total_duration_ms;
 } max78000_statistics_t;
 
 typedef struct __attribute__((packed)) {
