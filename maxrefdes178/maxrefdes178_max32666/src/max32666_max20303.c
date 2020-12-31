@@ -196,6 +196,9 @@ int max20303_init(void)
     // Boost converter	set to 9.6V and enable when needed
 
     // Configure LDO and Buck outputs
+    max20303_buck2(0);
+    MXC_Delay(MXC_DELAY_MSEC(100));
+
     max20303_boost(0, 0x10);
     MXC_Delay(MXC_DELAY_MSEC(10));
 
