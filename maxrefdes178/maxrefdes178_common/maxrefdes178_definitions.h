@@ -500,6 +500,7 @@ typedef struct __attribute__((packed)) {
 
 typedef struct __attribute__((packed)) {
     packet_info_t packet_info;
+    uint8_t command;
 } payload_packet_header_t;
 
 typedef struct __attribute__((packed)) {

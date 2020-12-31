@@ -239,8 +239,6 @@ int main(void)
 
     PR_INFO("core 0 init completed");
 
-
-
     run_application();
 
     return -1;
@@ -472,62 +470,4 @@ static void core1_irq_init(void)
 //    for (IRQn_Type irq = PF_IRQn; irq < MXC_IRQ_EXT_COUNT; irq++) {
 //        NVIC_DisableIRQ(irq);
 //    }
-}
-
-void debugHardfault(uint32_t *sp)
-{
-    uint32_t cfsr  = SCB->CFSR;
-    uint32_t hfsr  = SCB->HFSR;
-    uint32_t mmfar = SCB->MMFAR;
-    uint32_t bfar  = SCB->BFAR;
-    uint32_t afsr  = SCB->AFSR;
-
-    uint32_t r0  = sp[0];
-    uint32_t r1  = sp[1];
-    uint32_t r2  = sp[2];
-    uint32_t r3  = sp[3];
-    uint32_t r12 = sp[4];
-    uint32_t lr  = sp[5];
-    uint32_t pc  = sp[6];
-    uint32_t psr = sp[7];
-
-    printf("\n\n\n\n!!!!!\nCore %d Hard Fault\n!!!!!\n\n\n\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1));
-    printf("SCB->CFSR   0x%08lx\n", cfsr);
-    printf("SCB->HFSR   0x%08lx\n", hfsr);
-    printf("SCB->MMFAR  0x%08lx\n", mmfar);
-    printf("SCB->BFAR   0x%08lx\n", bfar);
-    printf("SCB->AFSR   0x%08lx\n", afsr);
-    printf("\n");
-
-    printf("SP          0x%08lx\n", (uint32_t)sp);
-    printf("R0          0x%08lx\n", r0);
-    printf("R1          0x%08lx\n", r1);
-    printf("R2          0x%08lx\n", r2);
-    printf("R3          0x%08lx\n", r3);
-    printf("R12         0x%08lx\n", r12);
-    printf("LR          0x%08lx\n", lr);
-    printf("PC          0x%08lx\n", pc);
-    printf("PSR         0x%08lx\n", psr);
-    printf("\n\n\n");
-
-    // Wait a little before reset to avoid reset loop
-    for (unsigned int i = 0; i < 30000000; i++) {}
-    MXC_GCR->rstr0 = 0xffffffff;
-}
-
-__attribute__( (naked) )
-void HardFault_Handler(void)
-{
-    //    __asm__("BKPT");
-
-    __asm volatile
-    (
-        "tst lr, #4                                    \n"
-        "ite eq                                        \n"
-        "mrseq r0, msp                                 \n"
-        "mrsne r0, psp                                 \n"
-        "ldr r1, debugHardfault_address                \n"
-        "bx r1                                         \n"
-        "debugHardfault_address: .word debugHardfault  \n"
-    );
 }

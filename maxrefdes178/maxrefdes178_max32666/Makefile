@@ -80,6 +80,7 @@ SRCS += max32666_commbuf.c
 SRCS += max32666_commhandler.c
 SRCS += max32666_data.c
 SRCS += max32666_expander.c
+SRCS += max32666_fault.c
 SRCS += max32666_fonts.c
 SRCS += max32666_i2c.c
 SRCS += max32666_lcd.c
@@ -127,7 +128,6 @@ PROJ_CFLAGS+=-Werror
 
 # Set MXC_OPTIMIZE to override the default optimization level 
 ifdef RELEASE
-PROJ_CFLAGS+=-DMAXREFDES178_RELEASE
 MXC_OPTIMIZE_CFLAGS=-Ofast
 else
 MXC_OPTIMIZE_CFLAGS=-Og
@@ -135,7 +135,8 @@ endif
 
 # Point this variable to a linker file to override the default file
 LINKER=$(TARGET_LC).ld
-LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+LINKERFILE=maxrefdes178_max32666.ld
 
 ifeq ($(MAKECMDGOALS),sla)
 LINKER=$(TARGET_LC)_sla.ld

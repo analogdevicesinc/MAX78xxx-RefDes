@@ -48,7 +48,7 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_MODULE_NAME   "commhand"
+#define S_MODULE_NAME   "comm"
 
 
 //-----------------------------------------------------------------------------
@@ -105,14 +105,14 @@ int commhandler_worker(void)
         PR_INFO("Command %02X", ble_packet_container.packet.command_packet.header.command);
         PR_INFO("Command size %d", ble_packet_container.packet.command_packet.header.command_size);
         PR_INFO("Payload: ");
-        for (int i = 0; i < ble_packet_container.size - sizeof(payload_packet_header_t); i++) {
-            PR("0x%02hhX ", ble_packet_container.packet.command_packet.payload[i]);
+        for (int i = 0; i < ble_packet_container.size - sizeof(command_packet_header_t); i++) {
+            PR("%02hhX ", ble_packet_container.packet.command_packet.payload[i]);
         }
         PR("\n");
     } else if (ble_packet_container.packet.packet_info.type == PACKET_TYPE_PAYLOAD) {
         PR_INFO("Payload: ");
-        for (int i = 0; i < ble_packet_container.size - sizeof(command_packet_header_t); i++) {
-            PR("0x%02hhX ", ble_packet_container.packet.payload_packet.payload[i]);
+        for (int i = 0; i < ble_packet_container.size - sizeof(payload_packet_header_t); i++) {
+            PR("%02hhX ", ble_packet_container.packet.payload_packet.payload[i]);
         }
         PR("\n");
     }

@@ -159,15 +159,27 @@ static const uint8_t periphAdvDataDisc[] =
     DM_ADV_TYPE_FLAGS,                      /*! AD type */
     DM_FLAG_LE_GENERAL_DISC |               /*! flags */
     DM_FLAG_LE_BREDR_NOT_SUP,
+
+    /*! manufacturer specific data */
+    3,                                      /*! length */
+    DM_ADV_TYPE_MANUFACTURER,               /*! AD type */
+    UINT16_TO_BYTES(HCI_ID_PACKETCRAFT),    /*! company ID */
+
     /*! device name */
-    7,                                      /*! length */
+    13,                                      /*! length */
     DM_ADV_TYPE_LOCAL_NAME,                 /*! AD type */
     'M',
     'A',
     'X',
-    'C',
-    'A',
-    'M'
+    'R',
+    'E',
+    'F',
+    'D',
+    'E',
+    'S',
+    '1',
+    '7',
+    '8'
 };
 
 /*! client characteristic configuration descriptors settings, indexed by above enumeration */
@@ -217,7 +229,7 @@ static void periphDmCback(dmEvt_t *pDmEvt)
     dmEvt_t   *pMsg;
     uint16_t  len;
 
-    PR_INFO("Event: 0x%02hhX", pDmEvt->hdr.event);
+    PR_DEBUG("Event: 0x%02hhX", pDmEvt->hdr.event);
 
     len = DmSizeOfEvt(pDmEvt);
 
@@ -252,7 +264,7 @@ static void periphAttCback(attEvt_t *pEvt)
         break;
 
     default:
-        PR_INFO("Event: 0x%02hhX Status: 0x%02hhX Handle: %d", pEvt->hdr.event, pEvt->hdr.status, pEvt->handle);
+        PR_DEBUG("Event: 0x%02hhX Status: 0x%02hhX Handle: %d", pEvt->hdr.event, pEvt->hdr.status, pEvt->handle);
         break;
     }
 
@@ -268,7 +280,7 @@ static void periphAttCback(attEvt_t *pEvt)
 // Application ATTS client characteristic configuration callback.
 static void periphCccCback(attsCccEvt_t *pEvt)
 {
-    PR_INFO("Event: 0x%02hhX idx: %d Value: %d", pEvt->hdr.event, pEvt->idx, pEvt->value);
+    PR_DEBUG("Event: 0x%02hhX idx: %d Value: %d", pEvt->hdr.event, pEvt->idx, pEvt->value);
 }
 
 // ATTS write callback for proprietary data service.
@@ -344,12 +356,12 @@ static void periphProcMsg(dmEvt_t *pMsg)
         timestamps.notification_received = GET_RTC_MS();
 
         PR_INFO("Connection opened");
-        PR_INFO("connId: %d", pMsg->connOpen.hdr.param);
-        PR_INFO("handle: %d", pMsg->connOpen.handle);
+        PR_DEBUG("connId: %d", pMsg->connOpen.hdr.param);
+        PR_DEBUG("handle: %d", pMsg->connOpen.handle);
         PR_INFO("peerAddr: %02X:%02X:%02X:%02X:%02X:%02X",
                 pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
                 pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
-        PR_INFO("MTU: %d", AttGetMtu(periphCb.connId));
+        PR_DEBUG("MTU: %d", AttGetMtu(periphCb.connId));
         memcpy(device_status.ble_connected_peer_mac, pMsg->connOpen.peerAddr, sizeof(device_status.ble_connected_peer_mac));
 
         uiEvent = APP_UI_CONN_OPEN;
@@ -387,7 +399,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
          break;
 
      default:
-         PR_INFO("Event 0x%02hhX", pMsg->hdr.event);
+         PR_DEBUG("Event 0x%02hhX", pMsg->hdr.event);
          break;
     }
 
@@ -568,7 +580,7 @@ static void mainWsfInit(void)
 #if (WSF_TOKEN_ENABLED == TRUE) || (WSF_TRACE_ENABLED == TRUE)
     //ty  WsfTraceRegisterHandler(WsfBufIoWrite);
     WsfTraceRegisterHandler(max32666_trace);
-    WsfTraceEnable(TRUE);
+//    WsfTraceEnable(TRUE);
 #endif
 
     AppTerminalInit();
@@ -606,7 +618,7 @@ static void ble_receive(uint16_t dataLen, uint8_t *data)
 
     PR_INFO("RX len: %d", dataLen);
     for (int i = 0; i < dataLen; i++) {
-      PR("0x%02hhX ", data[i]);
+      PR("%02hhX ", data[i]);
     }
     PR("\n");
 
@@ -657,7 +669,7 @@ int ble_send_indication(uint16_t dataLen, uint8_t *data)
 
     PR_INFO("TX indication len: %d", dataLen);
     for (int i = 0; i < dataLen; i++) {
-        PR("0x%02hhX ", data[i]);
+        PR("%02hhX ", data[i]);
     }
     PR("\n");
 
