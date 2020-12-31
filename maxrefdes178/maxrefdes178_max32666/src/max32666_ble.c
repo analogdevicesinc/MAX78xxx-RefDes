@@ -335,6 +335,8 @@ static void periphProcMsg(dmEvt_t *pMsg)
         periphCb.connected = TRUE;
         periphCb.connectionHandle = pMsg->connOpen.handle;
         device_status.ble_connected = 1;
+        device_status.ble_expected_rx_seq = 0;
+        device_status.ble_next_tx_seq = 0;
 
         snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE %02X:%02X:%02X:%02X:%02X:%02X connected!",
                 pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
@@ -356,6 +358,8 @@ static void periphProcMsg(dmEvt_t *pMsg)
     case DM_CONN_CLOSE_IND:
         periphCb.connected = FALSE;
         device_status.ble_connected = 0;
+        device_status.ble_expected_rx_seq = 0;
+        device_status.ble_next_tx_seq = 0;
         memset(device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
 
         snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE disconnected!",

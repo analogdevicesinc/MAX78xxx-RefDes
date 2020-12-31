@@ -81,6 +81,8 @@ typedef struct {
     classification_result_t classification_audio;
     uint8_t ble_connected;
     uint8_t ble_connected_peer_mac[6];
+    uint8_t ble_expected_rx_seq;
+    uint8_t ble_next_tx_seq;
     faceid_embed_update_status_e faceid_embed_update_status_e;  // TODO
 } device_status_t;
 

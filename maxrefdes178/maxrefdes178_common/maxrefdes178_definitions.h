@@ -486,14 +486,20 @@ typedef struct __attribute__((packed)) {
     uint8_t packet_type;
 } qspi_packet_header_t;
 
+#define PACKET_SEQ_MASK   0x7F
 typedef struct __attribute__((packed)) {
-    uint8_t packet_info;
+    uint8_t type : 1;
+    uint8_t seq  : 7;
+} packet_info_t;
+
+typedef struct __attribute__((packed)) {
+    packet_info_t packet_info;
     uint8_t command;
     uint32_t command_size;
 } command_packet_header_t;
 
 typedef struct __attribute__((packed)) {
-    uint8_t packet_info;
+    packet_info_t packet_info;
 } payload_packet_header_t;
 
 typedef struct __attribute__((packed)) {
@@ -510,7 +516,7 @@ typedef struct __attribute__((packed)) {
     uint8_t size;
     uint8_t status;
     union {
-        uint8_t packet_info;
+        packet_info_t packet_info;
         command_packet_t command_packet;
         payload_packet_t payload_packet;
     } packet;

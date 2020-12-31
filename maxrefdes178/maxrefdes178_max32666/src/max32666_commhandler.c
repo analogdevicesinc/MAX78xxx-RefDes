@@ -40,6 +40,7 @@
 
 #include "max32666_commbuf.h"
 #include "max32666_commhandler.h"
+#include "max32666_data.h"
 #include "max32666_debug.h"
 #include "maxrefdes178_definitions.h"
 
@@ -93,8 +94,14 @@ int commhandler_worker(void)
         return E_NO_ERROR;
     }
 
+    device_status.ble_expected_rx_seq += 1;
+    device_status.ble_expected_rx_seq %= PACKET_SEQ_MASK;
+    if (device_status.ble_expected_rx_seq != ble_packet_container.packet.packet_info.seq) {
+        PR_ERROR("Incorrect seq expected %d received %d", device_status.ble_expected_rx_seq, ble_packet_container.packet.packet_info.seq);
+    }
+
     PR_INFO("BLE RX packet size %d", ble_packet_container.size);
-    if (ble_packet_container.packet.packet_info == PACKET_TYPE_COMMAND) {
+    if (ble_packet_container.packet.packet_info.type == PACKET_TYPE_COMMAND) {
         PR_INFO("Command %02X", ble_packet_container.packet.command_packet.header.command);
         PR_INFO("Command size %d", ble_packet_container.packet.command_packet.header.command_size);
         PR_INFO("Payload: ");
@@ -102,7 +109,7 @@ int commhandler_worker(void)
             PR("0x%02hhX ", ble_packet_container.packet.command_packet.payload[i]);
         }
         PR("\n");
-    } else if (ble_packet_container.packet.packet_info == PACKET_TYPE_PAYLOAD) {
+    } else if (ble_packet_container.packet.packet_info.type == PACKET_TYPE_PAYLOAD) {
         PR_INFO("Payload: ");
         for (int i = 0; i < ble_packet_container.size - sizeof(command_packet_header_t); i++) {
             PR("0x%02hhX ", ble_packet_container.packet.payload_packet.payload[i]);
@@ -117,4 +124,3 @@ int commhandler_init(void)
 {
     return E_NO_ERROR;
 }
-
