@@ -69,7 +69,12 @@
 #define LCD_DATA_SIZE                      (LCD_WIDTH * LCD_HEIGHT * LCD_BYTE_PER_PIXEL)
 #define LCD_SUBTITLE_SIZE                  32
 #define LCD_TOPTITLE_SIZE                  32
+#define LCD_NOTIFICATION_SIZE              40
 #define LCD_ROTATION                       2  // 0-3
+
+#define LCD_CLASSIFICATION_DURATION        1000  // ms
+#define LCD_NO_VIDEO_DURATION              300   // ms
+#define LCD_NOTIFICATION_DURATION          5000  // ms
 
 // Common Camera
 #define CAMERA_WIDTH                       LCD_WIDTH
@@ -85,9 +90,6 @@
 #define FACEID_RECTANGLE_X2                FACEID_RECTANGLE_X1 + FACEID_WIDTH
 #define FACEID_RECTANGLE_Y2                FACEID_RECTANGLE_Y1 + FACEID_HEIGHT
 
-// Common KWS
-#define KWS_PRINT_DURATION                 1000
-
 // Common BLE
 #define BLE_MAX_MTU_SIZE                   256
 #define BLE_MAX_MTU_REQUEST_SIZE           (BLE_MAX_MTU_SIZE - 4)
@@ -95,7 +97,7 @@
 
 // Common communication
 #define COMMUNICATION_MAX_PACKET_SIZE      BLE_MAX_PACKET_SIZE
-
+#define COMMUNICATION_STATISTICS_INTERVAL  1000  // ms
 
 /*** MAX32666 ***/
 // MAX32666 PINS
@@ -544,6 +546,8 @@ typedef struct __attribute__((packed)) {
     max78000_statistics_t max78000_audio;
     float lcd_fps;
     float battery_level;
+    uint32_t max78000_video_power_mw;
+    uint32_t max78000_audio_power_mw;
 } device_statistics_t;
 
 typedef struct __attribute__((packed)) {

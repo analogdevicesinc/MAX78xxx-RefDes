@@ -55,6 +55,10 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
+int commhandler_send_audio_classification(void);
+int commhandler_send_video_classification(void);
+int commhandler_send_statistics(void);
+
 int commhandler_init(void);
 int commhandler_worker(void);
 

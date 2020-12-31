@@ -81,16 +81,27 @@ typedef struct {
     classification_result_t classification_audio;
     uint8_t ble_connected;
     uint8_t ble_connected_peer_mac[6];
+    faceid_embed_update_status_e faceid_embed_update_status_e;  // TODO
 } device_status_t;
 
 typedef struct {
     uint8_t buffer[LCD_DATA_SIZE];
     char subtitle[LCD_SUBTITLE_SIZE];
-    char toptitle[LCD_SUBTITLE_SIZE];
+    char toptitle[LCD_TOPTITLE_SIZE];
+    char notification[LCD_NOTIFICATION_SIZE];
     uint16_t subtitle_color;
     uint16_t toptitle_color;
+    uint16_t notification_color;
     uint16_t frame_color;
 } lcd_data_t;
+
+typedef struct {
+    uint32_t video_data_received;
+    uint32_t audio_result_received;
+    uint32_t notification_received;
+    uint32_t screen_drew;
+    uint32_t statistics_sent;
+} timestamps_t;
 
 
 //-----------------------------------------------------------------------------
@@ -100,6 +111,7 @@ extern lcd_data_t lcd_data;
 extern device_status_t device_status;
 extern device_settings_t device_settings;
 extern device_info_t device_info;
+extern timestamps_t timestamps;
 
 
 //-----------------------------------------------------------------------------

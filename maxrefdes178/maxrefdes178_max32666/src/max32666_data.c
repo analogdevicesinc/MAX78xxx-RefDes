@@ -61,6 +61,8 @@ device_status_t device_status = {0};
 
 device_info_t device_info = {0};
 
+timestamps_t timestamps = {0};
+
 device_settings_t device_settings = {
         .enable_ble = 1,
         .enable_lcd = 1,
@@ -70,10 +72,10 @@ device_settings_t device_settings = {
         .enable_max78000_video_cnn = 1,
         .enable_max78000_video_flash_led = 0,
         .enable_max78000_video_and_audio_power = 1,
-        .enable_show_statistics_lcd = 1,
-        .enable_show_probabilty_lcd = 1,
-        .enable_send_statistics = 0,
-        .enable_send_classification = 0,
+        .enable_show_statistics_lcd = 0,
+        .enable_show_probabilty_lcd = 0,
+        .enable_send_statistics = 1,
+        .enable_send_classification = 1,
 };
 
 //-----------------------------------------------------------------------------

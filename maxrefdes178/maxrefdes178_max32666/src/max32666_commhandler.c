@@ -58,6 +58,7 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
+static packet_container_t ble_packet_container = {0};
 
 
 //-----------------------------------------------------------------------------
@@ -68,11 +69,52 @@
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
+int commhandler_send_audio_classification(void)
+{
+
+    return E_NO_ERROR;
+}
+
+int commhandler_send_video_classification(void)
+{
+
+    return E_NO_ERROR;
+}
+
+int commhandler_send_statistics(void)
+{
+
+    return E_NO_ERROR;
+}
+
+int commhandler_worker(void)
+{
+    if (commbuf_pop_rx_ble(&ble_packet_container) != COMMBUF_STATUS_OK) {
+        return E_NO_ERROR;
+    }
+
+    PR_INFO("BLE RX packet size %d", ble_packet_container.size);
+    if (ble_packet_container.packet.packet_info == PACKET_TYPE_COMMAND) {
+        PR_INFO("Command %02X", ble_packet_container.packet.command_packet.header.command);
+        PR_INFO("Command size %d", ble_packet_container.packet.command_packet.header.command_size);
+        PR_INFO("Payload: ");
+        for (int i = 0; i < ble_packet_container.size - sizeof(payload_packet_header_t); i++) {
+            PR("0x%02hhX ", ble_packet_container.packet.command_packet.payload[i]);
+        }
+        PR("\n");
+    } else if (ble_packet_container.packet.packet_info == PACKET_TYPE_PAYLOAD) {
+        PR_INFO("Payload: ");
+        for (int i = 0; i < ble_packet_container.size - sizeof(command_packet_header_t); i++) {
+            PR("0x%02hhX ", ble_packet_container.packet.payload_packet.payload[i]);
+        }
+        PR("\n");
+    }
+
+    return E_NO_ERROR;
+}
 
 int commhandler_init(void)
 {
-
-
     return E_NO_ERROR;
 }
 

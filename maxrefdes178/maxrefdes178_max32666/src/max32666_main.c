@@ -87,6 +87,7 @@ static volatile int core1_init_done = 0;
 static void core0_irq_init(void);
 static void core1_irq_init(void);
 static void run_application(void);
+static void refresh_screen(void);
 
 
 //-----------------------------------------------------------------------------
@@ -245,73 +246,37 @@ int main(void)
 
 static void run_application(void)
 {
-    uint32_t audio_result_show_time = 0;
-    uint32_t lcd_draw_time = 0;
     qspi_packet_type_e qspi_packet_type = 0;
-    char fps_string[12] = {0};
-    char video_capture_string[12] = {0};
-    char video_cnn_string[12] = {0};
-    char video_comm_string[12] = {0};
-    char audio_cnn_string[12] = {0};
-
-    packet_container_t ble_packet_container = {0};
     lcd_data.toptitle_color = YELLOW;
+    lcd_data.notification_color = BLUE;
 
     while (1) {
         // Handle QSPI RX
         if (qspi_worker(&qspi_packet_type) == QSPI_STATUS_NEW_DATA) {
             switch(qspi_packet_type) {
             case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
-                if (device_settings.enable_max78000_video_cnn) {
-                    if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
-                        // if (device_settings.enable_show_probabilty_lcd)
-                        strncpy(lcd_data.subtitle, device_status.classification_video.result, sizeof(lcd_data.subtitle) - 1);
-                        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
-                    }
-
-                    fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
-                            FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, lcd_data.frame_color, lcd_data.buffer);
-                    fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1,
-                            FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, lcd_data.frame_color, lcd_data.buffer);
-                    fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2,
-                            FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
-                    fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3,
-                            FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
-                }
+                timestamps.video_data_received = GET_RTC_MS();
 
                 if (device_settings.enable_lcd) {
-                    device_status.statistics.lcd_fps = (float) 1000.0 / (float)(GET_RTC_MS() - lcd_draw_time);
-                    lcd_draw_time = GET_RTC_MS();
-                    if (device_settings.enable_show_statistics_lcd) {
-                        snprintf(fps_string, sizeof(fps_string) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
-                        snprintf(video_capture_string, sizeof(video_capture_string) - 1, "vCap:%d",
-                                device_status.statistics.max78000_video.capture_duration_ms);
-                        snprintf(video_cnn_string, sizeof(video_cnn_string) - 1, "vCNN:%d",
-                                device_status.statistics.max78000_video.cnn_duration_ms);
-                        snprintf(video_comm_string, sizeof(video_comm_string) - 1, "vCom:%d",
-                                device_status.statistics.max78000_video.communication_duration_ms);
-                        snprintf(audio_cnn_string, sizeof(audio_cnn_string) - 1, "aCNN:%d",
-                                device_status.statistics.max78000_audio.cnn_duration_ms);
-
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 3, fps_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 15, video_capture_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 27, video_cnn_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 39, video_comm_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, 51, audio_cnn_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-                    }
-
-                    if (lcd_draw_time - audio_result_show_time < KWS_PRINT_DURATION) {
-                        if (device_settings.enable_show_probabilty_lcd) {
-                            snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "%s %0.1f",
-                                    device_status.classification_audio.result, (double) device_status.classification_audio.probabily);
-                        } else {
-                            strncpy(lcd_data.toptitle, device_status.classification_audio.result, sizeof(lcd_data.toptitle) - 1);
+                    // Draw FaceID frame and result
+                    if (device_settings.enable_max78000_video_cnn) {
+                        if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
+                            // if (device_settings.enable_show_probabilty_lcd)
+                            strncpy(lcd_data.subtitle, device_status.classification_video.result, sizeof(lcd_data.subtitle) - 1);
+                            fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
                         }
 
-                        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
+                                FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, lcd_data.frame_color, lcd_data.buffer);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1,
+                                FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, lcd_data.frame_color, lcd_data.buffer);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2,
+                                FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
+                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3,
+                                FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
                     }
 
-                    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data.buffer);
+                    refresh_screen();
                 }
                 break;
             case QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES:
@@ -327,9 +292,13 @@ static void run_application(void)
                 } else if (device_status.classification_video.classification == CLASSIFICATION_NOTHING) {
                     lcd_data.frame_color = WHITE;
                 }
+
+                if (device_settings.enable_send_classification && device_status.ble_connected) {
+                    commhandler_send_video_classification();
+                }
                 break;
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
-                audio_result_show_time = GET_RTC_MS();
+                timestamps.audio_result_received = GET_RTC_MS();
 
                 if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
                     device_settings.enable_lcd = 0;
@@ -350,32 +319,94 @@ static void run_application(void)
                 } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
                     device_settings.enable_show_statistics_lcd = 0;
                 }
+
+                if (device_settings.enable_send_classification && device_status.ble_connected) {
+                    commhandler_send_audio_classification();
+                }
                 break;
             default:
                 break;
             }
         }
+
+        if (device_settings.enable_send_statistics && device_status.ble_connected) {
+            if ((GET_RTC_MS() - timestamps.statistics_sent) > COMMUNICATION_STATISTICS_INTERVAL) {
+                timestamps.statistics_sent = GET_RTC_MS();
+                commhandler_send_statistics();
+            }
+        }
+
+        // If video data is not received for a long time draw logo
+        if (device_settings.enable_lcd) {
+            if ((GET_RTC_MS() - timestamps.screen_drew) > LCD_NO_VIDEO_DURATION) {
+                memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
+                refresh_screen();
+            }
+        }
+
+        // Handle RX communication
+        commhandler_worker();
+    }
+}
+
+static void refresh_screen(void)
+{
+    static char statistics_string[20] = {0};
+
+    if (device_settings.enable_show_statistics_lcd) {
+        int line_pos = 3;
+
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "Bat:%.2f", (double)device_status.statistics.battery_level);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_ms);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCNN:%d", device_status.statistics.max78000_video.cnn_duration_ms);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_ms);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "vPow:%d", device_status.statistics.max78000_video_power_mw);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "aCNN:%d", device_status.statistics.max78000_audio.cnn_duration_ms);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "aPow:%d", device_status.statistics.max78000_audio_power_mw);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
     }
 
-    // Handle SPI RX
-    if (commbuf_pop_rx_ble(&ble_packet_container) == COMMBUF_STATUS_OK) {
-        PR_INFO("BLE RX packet size %d", ble_packet_container.size);
-        if (ble_packet_container.packet.packet_info == PACKET_TYPE_COMMAND) {
-            PR_INFO("Command %02X", ble_packet_container.packet.command_packet.header.command);
-            PR_INFO("Command size %d", ble_packet_container.packet.command_packet.header.command_size);
-            PR_INFO("Payload: ");
-            for (int i = 0; i < ble_packet_container.size - sizeof(payload_packet_header_t); i++) {
-                PR("0x%02hhX ", ble_packet_container.packet.command_packet.payload[i]);
-            }
-            PR("\n");
-        } else if (ble_packet_container.packet.packet_info == PACKET_TYPE_PAYLOAD) {
-            PR_INFO("Payload: ");
-            for (int i = 0; i < ble_packet_container.size - sizeof(command_packet_header_t); i++) {
-                PR("0x%02hhX ", ble_packet_container.packet.payload_packet.payload[i]);
-            }
-            PR("\n");
-        }
+    if ((timestamps.screen_drew - timestamps.notification_received) < LCD_NOTIFICATION_DURATION) {
+        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
     }
+
+    if ((timestamps.screen_drew - timestamps.audio_result_received) < LCD_CLASSIFICATION_DURATION) {
+        if (device_settings.enable_show_probabilty_lcd) {
+            snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "%s %0.1f",
+                    device_status.classification_audio.result, (double) device_status.classification_audio.probabily);
+        } else {
+            strncpy(lcd_data.toptitle, device_status.classification_audio.result, sizeof(lcd_data.toptitle) - 1);
+        }
+
+        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+    }
+
+    device_status.statistics.lcd_fps = (float) 1000.0 / (float)(GET_RTC_MS() - timestamps.screen_drew);
+    timestamps.screen_drew = GET_RTC_MS();
+    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data.buffer);
 }
 
 // Similar to Core 0, the entry point for Core 1
@@ -450,6 +481,12 @@ void HardFault_Handler(void)
                     (SCB->VTOR == (unsigned long)&__isr_vector_core1),
                     SCB->CFSR, SCB->BFAR, SCB->MMFAR, SCB->HFSR);
             cnt = 1;
+#ifdef MAXREFDES178_RELEASE
+    // Wait a little before reset to avoid reset loop
+    for (unsigned int i = 0; i < 20000000; i++) {}
+    MXC_GCR->rstr0 = 0xffffffff;
+#endif
+
 //            __asm__("BKPT");
         }
         cnt++;

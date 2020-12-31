@@ -58,6 +58,7 @@
 #endif
 #include <pal_bb.h>
 #include <pal_cfg.h>
+#include <rtc.h>
 #include <sec_api.h>
 #include <smp_api.h>
 #include <smp_handler.h>
@@ -335,6 +336,11 @@ static void periphProcMsg(dmEvt_t *pMsg)
         periphCb.connectionHandle = pMsg->connOpen.handle;
         device_status.ble_connected = 1;
 
+        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE %02X:%02X:%02X:%02X:%02X:%02X connected!",
+                pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
+                pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
+        timestamps.notification_received = GET_RTC_MS();
+
         PR_INFO("Connection opened");
         PR_INFO("connId: %d", pMsg->connOpen.hdr.param);
         PR_INFO("handle: %d", pMsg->connOpen.handle);
@@ -351,6 +357,11 @@ static void periphProcMsg(dmEvt_t *pMsg)
         periphCb.connected = FALSE;
         device_status.ble_connected = 0;
         memset(device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
+
+        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE disconnected!",
+                pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
+                pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
+        timestamps.notification_received = GET_RTC_MS();
 
         PR_INFO("Connection closed status 0x%02hhX, reason 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
         switch (pMsg->connClose.reason)
