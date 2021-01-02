@@ -460,14 +460,18 @@ int main(void)
                 } else {
                     classification_result.classification = CLASSIFICATION_DETECTED;
                     PR_INFO("Detected: %s (%0.1f%%)", keywords[out_class], probability);
-
-                    memcpy(classification_result.result, keywords[out_class], sizeof(classification_result.result));
-                    classification_result.probabily = probability;
-
-                    spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI,
-                            (uint8_t *) &classification_result, sizeof(classification_result),
-                            QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES, &qspi_int);
                 }
+
+                if (strcmp(keywords[out_class], "Unknown") == 0) {
+                    classification_result.classification = CLASSIFICATION_UNKNOWN;
+                }
+
+                memcpy(classification_result.result, keywords[out_class], sizeof(classification_result.result));
+                classification_result.probabily = probability;
+
+                spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI,
+                        (uint8_t *) &classification_result, sizeof(classification_result),
+                        QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES, &qspi_int);
 
                 max78000_statistics.cnn_duration_ms = cnn_time / 1000;
                 spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI, (uint8_t *) &max78000_statistics,

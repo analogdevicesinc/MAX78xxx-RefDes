@@ -61,5 +61,6 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi);
 void spi_dma_master_init(mxc_spi_regs_t *spi, sys_map_t map, uint32_t speed, uint8_t quad);
 void spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, mxc_dma_reqsel_t reqsel, void (*callback)(void));
 int spi_dma_wait(uint8_t ch, mxc_spi_regs_t *spi);
+int spi_dma_busy_flag(uint8_t ch);
 
 #endif /* _MAX32666_SPI_DMA_H_ */

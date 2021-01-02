@@ -311,12 +311,20 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
  */
 void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
 {
+//    if (spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
+//        return;
+//    }
+
     lcd_setAddrWindow(x, y, x + w - 1, y + h - 1);
 
     GPIO_SET(lcd_dc_pin);
     spi_assert_cs();
 
     spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, NULL, (w * h * LCD_BYTE_PER_PIXEL), MAX32666_LCD_DMA_REQSEL_SPITX, spi_deassert_cs);
+
+//    spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, NULL, (w * h * LCD_BYTE_PER_PIXEL), MAX32666_LCD_DMA_REQSEL_SPITX, NULL);
+//    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
+//    spi_deassert_cs();
 }
 
 int lcd_init(void)

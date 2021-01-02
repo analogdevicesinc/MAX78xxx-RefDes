@@ -98,7 +98,6 @@ typedef struct {
 } lcd_data_t;
 
 typedef struct {
-    uint32_t video_data_received;
     uint32_t audio_result_received;
     uint32_t notification_received;
     uint32_t screen_drew;

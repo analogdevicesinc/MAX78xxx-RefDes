@@ -59,6 +59,7 @@
 #include "max32666_max20303.h"
 #include "max32666_qspi.h"
 #include "max32666_sdcard.h"
+#include "max32666_spi_dma.h"
 #include "max32666_utils.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_version.h"
@@ -247,7 +248,6 @@ int main(void)
 static void run_application(void)
 {
     qspi_packet_type_e qspi_packet_type = 0;
-    lcd_data.toptitle_color = YELLOW;
     lcd_data.notification_color = BLUE;
 
     // Main application loop
@@ -256,28 +256,7 @@ static void run_application(void)
         if (qspi_worker(&qspi_packet_type) == QSPI_STATUS_SUCCESS_RX) {
             switch(qspi_packet_type) {
             case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
-                timestamps.video_data_received = GET_RTC_MS();
-
-                if (device_settings.enable_lcd) {
-                    // Draw FaceID frame and result
-                    if (device_settings.enable_max78000_video_cnn) {
-                        if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
-                            strncpy(lcd_data.subtitle, device_status.classification_video.result, sizeof(lcd_data.subtitle) - 1);
-                            fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
-                        }
-
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
-                                FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, lcd_data.frame_color, lcd_data.buffer);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1,
-                                FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, lcd_data.frame_color, lcd_data.buffer);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2,
-                                FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
-                        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3,
-                                FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
-                    }
-
-                    refresh_screen();
-                }
+                refresh_screen();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES:
                 if (device_status.classification_video.classification == CLASSIFICATION_UNKNOWN) {
@@ -300,25 +279,35 @@ static void run_application(void)
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
                 timestamps.audio_result_received = GET_RTC_MS();
 
-                if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
-                    device_settings.enable_lcd = 0;
-                    lcd_backlight(0);
-                } else if(strcmp(device_status.classification_audio.result, "ON") == 0) {
-                    device_settings.enable_lcd = 1;
-                    lcd_backlight(1);
-                } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
-                    device_settings.enable_max78000_video_cnn = 1;
-                } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
-                    device_settings.enable_max78000_video_cnn = 0;
-                } else if (strcmp(device_status.classification_audio.result, "UP") == 0) {
-                    device_settings.enable_show_probabilty_lcd = 1;
-                } else if(strcmp(device_status.classification_audio.result, "DOWN") == 0) {
-                    device_settings.enable_show_probabilty_lcd = 0;
-                } else if (strcmp(device_status.classification_audio.result, "YES") == 0) {
-                    device_settings.enable_show_statistics_lcd = 1;
-                } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
-                    device_settings.enable_show_statistics_lcd = 0;
+                if (device_status.classification_audio.classification == CLASSIFICATION_UNKNOWN) {
+                    lcd_data.toptitle_color = RED;
+                } else if (device_status.classification_audio.classification == CLASSIFICATION_LOW_CONFIDENCE) {
+                    lcd_data.toptitle_color = YELLOW;
+                } else if (device_status.classification_audio.classification == CLASSIFICATION_DETECTED) {
+                    lcd_data.toptitle_color = GREEN;
+
+                    if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
+                        device_settings.enable_lcd = 0;
+                        lcd_backlight(0);
+                    } else if(strcmp(device_status.classification_audio.result, "ON") == 0) {
+                        device_settings.enable_lcd = 1;
+                        lcd_backlight(1);
+                    } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
+                        device_settings.enable_max78000_video_cnn = 1;
+                    } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
+                        device_settings.enable_max78000_video_cnn = 0;
+                    } else if (strcmp(device_status.classification_audio.result, "UP") == 0) {
+                        device_settings.enable_show_probabilty_lcd = 1;
+                    } else if(strcmp(device_status.classification_audio.result, "DOWN") == 0) {
+                        device_settings.enable_show_probabilty_lcd = 0;
+                    } else if (strcmp(device_status.classification_audio.result, "YES") == 0) {
+                        device_settings.enable_show_statistics_lcd = 1;
+                    } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
+                        device_settings.enable_show_statistics_lcd = 0;
+                    }
                 }
+
+//                refresh_screen();
 
                 if (device_settings.enable_send_classification && device_status.ble_connected) {
                     ble_command_send_audio_classification();
@@ -337,15 +326,14 @@ static void run_application(void)
             }
         }
 
-        // If video data is not received for a long time draw logo
-        if (device_settings.enable_lcd) {
-            if ((GET_RTC_MS() - timestamps.screen_drew) > LCD_NO_VIDEO_DURATION) {
-                memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
-                refresh_screen();
-            }
+        // If video is disabled, draw logo and refresh periodically
+        if (!device_settings.enable_max78000_video &&
+                ((GET_RTC_MS() - timestamps.screen_drew) > LCD_NO_VIDEO_DURATION)) {
+            memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
+            refresh_screen();
         }
 
-        // Handle communication
+        // Handle BLE communication
         ble_command_worker();
     }
 }
@@ -353,6 +341,10 @@ static void run_application(void)
 static void refresh_screen(void)
 {
     static char statistics_string[20] = {0};
+
+    if (!device_settings.enable_lcd) {
+        return;
+    }
 
     if (device_settings.enable_show_statistics_lcd) {
         int line_pos = 3;
@@ -390,8 +382,21 @@ static void refresh_screen(void)
         line_pos += 12;
     }
 
-    if ((timestamps.screen_drew - timestamps.notification_received) < LCD_NOTIFICATION_DURATION) {
-        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
+    // Draw FaceID frame and result
+    if (device_settings.enable_max78000_video_cnn) {
+        if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
+            strncpy(lcd_data.subtitle, device_status.classification_video.result, sizeof(lcd_data.subtitle) - 1);
+            fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
+        }
+
+        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
+                FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, lcd_data.frame_color, lcd_data.buffer);
+        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1,
+                FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, lcd_data.frame_color, lcd_data.buffer);
+        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2,
+                FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
+        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3,
+                FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
     }
 
     if ((timestamps.screen_drew - timestamps.audio_result_received) < LCD_CLASSIFICATION_DURATION) {
@@ -403,6 +408,10 @@ static void refresh_screen(void)
         }
 
         fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+    }
+
+    if ((timestamps.screen_drew - timestamps.notification_received) < LCD_NOTIFICATION_DURATION) {
+        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
     }
 
     device_status.statistics.lcd_fps = (float) 1000.0 / (float)(GET_RTC_MS() - timestamps.screen_drew);

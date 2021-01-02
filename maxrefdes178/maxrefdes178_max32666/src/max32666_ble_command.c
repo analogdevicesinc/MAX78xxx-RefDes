@@ -184,7 +184,7 @@ int ble_command_worker(void)
 {
     int ret;
 
-    if (ble_queue_deq_rx(&tmp_ble_packet_container) != E_UNDERFLOW) {
+    if (ble_queue_deq_rx(&tmp_ble_packet_container) != E_SUCCESS) {
         // No new packet on ble rx queue
         return E_NO_ERROR;
     }

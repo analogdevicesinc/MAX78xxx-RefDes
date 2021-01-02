@@ -292,3 +292,8 @@ int spi_dma_wait(uint8_t ch, mxc_spi_regs_t *spi)
 
     return 0;
 }
+
+int spi_dma_busy_flag(uint8_t ch)
+{
+    return dma_busy_flag[ch];
+}
