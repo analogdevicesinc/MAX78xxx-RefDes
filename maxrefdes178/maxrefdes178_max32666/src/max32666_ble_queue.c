@@ -38,7 +38,7 @@
 //-----------------------------------------------------------------------------
 #include <string.h>
 
-#include "max32666_commbuf.h"
+#include "max32666_ble_queue.h"
 #include "max32666_debug.h"
 #include "maxrefdes178_definitions.h"
 
@@ -46,17 +46,18 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_MODULE_NAME   "commbuf"
+#define S_MODULE_NAME   "queue"
 
 
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+// Circular buffer queue implementation, overwrite is not permitted
 typedef struct {
-    packet_container_t container[MAX32666_COMMBUF_ARRAY_SIZE];;
-    int head;
-    int tail;
-} commbuf_buffer_t;
+    ble_packet_container_t container_array[MAX32666_BLE_QUEUE_SIZE];
+    uint32_t head;
+    uint32_t tail;
+} ble_queue_t;
 
 
 //-----------------------------------------------------------------------------
@@ -65,131 +66,118 @@ typedef struct {
 //static const mxc_gpio_cfg_t core0_int_pin = MAX32666_CORE0_INT_PIN;
 //static const mxc_gpio_cfg_t core1_int_pin = MAX32666_CORE1_INT_PIN;
 
-static commbuf_buffer_t ble_rx_container;
-static commbuf_buffer_t ble_tx_container;
-//static commbuf_buffer_t usb_rx_container;
-//static commbuf_buffer_t usb_tx_container;
+static ble_queue_t ble_queue_rx;
+static ble_queue_t ble_queue_tx;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static commbuf_status_e push_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container);
-static commbuf_status_e pop_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container);
+static int ble_queue_enq(ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container);
+static int ble_queue_deq(ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container);
+//static int ble_queue_trigger_interrupt(void)
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-//void core1_to_core0_int(void *cbdata)
+//void core1_to_core0_int_handler(void *cbdata)
 //{
 //
 //}
 
-static commbuf_status_e push_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container)
+static int ble_queue_enq(ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container)
 {
-    int next;
+    uint32_t next;
 
     while(MXC_SEMA_GetSema(MAX32666_COMMBUF_BUFFER) == E_BUSY) {};
 
-    next = buffer->head + 1;
-    if (next >= MAX32666_COMMBUF_ARRAY_SIZE) {
-        next = 0;
-    }
+    next = (ble_queue->head + 1) % MAX32666_BLE_QUEUE_SIZE;
 
-    if (next == buffer->tail) {
+    if (next == ble_queue->tail) {
         MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
-        return COMMBUF_STATUS_FULL;
+        return E_OVERFLOW;
     }
 
-    memcpy(&(buffer->container[buffer->head]), packet_container, sizeof(packet_container_t));
-    buffer->head = next;
+    memcpy(&(ble_queue->container_array[ble_queue->head]), ble_packet_container, sizeof(ble_packet_container_t));
+    ble_queue->head = next;
 
     MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
 
-    return COMMBUF_STATUS_OK;
+    return E_SUCCESS;
 }
 
-static commbuf_status_e pop_buffer(commbuf_buffer_t *buffer, packet_container_t *packet_container)
+static int ble_queue_deq(ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container)
 {
-    int next;
+    uint32_t next;
 
     while(MXC_SEMA_GetSema(MAX32666_COMMBUF_BUFFER) == E_BUSY) {};
 
-    if (buffer->head == buffer->tail) {
+    if (ble_queue->head == ble_queue->tail) {
         MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
-        return COMMBUF_STATUS_EMPTY;
+        return E_UNDERFLOW;
     }
 
-    next = buffer->tail + 1;
-    if(next >= MAX32666_COMMBUF_ARRAY_SIZE) {
-        next = 0;
-    }
+    next = (ble_queue->tail + 1) % MAX32666_BLE_QUEUE_SIZE;
 
-    memcpy(packet_container, &(buffer->container[buffer->tail]), sizeof(packet_container_t));
-    buffer->tail = next;
+    memcpy(ble_packet_container, &(ble_queue->container_array[ble_queue->tail]), sizeof(ble_packet_container_t));
+    ble_queue->tail = next;
 
     MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
 
-    return COMMBUF_STATUS_OK;
+    return E_SUCCESS;
 }
 
-commbuf_status_e commbuf_pop_rx_ble(packet_container_t *ble_packet_container)
+int ble_queue_deq_rx(ble_packet_container_t *ble_packet_container)
 {
-    return pop_buffer(&ble_rx_container, ble_packet_container);
+    return ble_queue_deq(&ble_queue_rx, ble_packet_container);
 }
 
-commbuf_status_e commbuf_push_rx_ble(packet_container_t *ble_packet_container)
+int ble_queue_enq_rx(ble_packet_container_t *ble_packet_container)
 {
-    return push_buffer(&ble_rx_container, ble_packet_container);
+    return ble_queue_enq(&ble_queue_rx, ble_packet_container);
 }
 
-commbuf_status_e commbuf_pop_tx_ble(packet_container_t *ble_packet_container)
+int ble_queue_deq_tx(ble_packet_container_t *ble_packet_container)
 {
-    return pop_buffer(&ble_tx_container, ble_packet_container);
+    return ble_queue_deq(&ble_queue_tx, ble_packet_container);
 }
 
-commbuf_status_e commbuf_push_tx_ble(packet_container_t *ble_packet_container)
+int ble_queue_enq_tx(ble_packet_container_t *ble_packet_container)
 {
-    return push_buffer(&ble_tx_container, ble_packet_container);
+    return ble_queue_enq(&ble_queue_tx, ble_packet_container);
 }
 
-//commbuf_status_e commbuf_pop_rx_usb(packet_container_t *usb_packet_container)
+int ble_queue_flush(void)
+{
+    while(MXC_SEMA_GetSema(MAX32666_COMMBUF_BUFFER) == E_BUSY) {};
+
+    ble_queue_rx.head = 0;
+    ble_queue_rx.tail = 0;
+    ble_queue_tx.head = 0;
+    ble_queue_tx.tail = 0;
+
+    MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
+
+    return E_SUCCESS;
+}
+
+//static int ble_queue_trigger_interrupt(void)
 //{
-//    return pop_buffer(&usb_rx_container, usb_packet_container);
-//}
-//
-//commbuf_status_e commbuf_push_rx_usb(packet_container_t *usb_packet_container)
-//{
-//    return push_buffer(&usb_rx_container, usb_packet_container);
-//}
-//
-//commbuf_status_e commbuf_pop_tx_usb(packet_container_t *usb_packet_container)
-//{
-//    return pop_buffer(&usb_tx_container, usb_packet_container);
-//}
-//
-//commbuf_status_e commbuf_push_tx_usb(packet_container_t *usb_packet_container)
-//{
-//    return push_buffer(&usb_tx_container, usb_packet_container);
-//}
-
-int commbuf_trigger_int(void)
-{
 //    // Only Core1 can call this function
 //    if (SCB->VTOR != (unsigned long)&__isr_vector_core1) {
 //        return E_NOT_SUPPORTED;
 //    }
 //    GPIO_CLR(core1_int_pin);
 //    GPIO_SET(core1_int_pin);
+//
+//    return E_SUCCESS;
+//}
 
-    return E_NO_ERROR;
-}
-
-int commbuf_init(void)
+int ble_queue_init(void)
 {
 //    MXC_GPIO_Config(&core0_int_pin);
-//    MXC_GPIO_RegisterCallback(&core0_int_pin, core1_to_core0_int, NULL);
+//    MXC_GPIO_RegisterCallback(&core0_int_pin, core1_to_core0_int_handler, NULL);
 //    MXC_GPIO_IntConfig(&core0_int_pin, MAX32666_CORE0_INT_MODE);
 //    MXC_GPIO_EnableInt(core0_int_pin.port, core0_int_pin.mask);
 //    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(core0_int_pin.port)));
@@ -197,11 +185,7 @@ int commbuf_init(void)
 //    GPIO_SET(core1_int_pin);
 //    MXC_GPIO_Config(&core1_int_pin);
 
-    ble_rx_container.head = 0;
-    ble_rx_container.tail = 0;
-    ble_tx_container.head = 0;
-    ble_tx_container.tail = 0;
+    ble_queue_flush();
 
-    return E_NO_ERROR;
+    return E_SUCCESS;
 }
-

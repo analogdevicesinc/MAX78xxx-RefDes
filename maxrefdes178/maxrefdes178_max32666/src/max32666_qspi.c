@@ -137,7 +137,7 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
         if (qspi_packet_header.start_symbol != QSPI_START_SYMBOL) {
             PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_packet_header.start_symbol);
-            return QSPI_STATUS_FAIL;
+            return QSPI_STATUS_ERROR_RX;
         }
 
         while(!qspi_video_int_flag);
@@ -147,7 +147,7 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
         case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
             if (qspi_packet_header.packet_size != LCD_DATA_SIZE) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(video_cs_pin);
@@ -157,12 +157,12 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
             PR_DEBUG("video %u", qspi_packet_header.packet_size);
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         case QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES:
             if (qspi_packet_header.packet_size != sizeof(classification_result_t)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(video_cs_pin);
@@ -172,12 +172,12 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
             PR_INFO("video result %s %d %0.1f", device_status.classification_video.result, device_status.classification_video.classification, (double)device_status.classification_video.probabily);
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         case QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES:
             if (qspi_packet_header.packet_size != sizeof(max78000_statistics_t)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(video_cs_pin);
@@ -190,12 +190,12 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
             PR_DEBUG("video qspi    : %lu", device_status.statistics.max78000_video.communication_duration_ms);
             PR_DEBUG("video total   : %lu", device_status.statistics.max78000_video.total_duration_ms);
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         case QSPI_PACKET_TYPE_VIDEO_VERSION_RES:
             if (qspi_packet_header.packet_size != sizeof(version_t)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(video_cs_pin);
@@ -205,12 +205,12 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
             PR_INFO("MAX78000 Video v%d.%d.%d", device_info.device_version.max78000_video.major, device_info.device_version.max78000_video.minor, device_info.device_version.max78000_video.build);
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         case QSPI_PACKET_TYPE_VIDEO_SERIAL_RES:
             if (qspi_packet_header.packet_size != sizeof(serial_num_t)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(video_cs_pin);
@@ -224,12 +224,12 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
             }
             PR("\n");
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
             if (qspi_packet_header.packet_size != sizeof(faceid_embed_update_status_e)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(video_cs_pin);
@@ -239,11 +239,11 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
             PR_INFO("FaceID embeddings update status: %d", device_status.faceid_embed_update_status_e);
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         default:
             PR_ERROR("Unknown qspi video packet");
-            return QSPI_STATUS_FAIL;
+            return QSPI_STATUS_ERROR_RX;
             break;
         }
     }
@@ -259,7 +259,7 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
         if (qspi_packet_header.start_symbol != QSPI_START_SYMBOL) {
             PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_packet_header.start_symbol);
-            return QSPI_STATUS_FAIL;
+            return QSPI_STATUS_ERROR_RX;
         }
 
         while(!qspi_audio_int_flag);
@@ -269,7 +269,7 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
         case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
             if (qspi_packet_header.packet_size != sizeof(classification_result_t)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(audio_cs_pin);
@@ -279,12 +279,12 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
             PR_INFO("audio result %s %d %0.1f", device_status.classification_audio.result, device_status.classification_audio.classification, (double)device_status.classification_audio.probabily);
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         case QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES:
             if (qspi_packet_header.packet_size != sizeof(max78000_statistics_t)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(audio_cs_pin);
@@ -294,12 +294,12 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
             PR_DEBUG("audio cnn: %lu", device_status.statistics.max78000_audio.cnn_duration_ms);
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         case QSPI_PACKET_TYPE_AUDIO_VERSION_RES:
             if (qspi_packet_header.packet_size != sizeof(version_t)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(audio_cs_pin);
@@ -309,12 +309,12 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
 
             PR_INFO("MAX78000 Audio v%d.%d.%d", device_info.device_version.max78000_audio.major, device_info.device_version.max78000_audio.minor, device_info.device_version.max78000_audio.build);
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         case QSPI_PACKET_TYPE_AUDIO_SERIAL_RES:
             if (qspi_packet_header.packet_size != sizeof(serial_num_t)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header.packet_size);
-                return QSPI_STATUS_FAIL;
+                return QSPI_STATUS_ERROR_RX;
             }
 
             GPIO_CLR(audio_cs_pin);
@@ -328,14 +328,14 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
             }
             PR("\n");
 
-            return QSPI_STATUS_NEW_DATA;
+            return QSPI_STATUS_SUCCESS_RX;
             break;
         default:
             PR_ERROR("Unknown qspi audio packet");
-            return QSPI_STATUS_FAIL;
+            return QSPI_STATUS_ERROR_RX;
             break;
         }
     }
 
-    return QSPI_STATUS_FAIL;
+    return QSPI_STATUS_IDLE;
 }

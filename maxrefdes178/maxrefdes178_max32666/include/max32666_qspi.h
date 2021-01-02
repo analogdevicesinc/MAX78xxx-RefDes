@@ -50,9 +50,13 @@
 // Typedefs
 //-----------------------------------------------------------------------------
 typedef enum {
-    QSPI_STATUS_NEW_DATA = 0,
-    QSPI_STATUS_NO_NEW_DATA,
-    QSPI_STATUS_FAIL
+    QSPI_STATUS_IDLE = 0,
+    QSPI_STATUS_SUCCESS_RX,
+    QSPI_STATUS_SUCCESS_TX,
+    QSPI_STATUS_ERROR_RX,
+    QSPI_STATUS_ERROR_TX,
+
+    QSPI_STATUS_LAST
 } qspi_status_e;
 
 

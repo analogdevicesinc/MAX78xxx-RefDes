@@ -90,14 +90,15 @@
 #define FACEID_RECTANGLE_X2                FACEID_RECTANGLE_X1 + FACEID_WIDTH
 #define FACEID_RECTANGLE_Y2                FACEID_RECTANGLE_Y1 + FACEID_HEIGHT
 
+// Common Classification
+#define CLASSIFICATION_STRING_SIZE         15
+
 // Common BLE
 #define BLE_MAX_MTU_SIZE                   256
 #define BLE_MAX_MTU_REQUEST_SIZE           (BLE_MAX_MTU_SIZE - 4)
 #define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_REQUEST_SIZE - 3)
 
-// Common communication
-#define COMMUNICATION_MAX_PACKET_SIZE      BLE_MAX_PACKET_SIZE
-#define COMMUNICATION_STATISTICS_INTERVAL  1000  // ms
+#define BLE_STATISTICS_INTERVAL            1000  // ms
 
 /*** MAX32666 ***/
 // MAX32666 PINS
@@ -179,8 +180,10 @@
 #define MAX32666_BLE_SLEEP_TIMER           MXC_TMR1
 #define MAX32666_LED_TIMER                 MXC_TMR2
 
-// Communication buffer
-#define MAX32666_COMMBUF_ARRAY_SIZE        10
+// BLE Communication buffer
+#define MAX32666_BLE_QUEUE_SIZE            10
+#define MAX32666_BLE_COMMAND_BUFFER_SIZE   1024 * 4
+
 
 /*** MAX78000 AUDIO ***/
 // MAX78000 AUDIO PINS
@@ -254,6 +257,8 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+// Typedef Enums
+// QSPI packet types
 typedef enum {
 //  QSPI Packet                                 QSPI Packet Payload Description
     QSPI_PACKET_TYPE_VIDEO_VERSION_CMD = 0,  // None
@@ -295,145 +300,149 @@ typedef enum {
     QSPI_PACKET_TYPE_LAST
 } qspi_packet_type_e;
 
+// BLE packet types
 typedef enum {
-    PACKET_TYPE_COMMAND = 0,
-    PACKET_TYPE_PAYLOAD
-} packet_type_e;
+    BLE_PACKET_TYPE_COMMAND = 0,
+    BLE_PACKET_TYPE_PAYLOAD
+} ble_packet_type_e;
 
+// BLE command types
 typedef enum {
 //  Command                             Command Payload Description
     // Communication
-    COMMAND_ABORT_CMD = 0,           // None
-    COMMAND_INVALID_RES,             // Invalid command code
-    COMMAND_NOP_CMD,                 // None
+    BLE_COMMAND_ABORT_CMD = 0,           // None
+    BLE_COMMAND_INVALID_RES,             // None
+    BLE_COMMAND_NOP_CMD,                 // None
 
     // Version
-    COMMAND_GET_VERSION_CMD,         // None
-    COMMAND_GET_VERSION_RES,         // device_version_t
-    COMMAND_GET_SERIAL_NUM_CMD,      // None
-    COMMAND_GET_SERIAL_NUM_RES,      // device_serial_num_t
+    BLE_COMMAND_GET_VERSION_CMD,         // None
+    BLE_COMMAND_GET_VERSION_RES,         // device_version_t
+    BLE_COMMAND_GET_SERIAL_NUM_CMD,      // None
+    BLE_COMMAND_GET_SERIAL_NUM_RES,      // device_serial_num_t
 
     // SD Card
-    COMMAND_GET_SD_INSERTED_CMD,     // None
-    COMMAND_GET_SD_INSERTED_RES,     // sd_status_e
-    COMMAND_WRITE_SD_FILE_CMD,       // File name size (uint8_t) + File name string + File content
-    COMMAND_WRITE_SD_FILE_RES,       // sd_status_e
-    COMMAND_READ_SD_FILE_CMD,        // File name string
-    COMMAND_READ_SD_FILE_RES,        // sd_status_e + File content
-    COMMAND_GET_SD_CONTENT_CMD,      // None
-    COMMAND_GET_SD_CONTENT_RES,      // (file_info_header_t + File name string) * Number of files
-    COMMAND_GET_SD_FREE_SPACE_CMD,   // None
-    COMMAND_GET_SD_FREE_SPACE_RES,   // Free space size (uint32_t)
-    COMMAND_DELETE_SD_FILE_CMD,      // File name string
-    COMMAND_DELETE_SD_FILE_RES,      // sd_status_e
-    COMMAND_FORMAT_SD_CMD,           // None
-    COMMAND_FORMAT_SD_RES,           // sd_status_e
+    BLE_COMMAND_GET_SD_INSERTED_CMD,     // None
+    BLE_COMMAND_GET_SD_INSERTED_RES,     // sd_status_e
+    BLE_COMMAND_WRITE_SD_FILE_CMD,       // File name size (uint8_t) + File name string + File content
+    BLE_COMMAND_WRITE_SD_FILE_RES,       // sd_status_e
+    BLE_COMMAND_READ_SD_FILE_CMD,        // File name string
+    BLE_COMMAND_READ_SD_FILE_RES,        // sd_status_e + File content
+    BLE_COMMAND_GET_SD_CONTENT_CMD,      // None
+    BLE_COMMAND_GET_SD_CONTENT_RES,      // (file_info_header_t + File name string) * Number of files
+    BLE_COMMAND_GET_SD_FREE_SPACE_CMD,   // None
+    BLE_COMMAND_GET_SD_FREE_SPACE_RES,   // Free space size (uint32_t)
+    BLE_COMMAND_DELETE_SD_FILE_CMD,      // File name string
+    BLE_COMMAND_DELETE_SD_FILE_RES,      // sd_status_e
+    BLE_COMMAND_FORMAT_SD_CMD,           // None
+    BLE_COMMAND_FORMAT_SD_RES,           // sd_status_e
 
     // External Flash
-    COMMAND_WRITE_EXT_FILE_CMD,      // File name size (uint8_t) + File name string + File content
-    COMMAND_WRITE_EXT_FILE_RES,      // ext_status_e
-    COMMAND_READ_EXT_FILE_CMD,       // File name string
-    COMMAND_READ_EXT_FILE_RES,       // ext_status_e + File content
-    COMMAND_GET_EXT_CONTENT_CMD,     // None
-    COMMAND_GET_EXT_CONTENT_RES,     // (file_info_header_t + File name string) * Number of files
-    COMMAND_GET_EXT_FREE_SPACE_CMD,  // None
-    COMMAND_GET_EXT_FREE_SPACE_RES,  // Free space size (uint32_t)
-    COMMAND_DELETE_EXT_FILE_CMD,     // File name string
-    COMMAND_DELETE_EXT_FILE_RES,     // ext_status_e
-    COMMAND_FORMAT_EXT_CMD,          // None
-    COMMAND_FORMAT_EXT_RES,          // ext_status_e
+    BLE_COMMAND_WRITE_EXT_FILE_CMD,      // File name size (uint8_t) + File name string + File content
+    BLE_COMMAND_WRITE_EXT_FILE_RES,      // ext_status_e
+    BLE_COMMAND_READ_EXT_FILE_CMD,       // File name string
+    BLE_COMMAND_READ_EXT_FILE_RES,       // ext_status_e + File content
+    BLE_COMMAND_GET_EXT_CONTENT_CMD,     // None
+    BLE_COMMAND_GET_EXT_CONTENT_RES,     // (file_info_header_t + File name string) * Number of files
+    BLE_COMMAND_GET_EXT_FREE_SPACE_CMD,  // None
+    BLE_COMMAND_GET_EXT_FREE_SPACE_RES,  // Free space size (uint32_t)
+    BLE_COMMAND_DELETE_EXT_FILE_CMD,     // File name string
+    BLE_COMMAND_DELETE_EXT_FILE_RES,     // ext_status_e
+    BLE_COMMAND_FORMAT_EXT_CMD,          // None
+    BLE_COMMAND_FORMAT_EXT_RES,          // ext_status_e
 
     // Firmware Update from SD Card
-    COMMAND_FW_UPDATE_MAX32666_SD_CMD,        // File name string
-    COMMAND_FW_UPDATE_MAX32666_SD_RES,        // fw_update_status_e
-    COMMAND_FW_UPDATE_MAX78000_SD_VIDEO_CMD,  // File name string
-    COMMAND_FW_UPDATE_MAX78000_SD_VIDEO_RES,  // fw_update_status_e
-    COMMAND_FW_UPDATE_MAX78000_SD_AUDIO_CMD,  // File name string
-    COMMAND_FW_UPDATE_MAX78000_SD_AUDIO_RES,  // fw_update_status_e
-    COMMAND_FW_UPDATE_COMBINED_SD_CMD,        // File name string
-    COMMAND_FW_UPDATE_COMBINED_SD_RES,        // fw_update_status_e
+    BLE_COMMAND_FW_UPDATE_MAX32666_SD_CMD,        // File name string
+    BLE_COMMAND_FW_UPDATE_MAX32666_SD_RES,        // fw_update_status_e
+    BLE_COMMAND_FW_UPDATE_MAX78000_SD_VIDEO_CMD,  // File name string
+    BLE_COMMAND_FW_UPDATE_MAX78000_SD_VIDEO_RES,  // fw_update_status_e
+    BLE_COMMAND_FW_UPDATE_MAX78000_SD_AUDIO_CMD,  // File name string
+    BLE_COMMAND_FW_UPDATE_MAX78000_SD_AUDIO_RES,  // fw_update_status_e
+    BLE_COMMAND_FW_UPDATE_COMBINED_SD_CMD,        // File name string
+    BLE_COMMAND_FW_UPDATE_COMBINED_SD_RES,        // fw_update_status_e
 
     // Firmware Update from External Flash
-    COMMAND_FW_UPDATE_MAX32666_EXT_CMD,       // File name string
-    COMMAND_FW_UPDATE_MAX32666_EXT_RES,       // fw_update_status_e
-    COMMAND_FW_UPDATE_MAX78000_EXT_VIDEO_CMD, // File name string
-    COMMAND_FW_UPDATE_MAX78000_EXT_VIDEO_RES, // fw_update_status_e
-    COMMAND_FW_UPDATE_MAX78000_EXT_AUDIO_CMD, // File name string
-    COMMAND_FW_UPDATE_MAX78000_EXT_AUDIO_RES, // fw_update_status_e
-    COMMAND_FW_UPDATE_COMBINED_EXT_CMD,       // File name string
-    COMMAND_FW_UPDATE_COMBINED_EXT_RES,       // fw_update_status_e
+    BLE_COMMAND_FW_UPDATE_MAX32666_EXT_CMD,       // File name string
+    BLE_COMMAND_FW_UPDATE_MAX32666_EXT_RES,       // fw_update_status_e
+    BLE_COMMAND_FW_UPDATE_MAX78000_EXT_VIDEO_CMD, // File name string
+    BLE_COMMAND_FW_UPDATE_MAX78000_EXT_VIDEO_RES, // fw_update_status_e
+    BLE_COMMAND_FW_UPDATE_MAX78000_EXT_AUDIO_CMD, // File name string
+    BLE_COMMAND_FW_UPDATE_MAX78000_EXT_AUDIO_RES, // fw_update_status_e
+    BLE_COMMAND_FW_UPDATE_COMBINED_EXT_CMD,       // File name string
+    BLE_COMMAND_FW_UPDATE_COMBINED_EXT_RES,       // fw_update_status_e
 
     // FaceID Embeddings Update
-    COMMAND_FACEID_EMBED_UPDATE_CMD,          // FaceID embeddings binary content
-    COMMAND_FACEID_EMBED_UPDATE_RES,          // faceid_embed_update_status_e
-    COMMAND_FACEID_EMBED_UPDATE_SD_CMD,       // File name string
-    COMMAND_FACEID_EMBED_UPDATE_SD_RES,       // faceid_embed_update_status_e
-    COMMAND_FACEID_EMBED_UPDATE_EXT_CMD,      // File name string
-    COMMAND_FACEID_EMBED_UPDATE_EXT_RES,      // faceid_embed_update_status_e
+    BLE_COMMAND_FACEID_EMBED_UPDATE_CMD,          // FaceID embeddings binary content
+    BLE_COMMAND_FACEID_EMBED_UPDATE_RES,          // faceid_embed_update_status_e
+    BLE_COMMAND_FACEID_EMBED_UPDATE_SD_CMD,       // File name string
+    BLE_COMMAND_FACEID_EMBED_UPDATE_SD_RES,       // faceid_embed_update_status_e
+    BLE_COMMAND_FACEID_EMBED_UPDATE_EXT_CMD,      // File name string
+    BLE_COMMAND_FACEID_EMBED_UPDATE_EXT_RES,      // faceid_embed_update_status_e
 
     // Device Settings
-    COMMAND_ENABLE_BLE_CMD,                       // None
-    COMMAND_DISABLE_BLE_CMD,                      // None
-    COMMAND_SHUT_DOWN_DEVICE_CMD,                 // None
-    COMMAND_ENABLE_MAX78000_AUDIO_CMD,            // None
-    COMMAND_DISABLE_MAX78000_AUDIO_CMD,           // None
-    COMMAND_ENABLE_MAX78000_VIDEO_CMD,            // None
-    COMMAND_DISABLE_MAX78000_VIDEO_CMD,           // None
-    COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD,        // None
-    COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD,       // None
-    COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,  // None
-    COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD, // None
-    COMMAND_ENABLE_MAX78000_VIDEO_AUDIO_POWER,    // None
-    COMMAND_DISABLE_MAX78000_VIDEO_AUDIO_POWER,   // None
-    COMMAND_ENABLE_LCD_CMD,                       // None
-    COMMAND_DISABLE_LCD_CMD,                      // None
-    COMMAND_ENABLE_LCD_STATISCTICS_CMD,           // None
-    COMMAND_DISABLE_LCD_STATISCTICS_CMD,          // None
-    COMMAND_ENABLE_LCD_PROBABILITY_CMD,           // None
-    COMMAND_DISABLE_LCD_PROBABILITY_CMD,          // None
-    COMMAND_ENABLE_SEND_STATISTICS_CMD,           // None
-    COMMAND_DISABLE_SEND_STATISTICS_CMD,          // None
-    COMMAND_ENABLE_SEND_CLASSIFICATION_CMD,       // None
-    COMMAND_DISABLE_SEND_CLASSIFICATION_CMD,      // None
+    BLE_COMMAND_ENABLE_BLE_CMD,                       // None
+    BLE_COMMAND_DISABLE_BLE_CMD,                      // None
+    BLE_COMMAND_SHUT_DOWN_DEVICE_CMD,                 // None
+    BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD,            // None
+    BLE_COMMAND_DISABLE_MAX78000_AUDIO_CMD,           // None
+    BLE_COMMAND_ENABLE_MAX78000_VIDEO_CMD,            // None
+    BLE_COMMAND_DISABLE_MAX78000_VIDEO_CMD,           // None
+    BLE_COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD,        // None
+    BLE_COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD,       // None
+    BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,  // None
+    BLE_COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD, // None
+    BLE_COMMAND_ENABLE_MAX78000_VIDEO_AUDIO_POWER,    // None
+    BLE_COMMAND_DISABLE_MAX78000_VIDEO_AUDIO_POWER,   // None
+    BLE_COMMAND_ENABLE_LCD_CMD,                       // None
+    BLE_COMMAND_DISABLE_LCD_CMD,                      // None
+    BLE_COMMAND_ENABLE_LCD_STATISCTICS_CMD,           // None
+    BLE_COMMAND_DISABLE_LCD_STATISCTICS_CMD,          // None
+    BLE_COMMAND_ENABLE_LCD_PROBABILITY_CMD,           // None
+    BLE_COMMAND_DISABLE_LCD_PROBABILITY_CMD,          // None
+    BLE_COMMAND_ENABLE_SEND_STATISTICS_CMD,           // None
+    BLE_COMMAND_DISABLE_SEND_STATISTICS_CMD,          // None
+    BLE_COMMAND_ENABLE_SEND_CLASSIFICATION_CMD,       // None
+    BLE_COMMAND_DISABLE_SEND_CLASSIFICATION_CMD,      // None
 
     // Statistics
-    COMMAND_GET_STATISTICS_RES,      // device_statistics_t
+    BLE_COMMAND_GET_STATISTICS_RES,      // device_statistics_t
 
     // Classification
-    COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES, // classification_result_t
-    COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES, // classification_result_t
+    BLE_COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES, // classification_result_t
+    BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES, // classification_result_t
 
     // Debugger Selection
-    COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
-    COMMAND_GET_DEBUGGER_CMD,        // None
-    COMMAND_GET_DEBUGGER_RES,        // debugger_select_e
+    BLE_COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
+    BLE_COMMAND_GET_DEBUGGER_CMD,        // None
+    BLE_COMMAND_GET_DEBUGGER_RES,        // debugger_select_e
 
-    COMMAND_LAST
-} command_e;
+    BLE_COMMAND_LAST
+} ble_command_e;
 
+// SD card commands status codes
 typedef enum {
-    SD_STATUS_OK = 0,
-    SD_STATUS_DISK_ERR,
-    SD_STATUS_INT_ERR,
-    SD_STATUS_NOT_READY,
-    SD_STATUS_NO_FILE,
-    SD_STATUS_NO_PATH,
-    SD_STATUS_INVALID_NAME,
-    SD_STATUS_DENIED,
-    SD_STATUS_EXIST,
-    SD_STATUS_INVALID_OBJECT,
-    SD_STATUS_NOT_ENABLED,
-    SD_STATUS_NO_FILESYSTEM,
-    SD_STATUS_MKFS_ABORTED,
-    SD_STATUS_TIMEOUT,
-    SD_STATUS_LOCKED,
-    SD_STATUS_NOT_ENOUGH_CORE,
-    SD_STATUS_TOO_MANY_OPEN_FILES,
-    SD_STATUS_INVALID_PARAMETER,
+    SD_STATUS_SUCCESS = 0,
+    SD_STATUS_ERROR_DISK_ERR,
+    SD_STATUS_ERROR_INT_ERR,
+    SD_STATUS_ERROR_NOT_READY,
+    SD_STATUS_ERROR_NO_FILE,
+    SD_STATUS_ERROR_NO_PATH,
+    SD_STATUS_ERROR_INVALID_NAME,
+    SD_STATUS_ERROR_DENIED,
+    SD_STATUS_ERROR_EXIST,
+    SD_STATUS_ERROR_INVALID_OBJECT,
+    SD_STATUS_ERROR_NOT_ENABLED,
+    SD_STATUS_ERROR_NO_FILESYSTEM,
+    SD_STATUS_ERROR_MKFS_ABORTED,
+    SD_STATUS_ERROR_TIMEOUT,
+    SD_STATUS_ERROR_LOCKED,
+    SD_STATUS_ERROR_NOT_ENOUGH_CORE,
+    SD_STATUS_ERROR_TOO_MANY_OPEN_FILES,
+    SD_STATUS_ERROR_INVALID_PARAMETER,
 
     SD_STATUS_LAST
 } sd_status_e;
 
+// External flash commands status codes
 typedef enum {
     EXT_STATUS_OK = 0,
     //TODO
@@ -441,26 +450,28 @@ typedef enum {
     EXT_STATUS_LAST
 } ext_status_e;
 
+// Firmware update commands status codes
 typedef enum {
-    FW_UPDATE_STATUS_ = 0,
-    FW_UPDATE_STATUS_SUCCESS,
-    FW_UPDATE_STATUS_NO_FILE,
-    FW_UPDATE_STATUS_MAX32666_FAIL,
-    FW_UPDATE_STATUS_MAX78000_VIDEO_FAIL,
-    FW_UPDATE_STATUS_MAX78000_AUDIO_FAIL,
-    FW_UPDATE_STATUS_COMBINED_FAIL,
+    FW_UPDATE_STATUS_SUCCESS = 0,
+    FW_UPDATE_STATUS_ERROR_NO_FILE,
+    FW_UPDATE_STATUS_ERROR_MAX32666,
+    FW_UPDATE_STATUS_ERROR_MAX78000_VIDEO,
+    FW_UPDATE_STATUS_ERROR_MAX78000_AUDIO,
+    FW_UPDATE_STATUS_ERROR_COMBINED,
 
     FW_UPDATE_STATUS_LAST
 } fw_update_status_e;
 
+// FaceID embedding update commands status codes
 typedef enum {
     FACEID_EMBED_UPDATE_STATUS_SUCCESS = 0,
-    FACEID_EMBED_UPDATE_STATUS_NO_FILE,
-    FACEID_EMBED_UPDATE_STATUS_FAIL,
+    FACEID_EMBED_UPDATE_STATUS_ERROR_NO_FILE,
+    FACEID_EMBED_UPDATE_STATUS_ERROR_UNKNOWN,
 
     FACEID_EMBED_UPDATE_STATUS_LAST
 } faceid_embed_update_status_e;
 
+// Debugger select command types
 typedef enum {
     DEBUGGER_SELECT_MAX32666_CORE1 = 0,
     DEBUGGER_SELECT_MAX78000_VIDEO,
@@ -469,6 +480,7 @@ typedef enum {
     DEBUGGER_SELECT_LAST
 } debugger_select_e;
 
+// Classification command response classification codes
 typedef enum {
     CLASSIFICATION_NOTHING = 0,
     CLASSIFICATION_UNKNOWN,
@@ -478,69 +490,78 @@ typedef enum {
     CLASSIFICATION_LAST
 } classification_e;
 
-typedef uint8_t serial_num_t[13];
-
+// Typedef Structs
+// QSPI packet
 typedef struct __attribute__((packed)) {
     uint32_t start_symbol;
     uint32_t packet_size;
     uint8_t packet_type;
 } qspi_packet_header_t;
 
-#define PACKET_SEQ_MASK   0x7F
+// BLE packet info field
+#define BLE_PACKET_SEQ_MASK   0x7F
 typedef struct __attribute__((packed)) {
     uint8_t type : 1;
     uint8_t seq  : 7;
-} packet_info_t;
+} ble_packet_info_t;
 
+// BLE command packet header
 typedef struct __attribute__((packed)) {
-    packet_info_t packet_info;
+    ble_packet_info_t packet_info;
     uint8_t command;
-    uint32_t command_size;
-} command_packet_header_t;
+    uint32_t total_payload_size;
+} ble_command_packet_header_t;
 
+// BLE payload packet header
 typedef struct __attribute__((packed)) {
-    packet_info_t packet_info;
-    uint8_t command;
-} payload_packet_header_t;
+    ble_packet_info_t packet_info;
+} ble_payload_packet_header_t;
 
+// BLE command packet
 typedef struct __attribute__((packed)) {
-    command_packet_header_t header;
-    uint8_t payload[COMMUNICATION_MAX_PACKET_SIZE - sizeof(command_packet_header_t)];
-} command_packet_t;
+    ble_command_packet_header_t header;
+    uint8_t payload[BLE_MAX_PACKET_SIZE - sizeof(ble_command_packet_header_t)];
+} ble_command_packet_t;
 
+// BLE payload packet
 typedef struct __attribute__((packed)) {
-    payload_packet_header_t header;
-    uint8_t payload[COMMUNICATION_MAX_PACKET_SIZE - sizeof(payload_packet_header_t)];
-} payload_packet_t;
+    ble_payload_packet_header_t header;
+    uint8_t payload[BLE_MAX_PACKET_SIZE - sizeof(ble_payload_packet_header_t)];
+} ble_payload_packet_t;
 
+// BLE packet container
 typedef struct __attribute__((packed)) {
     uint8_t size;
-    uint8_t status;
     union {
-        packet_info_t packet_info;
-        command_packet_t command_packet;
-        payload_packet_t payload_packet;
+        ble_packet_info_t packet_info;
+        ble_command_packet_t command_packet;
+        ble_payload_packet_t payload_packet;
     } packet;
-} packet_container_t;
+} ble_packet_container_t;
 
+// Version info field
 typedef struct __attribute__((packed)) {
     uint8_t major;
     uint8_t minor;
     uint32_t build;
 } version_t;
 
+// Version command response
 typedef struct __attribute__((packed)) {
     version_t max32666;
     version_t max78000_video;
     version_t max78000_audio;
 } device_version_t;
 
+// Serial number command response
+typedef uint8_t serial_num_t[13];
 typedef struct __attribute__((packed)) {
     serial_num_t max32666;
     serial_num_t max78000_video;
     serial_num_t max78000_audio;
 } device_serial_num_t;
 
+// MAX78000 statistics field
 typedef struct __attribute__((packed)) {
     uint32_t cnn_duration_ms;
     uint32_t capture_duration_ms;
@@ -548,6 +569,7 @@ typedef struct __attribute__((packed)) {
     uint32_t total_duration_ms;
 } max78000_statistics_t;
 
+// Statistics command response
 typedef struct __attribute__((packed)) {
     max78000_statistics_t max78000_video;
     max78000_statistics_t max78000_audio;
@@ -557,12 +579,14 @@ typedef struct __attribute__((packed)) {
     uint32_t max78000_audio_power_mw;
 } device_statistics_t;
 
+// Classification command response
 typedef struct __attribute__((packed)) {
     float probabily;
     classification_e classification;
-    char result[15];
+    char result[CLASSIFICATION_STRING_SIZE];
 } classification_result_t;
 
+// File operation commands file info field
 typedef struct __attribute__((packed)) {
     uint8_t file_name_size;
     uint32_t file_size;

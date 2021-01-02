@@ -33,13 +33,14 @@
 *******************************************************************************
 */
 
-#ifndef _MAX32666_COMMHANDLER_H_
-#define _MAX32666_COMMHANDLER_H_
+#ifndef _MAX32666_BLE_QUEUE_H_
+#define _MAX32666_BLE_QUEUE_H_
 
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -55,12 +56,19 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int commhandler_send_audio_classification(void);
-int commhandler_send_video_classification(void);
-int commhandler_send_statistics(void);
+int ble_queue_init(void);
+int ble_queue_flush(void);
 
-int commhandler_init(void);
-int commhandler_worker(void);
+// Should be called from core0
+int ble_queue_deq_rx(ble_packet_container_t *ble_packet_container);
 
+// Should be called from core1
+int ble_queue_enq_rx(ble_packet_container_t *ble_packet_container);
 
-#endif /* _MAX32666_COMMHANDLER_H_ */
+// Should be called from core0
+int ble_queue_deq_tx(ble_packet_container_t *ble_packet_container);
+
+// Should be called from core1
+int ble_queue_enq_tx(ble_packet_container_t *ble_packet_container);
+
+#endif /* _MAX32666_BLE_QUEUE_H_ */

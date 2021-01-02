@@ -85,7 +85,7 @@
 #include <wsf_types.h>
 
 #include "max32666_ble.h"
-#include "max32666_commbuf.h"
+#include "max32666_ble_queue.h"
 #include "max32666_data.h"
 #include "max32666_debug.h"
 #include "maxrefdes178_definitions.h"
@@ -603,7 +603,8 @@ static void mainWsfInit(void)
     bdAddr_t bdAddr;
     PalCfgLoadData(PAL_CFG_ID_BD_ADDR, bdAddr, sizeof(bdAddr_t));
     memcpy(device_info.ble_mac, bdAddr, sizeof(bdAddr_t));
-    PR_INFO("Setting address -- MAC %02X:%02X:%02X:%02X:%02X:%02X", bdAddr[5], bdAddr[4], bdAddr[3], bdAddr[2], bdAddr[1], bdAddr[0]);
+    PR_INFO("Setting address -- MAC %02X:%02X:%02X:%02X:%02X:%02X",
+            bdAddr[5], bdAddr[4], bdAddr[3], bdAddr[2], bdAddr[1], bdAddr[0]);
     LlSetBdAddr((uint8_t *)&bdAddr);
     LlMathSetSeed((uint32_t *)&bdAddr);
 #endif
@@ -614,7 +615,7 @@ static void mainWsfInit(void)
 
 static void ble_receive(uint16_t dataLen, uint8_t *data)
 {
-    packet_container_t ble_packet_container;
+    ble_packet_container_t ble_packet_container;
 
     PR_INFO("RX len: %d", dataLen);
     for (int i = 0; i < dataLen; i++) {
@@ -629,19 +630,13 @@ static void ble_receive(uint16_t dataLen, uint8_t *data)
 
     ble_packet_container.size = dataLen;
     memcpy(&(ble_packet_container.packet), data, dataLen);
-    commbuf_push_rx_ble(&ble_packet_container);
+    ble_queue_enq_rx(&ble_packet_container);
+
+    device_status.ble_expected_rx_seq += 1;
+    device_status.ble_expected_rx_seq %= BLE_PACKET_SEQ_MASK;
 }
 
-int ble_mtu_size(void)
-{
-    if (!periphCb.connected) {
-        return 0;
-    }
-
-    return AttGetMtu(periphCb.connId);
-}
-
-int ble_packet_size(void)
+uint16_t ble_max_packet_size(void)
 {
     if (!periphCb.connected) {
         return 0;
@@ -667,6 +662,12 @@ int ble_send_indication(uint16_t dataLen, uint8_t *data)
       return E_BAD_STATE;
     }
 
+    if (dataLen > ble_max_packet_size()) {
+      PR_ERROR("indication request size is larger than max size %d > %d",
+              dataLen, ble_max_packet_size());
+      return E_BAD_STATE;
+    }
+
     PR_INFO("TX indication len: %d", dataLen);
     for (int i = 0; i < dataLen; i++) {
         PR("%02hhX ", data[i]);
@@ -683,6 +684,8 @@ int ble_send_indication(uint16_t dataLen, uint8_t *data)
         }
 
         if (periphCb.indicationStatus == ATT_SUCCESS) {
+            device_status.ble_next_tx_seq += 1;
+            device_status.ble_next_tx_seq %= BLE_PACKET_SEQ_MASK;
             return E_SUCCESS;
         }
     }
@@ -703,7 +706,7 @@ int ble_init(void)
 
 int ble_worker(void)
 {
-    packet_container_t ble_packet_container;
+    ble_packet_container_t ble_packet_container;
 
     /* Run the WSF OS */
     wsfOsDispatcher();
@@ -712,7 +715,7 @@ int ble_worker(void)
 //      /* No WSF tasks are active, optionally sleep */
 //    }
 
-    if (commbuf_pop_tx_ble(&ble_packet_container) == COMMBUF_STATUS_OK) {
+    if (ble_queue_deq_tx(&ble_packet_container) == E_SUCCESS) {
         if (ble_send_indication(ble_packet_container.size, (uint8_t *) &(ble_packet_container.packet)) != E_SUCCESS) {
             PR_ERROR("ble_send_indication failed");
         }
@@ -721,6 +724,7 @@ int ble_worker(void)
     if (!device_settings.enable_ble) {
         PR_INFO("Disable BLE");
 
+        // If device is connected, send disconnect
         if (device_status.ble_connected) {
             LlDisconnect(periphCb.connectionHandle, LL_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_POWER_OFF);
             while (device_status.ble_connected) {

@@ -63,8 +63,8 @@ typedef struct {
     uint8_t enable_max78000_video_cnn;
     uint8_t enable_max78000_video_flash_led;        // TODO
     uint8_t enable_max78000_video_and_audio_power;  // TODO
-    uint8_t enable_show_statistics_lcd;
-    uint8_t enable_show_probabilty_lcd;
+    uint8_t enable_show_statistics_lcd;  // TODO
+    uint8_t enable_show_probabilty_lcd;  // TODO
     uint8_t enable_send_statistics;      // TODO
     uint8_t enable_send_classification;  // TODO
 } device_settings_t;

@@ -52,18 +52,11 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
-typedef enum eExpanderDebug
-{
-    eExpanderDebugVideo,
-    eExpanderDebugAudio,
-
-    eExpanderDebugLast
-} teExpanderDebug;
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
 int expander_init(void);
-int expander_debug_select(teExpanderDebug expanderDebug);
+int expander_debug_select(debugger_select_e debugger_select);
 
 #endif /* _MAX32666_EXPANDER_H_ */

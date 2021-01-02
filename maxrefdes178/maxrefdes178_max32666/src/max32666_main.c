@@ -46,8 +46,8 @@
 #include <string.h>
 
 #include "max32666_ble.h"
-#include "max32666_commbuf.h"
-#include "max32666_commhandler.h"
+#include "max32666_ble_command.h"
+#include "max32666_ble_queue.h"
 #include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
@@ -155,7 +155,7 @@ int main(void)
     }
 
     /* Select USB-TYpe-C Debug Connection to MAX78000-Video on IO expander */
-    ret = expander_debug_select(eExpanderDebugVideo);
+    ret = expander_debug_select(DEBUGGER_SELECT_MAX78000_VIDEO);
     if (ret != E_NO_ERROR) {
         PR_ERROR("expander_debug_select failed %d", ret);
         max20303_led_red(1);
@@ -196,15 +196,15 @@ int main(void)
         max20303_led_red(1);
     }
 
-    ret = commbuf_init();
+    ret = ble_queue_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("commbuf_init failed %d", ret);
+        PR_ERROR("ble_queue_init failed %d", ret);
         max20303_led_red(1);
     }
 
-    ret = commhandler_init();
+    ret = ble_command_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("commhandler_init failed %d", ret);
+        PR_ERROR("ble_command_init failed %d", ret);
         max20303_led_red(1);
     }
 
@@ -250,9 +250,10 @@ static void run_application(void)
     lcd_data.toptitle_color = YELLOW;
     lcd_data.notification_color = BLUE;
 
+    // Main application loop
     while (1) {
-        // Handle QSPI RX
-        if (qspi_worker(&qspi_packet_type) == QSPI_STATUS_NEW_DATA) {
+        // Handle received QSPI packets
+        if (qspi_worker(&qspi_packet_type) == QSPI_STATUS_SUCCESS_RX) {
             switch(qspi_packet_type) {
             case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
                 timestamps.video_data_received = GET_RTC_MS();
@@ -261,7 +262,6 @@ static void run_application(void)
                     // Draw FaceID frame and result
                     if (device_settings.enable_max78000_video_cnn) {
                         if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
-                            // if (device_settings.enable_show_probabilty_lcd)
                             strncpy(lcd_data.subtitle, device_status.classification_video.result, sizeof(lcd_data.subtitle) - 1);
                             fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
                         }
@@ -294,7 +294,7 @@ static void run_application(void)
                 }
 
                 if (device_settings.enable_send_classification && device_status.ble_connected) {
-                    commhandler_send_video_classification();
+                    ble_command_send_video_classification();
                 }
                 break;
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
@@ -321,7 +321,7 @@ static void run_application(void)
                 }
 
                 if (device_settings.enable_send_classification && device_status.ble_connected) {
-                    commhandler_send_audio_classification();
+                    ble_command_send_audio_classification();
                 }
                 break;
             default:
@@ -329,10 +329,11 @@ static void run_application(void)
             }
         }
 
+        // Send periodic statistics
         if (device_settings.enable_send_statistics && device_status.ble_connected) {
-            if ((GET_RTC_MS() - timestamps.statistics_sent) > COMMUNICATION_STATISTICS_INTERVAL) {
+            if ((GET_RTC_MS() - timestamps.statistics_sent) > BLE_STATISTICS_INTERVAL) {
                 timestamps.statistics_sent = GET_RTC_MS();
-                commhandler_send_statistics();
+                ble_command_send_statistics();
             }
         }
 
@@ -344,8 +345,8 @@ static void run_application(void)
             }
         }
 
-        // Handle RX communication
-        commhandler_worker();
+        // Handle communication
+        ble_command_worker();
     }
 }
 
@@ -470,4 +471,7 @@ static void core1_irq_init(void)
 //    for (IRQn_Type irq = PF_IRQn; irq < MXC_IRQ_EXT_COUNT; irq++) {
 //        NVIC_DisableIRQ(irq);
 //    }
+
+    NVIC_DisableIRQ(GPIO0_IRQn);
+    NVIC_DisableIRQ(GPIO1_IRQn);
 }

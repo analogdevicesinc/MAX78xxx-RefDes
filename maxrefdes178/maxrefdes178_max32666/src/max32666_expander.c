@@ -65,17 +65,13 @@
 int expander_init(void)
 {
     // TODO
+
     return E_NO_ERROR;
 }
 
-int expander_debug_select(teExpanderDebug expanderDebug)
+int expander_debug_select(debugger_select_e debugger_select)
 {
-//    int err = 0;
-//    if ((err = i2c_reg_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, 0xff, 0x00)) != E_NO_ERROR) {
-//        PR_ERROR("i2c_reg_write failed %d", err);
-//        return err;
-//    }
-
     // TODO
+
     return E_NO_ERROR;
 }
