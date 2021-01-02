@@ -185,10 +185,10 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_DEBUG("video capture : %lu", device_status.statistics.max78000_video.capture_duration_ms);
-            PR_DEBUG("video cnn     : %lu", device_status.statistics.max78000_video.cnn_duration_ms);
-            PR_DEBUG("video qspi    : %lu", device_status.statistics.max78000_video.communication_duration_ms);
-            PR_DEBUG("video total   : %lu", device_status.statistics.max78000_video.total_duration_ms);
+            PR_DEBUG("video capture : %lu", device_status.statistics.max78000_video.capture_duration_us);
+            PR_DEBUG("video cnn     : %lu", device_status.statistics.max78000_video.cnn_duration_us);
+            PR_DEBUG("video qspi    : %lu", device_status.statistics.max78000_video.communication_duration_us);
+            PR_DEBUG("video total   : %lu", device_status.statistics.max78000_video.total_duration_us);
 
             return QSPI_STATUS_SUCCESS_RX;
             break;
@@ -292,7 +292,7 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
-            PR_DEBUG("audio cnn: %lu", device_status.statistics.max78000_audio.cnn_duration_ms);
+            PR_DEBUG("audio cnn: %lu", device_status.statistics.max78000_audio.cnn_duration_us);
 
             return QSPI_STATUS_SUCCESS_RX;
             break;

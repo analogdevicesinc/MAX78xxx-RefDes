@@ -57,32 +57,33 @@
 typedef enum {
     BLE_COMMAND_STATE_IDLE = 0,
     BLE_COMMAND_STATE_RX_STARTED,
-    BLE_COMMAND_STATE_RX_PAYLOAD_RECEIVED,
     BLE_COMMAND_STATE_TX_STARTED,
-    BLE_COMMAND_STATE_TX_PAYLOAD_SENT,
 
     BLE_COMMAND_STATE_LAST
 } ble_command_state_e;
 
-
-//-----------------------------------------------------------------------------
-// Global variables
-//-----------------------------------------------------------------------------
-static ble_packet_container_t tmp_ble_packet_container;
-
-struct {
+typedef struct {
     uint8_t command;
     ble_command_state_e command_state;
     uint32_t received_payload_size;
     uint32_t total_payload_size;
     uint8_t total_payload_buffer[MAX32666_BLE_COMMAND_BUFFER_SIZE];
-} ble_command_buffer;
+} ble_command_buffer_t;
+
+
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+static ble_packet_container_t tmp_container;
+static ble_command_buffer_t ble_command_buffer;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
 static int ble_command_form_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload);
+static int ble_command_handle_rx(void);
+static int ble_command_handle_tx(void);
 
 
 //-----------------------------------------------------------------------------
@@ -91,16 +92,16 @@ static int ble_command_form_single_packet(ble_command_e ble_command, uint32_t pa
 // TODO: handle small MTU, multiple packet cases
 static int ble_command_form_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload)
 {
-    if (payload_size > sizeof(tmp_ble_packet_container.packet.command_packet.payload)) {
+    if (payload_size > sizeof(tmp_container.packet.command_packet.payload)) {
         PR_ERROR("invalid command %d payload size %d", ble_command, payload_size);
         return E_BAD_PARAM;
     }
-    tmp_ble_packet_container.packet.command_packet.header.packet_info.type = BLE_PACKET_TYPE_COMMAND;
-    tmp_ble_packet_container.packet.command_packet.header.packet_info.seq = device_status.ble_next_tx_seq;
-    tmp_ble_packet_container.packet.command_packet.header.command = ble_command;
-    tmp_ble_packet_container.packet.command_packet.header.total_payload_size = payload_size;
-    memcpy(&tmp_ble_packet_container.packet.command_packet.payload, payload, payload_size);
-    tmp_ble_packet_container.size = payload_size + sizeof(ble_command_packet_header_t);
+    tmp_container.packet.command_packet.header.packet_info.type = BLE_PACKET_TYPE_COMMAND;
+    tmp_container.packet.command_packet.header.packet_info.seq = device_status.ble_next_tx_seq;
+    tmp_container.packet.command_packet.header.command = ble_command;
+    tmp_container.packet.command_packet.header.total_payload_size = payload_size;
+    memcpy(&tmp_container.packet.command_packet.payload, payload, payload_size);
+    tmp_container.size = payload_size + sizeof(ble_command_packet_header_t);
 
     return E_SUCCESS;
 }
@@ -121,7 +122,7 @@ int ble_command_send_audio_classification(void)
         return ret;
     }
 
-    ret = ble_queue_enq_tx(&tmp_ble_packet_container);
+    ret = ble_queue_enq_tx(&tmp_container);
     if (ret != E_SUCCESS) {
         PR_ERROR("ble_queue_enq_tx failed %d", ret);
         return ret;
@@ -146,7 +147,7 @@ int ble_command_send_video_classification(void)
         return ret;
     }
 
-    ret = ble_queue_enq_tx(&tmp_ble_packet_container);
+    ret = ble_queue_enq_tx(&tmp_container);
     if (ret != E_SUCCESS) {
         PR_ERROR("ble_queue_enq_tx failed %d", ret);
         return ret;
@@ -171,7 +172,7 @@ int ble_command_send_statistics(void)
         return ret;
     }
 
-    ret = ble_queue_enq_tx(&tmp_ble_packet_container);
+    ret = ble_queue_enq_tx(&tmp_container);
     if (ret != E_SUCCESS) {
         PR_ERROR("ble_queue_enq_tx failed ret", ret);
         return ret;
@@ -180,34 +181,47 @@ int ble_command_send_statistics(void)
     return E_SUCCESS;
 }
 
-int ble_command_worker(void)
+static int ble_command_execute_rx_command(void)
 {
-    int ret;
+    PR_INFO("Execute command %d", ble_command_buffer.command);
+    PR_INFO("Total payload: %d", ble_command_buffer.total_payload_size);
+    for (int i = 0; i < ble_command_buffer.total_payload_size; i++) {
+        PR("%02hhX ", ble_command_buffer.total_payload_buffer[i]);
+    }
+    PR("\n");
 
-    if (ble_queue_deq_rx(&tmp_ble_packet_container) != E_SUCCESS) {
-        // No new packet on ble rx queue
+    return E_SUCCESS;
+}
+
+static int ble_command_handle_rx(void)
+{
+    uint8_t packet_payload_size;
+
+    // BLE RX, check new packet on ble rx queue
+    if (ble_queue_deq_rx(&tmp_container) != E_SUCCESS) {
         return E_NO_ERROR;
     }
 
-    // Check sequence number of packet
-    if (device_status.ble_expected_rx_seq != tmp_ble_packet_container.packet.packet_info.seq) {
+    // Check sequence number of the packet
+    if (device_status.ble_expected_rx_seq != tmp_container.packet.packet_info.seq) {
         PR_ERROR("Incorrect seq expected %d received %d", device_status.ble_expected_rx_seq,
-                tmp_ble_packet_container.packet.packet_info.seq);
+                tmp_container.packet.packet_info.seq);
 //        return E_BAD_STATE;
     }
 
-    PR_INFO("BLE RX packet size %d", tmp_ble_packet_container.size);
-    if (tmp_ble_packet_container.packet.packet_info.type == BLE_PACKET_TYPE_COMMAND) {
-        PR_INFO("Command %d", tmp_ble_packet_container.packet.command_packet.header.command);
-        PR_INFO("Total payload size %d", tmp_ble_packet_container.packet.command_packet.header.total_payload_size);
-        PR_INFO("Payload: ");
-        for (int i = 0; i < tmp_ble_packet_container.size - sizeof(ble_command_packet_header_t); i++) {
-            PR("%02hhX ", tmp_ble_packet_container.packet.command_packet.payload[i]);
+    PR_INFO("BLE RX packet size %d", tmp_container.size);
+    if (tmp_container.packet.packet_info.type == BLE_PACKET_TYPE_COMMAND) {
+        packet_payload_size = tmp_container.size - sizeof(ble_command_packet_header_t);
+        PR_INFO("Command %d", tmp_container.packet.command_packet.header.command);
+        PR_INFO("Total payload size %d", tmp_container.packet.command_packet.header.total_payload_size);
+        PR_INFO("Payload: %d", packet_payload_size);
+        for (int i = 0; i < packet_payload_size; i++) {
+            PR("%02hhX ", tmp_container.packet.command_packet.payload[i]);
         }
         PR("\n");
 
         // Check abort command
-        if (tmp_ble_packet_container.packet.command_packet.header.command == BLE_COMMAND_ABORT_CMD) {
+        if (tmp_container.packet.command_packet.header.command == BLE_COMMAND_ABORT_CMD) {
             PR_INFO("reset command state");
             ble_command_buffer.command_state = BLE_COMMAND_STATE_IDLE;
             return E_SUCCESS;
@@ -216,46 +230,102 @@ int ble_command_worker(void)
         // Check state
         if (ble_command_buffer.command_state != BLE_COMMAND_STATE_IDLE) {
             PR_ERROR("command packet is not expected");
-
-            // Send invalid command response
-            ret = ble_command_form_single_packet(BLE_COMMAND_INVALID_RES, 0, NULL);
-            if (ret != E_SUCCESS) {
-                PR_ERROR("form_single_packet_command failed %d", ret);
-                return ret;
-            }
-            ret = ble_queue_enq_tx(&tmp_ble_packet_container);
-            if (ret != E_SUCCESS) {
-                PR_ERROR("commbuf_push_tx_ble failed %d", ret);
-                return ret;
-            }
-
             return E_BAD_STATE;
         }
 
-        // Start command state
-        ble_command_buffer.command_state = BLE_COMMAND_STATE_RX_STARTED;
-        ble_command_buffer.command = tmp_ble_packet_container.packet.command_packet.header.command;
+        // Check size
+        if (packet_payload_size > tmp_container.packet.command_packet.header.total_payload_size) {
+            PR_ERROR("packet payload size is larger than total payload size");
+            return E_BAD_PARAM;
+        }
 
+        // TODO: handle big files
+        // Check max size
+        if (tmp_container.packet.command_packet.header.total_payload_size > MAX32666_BLE_COMMAND_BUFFER_SIZE) {
+            PR_ERROR("total payload size is too big");
+            return E_BAD_PARAM;
+        }
+
+        ble_command_buffer.command = tmp_container.packet.command_packet.header.command;
+        ble_command_buffer.total_payload_size = tmp_container.packet.command_packet.header.total_payload_size;
+        ble_command_buffer.received_payload_size = packet_payload_size;
+        ble_command_buffer.command_state = BLE_COMMAND_STATE_RX_STARTED;
+        memcpy(&ble_command_buffer.total_payload_buffer, &tmp_container.packet.command_packet.payload, packet_payload_size);
+
+        // Check if single packet command
+        if (tmp_container.packet.command_packet.header.total_payload_size <= packet_payload_size) {
+            ble_command_execute_rx_command();
+            ble_command_buffer.command_state = BLE_COMMAND_STATE_IDLE;
+        }
 
         return E_SUCCESS;
-    } else if (tmp_ble_packet_container.packet.packet_info.type == BLE_PACKET_TYPE_PAYLOAD) {
-        PR_INFO("Payload: ");
-        for (int i = 0; i < tmp_ble_packet_container.size - sizeof(ble_payload_packet_header_t); i++) {
-            PR("%02hhX ", tmp_ble_packet_container.packet.payload_packet.payload[i]);
+    } else if (tmp_container.packet.packet_info.type == BLE_PACKET_TYPE_PAYLOAD) {
+        packet_payload_size = tmp_container.size - sizeof(ble_payload_packet_header_t);
+        PR_INFO("Payload %d: ", packet_payload_size);
+        for (int i = 0; i < packet_payload_size; i++) {
+            PR("%02hhX ", tmp_container.packet.payload_packet.payload[i]);
         }
         PR("\n");
-        // TODO: handle multiple packet commands
+
+        // Check state
+        if (ble_command_buffer.command_state != BLE_COMMAND_STATE_RX_STARTED) {
+            PR_ERROR("payload packet is not expected");
+            return E_BAD_STATE;
+        }
+
+        if (ble_command_buffer.received_payload_size + packet_payload_size > MAX32666_BLE_COMMAND_BUFFER_SIZE) {
+            PR_ERROR("payload overflow");
+            return E_OVERFLOW;
+        }
+
+        memcpy((&ble_command_buffer.total_payload_buffer) + ble_command_buffer.received_payload_size,
+                &tmp_container.packet.command_packet.payload, packet_payload_size);
+
+        ble_command_buffer.received_payload_size += packet_payload_size;
+
+        // Check if payload receive is completed
+        if (tmp_container.packet.command_packet.header.total_payload_size <= ble_command_buffer.received_payload_size) {
+            ble_command_execute_rx_command();
+            ble_command_buffer.command_state = BLE_COMMAND_STATE_IDLE;
+        }
+
         return E_SUCCESS;
     }
 
     return E_SUCCESS;
 }
 
+static int ble_command_handle_tx(void)
+{
+    // BLE TX, check new packet to enqueue ble tx queue
+    if (ble_command_buffer.command_state != BLE_COMMAND_STATE_TX_STARTED) {
+        return E_NO_ERROR;
+    }
+    // TODO
 
+    return E_SUCCESS;
+}
+
+int ble_command_reset(void)
+{
+    ble_command_buffer.command_state = BLE_COMMAND_STATE_IDLE;
+
+    // TODO close open files
+
+    return E_NO_ERROR;
+}
+
+int ble_command_worker(void)
+{
+    ble_command_handle_rx();
+    ble_command_handle_tx();
+
+    return E_SUCCESS;
+}
 
 int ble_command_init(void)
 {
-    ble_command_buffer.command_state = BLE_COMMAND_STATE_IDLE;
+    ble_command_reset();
 
     return E_NO_ERROR;
 }

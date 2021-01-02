@@ -402,15 +402,15 @@ static void run_demo(void)
             qspi_completed_time = GET_RTC_MS();
 
             if (time_counter % 10 == 0) {
-                max78000_statistics.capture_duration_ms = (capture_completed_time - capture_started_time);
-                max78000_statistics.cnn_duration_ms = (cnn_completed_time - capture_completed_time);
-                max78000_statistics.communication_duration_ms = (qspi_completed_time - cnn_completed_time);
-                max78000_statistics.total_duration_ms = (qspi_completed_time - capture_started_time);
+                max78000_statistics.capture_duration_us = (capture_completed_time - capture_started_time) * 1000;
+                max78000_statistics.cnn_duration_us = (cnn_completed_time - capture_completed_time) * 1000;
+                max78000_statistics.communication_duration_us = (qspi_completed_time - cnn_completed_time) * 1000;
+                max78000_statistics.total_duration_us = (qspi_completed_time - capture_started_time) * 1000;
 
-                PR_DEBUG("Capture : %lu", max78000_statistics.capture_duration_ms);
-                PR_DEBUG("CNN     : %lu", max78000_statistics.cnn_duration_ms);
-                PR_DEBUG("QSPI    : %lu", max78000_statistics.communication_duration_ms);
-                PR_DEBUG("Total   : %lu\n\n", max78000_statistics.total_duration_ms);
+                PR_DEBUG("Capture : %lu", max78000_statistics.capture_duration_us);
+                PR_DEBUG("CNN     : %lu", max78000_statistics.cnn_duration_us);
+                PR_DEBUG("QSPI    : %lu", max78000_statistics.communication_duration_us);
+                PR_DEBUG("Total   : %lu\n\n", max78000_statistics.total_duration_us);
 
                 spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, (uint8_t *) &max78000_statistics,
                                     sizeof(max78000_statistics), QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES, &qspi_int);

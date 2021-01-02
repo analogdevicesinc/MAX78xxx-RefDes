@@ -334,7 +334,32 @@ static void run_application(void)
         }
 
         // Handle BLE communication
-        ble_command_worker();
+        if (device_settings.enable_ble && device_status.ble_connected) {
+            ble_command_worker();
+        }
+
+        // Check if BLE status changed
+        if (device_status.ble_status_changed) {
+            device_status.ble_status_changed = 0;
+
+            if (device_status.ble_connected) {
+                ble_queue_flush();
+                ble_command_reset();
+
+                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1,
+                        "BLE %02X:%02X:%02X:%02X:%02X:%02X connected!",
+                        device_status.ble_connected_peer_mac[5], device_status.ble_connected_peer_mac[4],
+                        device_status.ble_connected_peer_mac[3], device_status.ble_connected_peer_mac[2],
+                        device_status.ble_connected_peer_mac[1], device_status.ble_connected_peer_mac[0]);
+                timestamps.notification_received = GET_RTC_MS();
+            } else {
+                ble_queue_flush();
+                ble_command_reset();
+
+                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE disconnected!");
+                timestamps.notification_received = GET_RTC_MS();
+            }
+        }
     }
 }
 
@@ -353,31 +378,31 @@ static void refresh_screen(void)
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "Bat:%.2f", (double)device_status.statistics.battery_level);
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "Bat:%d", device_status.statistics.battery_level);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_ms);
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_us / 1000);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCNN:%d", device_status.statistics.max78000_video.cnn_duration_ms);
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCNN:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_ms);
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_us / 1000);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "vPow:%d", device_status.statistics.max78000_video_power_mw);
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "vPow:%d", device_status.statistics.max78000_video_power_uw / 1000);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "aCNN:%d", device_status.statistics.max78000_audio.cnn_duration_ms);
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "aCNN:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "aPow:%d", device_status.statistics.max78000_audio_power_mw);
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "aPow:%d", device_status.statistics.max78000_audio_power_uw / 1000);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
     }

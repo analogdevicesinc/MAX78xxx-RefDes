@@ -173,7 +173,7 @@
 
 // MAX32666 Hardware semaphores
 #define MAX32666_SEMAPHORE_PRINT           1
-#define MAX32666_COMMBUF_BUFFER            2
+#define MAX32666_SEMAPHORE_BLE_QUEUE       2
 
 // MAX32666 Timers
 #define MAX32666_BLE_TIMER                 MXC_TMR0
@@ -518,15 +518,17 @@ typedef struct __attribute__((packed)) {
 } ble_payload_packet_header_t;
 
 // BLE command packet
+#define BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE    BLE_MAX_PACKET_SIZE - sizeof(ble_command_packet_header_t)
 typedef struct __attribute__((packed)) {
     ble_command_packet_header_t header;
-    uint8_t payload[BLE_MAX_PACKET_SIZE - sizeof(ble_command_packet_header_t)];
+    uint8_t payload[BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE];
 } ble_command_packet_t;
 
 // BLE payload packet
+#define BLE_PAYLOAD_PACKET_MAX_PAYLOAD_SIZE    BLE_MAX_PACKET_SIZE - sizeof(ble_payload_packet_header_t)
 typedef struct __attribute__((packed)) {
     ble_payload_packet_header_t header;
-    uint8_t payload[BLE_MAX_PACKET_SIZE - sizeof(ble_payload_packet_header_t)];
+    uint8_t payload[BLE_PAYLOAD_PACKET_MAX_PAYLOAD_SIZE];
 } ble_payload_packet_t;
 
 // BLE packet container
@@ -563,10 +565,10 @@ typedef struct __attribute__((packed)) {
 
 // MAX78000 statistics field
 typedef struct __attribute__((packed)) {
-    uint32_t cnn_duration_ms;
-    uint32_t capture_duration_ms;
-    uint32_t communication_duration_ms;
-    uint32_t total_duration_ms;
+    uint32_t cnn_duration_us;
+    uint32_t capture_duration_us;
+    uint32_t communication_duration_us;
+    uint32_t total_duration_us;
 } max78000_statistics_t;
 
 // Statistics command response
@@ -574,9 +576,9 @@ typedef struct __attribute__((packed)) {
     max78000_statistics_t max78000_video;
     max78000_statistics_t max78000_audio;
     float lcd_fps;
-    float battery_level;
-    uint32_t max78000_video_power_mw;
-    uint32_t max78000_audio_power_mw;
+    uint8_t battery_level;
+    uint32_t max78000_video_power_uw;
+    uint32_t max78000_audio_power_uw;
 } device_statistics_t;
 
 // Classification command response

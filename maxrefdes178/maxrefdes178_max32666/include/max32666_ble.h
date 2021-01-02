@@ -56,7 +56,6 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 uint16_t ble_max_packet_size(void);
-int ble_connected(void);
 int ble_send_indication(uint16_t dataLen, uint8_t *data);
 int ble_init(void);
 int ble_worker(void);

@@ -346,14 +346,11 @@ static void periphProcMsg(dmEvt_t *pMsg)
         periphCb.connId = (dmConnId_t) pMsg->hdr.param;
         periphCb.connected = TRUE;
         periphCb.connectionHandle = pMsg->connOpen.handle;
+
         device_status.ble_connected = 1;
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
-
-        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE %02X:%02X:%02X:%02X:%02X:%02X connected!",
-                pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
-                pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
-        timestamps.notification_received = GET_RTC_MS();
+        memcpy(device_status.ble_connected_peer_mac, pMsg->connOpen.peerAddr, sizeof(device_status.ble_connected_peer_mac));
 
         PR_INFO("Connection opened");
         PR_DEBUG("connId: %d", pMsg->connOpen.hdr.param);
@@ -362,22 +359,17 @@ static void periphProcMsg(dmEvt_t *pMsg)
                 pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
                 pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
         PR_DEBUG("MTU: %d", AttGetMtu(periphCb.connId));
-        memcpy(device_status.ble_connected_peer_mac, pMsg->connOpen.peerAddr, sizeof(device_status.ble_connected_peer_mac));
 
         uiEvent = APP_UI_CONN_OPEN;
         break;
 
     case DM_CONN_CLOSE_IND:
         periphCb.connected = FALSE;
+
         device_status.ble_connected = 0;
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
         memset(device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
-
-        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE disconnected!",
-                pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
-                pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
-        timestamps.notification_received = GET_RTC_MS();
 
         PR_INFO("Connection closed status 0x%02hhX, reason 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
         switch (pMsg->connClose.reason)
@@ -623,7 +615,8 @@ static void ble_receive(uint16_t dataLen, uint8_t *data)
     }
     PR("\n");
 
-    if (dataLen > sizeof(ble_packet_container.packet)) {
+    if ((dataLen > sizeof(ble_packet_container.packet)) ||
+        (dataLen < sizeof(ble_packet_container.packet.packet_info))) {
         PR_ERROR("invalid packet size %u", dataLen);
         return;
     }
@@ -643,11 +636,6 @@ uint16_t ble_max_packet_size(void)
     }
 
     return AttGetMtu(periphCb.connId) - 3;
-}
-
-int ble_connected(void)
-{
-    return periphCb.connected;
 }
 
 int ble_send_indication(uint16_t dataLen, uint8_t *data)
@@ -725,9 +713,9 @@ int ble_worker(void)
         PR_INFO("Disable BLE");
 
         // If device is connected, send disconnect
-        if (device_status.ble_connected) {
+        if (periphCb.connected) {
             LlDisconnect(periphCb.connectionHandle, LL_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_POWER_OFF);
-            while (device_status.ble_connected) {
+            while (periphCb.connected) {
                 wsfOsDispatcher();
             }
         }

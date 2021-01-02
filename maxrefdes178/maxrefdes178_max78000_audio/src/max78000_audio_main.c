@@ -473,7 +473,7 @@ int main(void)
                         (uint8_t *) &classification_result, sizeof(classification_result),
                         QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES, &qspi_int);
 
-                max78000_statistics.cnn_duration_ms = cnn_time / 1000;
+                max78000_statistics.cnn_duration_us = cnn_time;
                 spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI, (uint8_t *) &max78000_statistics,
                                     sizeof(max78000_statistics), QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES, &qspi_int);
 

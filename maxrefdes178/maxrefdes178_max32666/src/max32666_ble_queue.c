@@ -90,19 +90,19 @@ static int ble_queue_enq(ble_queue_t *ble_queue, ble_packet_container_t *ble_pac
 {
     uint32_t next;
 
-    while(MXC_SEMA_GetSema(MAX32666_COMMBUF_BUFFER) == E_BUSY) {};
+    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_BLE_QUEUE) == E_BUSY) {};
 
     next = (ble_queue->head + 1) % MAX32666_BLE_QUEUE_SIZE;
 
     if (next == ble_queue->tail) {
-        MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
+        MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_BLE_QUEUE);
         return E_OVERFLOW;
     }
 
     memcpy(&(ble_queue->container_array[ble_queue->head]), ble_packet_container, sizeof(ble_packet_container_t));
     ble_queue->head = next;
 
-    MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
+    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_BLE_QUEUE);
 
     return E_SUCCESS;
 }
@@ -111,10 +111,10 @@ static int ble_queue_deq(ble_queue_t *ble_queue, ble_packet_container_t *ble_pac
 {
     uint32_t next;
 
-    while(MXC_SEMA_GetSema(MAX32666_COMMBUF_BUFFER) == E_BUSY) {};
+    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_BLE_QUEUE) == E_BUSY) {};
 
     if (ble_queue->head == ble_queue->tail) {
-        MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
+        MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_BLE_QUEUE);
         return E_UNDERFLOW;
     }
 
@@ -123,7 +123,7 @@ static int ble_queue_deq(ble_queue_t *ble_queue, ble_packet_container_t *ble_pac
     memcpy(ble_packet_container, &(ble_queue->container_array[ble_queue->tail]), sizeof(ble_packet_container_t));
     ble_queue->tail = next;
 
-    MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
+    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_BLE_QUEUE);
 
     return E_SUCCESS;
 }
@@ -150,14 +150,14 @@ int ble_queue_enq_tx(ble_packet_container_t *ble_packet_container)
 
 int ble_queue_flush(void)
 {
-    while(MXC_SEMA_GetSema(MAX32666_COMMBUF_BUFFER) == E_BUSY) {};
+    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_BLE_QUEUE) == E_BUSY) {};
 
     ble_queue_rx.head = 0;
     ble_queue_rx.tail = 0;
     ble_queue_tx.head = 0;
     ble_queue_tx.tail = 0;
 
-    MXC_SEMA_FreeSema(MAX32666_COMMBUF_BUFFER);
+    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_BLE_QUEUE);
 
     return E_SUCCESS;
 }

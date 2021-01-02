@@ -59,6 +59,8 @@ int ble_command_send_audio_classification(void);
 int ble_command_send_video_classification(void);
 int ble_command_send_statistics(void);
 
+int ble_command_reset(void);
+
 int ble_command_init(void);
 int ble_command_worker(void);
 

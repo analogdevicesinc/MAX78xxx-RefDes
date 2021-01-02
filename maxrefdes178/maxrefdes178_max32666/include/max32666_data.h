@@ -72,18 +72,20 @@ typedef struct {
 typedef struct {
     device_serial_num_t device_serial_num; // TODO
     device_version_t device_version;
-    uint8_t ble_mac[6];
+    uint8_t ble_mac[6];  // written by core1
 } device_info_t;
 
 typedef struct {
     device_statistics_t statistics;      // TODO
     classification_result_t classification_video;
     classification_result_t classification_audio;
-    uint8_t ble_connected;
-    uint8_t ble_connected_peer_mac[6];
-    uint8_t ble_expected_rx_seq;
-    uint8_t ble_next_tx_seq;
     faceid_embed_update_status_e faceid_embed_update_status_e;  // TODO
+
+    uint8_t ble_status_changed;  // written by both core0 and core1
+    uint8_t ble_connected;  // written by core1
+    uint8_t ble_connected_peer_mac[6];  // written by core1
+    uint8_t ble_expected_rx_seq;  // written by core1
+    uint8_t ble_next_tx_seq;  // written by core1
 } device_status_t;
 
 typedef struct {
