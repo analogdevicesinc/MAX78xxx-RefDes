@@ -241,6 +241,8 @@ int main(void)
     PR("\n");
 
     // TODO: get max78000_video and max78000_audio version and serial num
+    // QSPI_PACKET_TYPE_VIDEO_VERSION_CMD QSPI_PACKET_TYPE_AUDIO_VERSION_CMD
+    // QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD
 
     // Print logo and version
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
@@ -281,7 +283,8 @@ static void run_application(void)
                 }
 
                 if (device_settings.enable_send_classification && device_status.ble_connected) {
-                    ble_command_send_video_classification();
+                    ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES,
+                        sizeof(device_status.classification_video), (uint8_t *) &device_status.classification_video);
                 }
                 break;
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
@@ -305,20 +308,21 @@ static void run_application(void)
                     } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
                         device_settings.enable_max78000_video_cnn = 0;
                     } else if (strcmp(device_status.classification_audio.result, "UP") == 0) {
-                        device_settings.enable_show_probabilty_lcd = 1;
+                        device_settings.enable_lcd_probabilty = 1;
                     } else if(strcmp(device_status.classification_audio.result, "DOWN") == 0) {
-                        device_settings.enable_show_probabilty_lcd = 0;
+                        device_settings.enable_lcd_probabilty = 0;
                     } else if (strcmp(device_status.classification_audio.result, "YES") == 0) {
-                        device_settings.enable_show_statistics_lcd = 1;
+                        device_settings.enable_lcd_statistics = 1;
                     } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
-                        device_settings.enable_show_statistics_lcd = 0;
+                        device_settings.enable_lcd_statistics = 0;
                     }
                 }
 
 //                refresh_screen();
 
                 if (device_settings.enable_send_classification && device_status.ble_connected) {
-                    ble_command_send_audio_classification();
+                    ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
+                        sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
                 }
                 break;
             default:
@@ -330,7 +334,8 @@ static void run_application(void)
         if (device_settings.enable_send_statistics && device_status.ble_connected) {
             if ((GET_RTC_MS() - timestamps.statistics_sent) > BLE_STATISTICS_INTERVAL) {
                 timestamps.statistics_sent = GET_RTC_MS();
-                ble_command_send_statistics();
+                ble_command_send_single_packet(BLE_COMMAND_GET_STATISTICS_RES,
+                    sizeof(device_status.statistics), (uint8_t *) &device_status.statistics);
             }
         }
 
@@ -379,7 +384,7 @@ static void refresh_screen(void)
         return;
     }
 
-    if (device_settings.enable_show_statistics_lcd) {
+    if (device_settings.enable_lcd_statistics) {
         int line_pos = 3;
 
         snprintf(statistics_string, sizeof(statistics_string) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
@@ -433,7 +438,7 @@ static void refresh_screen(void)
     }
 
     if ((timestamps.screen_drew - timestamps.audio_result_received) < LCD_CLASSIFICATION_DURATION) {
-        if (device_settings.enable_show_probabilty_lcd) {
+        if (device_settings.enable_lcd_probabilty) {
             snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "%s %0.1f",
                     device_status.classification_audio.result, (double) device_status.classification_audio.probabily);
         } else {

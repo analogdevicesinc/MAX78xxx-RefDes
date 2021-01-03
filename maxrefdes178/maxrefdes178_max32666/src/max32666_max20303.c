@@ -196,7 +196,7 @@ int max20303_init(void)
     // Boost converter	set to 9.6V and enable when needed
 
     // Configure LDO and Buck outputs
-    max20303_buck2(0);
+    max20303_enable_video_audio(0);
     MXC_Delay(MXC_DELAY_MSEC(100));
 
     max20303_boost(0, 0x10);
@@ -212,7 +212,7 @@ int max20303_init(void)
     MXC_Delay(MXC_DELAY_MSEC(10));
 
     // Power On MAX78000 Board
-    max20303_buck2(1);
+    max20303_enable_video_audio(1);
     MXC_Delay(MXC_DELAY_MSEC(100));
 
     return E_NO_ERROR;
@@ -290,7 +290,7 @@ int max20303_buck1(int on)
     return E_NO_ERROR;
 }
 
-int max20303_buck2(int on)
+int max20303_enable_video_audio(int on)
 {
     i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x7E);	// Enable active discharge and FET scaling
     i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x28);	// Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)
@@ -323,7 +323,6 @@ int max20303_buckboost(int on)
     return E_NO_ERROR;
 }
 
-
 int max20303_boost(int on, uint8_t boost_output_level)
 {
     if (boost_output_level > 0x16) {
@@ -340,5 +339,11 @@ int max20303_boost(int on, uint8_t boost_output_level)
 
     i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT4, 0x03);				   //  BstSet 0x03 - not sure if this is writeable
     i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BST_CONFIG_WRITE);  // = Bset_Config_Write
+    return E_NO_ERROR;
+}
+
+int max20303_power_off(void)
+{
+    i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_APREG_POWEROFF, 0xB2);
     return E_NO_ERROR;
 }

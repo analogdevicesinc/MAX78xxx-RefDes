@@ -379,7 +379,6 @@ typedef enum {
     BLE_COMMAND_FACEID_EMBED_UPDATE_EXT_RES,      // faceid_embed_update_status_e
 
     // Device Settings
-    BLE_COMMAND_ENABLE_BLE_CMD,                       // None
     BLE_COMMAND_DISABLE_BLE_CMD,                      // None
     BLE_COMMAND_SHUT_DOWN_DEVICE_CMD,                 // None
     BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD,            // None
@@ -388,6 +387,8 @@ typedef enum {
     BLE_COMMAND_DISABLE_MAX78000_VIDEO_CMD,           // None
     BLE_COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD,        // None
     BLE_COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD,       // None
+    BLE_COMMAND_ENABLE_MAX78000_AUDIO_CNN_CMD,        // None
+    BLE_COMMAND_DISABLE_MAX78000_AUDIO_CNN_CMD,       // None
     BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,  // None
     BLE_COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD, // None
     BLE_COMMAND_ENABLE_MAX78000_VIDEO_AUDIO_POWER,    // None
@@ -412,8 +413,6 @@ typedef enum {
 
     // Debugger Selection
     BLE_COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
-    BLE_COMMAND_GET_DEBUGGER_CMD,        // None
-    BLE_COMMAND_GET_DEBUGGER_RES,        // debugger_select_e
 
     BLE_COMMAND_LAST
 } ble_command_e;

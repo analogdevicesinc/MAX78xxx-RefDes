@@ -42,6 +42,9 @@
 #include "max32666_ble_queue.h"
 #include "max32666_data.h"
 #include "max32666_debug.h"
+#include "max32666_expander.h"
+#include "max32666_lcd.h"
+#include "max32666_max20303.h"
 #include "maxrefdes178_definitions.h"
 
 
@@ -56,8 +59,8 @@
 //-----------------------------------------------------------------------------
 typedef enum {
     BLE_COMMAND_STATE_IDLE = 0,
-    BLE_COMMAND_STATE_RX_STARTED,
-    BLE_COMMAND_STATE_TX_STARTED,
+    BLE_COMMAND_STATE_RX_RUNNING,
+    BLE_COMMAND_STATE_TX_RUNNING,
 
     BLE_COMMAND_STATE_LAST
 } ble_command_state_e;
@@ -66,6 +69,7 @@ typedef struct {
     uint8_t command;
     ble_command_state_e command_state;
     uint32_t received_payload_size;
+    uint32_t transmitted_payload_size;
     uint32_t total_payload_size;
     uint8_t total_payload_buffer[MAX32666_BLE_COMMAND_BUFFER_SIZE];
 } ble_command_buffer_t;
@@ -89,7 +93,6 @@ static int ble_command_handle_tx(void);
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-// TODO: handle small MTU, multiple packet cases
 static int ble_command_form_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload)
 {
     if (payload_size > sizeof(tmp_container.packet.command_packet.payload)) {
@@ -100,13 +103,14 @@ static int ble_command_form_single_packet(ble_command_e ble_command, uint32_t pa
     tmp_container.packet.command_packet.header.packet_info.seq = device_status.ble_next_tx_seq;
     tmp_container.packet.command_packet.header.command = ble_command;
     tmp_container.packet.command_packet.header.total_payload_size = payload_size;
-    memcpy(&tmp_container.packet.command_packet.payload, payload, payload_size);
+    memcpy(tmp_container.packet.command_packet.payload, payload, payload_size);
     tmp_container.size = payload_size + sizeof(ble_command_packet_header_t);
 
     return E_SUCCESS;
 }
 
-int ble_command_send_audio_classification(void)
+// TODO: handle small MTU, multiple packet cases
+int ble_command_send_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload)
 {
     int ret;
 
@@ -115,8 +119,13 @@ int ble_command_send_audio_classification(void)
         return E_BAD_STATE;
     }
 
-    ret = ble_command_form_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
-            sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
+    if (payload_size + sizeof(ble_command_packet_header_t) > device_status.ble_max_packet_size) {
+        PR_ERROR("command is bigger than ble max packet size %d %d",
+                payload_size + sizeof(ble_command_packet_header_t), device_status.ble_max_packet_size);
+        return E_BAD_PARAM;
+    }
+
+    ret = ble_command_form_single_packet(ble_command, payload_size, payload);
     if (ret != E_SUCCESS) {
         PR_ERROR("form_single_packet_command failed %d", ret);
         return ret;
@@ -131,56 +140,6 @@ int ble_command_send_audio_classification(void)
     return ret;
 }
 
-int ble_command_send_video_classification(void)
-{
-    int ret;
-
-    if (ble_command_buffer.command_state != BLE_COMMAND_STATE_IDLE) {
-        PR_ERROR("command state is not idle");
-        return E_BAD_STATE;
-    }
-
-    ret = ble_command_form_single_packet(BLE_COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES,
-            sizeof(device_status.classification_video), (uint8_t *) &device_status.classification_video);
-    if (ret != E_SUCCESS) {
-        PR_ERROR("form_single_packet_command failed %d", ret);
-        return ret;
-    }
-
-    ret = ble_queue_enq_tx(&tmp_container);
-    if (ret != E_SUCCESS) {
-        PR_ERROR("ble_queue_enq_tx failed %d", ret);
-        return ret;
-    }
-
-    return E_SUCCESS;
-}
-
-int ble_command_send_statistics(void)
-{
-    int ret;
-
-    if (ble_command_buffer.command_state != BLE_COMMAND_STATE_IDLE) {
-        PR_ERROR("command state is not idle");
-        return E_BAD_STATE;
-    }
-
-    ret = ble_command_form_single_packet(BLE_COMMAND_GET_STATISTICS_RES,
-            sizeof(device_status.statistics), (uint8_t *) &device_status.statistics);
-    if (ret != E_SUCCESS) {
-        PR_ERROR("form_single_packet_command failed %d", ret);
-        return ret;
-    }
-
-    ret = ble_queue_enq_tx(&tmp_container);
-    if (ret != E_SUCCESS) {
-        PR_ERROR("ble_queue_enq_tx failed ret", ret);
-        return ret;
-    }
-
-    return E_SUCCESS;
-}
-
 static int ble_command_execute_rx_command(void)
 {
     PR_INFO("Execute command %d", ble_command_buffer.command);
@@ -189,6 +148,146 @@ static int ble_command_execute_rx_command(void)
         PR("%02hhX ", ble_command_buffer.total_payload_buffer[i]);
     }
     PR("\n");
+
+    switch (ble_command_buffer.command) {
+    case BLE_COMMAND_GET_VERSION_CMD:
+        ble_command_send_single_packet(BLE_COMMAND_GET_VERSION_RES,
+            sizeof(device_info.device_version), (uint8_t *) &device_info.device_version);
+        break;
+    case BLE_COMMAND_GET_SERIAL_NUM_CMD:
+        ble_command_send_single_packet(BLE_COMMAND_GET_SERIAL_NUM_RES,
+            sizeof(device_info.device_serial_num), (uint8_t *) &device_info.device_serial_num);
+        break;
+    case BLE_COMMAND_FACEID_EMBED_UPDATE_CMD:
+        if (ble_command_buffer.total_payload_size > 1) {
+            // TODO
+            ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
+                sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
+        } else {
+            PR_ERROR("invalid faceid embed payload len")
+        }
+        break;
+    case BLE_COMMAND_DISABLE_BLE_CMD:
+        device_settings.enable_ble = 0;
+        break;
+    case BLE_COMMAND_SHUT_DOWN_DEVICE_CMD:
+        max20303_power_off();
+        break;
+    case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD:
+        if (device_settings.enable_max78000_audio == 0) {
+            // TODO send QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD
+        }
+        device_settings.enable_max78000_audio = 1;
+        break;
+    case BLE_COMMAND_DISABLE_MAX78000_AUDIO_CMD:
+        if (device_settings.enable_max78000_audio != 0) {
+            // TODO send QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD
+        }
+        device_settings.enable_max78000_audio = 0;
+        break;
+    case BLE_COMMAND_ENABLE_MAX78000_VIDEO_CMD:
+        if (device_settings.enable_max78000_video != 1) {
+            // TODO send QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD
+        }
+        device_settings.enable_max78000_video = 1;
+        break;
+    case BLE_COMMAND_DISABLE_MAX78000_VIDEO_CMD:
+        if (device_settings.enable_max78000_video != 0) {
+            // TODO send QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD
+        }
+        device_settings.enable_max78000_video = 0;
+        break;
+    case BLE_COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD:
+        if (device_settings.enable_max78000_video_cnn != 1) {
+            // TODO send QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD
+        }
+        device_settings.enable_max78000_video_cnn = 1;
+        break;
+    case BLE_COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD:
+        if (device_settings.enable_max78000_video_cnn != 0) {
+            // TODO send QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD
+        }
+        device_settings.enable_max78000_video_cnn = 0;
+        break;
+    case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CNN_CMD:
+        if (device_settings.enable_max78000_audio_cnn != 1) {
+            // TODO send QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD
+        }
+        device_settings.enable_max78000_audio_cnn = 1;
+        break;
+    case BLE_COMMAND_DISABLE_MAX78000_AUDIO_CNN_CMD:
+        if (device_settings.enable_max78000_audio_cnn != 0) {
+            // TODO send QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD
+        }
+        device_settings.enable_max78000_audio_cnn = 0;
+        break;
+    case BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD:
+        if (device_settings.enable_max78000_video_flash_led != 1) {
+            // TODO send QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD
+        }
+        device_settings.enable_max78000_video_flash_led = 1;
+        break;
+    case BLE_COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD:
+        if (device_settings.enable_max78000_video_flash_led != 0) {
+            // TODO send QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD
+        }
+        device_settings.enable_max78000_video_flash_led = 0;
+        break;
+    case BLE_COMMAND_ENABLE_MAX78000_VIDEO_AUDIO_POWER:
+        if (device_settings.enable_max78000_video_and_audio_power != 1) {
+            max20303_enable_video_audio(1);
+        }
+        device_settings.enable_max78000_video_and_audio_power = 1;
+        break;
+    case BLE_COMMAND_DISABLE_MAX78000_VIDEO_AUDIO_POWER:
+        if (device_settings.enable_max78000_video_and_audio_power != 0) {
+            max20303_enable_video_audio(0);
+        }
+        device_settings.enable_max78000_video_and_audio_power = 0;
+        break;
+    case BLE_COMMAND_ENABLE_LCD_CMD:
+        device_settings.enable_lcd = 1;
+        lcd_backlight(1);
+        break;
+    case BLE_COMMAND_DISABLE_LCD_CMD:
+        device_settings.enable_lcd = 0;
+        lcd_backlight(0);
+        break;
+    case BLE_COMMAND_ENABLE_LCD_STATISCTICS_CMD:
+        device_settings.enable_lcd_statistics = 1;
+        break;
+    case BLE_COMMAND_DISABLE_LCD_STATISCTICS_CMD:
+        device_settings.enable_lcd_statistics = 0;
+        break;
+    case BLE_COMMAND_ENABLE_LCD_PROBABILITY_CMD:
+        device_settings.enable_lcd_probabilty = 1;
+        break;
+    case BLE_COMMAND_DISABLE_LCD_PROBABILITY_CMD:
+        device_settings.enable_lcd_probabilty = 0;
+        break;
+    case BLE_COMMAND_ENABLE_SEND_STATISTICS_CMD:
+        device_settings.enable_send_statistics = 1;
+        break;
+    case BLE_COMMAND_DISABLE_SEND_STATISTICS_CMD:
+        device_settings.enable_send_statistics = 0;
+        break;
+    case BLE_COMMAND_ENABLE_SEND_CLASSIFICATION_CMD:
+        device_settings.enable_send_classification = 1;
+        break;
+    case BLE_COMMAND_DISABLE_SEND_CLASSIFICATION_CMD:
+        device_settings.enable_send_classification = 0;
+        break;
+    case BLE_COMMAND_SET_DEBUGGER_CMD:
+        if (ble_command_buffer.total_payload_size == 1) {
+            expander_debug_select((debugger_select_e)ble_command_buffer.total_payload_buffer[0]);
+        } else {
+            PR_ERROR("invalid set debugger payload len")
+        }
+        break;
+    default:
+        PR_ERROR("Unknwon command");
+        break;
+    }
 
     return E_SUCCESS;
 }
@@ -250,26 +349,28 @@ static int ble_command_handle_rx(void)
         ble_command_buffer.command = tmp_container.packet.command_packet.header.command;
         ble_command_buffer.total_payload_size = tmp_container.packet.command_packet.header.total_payload_size;
         ble_command_buffer.received_payload_size = packet_payload_size;
-        ble_command_buffer.command_state = BLE_COMMAND_STATE_RX_STARTED;
-        memcpy(&ble_command_buffer.total_payload_buffer, &tmp_container.packet.command_packet.payload, packet_payload_size);
+        ble_command_buffer.command_state = BLE_COMMAND_STATE_RX_RUNNING;
+        memcpy(ble_command_buffer.total_payload_buffer, tmp_container.packet.command_packet.payload,
+                packet_payload_size);
 
         // Check if single packet command
-        if (tmp_container.packet.command_packet.header.total_payload_size <= packet_payload_size) {
-            ble_command_execute_rx_command();
+        if (ble_command_buffer.total_payload_size <= ble_command_buffer.received_payload_size) {
             ble_command_buffer.command_state = BLE_COMMAND_STATE_IDLE;
+            ble_command_execute_rx_command();
         }
 
         return E_SUCCESS;
     } else if (tmp_container.packet.packet_info.type == BLE_PACKET_TYPE_PAYLOAD) {
         packet_payload_size = tmp_container.size - sizeof(ble_payload_packet_header_t);
-        PR_INFO("Payload %d: ", packet_payload_size);
+        PR_INFO("Payload %d (%d/%d): ", packet_payload_size, ble_command_buffer.received_payload_size,
+                ble_command_buffer.total_payload_size);
         for (int i = 0; i < packet_payload_size; i++) {
             PR("%02hhX ", tmp_container.packet.payload_packet.payload[i]);
         }
         PR("\n");
 
         // Check state
-        if (ble_command_buffer.command_state != BLE_COMMAND_STATE_RX_STARTED) {
+        if (ble_command_buffer.command_state != BLE_COMMAND_STATE_RX_RUNNING) {
             PR_ERROR("payload packet is not expected");
             return E_BAD_STATE;
         }
@@ -279,15 +380,15 @@ static int ble_command_handle_rx(void)
             return E_OVERFLOW;
         }
 
-        memcpy((&ble_command_buffer.total_payload_buffer) + ble_command_buffer.received_payload_size,
-                &tmp_container.packet.command_packet.payload, packet_payload_size);
+        memcpy(&ble_command_buffer.total_payload_buffer[ble_command_buffer.received_payload_size],
+                tmp_container.packet.payload_packet.payload, packet_payload_size);
 
         ble_command_buffer.received_payload_size += packet_payload_size;
 
         // Check if payload receive is completed
-        if (tmp_container.packet.command_packet.header.total_payload_size <= ble_command_buffer.received_payload_size) {
-            ble_command_execute_rx_command();
+        if (ble_command_buffer.total_payload_size <= ble_command_buffer.received_payload_size) {
             ble_command_buffer.command_state = BLE_COMMAND_STATE_IDLE;
+            ble_command_execute_rx_command();
         }
 
         return E_SUCCESS;
@@ -299,7 +400,7 @@ static int ble_command_handle_rx(void)
 static int ble_command_handle_tx(void)
 {
     // BLE TX, check new packet to enqueue ble tx queue
-    if (ble_command_buffer.command_state != BLE_COMMAND_STATE_TX_STARTED) {
+    if (ble_command_buffer.command_state != BLE_COMMAND_STATE_TX_RUNNING) {
         return E_NO_ERROR;
     }
     // TODO

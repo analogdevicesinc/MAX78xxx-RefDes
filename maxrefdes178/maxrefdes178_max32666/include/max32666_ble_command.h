@@ -40,6 +40,7 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -55,9 +56,7 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int ble_command_send_audio_classification(void);
-int ble_command_send_video_classification(void);
-int ble_command_send_statistics(void);
+int ble_command_send_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload);
 
 int ble_command_reset(void);
 

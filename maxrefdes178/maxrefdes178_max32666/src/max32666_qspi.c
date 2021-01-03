@@ -233,11 +233,11 @@ qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(video_cs_pin);
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_update_status_e, qspi_packet_header.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_update_status, qspi_packet_header.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_INFO("FaceID embeddings update status: %d", device_status.faceid_embed_update_status_e);
+            PR_INFO("FaceID embeddings update status: %d", device_status.faceid_embed_update_status);
 
             return QSPI_STATUS_SUCCESS_RX;
             break;

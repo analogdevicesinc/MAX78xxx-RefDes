@@ -100,7 +100,7 @@
 //-----------------------------------------------------------------------------
 // Create a hard fault with writing data to the 'External Device' part (0xA0000000-0xDFFFFFFF).
 // (*((volatile uint32_t *)(0xAAAAAAAA))) = 0x1234567;
-
+// arm-none-eabi-objdump -S .elf
 void ReportHardFault(uint32_t *stack_frame, uint32_t exc)
 {
     uint32_t r0   = stack_frame[0];

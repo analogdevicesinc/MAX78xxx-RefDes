@@ -100,7 +100,7 @@ int max20303_buck1(int on);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_buck2(int on);
+int max20303_enable_video_audio(int on);
 
 /**
  * @brief  Setup for Boost Converter of MAX20303 PMIC to enable or disable LCD backlight.
@@ -113,6 +113,14 @@ int max20303_buck2(int on);
  * @returns    This function has no return value
  */
 int max20303_boost(int on, uint8_t boost_output_level);
+
+/**
+ * @brief  Power off MAX20303.
+ * Before calling this function, PMIC should be initialized via max20303_initialize() function
+ * @retval     #E_NO_ERROR   If successful.
+ * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
+ */
+int max20303_power_off(void);
 
 /**
  * @brief  Setup for BuckBoost Converter of MAX20303 PMIC.

@@ -63,14 +63,14 @@ typedef struct {
     uint8_t enable_max78000_video_cnn;
     uint8_t enable_max78000_video_flash_led;        // TODO
     uint8_t enable_max78000_video_and_audio_power;  // TODO
-    uint8_t enable_show_statistics_lcd;  // TODO
-    uint8_t enable_show_probabilty_lcd;  // TODO
+    uint8_t enable_lcd_statistics;       // TODO
+    uint8_t enable_lcd_probabilty;       // TODO
     uint8_t enable_send_statistics;      // TODO
     uint8_t enable_send_classification;  // TODO
 } device_settings_t;
 
 typedef struct {
-    device_serial_num_t device_serial_num; // TODO
+    device_serial_num_t device_serial_num;
     device_version_t device_version;
     uint8_t ble_mac[6];  // written by core1
 } device_info_t;
@@ -79,11 +79,12 @@ typedef struct {
     device_statistics_t statistics;      // TODO
     classification_result_t classification_video;
     classification_result_t classification_audio;
-    faceid_embed_update_status_e faceid_embed_update_status_e;  // TODO
+    faceid_embed_update_status_e faceid_embed_update_status;  // TODO
 
     uint8_t ble_status_changed;  // written by both core0 and core1
     uint8_t ble_connected;  // written by core1
     uint8_t ble_connected_peer_mac[6];  // written by core1
+    uint16_t ble_max_packet_size; // written by core1
     uint8_t ble_expected_rx_seq;  // written by core1
     uint8_t ble_next_tx_seq;  // written by core1
 } device_status_t;

@@ -350,6 +350,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
         device_status.ble_connected = 1;
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
+        device_status.ble_max_packet_size = AttGetMtu(periphCb.connId) - 3;
         memcpy(device_status.ble_connected_peer_mac, pMsg->connOpen.peerAddr, sizeof(device_status.ble_connected_peer_mac));
 
         PR_INFO("Connection opened");
@@ -387,6 +388,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
      case DM_CONN_DATA_LEN_CHANGE_IND:
          PR_INFO("Data len changed maxTxOctets: %d, maxRxOctets: %d", pMsg->dataLenChange.maxTxOctets, pMsg->dataLenChange.maxRxOctets);
          PR_INFO("MTU: %d", AttGetMtu(periphCb.connId));
+         device_status.ble_max_packet_size = AttGetMtu(periphCb.connId) - 3;
          uiEvent = DM_CONN_DATA_LEN_CHANGE_IND;
          break;
 
@@ -629,15 +631,6 @@ static void ble_receive(uint16_t dataLen, uint8_t *data)
     device_status.ble_expected_rx_seq %= BLE_PACKET_SEQ_MASK;
 }
 
-uint16_t ble_max_packet_size(void)
-{
-    if (!periphCb.connected) {
-        return 0;
-    }
-
-    return AttGetMtu(periphCb.connId) - 3;
-}
-
 int ble_send_indication(uint16_t dataLen, uint8_t *data)
 {
     if (!periphCb.connected) {
@@ -650,9 +643,9 @@ int ble_send_indication(uint16_t dataLen, uint8_t *data)
       return E_BAD_STATE;
     }
 
-    if (dataLen > ble_max_packet_size()) {
+    if (dataLen > (AttGetMtu(periphCb.connId) - 3)) {
       PR_ERROR("indication request size is larger than max size %d > %d",
-              dataLen, ble_max_packet_size());
+              dataLen, AttGetMtu(periphCb.connId) - 3);
       return E_BAD_STATE;
     }
 
