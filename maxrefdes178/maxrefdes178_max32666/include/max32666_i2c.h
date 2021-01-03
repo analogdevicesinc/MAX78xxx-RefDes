@@ -53,6 +53,15 @@
 //-----------------------------------------------------------------------------
 
 /**
+ * @brief   Writes a single I2C byte. Before calling this function, I2C should
+ * be initialized via i2c_init() function
+ * @param      addr is the address of the I2C slave
+ * @param      value is the value to be written
+ * @returns    This function has no return value.
+ */
+int i2c_master_byte_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t val);
+
+/**
  * @brief   Writes a single I2C register. Before calling this function, I2C should
  * be initialized via i2c_init() function
  * @param      addr is the address of the I2C slave
@@ -78,10 +87,22 @@ int i2c_master_reg_write_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uin
  * be initialized via i2c_init() function
  * @param      addr is the address of the I2C slave
  * @param      reg is the offset of the register
- * @param      value is the register value to be read
+ * @param      buf is the register value to be read
  * @returns    This function has no return value.
  */
 int i2c_master_reg_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf);
+
+/**
+ * @brief   Read a multiple I2C register. Before calling this function, I2C should
+ * be initialized via i2c_init() function
+ * @param      addr is the address of the I2C slave
+ * @param      reg is the offset of the register
+ * @param      value is the register value to be read
+ * @param      len is size of the buffer
+ * @param      buf is the register value to be read
+ * @returns    This function has no return value.
+ */
+int i2c_master_reg_read_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, int len);
 
 /**
  * @brief  Initialize I2C peripheral

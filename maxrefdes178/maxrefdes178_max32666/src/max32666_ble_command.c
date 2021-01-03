@@ -223,7 +223,8 @@ static int ble_command_handle_rx(void)
         // Check abort command
         if (tmp_container.packet.command_packet.header.command == BLE_COMMAND_ABORT_CMD) {
             PR_INFO("reset command state");
-            ble_command_buffer.command_state = BLE_COMMAND_STATE_IDLE;
+            ble_command_reset();
+            ble_queue_flush();
             return E_SUCCESS;
         }
 

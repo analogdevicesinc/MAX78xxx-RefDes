@@ -57,6 +57,7 @@
 #include "max32666_lcd_images.h"
 #include "max32666_led_button.h"
 #include "max32666_max20303.h"
+#include "max32666_max34417.h"
 #include "max32666_qspi.h"
 #include "max32666_sdcard.h"
 #include "max32666_spi_dma.h"
@@ -177,6 +178,13 @@ int main(void)
         max20303_led_red(1);
         while(1);
     }
+
+//    ret = max34417_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("max34417_init failed %d", ret);
+//        max20303_led_red(1);
+//        while(1);
+//    }
 
     ret = qspi_init();
     if (ret != E_NO_ERROR) {

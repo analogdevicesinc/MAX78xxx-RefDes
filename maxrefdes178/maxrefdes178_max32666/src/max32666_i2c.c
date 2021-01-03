@@ -85,8 +85,40 @@ static inline void i2c_flush(mxc_i2c_regs_t *i2c)
     i2c->rx_ctrl0 |= MXC_F_I2C_RX_CTRL0_RX_FLUSH; while (i2c->rx_ctrl0 & MXC_F_I2C_RX_CTRL0_RX_FLUSH);
 }
 
+int i2c_master_byte_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t val)
+{
+    i2c_flush(i2c);
+
+    i2c->fifo = addr;
+    i2c->m |= MXC_F_I2C_M_START;
+    i2c->fifo = val;
+    i2c->m |= MXC_F_I2C_M_STOP;
+
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
+}
+
 int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t val)
 {
+//    int err;
+//    uint8_t buf[2] = {reg, val};
+//    mxc_i2c_req_t reqMaster;
+//    reqMaster.i2c = i2c;
+//    reqMaster.addr = addr >> 1;
+//    reqMaster.tx_buf = buf;
+//    reqMaster.tx_len = 2;
+//    reqMaster.rx_buf = NULL;
+//    reqMaster.rx_len = 0;
+//    reqMaster.restart = 0;
+//    reqMaster.callback = NULL;
+//    if((err = MXC_I2C_MasterTransaction(&reqMaster)) != E_NO_ERROR) {
+//        PR_ERROR("i2c_reg_read failed %d", err);
+//        return err;
+//    }
+//    return E_NO_ERROR;
+
     i2c_flush(i2c);
 
     i2c->fifo = addr;
@@ -150,6 +182,39 @@ int i2c_master_reg_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t 
     i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
+}
+
+int i2c_master_reg_read_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, int len)
+{
+    i2c_flush(i2c);
+
+    i2c->fifo = addr;
+    i2c->m = MXC_F_I2C_M_START;
+    i2c->fifo = reg;
+
+    i2c->rx_ctrl1 = 1;
+    i2c->m = MXC_F_I2C_M_RESTART;
+    while (i2c->m & MXC_F_I2C_M_RESTART);
+    i2c->fifo = addr | 0x01;
+
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_RX_THRESH));
+
+    while (len--) {
+        *buf = i2c->fifo;
+    }
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_RX_THRESH;
+
+    i2c->m = MXC_F_I2C_M_STOP;
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
+}
+
+void I2C0_IRQHandler(void)
+{
+    MXC_I2C_AsyncHandler(MXC_I2C0_BUS0);
+    return;
 }
 
 int i2c_master_init(mxc_i2c_regs_t *i2c, unsigned int speed)
