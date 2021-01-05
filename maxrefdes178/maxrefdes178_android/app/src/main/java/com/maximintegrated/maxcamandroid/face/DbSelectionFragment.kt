@@ -81,9 +81,6 @@ class DbSelectionFragment : Fragment(), DbListener {
         alert.show()
     }
 
-    override fun onDeleteButtonClicked(dbModel: DbModel) {
-        faceIdViewModel.deleteDatabase(dbModel)
-    }
 
     override fun onRenameRequested(dbModel: DbModel, name: String) {
         faceIdViewModel.renameDatabase(dbModel, name)
@@ -91,5 +88,10 @@ class DbSelectionFragment : Fragment(), DbListener {
 
     override fun onDatabaseSelected(dbModel: DbModel) {
         faceIdViewModel.selectDatabase(dbModel)
+    }
+
+    override fun onDeleteButtonClicked(vararg model: Any) {
+        model?.let { faceIdViewModel.deleteDatabase(it[0] as DbModel) }
+
     }
 }

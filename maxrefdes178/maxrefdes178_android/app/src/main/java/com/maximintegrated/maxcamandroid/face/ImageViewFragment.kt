@@ -4,18 +4,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.bumptech.glide.Glide
 import com.maximintegrated.maxcamandroid.R
-import com.maximintegrated.maxcamandroid.exts.addFragment
-import com.maximintegrated.maxcamandroid.utils.EventObserver
-import kotlinx.android.synthetic.main.fragment_db_edit.*
+import com.maximintegrated.maxcamandroid.utils.DeleteListener
+import com.maximintegrated.maxcamandroid.utils.askUserForDeleteOperation
+import kotlinx.android.synthetic.main.fragment_image_view.*
+import java.io.File
 
-class ImageViewFragment : Fragment() {
+class ImageViewFragment : Fragment(), DeleteListener {
 
     companion object {
-        fun newInstance() = DbEditFragment()
+        fun newInstance() = ImageViewFragment()
     }
 
     private lateinit var faceIdViewModel: FaceIdViewModel
@@ -31,18 +32,21 @@ class ImageViewFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         faceIdViewModel = ViewModelProviders.of(requireActivity()).get(FaceIdViewModel::class.java)
-
-        faceIdViewModel.getPersonList()
-
-        stepperView.onBackButtonClicked {
-            requireActivity().onBackPressed()
+        Glide.with(this).load(faceIdViewModel.selectedPersonImage).into(imageView)
+        deleteButton.setOnClickListener {
+            askUserForDeleteOperation(
+                view.context,
+                this
+            )
         }
-        stepperView.onNextButtonClicked {
-            faceIdViewModel.onDemoFragmentRequested()
-        }
-        faceIdViewModel.goToDemoFragment.observe(viewLifecycleOwner, EventObserver {
-            requireActivity().addFragment(DemoFragment.newInstance())
-        })
+    }
+
+    override fun onDeleteButtonClicked(vararg model: Any) {
+
+        faceIdViewModel.deletePersonImage(faceIdViewModel.selectedPersonImage!!)
+        activity?.onBackPressed()
+
+
     }
 
 

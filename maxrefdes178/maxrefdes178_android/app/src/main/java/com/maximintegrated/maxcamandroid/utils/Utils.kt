@@ -1,7 +1,11 @@
 package com.maximintegrated.maxcamandroid.utils
 
+import android.content.Context
 import android.os.Environment
+import androidx.appcompat.app.AlertDialog
 import com.maximintegrated.maxcamandroid.FileWriter
+import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.face.DbModel
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -62,6 +66,23 @@ fun String.fromHexStringToMeaningfulAscii(): String {
     return sb.toString()
 }
 
+interface DeleteListener {
+    fun onDeleteButtonClicked(vararg model: Any)
+}
+
+public fun askUserForDeleteOperation(context: Context, listener: DeleteListener, vararg model: Any) {
+    val alert = AlertDialog.Builder(context)
+    alert.setMessage(context.getString(R.string.are_you_sure_to_delete_it))
+    alert.setPositiveButton(context.getString(R.string.yes)) { dialog, _ ->
+        dialog.dismiss()
+        listener.onDeleteButtonClicked(model)
+    }
+    alert.setNegativeButton(context.getString(R.string.cancel)) { dialog, _ ->
+        dialog.dismiss()
+    }
+    alert.show()
+}
+
 private val IO_EXECUTOR = Executors.newSingleThreadExecutor()
 
 /**
@@ -76,5 +97,7 @@ fun getMaxCamFile(fileName: String): File {
         Environment.getExternalStorageDirectory().toString() + FileWriter.FOLDER_NAME,
         fileName
     )
+
+
 }
 

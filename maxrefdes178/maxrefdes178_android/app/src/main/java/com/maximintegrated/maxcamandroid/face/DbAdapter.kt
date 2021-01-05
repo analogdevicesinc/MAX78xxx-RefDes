@@ -1,5 +1,6 @@
 package com.maximintegrated.maxcamandroid.face
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -10,6 +11,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.utils.DeleteListener
+import com.maximintegrated.maxcamandroid.utils.askUserForDeleteOperation
 import kotlinx.android.synthetic.main.db_item.view.*
 import kotlinx.android.synthetic.main.edit_text_alert_dialog.view.*
 
@@ -55,7 +58,7 @@ class DbAdapter(private val listener: DbListener) :
             imageCountTextView.text = imageCount.toString()
             personCountTextView.text = dbModel.persons.size.toString()
             deleteButton.setOnClickListener {
-                askUserForDeleteOperation(dbModel)
+                askUserForDeleteOperation(parent.context, listener, dbModel)
             }
             editImageView.setOnClickListener {
                 showEditDatabaseDialog(dbModel)
@@ -65,19 +68,6 @@ class DbAdapter(private val listener: DbListener) :
             }
         }
 
-        private fun askUserForDeleteOperation(dbModel: DbModel) {
-            val context = parent.context
-            val alert = AlertDialog.Builder(context)
-            alert.setMessage(context.getString(R.string.are_you_sure_to_delete_it))
-            alert.setPositiveButton(context.getString(R.string.yes)) { dialog, _ ->
-                dialog.dismiss()
-                listener.onDeleteButtonClicked(dbModel)
-            }
-            alert.setNegativeButton(context.getString(R.string.cancel)) { dialog, _ ->
-                dialog.dismiss()
-            }
-            alert.show()
-        }
 
         private fun showEditDatabaseDialog(dbModel: DbModel) {
             val context = parent.context
@@ -101,8 +91,7 @@ class DbAdapter(private val listener: DbListener) :
     }
 }
 
-interface DbListener {
-    fun onDeleteButtonClicked(dbModel: DbModel)
+interface DbListener : DeleteListener {
     fun onRenameRequested(dbModel: DbModel, name: String)
     fun onDatabaseSelected(dbModel: DbModel)
 }

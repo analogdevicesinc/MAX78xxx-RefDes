@@ -51,6 +51,9 @@ class DbEditFragment : Fragment(), PersonListener {
         faceIdViewModel.goToDemoFragment.observe(viewLifecycleOwner, EventObserver {
             requireActivity().addFragment(DemoFragment.newInstance())
         })
+        faceIdViewModel.personImageSelectedEvent.observe(viewLifecycleOwner, EventObserver {
+            requireActivity().addFragment(ImageViewFragment.newInstance())
+        })
     }
 
     override fun onDeleteButtonClicked(personModel: PersonModel) {
@@ -70,7 +73,7 @@ class DbEditFragment : Fragment(), PersonListener {
     }
 
     override fun onImageClicked(imageFile: File, person: PersonModel) {
-        TODO("Not yet implemented")
+        faceIdViewModel.selectPersonImage(imageFile, person)
     }
 
     override fun onAddImageClicked(person: PersonModel) {

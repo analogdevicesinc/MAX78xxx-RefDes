@@ -42,6 +42,8 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
 
     var selectedDatabase: DbModel? = null
         private set
+    var selectedPerson: PersonModel? = null
+        private set
     var selectedPersonImage: File? = null
         private set
 
@@ -140,7 +142,8 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
         _personImageDeletedEvent.value = Event(Unit)
     }
 
-    fun selectPersonImage(image: File) {
+    fun selectPersonImage(image: File, person : PersonModel) {
+        selectedPerson = person
         selectedPersonImage = image
         _personImageSelectedEvent.value = Event(Unit)
     }

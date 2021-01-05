@@ -4,17 +4,38 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".face.ImageViewFragment"
-    android:background="#000">
+    android:background="#000"
+    tools:context=".face.ImageViewFragment">
 
     <com.ortiz.touchview.TouchImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
 
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/nav"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/nav"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:cardElevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteButton"
+            style="@style/MaximCircleButton"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:backgroundTint="@color/color_error"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="@string/delete"
+            app:backgroundTint="@color/outlined_button_background"
+            app:icon="@drawable/ic_delete" />
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
