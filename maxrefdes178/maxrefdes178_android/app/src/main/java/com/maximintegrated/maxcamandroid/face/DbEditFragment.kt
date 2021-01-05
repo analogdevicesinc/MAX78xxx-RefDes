@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.google.android.material.snackbar.Snackbar
 import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.utils.EventObserver
@@ -54,18 +55,13 @@ class DbEditFragment : Fragment(), PersonListener {
         faceIdViewModel.personImageSelectedEvent.observe(viewLifecycleOwner, EventObserver {
             requireActivity().addFragment(ImageViewFragment.newInstance())
         })
-    }
-
-    override fun onDeleteButtonClicked(personModel: PersonModel) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onDeleteButtonClicked(imageFile: File, person: PersonModel) {
-        TODO("Not yet implemented")
+        faceIdViewModel.warningEvent.observe(viewLifecycleOwner, EventObserver {
+            Snackbar.make(view, it, Snackbar.LENGTH_SHORT).show()
+        })
     }
 
     override fun onRenameRequested(personModel: PersonModel, name: String) {
-        TODO("Not yet implemented")
+        faceIdViewModel.renamePerson(personModel, name)
     }
 
     override fun onDatabaseSelected(personModel: PersonModel) {

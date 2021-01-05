@@ -79,6 +79,8 @@
     <string name="are_you_sure_to_delete_it">Are you sure you want to delete it?</string>
     <string name="yes">Yes</string>
     <string name="cancel">Cancel</string>
+    <string name="person_name_exists">The person name exists.</string>
+    <string name="person_is_renamed">The person is renamed.</string>
     <string name="database_name_exists">The database name exists.</string>
     <string name="database_is_deleted">The database is deleted.</string>
     <string name="database_is_renamed">The database is renamed.</string>

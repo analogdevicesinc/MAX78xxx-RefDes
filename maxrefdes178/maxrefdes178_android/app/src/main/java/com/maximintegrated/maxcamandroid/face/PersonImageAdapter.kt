@@ -50,6 +50,7 @@ class PersonImageAdapter(
 
 
         fun bind(imageFile: File, isLast: Boolean) {
+
             if (isLast) {
                 imageCard.setOnClickListener {
                     listener.onAddImageClicked(personModel)
@@ -65,44 +66,10 @@ class PersonImageAdapter(
 
         }
 
-        private fun askUserForDeleteOperation(imageFile: File) {
-            val context = parent.context
-            val alert = AlertDialog.Builder(context)
-            alert.setMessage(context.getString(R.string.are_you_sure_to_delete_it))
-            alert.setPositiveButton(context.getString(R.string.yes)) { dialog, _ ->
-                dialog.dismiss()
-                listener.onDeleteButtonClicked(imageFile, personModel)
-            }
-            alert.setNegativeButton(context.getString(R.string.cancel)) { dialog, _ ->
-                dialog.dismiss()
-            }
-            alert.show()
-        }
-
-        private fun showEditDatabaseDialog(dbModel: DbModel) {
-            val context = parent.context
-            val alert = AlertDialog.Builder(context)
-            val layout = LayoutInflater.from(context).inflate(
-                R.layout.edit_text_alert_dialog, parent, false
-            )
-            layout.dialogTitleTextView.text = context.getString(R.string.rename_database)
-            layout.dialogEditText.hint = context.getString(R.string.enter_a_database_name)
-            layout.dialogEditText.setText(dbModel.dbFolder.nameWithoutExtension)
-            alert.setView(layout)
-            alert.setPositiveButton(context.getString(R.string.change)) { dialog, _ ->
-                val name = layout.dialogEditText.text.toString().trim()
-                if (name != dbModel.dbFolder.nameWithoutExtension) {
-                    //listener.onRenameRequested(dbModel, name)
-                }
-                dialog.dismiss()
-            }
-            alert.show()
-        }
     }
 }
 
 interface PersonImageListener {
-    fun onDeleteButtonClicked(imageFile: File, person: PersonModel)
     fun onImageClicked(imageFile: File, person: PersonModel)
     fun onAddImageClicked(person: PersonModel)
 }

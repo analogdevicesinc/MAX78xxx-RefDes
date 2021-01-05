@@ -111,6 +111,27 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
         _warningEvent.value = Event(R.string.database_is_deleted)
     }
 
+    fun renamePerson(person: PersonModel, name: String) {
+        viewModelScope.launch {
+            selectedDatabase?.dbFolder?.let {
+                val file = File(it, name)
+                if (file.exists()) {
+                    _warningEvent.value = Event(R.string.person_name_exists)
+                } else {
+                    val list = _persons.value?.toMutableList()
+                    val index = list?.remove(person)
+                    _persons.value = list
+                    withContext(Dispatchers.IO) {
+                        person.rename(file)
+                    }
+                    list?.add(person)
+                    _persons.value = list
+                    _warningEvent.value = Event(R.string.person_is_renamed)
+                }
+            }
+        }
+    }
+
     fun renameDatabase(db: DbModel, name: String) {
         viewModelScope.launch {
             dbRootFolder?.let {
@@ -142,7 +163,7 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
         _personImageDeletedEvent.value = Event(Unit)
     }
 
-    fun selectPersonImage(image: File, person : PersonModel) {
+    fun selectPersonImage(image: File, person: PersonModel) {
         selectedPerson = person
         selectedPersonImage = image
         _personImageSelectedEvent.value = Event(Unit)

@@ -20,6 +20,7 @@ data class PersonModel(
 
     fun rename(file: File) {
         personFolder.renameTo(file)
+        personFolder = file
         initializeModel()
     }
 
