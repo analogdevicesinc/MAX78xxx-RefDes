@@ -18,8 +18,18 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
     private val _databases = MutableLiveData<List<DbModel>>(emptyList())
     val databases: LiveData<List<DbModel>> = _databases
 
+
+    private val _persons = MutableLiveData<List<PersonModel>>(emptyList())
+    val persons: LiveData<List<PersonModel>> = _persons
+
     private val _databaseSelectedEvent = MutableLiveData<Event<Unit>>()
     val databaseSelectedEvent: LiveData<Event<Unit>> = _databaseSelectedEvent
+
+    private val _personImageSelectedEvent = MutableLiveData<Event<Unit>>()
+    val personImageSelectedEvent: LiveData<Event<Unit>> = _personImageSelectedEvent
+
+    private val _personImageDeletedEvent = MutableLiveData<Event<Unit>>()
+    val personImageDeletedEvent: LiveData<Event<Unit>> = _personImageDeletedEvent
 
     private val _warningEvent = MutableLiveData<Event<Int>>()
     val warningEvent: LiveData<Event<Int>> = _warningEvent
@@ -32,6 +42,8 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
 
     var selectedDatabase: DbModel? = null
         private set
+    var selectedPersonImage: File? = null
+        private set
 
     private var dbRootFolder: File? = null
 
@@ -43,6 +55,13 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
                     folder.mkdirs()
                 }
             }
+        }
+    }
+
+    fun getPersonList() {
+        //if not null
+        selectedDatabase?.let {
+            _persons.value = it.persons
         }
     }
 
@@ -111,6 +130,21 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun deletePersonImage(image: File) {
+        selectedDatabase?.persons?.forEach {
+            if (it.images.contains(image)) {
+                it.images.remove(image)
+                image.delete()
+            }
+        }
+        _personImageDeletedEvent.value = Event(Unit)
+    }
+
+    fun selectPersonImage(image: File) {
+        selectedPersonImage = image
+        _personImageSelectedEvent.value = Event(Unit)
+    }
+
     fun selectDatabase(db: DbModel) {
         selectedDatabase = db
         _databaseSelectedEvent.value = Event(Unit)
@@ -133,7 +167,7 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 selectedDatabase?.let {
-                    script.callAttr("create_db", it.dbFile.path, "embeddings")
+                    script.callAttr("create_db", it.dbFolder.path, "embeddings")
                     /*val obj1 = script.callAttr("get_current_dir")
                     val obj2 = script.callAttr("get_file_dir", it.dbFile.path)
                     val obj3 = script.callAttr("get_include_dir")

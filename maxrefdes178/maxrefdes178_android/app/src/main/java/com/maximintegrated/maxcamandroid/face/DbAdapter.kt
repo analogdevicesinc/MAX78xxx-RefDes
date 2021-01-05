@@ -23,7 +23,7 @@ class DbAdapter(private val listener: DbListener) :
         }
 
         override fun areContentsTheSame(oldItem: DbModel, newItem: DbModel): Boolean {
-            return oldItem.dbFile == newItem.dbFile
+            return oldItem.dbFolder == newItem.dbFolder
         }
     }
 
@@ -47,13 +47,13 @@ class DbAdapter(private val listener: DbListener) :
         private val selectButton: MaterialButton by lazy { itemView.selectButton }
 
         fun bind(dbModel: DbModel) {
-            databaseNameTextView.text = dbModel.dbFile.nameWithoutExtension
+            databaseNameTextView.text = dbModel.dbName
             var imageCount = 0
-            for ((_, list) in dbModel.images) {
-                imageCount += list.size
+            for (person in dbModel.persons) {
+                imageCount += person.images.size
             }
             imageCountTextView.text = imageCount.toString()
-            personCountTextView.text = dbModel.listOfFoldersForPeople.size.toString()
+            personCountTextView.text = dbModel.persons.size.toString()
             deleteButton.setOnClickListener {
                 askUserForDeleteOperation(dbModel)
             }
@@ -87,11 +87,11 @@ class DbAdapter(private val listener: DbListener) :
             )
             layout.dialogTitleTextView.text = context.getString(R.string.rename_database)
             layout.dialogEditText.hint = context.getString(R.string.enter_a_database_name)
-            layout.dialogEditText.setText(dbModel.dbFile.nameWithoutExtension)
+            layout.dialogEditText.setText(dbModel.dbName)
             alert.setView(layout)
             alert.setPositiveButton(context.getString(R.string.rename)) { dialog, _ ->
                 val name = layout.dialogEditText.text.toString().trim()
-                if (name != dbModel.dbFile.nameWithoutExtension) {
+                if (name != dbModel.dbName) {
                     listener.onRenameRequested(dbModel, name)
                 }
                 dialog.dismiss()

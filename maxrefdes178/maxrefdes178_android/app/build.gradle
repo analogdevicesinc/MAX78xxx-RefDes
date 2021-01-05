@@ -201,6 +201,9 @@ dependencies {
     implementation deps.testCore
     androidTestImplementation deps.espressoContrib
 
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
+    implementation 'com.github.MikeOrtiz:TouchImageView:3.0.1' // Android X
 
     implementation deps.roomRuntime
     annotationProcessor deps.roomCompiler

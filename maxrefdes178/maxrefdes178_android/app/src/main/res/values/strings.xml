@@ -86,6 +86,7 @@
     <string name="new_database">New Database</string>
     <string name="rename_database">Rename Database</string>
     <string name="rename">Rename</string>
+    <string name="change">Change</string>
     <string name="no_available_databases">There are no available databases.</string>
     <string name="db_selection">DB Selection</string>
     <string name="db_edit">DB Edit</string>

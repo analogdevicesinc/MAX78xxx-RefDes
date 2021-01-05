@@ -5,11 +5,11 @@ import java.io.File
 const val DB_FOLDER_NAME = "/Databases"
 
 data class DbModel(
-    var dbFile: File
+    var dbFolder: File
 ) {
 
-    var listOfFoldersForPeople: List<File> = listOf()
-    var images: HashMap<String, List<File>> = hashMapOf()
+    val persons: ArrayList<PersonModel> = arrayListOf()
+    val dbName: String get() = dbFolder.nameWithoutExtension
     var embeddingsFile: File? = null
 
     init {
@@ -17,33 +17,28 @@ data class DbModel(
     }
 
     fun delete() {
-        dbFile.deleteRecursively()
+        dbFolder.deleteRecursively()
     }
 
     fun rename(file: File) {
-        dbFile.renameTo(file)
-        dbFile = file
+        dbFolder.renameTo(file)
+        dbFolder = file
         initializeModel()
     }
 
     private fun initializeModel() {
-        listOfFoldersForPeople = listOf()
-        images.clear()
+        persons.clear()
         embeddingsFile = null
-        if (dbFile.exists()) {
-            listOfFoldersForPeople = dbFile.listFiles()?.toList() ?: emptyList()
+        if (dbFolder.exists()) {
+            var listOfFoldersForPeople = dbFolder.listFiles()?.toList() ?: emptyList()
             embeddingsFile = listOfFoldersForPeople.find { it.extension == "bin" }
             listOfFoldersForPeople = listOfFoldersForPeople.filter { it.isDirectory }
-            for (folder in listOfFoldersForPeople) {
-                val name = folder.nameWithoutExtension
-                val list = folder.listFiles()?.toList() ?: emptyList()
-                images[name] = list
-            }
+            listOfFoldersForPeople.forEach { persons.add(PersonModel(it)) }
         }
     }
 
     fun findEmbeddingsFile() {
-        val list = dbFile.listFiles()?.toList() ?: emptyList()
+        val list = dbFolder.listFiles()?.toList() ?: emptyList()
         embeddingsFile = list.find { it.extension == "bin" }
     }
 }

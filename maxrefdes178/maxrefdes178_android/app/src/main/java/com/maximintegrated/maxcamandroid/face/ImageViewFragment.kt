@@ -11,36 +11,28 @@ import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.utils.EventObserver
 import kotlinx.android.synthetic.main.fragment_db_edit.*
-import java.io.File
 
-class DbEditFragment : Fragment(), PersonListener {
+class ImageViewFragment : Fragment() {
 
     companion object {
         fun newInstance() = DbEditFragment()
     }
 
     private lateinit var faceIdViewModel: FaceIdViewModel
-    private lateinit var personAdapter: PersonAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_db_edit, container, false)
+        return inflater.inflate(R.layout.fragment_image_view, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         faceIdViewModel = ViewModelProviders.of(requireActivity()).get(FaceIdViewModel::class.java)
-        personAdapter = PersonAdapter(this)
-        recyclerView.adapter = personAdapter
+
         faceIdViewModel.getPersonList()
-        faceIdViewModel.persons.observe(viewLifecycleOwner) {
-            personAdapter.submitList(it)
-            emptyViews.isVisible = it.isEmpty()
-            recyclerView.isVisible = it.isNotEmpty()
-        }
 
         stepperView.onBackButtonClicked {
             requireActivity().onBackPressed()
@@ -53,27 +45,5 @@ class DbEditFragment : Fragment(), PersonListener {
         })
     }
 
-    override fun onDeleteButtonClicked(personModel: PersonModel) {
-        TODO("Not yet implemented")
-    }
 
-    override fun onDeleteButtonClicked(imageFile: File, person: PersonModel) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onRenameRequested(personModel: PersonModel, name: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onDatabaseSelected(personModel: PersonModel) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onImageClicked(imageFile: File, person: PersonModel) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onAddImageClicked(person: PersonModel) {
-        TODO("Not yet implemented")
-    }
 }
