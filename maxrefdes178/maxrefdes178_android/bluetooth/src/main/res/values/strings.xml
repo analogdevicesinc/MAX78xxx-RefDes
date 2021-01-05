@@ -24,6 +24,6 @@
     <string name="warning">Warning!</string>
 
     <string-array name="supported_devices_prefix">
-        <item>MAXCAM</item>
+        <item>MAXREFDES</item>
     </string-array>
 </resources>
