@@ -6,7 +6,11 @@ import java.io.File
 
 data class PersonModel(
     var personFolder: File
-) {
+) : Comparable<PersonModel> {
+    override fun compareTo(other: PersonModel): Int {
+        return this.nameSurname.compareTo(other.nameSurname)
+    }
+
     val nameSurname: String get() = personFolder.nameWithoutExtension
     var images = ArrayList<File>()
 
@@ -28,7 +32,7 @@ data class PersonModel(
 
         if (personFolder.exists()) {
             images = (personFolder.listFiles()?.toList() ?: arrayListOf()) as ArrayList<File>
-            images.forEach{File(it.toURI().path) }
+            images.forEach { File(it.toURI().path) }
             images.add(createTempFile())
         }
     }

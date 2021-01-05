@@ -119,12 +119,13 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
                     _warningEvent.value = Event(R.string.person_name_exists)
                 } else {
                     val list = _persons.value?.toMutableList()
-                    val index = list?.remove(person)
+                    list?.remove(person)
                     _persons.value = list
                     withContext(Dispatchers.IO) {
                         person.rename(file)
                     }
                     list?.add(person)
+                    //list?.sort()
                     _persons.value = list
                     _warningEvent.value = Event(R.string.person_is_renamed)
                 }
