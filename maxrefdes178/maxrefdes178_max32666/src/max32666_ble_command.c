@@ -151,138 +151,242 @@ static int ble_command_execute_rx_command(void)
 
     switch (ble_command_buffer.command) {
     case BLE_COMMAND_GET_VERSION_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         ble_command_send_single_packet(BLE_COMMAND_GET_VERSION_RES,
             sizeof(device_info.device_version), (uint8_t *) &device_info.device_version);
         break;
     case BLE_COMMAND_GET_SERIAL_NUM_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         ble_command_send_single_packet(BLE_COMMAND_GET_SERIAL_NUM_RES,
             sizeof(device_info.device_serial_num), (uint8_t *) &device_info.device_serial_num);
         break;
     case BLE_COMMAND_FACEID_EMBED_UPDATE_CMD:
-        if (ble_command_buffer.total_payload_size > 1) {
-            // TODO
-            ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
-                sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
-        } else {
-            PR_ERROR("invalid faceid embed payload len")
+        if (ble_command_buffer.total_payload_size == 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
         }
+        // TODO
+        ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
+            sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
         break;
     case BLE_COMMAND_DISABLE_BLE_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_ble = 0;
         break;
     case BLE_COMMAND_SHUT_DOWN_DEVICE_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         max20303_power_off();
         break;
     case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_audio == 0) {
             // TODO send QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD
         }
         device_settings.enable_max78000_audio = 1;
         break;
     case BLE_COMMAND_DISABLE_MAX78000_AUDIO_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_audio != 0) {
             // TODO send QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD
         }
         device_settings.enable_max78000_audio = 0;
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_video != 1) {
             // TODO send QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD
         }
         device_settings.enable_max78000_video = 1;
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_video != 0) {
             // TODO send QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD
         }
         device_settings.enable_max78000_video = 0;
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_video_cnn != 1) {
             // TODO send QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD
         }
         device_settings.enable_max78000_video_cnn = 1;
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_video_cnn != 0) {
             // TODO send QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD
         }
         device_settings.enable_max78000_video_cnn = 0;
         break;
     case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CNN_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_audio_cnn != 1) {
             // TODO send QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD
         }
         device_settings.enable_max78000_audio_cnn = 1;
         break;
     case BLE_COMMAND_DISABLE_MAX78000_AUDIO_CNN_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_audio_cnn != 0) {
             // TODO send QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD
         }
         device_settings.enable_max78000_audio_cnn = 0;
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_video_flash_led != 1) {
             // TODO send QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD
         }
         device_settings.enable_max78000_video_flash_led = 1;
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_video_flash_led != 0) {
             // TODO send QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD
         }
         device_settings.enable_max78000_video_flash_led = 0;
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_AUDIO_POWER:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_video_and_audio_power != 1) {
             max20303_enable_video_audio(1);
         }
         device_settings.enable_max78000_video_and_audio_power = 1;
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_AUDIO_POWER:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         if (device_settings.enable_max78000_video_and_audio_power != 0) {
             max20303_enable_video_audio(0);
         }
         device_settings.enable_max78000_video_and_audio_power = 0;
         break;
     case BLE_COMMAND_ENABLE_LCD_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_lcd = 1;
         lcd_backlight(1);
         break;
     case BLE_COMMAND_DISABLE_LCD_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_lcd = 0;
         lcd_backlight(0);
         break;
     case BLE_COMMAND_ENABLE_LCD_STATISCTICS_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_lcd_statistics = 1;
         break;
     case BLE_COMMAND_DISABLE_LCD_STATISCTICS_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_lcd_statistics = 0;
         break;
     case BLE_COMMAND_ENABLE_LCD_PROBABILITY_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_lcd_probabilty = 1;
         break;
     case BLE_COMMAND_DISABLE_LCD_PROBABILITY_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_lcd_probabilty = 0;
         break;
     case BLE_COMMAND_ENABLE_SEND_STATISTICS_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_send_statistics = 1;
         break;
     case BLE_COMMAND_DISABLE_SEND_STATISTICS_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_send_statistics = 0;
         break;
     case BLE_COMMAND_ENABLE_SEND_CLASSIFICATION_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_send_classification = 1;
         break;
     case BLE_COMMAND_DISABLE_SEND_CLASSIFICATION_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
         device_settings.enable_send_classification = 0;
         break;
     case BLE_COMMAND_SET_DEBUGGER_CMD:
-        if (ble_command_buffer.total_payload_size == 1) {
-            expander_debug_select((debugger_select_e)ble_command_buffer.total_payload_buffer[0]);
-        } else {
-            PR_ERROR("invalid set debugger payload len")
+        if (ble_command_buffer.total_payload_size != 1) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
         }
+        expander_debug_select((debugger_select_e)ble_command_buffer.total_payload_buffer[0]);
         break;
     default:
         PR_ERROR("Unknwon command");

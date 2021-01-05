@@ -41,9 +41,10 @@
 #include <dma.h>
 #include <mxc_delay.h>
 #include <mxc_sys.h>
-#include <rtc.h>
+#include <nvic_table.h>
 #include <stdint.h>
 #include <string.h>
+#include <tmr.h>
 
 #include "max32666_ble.h"
 #include "max32666_ble_command.h"
@@ -81,6 +82,9 @@
 // Global variables
 //-----------------------------------------------------------------------------
 static volatile int core1_init_done = 0;
+static volatile uint32_t timer_ms_tick = 0;
+
+//static const mxc_gpio_cfg_t core1_swd_pin = MAX32666_CORE1_SWD_PIN;
 
 
 //-----------------------------------------------------------------------------
@@ -90,6 +94,7 @@ static void core0_irq_init(void);
 static void core1_irq_init(void);
 static void run_application(void);
 static void refresh_screen(void);
+static int ms_timer_init(void);
 
 
 //-----------------------------------------------------------------------------
@@ -128,6 +133,9 @@ int main(void)
         while(1);
     }
     max20303_led_green(1);
+
+    // To debug Core1 set alternate function 3
+//    MXC_GPIO_Config(&core1_swd_pin);
 
    // BLE should init first since it is mischievous
    // BLE init somehow damages GPIO settings for P0.0, P0.23
@@ -217,15 +225,9 @@ int main(void)
         max20303_led_red(1);
     }
 
-    ret = MXC_RTC_Init(0, 0);
+    ret = ms_timer_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("MXC_RTC_Init failed %d", ret);
-        max20303_led_red(1);
-    }
-
-    ret = MXC_RTC_Start();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("MXC_RTC_Start failed %d", ret);
+        PR_ERROR("ms_timer_init failed %d", ret);
         max20303_led_red(1);
     }
 
@@ -252,7 +254,7 @@ int main(void)
 
     run_application();
 
-    return -1;
+    return E_NO_ERROR;
 }
 
 static void run_application(void)
@@ -288,7 +290,7 @@ static void run_application(void)
                 }
                 break;
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
-                timestamps.audio_result_received = GET_RTC_MS();
+                timestamps.audio_result_received = timer_ms_tick;
 
                 if (device_status.classification_audio.classification == CLASSIFICATION_UNKNOWN) {
                     lcd_data.toptitle_color = RED;
@@ -332,8 +334,8 @@ static void run_application(void)
 
         // Send periodic statistics
         if (device_settings.enable_send_statistics && device_status.ble_connected) {
-            if ((GET_RTC_MS() - timestamps.statistics_sent) > BLE_STATISTICS_INTERVAL) {
-                timestamps.statistics_sent = GET_RTC_MS();
+            if ((timer_ms_tick - timestamps.statistics_sent) > BLE_STATISTICS_INTERVAL) {
+                timestamps.statistics_sent = timer_ms_tick;
                 ble_command_send_single_packet(BLE_COMMAND_GET_STATISTICS_RES,
                     sizeof(device_status.statistics), (uint8_t *) &device_status.statistics);
             }
@@ -341,7 +343,7 @@ static void run_application(void)
 
         // If video is disabled, draw logo and refresh periodically
         if (!device_settings.enable_max78000_video &&
-                ((GET_RTC_MS() - timestamps.screen_drew) > LCD_NO_VIDEO_DURATION)) {
+                ((timer_ms_tick - timestamps.screen_drew) > LCD_NO_VIDEO_DURATION)) {
             memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
             refresh_screen();
         }
@@ -364,13 +366,13 @@ static void run_application(void)
                         device_status.ble_connected_peer_mac[5], device_status.ble_connected_peer_mac[4],
                         device_status.ble_connected_peer_mac[3], device_status.ble_connected_peer_mac[2],
                         device_status.ble_connected_peer_mac[1], device_status.ble_connected_peer_mac[0]);
-                timestamps.notification_received = GET_RTC_MS();
+                timestamps.notification_received = timer_ms_tick;
             } else {
                 ble_queue_flush();
                 ble_command_reset();
 
                 snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE disconnected!");
-                timestamps.notification_received = GET_RTC_MS();
+                timestamps.notification_received = timer_ms_tick;
             }
         }
     }
@@ -452,9 +454,34 @@ static void refresh_screen(void)
         fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
     }
 
-    device_status.statistics.lcd_fps = (float) 1000.0 / (float)(GET_RTC_MS() - timestamps.screen_drew);
-    timestamps.screen_drew = GET_RTC_MS();
+    device_status.statistics.lcd_fps = (float) 1000.0 / (float)(timer_ms_tick - timestamps.screen_drew);
+    timestamps.screen_drew = timer_ms_tick;
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data.buffer);
+}
+
+void ms_timer(void)
+{
+    // Clear interrupt
+    MXC_TMR_ClearFlags(MAX32666_TIMER_MS);
+
+    timer_ms_tick += 1;
+}
+
+static int ms_timer_init(void)
+{
+    // Init ms timer
+    mxc_tmr_cfg_t tmr;
+    MXC_TMR_Shutdown(MAX32666_TIMER_MS);
+    tmr.pres = TMR_PRES_1;
+    tmr.mode = TMR_MODE_CONTINUOUS;
+    tmr.cmp_cnt = PeripheralClock / 1000;
+    tmr.pol = 0;
+    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)), ms_timer);
+    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)));
+    MXC_TMR_Init(MAX32666_TIMER_MS, &tmr);
+    MXC_TMR_Start(MAX32666_TIMER_MS);
+
+    return E_NO_ERROR;
 }
 
 // Similar to Core 0, the entry point for Core 1
@@ -468,12 +495,12 @@ int Core1_Main(void)
 
     PR_INFO("maxrefdes178_max32666 core1");
 
-    core1_irq_init();
-
     ret = ble_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("ble_init %d", ret);
     }
+
+    core1_irq_init();
 
     core1_init_done = 1;
 
@@ -483,7 +510,7 @@ int Core1_Main(void)
         ble_worker();
     }
 
-    return -1;
+    return E_NO_ERROR;
 }
 
 static void core0_irq_init(void)
@@ -504,21 +531,18 @@ static void core0_irq_init(void)
     NVIC_DisableIRQ(BTLE_INV_APB_ADDR_IRQn); // Disabled
     NVIC_DisableIRQ(BTLE_IQ_DATA_VALID_IRQn); // Disabled
 
-    NVIC_DisableIRQ(TMR0_IRQn);
-    NVIC_DisableIRQ(TMR1_IRQn);
+    NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BLE)));
+    NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BLE_SLEEP)));
 
     NVIC_DisableIRQ(WUT_IRQn);
-
-    NVIC_DisableIRQ(SDMA_IRQn); // ?
 }
 
 static void core1_irq_init(void)
 {
-//    // Disable all interrupts
-//    for (IRQn_Type irq = PF_IRQn; irq < MXC_IRQ_EXT_COUNT; irq++) {
-//        NVIC_DisableIRQ(irq);
-//    }
 
     NVIC_DisableIRQ(GPIO0_IRQn);
     NVIC_DisableIRQ(GPIO1_IRQn);
+
+    NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_LED)));
+    NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)));
 }

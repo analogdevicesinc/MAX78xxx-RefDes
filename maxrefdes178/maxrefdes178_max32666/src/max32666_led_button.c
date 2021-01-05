@@ -88,7 +88,7 @@ void button1_int(void *cbdata)
 void led_continuous_timer(void)
 {
     // Clear interrupt
-    MXC_TMR_ClearFlags(MAX32666_LED_TIMER);
+    MXC_TMR_ClearFlags(MAX32666_TIMER_LED);
     led_toogle ^= 1;
 
     // If BLE is enabled, blink blue
@@ -118,15 +118,15 @@ int led_button_init(void)
 {
     // Init led_continuous_timer
     mxc_tmr_cfg_t tmr;
-    MXC_TMR_Shutdown(MAX32666_LED_TIMER);
+    MXC_TMR_Shutdown(MAX32666_TIMER_LED);
     tmr.pres = TMR_PRES_128;
     tmr.mode = TMR_MODE_CONTINUOUS;
     tmr.cmp_cnt = (PeripheralClock/128) * LED_CONINOUS_TIMER_INTERVAL;
     tmr.pol = 0;
-    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_LED_TIMER)), led_continuous_timer);
-    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_LED_TIMER)));
-    MXC_TMR_Init(MAX32666_LED_TIMER, &tmr);
-    MXC_TMR_Start(MAX32666_LED_TIMER);
+    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_LED)), led_continuous_timer);
+    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_LED)));
+    MXC_TMR_Init(MAX32666_TIMER_LED, &tmr);
+    MXC_TMR_Start(MAX32666_TIMER_LED);
 
     // Init button1 interrupt
     MXC_GPIO_Config(&button1_int_pin);

@@ -176,9 +176,10 @@
 #define MAX32666_SEMAPHORE_BLE_QUEUE       2
 
 // MAX32666 Timers
-#define MAX32666_BLE_TIMER                 MXC_TMR0
-#define MAX32666_BLE_SLEEP_TIMER           MXC_TMR1
-#define MAX32666_LED_TIMER                 MXC_TMR2
+#define MAX32666_TIMER_BLE                 MXC_TMR0  // TODO remove
+#define MAX32666_TIMER_BLE_SLEEP           MXC_TMR1  // TODO remove
+#define MAX32666_TIMER_LED                 MXC_TMR2
+#define MAX32666_TIMER_MS                  MXC_TMR3
 
 // BLE Communication buffer
 #define MAX32666_BLE_QUEUE_SIZE            10

@@ -58,7 +58,6 @@
 #endif
 #include <pal_bb.h>
 #include <pal_cfg.h>
-#include <rtc.h>
 #include <sec_api.h>
 #include <smp_api.h>
 #include <smp_handler.h>
