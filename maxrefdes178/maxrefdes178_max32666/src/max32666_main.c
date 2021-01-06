@@ -318,11 +318,6 @@ static void run_application(void)
                     } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
                         device_settings.enable_lcd_statistics = 0;
                     }
-
-                    else if(strcmp(device_status.classification_audio.result, "TWO") == 0) {
-                        qspi_audio_send();
-                    }
-
                 }
 
 //                refresh_screen();
