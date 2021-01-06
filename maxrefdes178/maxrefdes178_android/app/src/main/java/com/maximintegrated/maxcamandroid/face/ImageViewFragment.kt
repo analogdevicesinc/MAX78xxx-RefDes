@@ -42,11 +42,8 @@ class ImageViewFragment : Fragment(), DeleteListener {
     }
 
     override fun onDeleteButtonClicked(vararg model: Any) {
-
         faceIdViewModel.deletePersonImage(faceIdViewModel.selectedPersonImage!!)
         activity?.onBackPressed()
-
-
     }
 
 

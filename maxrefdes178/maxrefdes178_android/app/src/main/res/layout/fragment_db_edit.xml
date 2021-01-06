@@ -29,7 +29,7 @@
         app:layout_constraintTop_toBottomOf="@id/emptyImageView" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/newDatabaseFab"
+        android:id="@+id/newPersonFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"

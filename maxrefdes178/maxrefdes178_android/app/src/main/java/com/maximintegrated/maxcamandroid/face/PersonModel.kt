@@ -28,8 +28,7 @@ data class PersonModel(
         initializeModel()
     }
 
-    private fun initializeModel() {
-
+    fun refreshImages() {
         if (personFolder.exists()) {
             images = (personFolder.listFiles()?.toList() ?: arrayListOf()) as ArrayList<File>
             images.forEach { File(it.toURI().path) }
@@ -37,4 +36,7 @@ data class PersonModel(
         }
     }
 
+    private fun initializeModel() {
+        refreshImages()
+    }
 }

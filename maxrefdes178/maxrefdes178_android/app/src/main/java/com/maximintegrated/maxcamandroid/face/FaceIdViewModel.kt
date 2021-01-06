@@ -1,6 +1,9 @@
 package com.maximintegrated.maxcamandroid.face
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.net.Uri
+import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,9 +14,11 @@ import com.maximintegrated.maxcamandroid.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
 
-class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
+class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
 
     private val _databases = MutableLiveData<List<DbModel>>(emptyList())
     val databases: LiveData<List<DbModel>> = _databases
@@ -31,6 +36,9 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
     private val _personImageDeletedEvent = MutableLiveData<Event<Unit>>()
     val personImageDeletedEvent: LiveData<Event<Unit>> = _personImageDeletedEvent
 
+    private val _personImageAddedEvent = MutableLiveData<Event<Unit>>()
+    val personImageAddedEvent: LiveData<Event<Unit>> = _personImageAddedEvent
+
     private val _warningEvent = MutableLiveData<Event<Int>>()
     val warningEvent: LiveData<Event<Int>> = _warningEvent
 
@@ -43,7 +51,6 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
     var selectedDatabase: DbModel? = null
         private set
     var selectedPerson: PersonModel? = null
-        private set
     var selectedPersonImage: File? = null
         private set
 
@@ -183,6 +190,40 @@ class FaceIdViewModel(app: Application) : AndroidViewModel(app) {
         selectedDatabase?.findEmbeddingsFile()
         selectedDatabase?.embeddingsFile?.let {
             _embeddingsFileEvent.value = Event(it)
+        }
+    }
+
+    fun onImageAdded(uri: Uri) {
+        try {
+            val timestamp = System.currentTimeMillis()
+            val name = "MAXCAM_" + timestamp + ".png"
+            val file = File(selectedPerson?.personFolder, name)
+            val fOut = FileOutputStream(file)
+
+            //val source = ImageDecoder.createSource(app.contentResolver, uri)
+            //val bitmap = ImageDecoder.decodeBitmap(source)
+            val bitmap = MediaStore.Images.Media.getBitmap(app.contentResolver, uri)
+            //bitmap.config = Bitmap.Config.ARGB_8888
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fOut)
+//            val stream = ByteArrayOutputStream()
+//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+//            val bytes = stream.toByteArray()
+            fOut.flush()
+            fOut.close()
+
+            selectedPerson?.refreshImages()
+
+//            val list = persons.value?.toMutableList()
+//            val index = list?.indexOf(selectedPerson)
+//            list?.remove(selectedPerson)
+//            _persons.value = list
+//            list?.add(index!!, selectedPerson!!)
+//            _persons.value = list
+            _personImageAddedEvent.value = Event(Unit)
+
+
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
