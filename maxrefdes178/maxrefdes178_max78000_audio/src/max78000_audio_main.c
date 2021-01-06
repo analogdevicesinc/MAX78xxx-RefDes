@@ -98,10 +98,9 @@
 //-----------------------------------------------------------------------------
 mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_AUDIO_CNN_BOOST_PIN;
 mxc_gpio_cfg_t gpio_audio_osc = MAX78000_AUDIO_AUDIO_OSC_PIN;
-mxc_gpio_cfg_t qspi_int    = MAX78000_AUDIO_HOST_INT_PIN;
-mxc_gpio_cfg_t gpio_red    = MAX78000_AUDIO_LED_RED_PIN;
-mxc_gpio_cfg_t gpio_green  = MAX78000_AUDIO_LED_GREEN_PIN;
-mxc_gpio_cfg_t gpio_blue   = MAX78000_AUDIO_LED_BLUE_PIN;
+mxc_gpio_cfg_t gpio_red       = MAX78000_AUDIO_LED_RED_PIN;
+mxc_gpio_cfg_t gpio_green     = MAX78000_AUDIO_LED_GREEN_PIN;
+mxc_gpio_cfg_t gpio_blue      = MAX78000_AUDIO_LED_BLUE_PIN;
 
 extern uint32_t cnn_time;
 static int32_t ml_data[NUM_OUTPUTS];
@@ -150,11 +149,6 @@ static void fail(void);
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void MAX78000_AUDIO_QSPI_DMA_IRQ_HAND(void)
-{
-    spi_dma_int_handler(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI);
-}
-
 void i2s_isr(void)
 {
     i2s_flag = 1;
@@ -209,10 +203,6 @@ int main(void)
     GPIO_SET(gpio_audio_osc);
     MXC_GPIO_Config(&gpio_audio_osc);
 
-    // Configure SPI int pin
-    GPIO_SET(qspi_int);
-    MXC_GPIO_Config(&qspi_int);
-
     // Configure LEDs
     GPIO_CLR(gpio_red);
     MXC_GPIO_Config(&gpio_red);
@@ -232,24 +222,15 @@ int main(void)
     PR_DEBUG("pPreambleCircBuffer: %d", sizeof(pPreambleCircBuffer));
     PR_DEBUG("pAI85Buffer: %d", sizeof(pAI85Buffer));
 
-    mxc_spi_pins_t qspi_pins;
-    qspi_pins.clock = TRUE;
-    qspi_pins.miso = TRUE;
-    qspi_pins.mosi = TRUE;
-    qspi_pins.sdio2 = TRUE;
-    qspi_pins.sdio3 = TRUE;
-    qspi_pins.ss0 = TRUE;
-    qspi_pins.ss1 = FALSE;
-    qspi_pins.ss2 = FALSE;
-
-    spi_dma_slave_init(MAX78000_AUDIO_QSPI, qspi_pins);
-
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
         fail();
     }
 
-    NVIC_EnableIRQ(MAX78000_AUDIO_QSPI_DMA_IRQ);
+    if (qspi_dma_slave_init() != E_NO_ERROR) {
+        PR_ERROR("qspi_dma_slave_init fail");
+        fail();
+    }
 
     /* load kernels */
     PR_INFO("*** CNN Kernel load ***");
@@ -469,13 +450,13 @@ int main(void)
                 memcpy(classification_result.result, keywords[out_class], sizeof(classification_result.result));
                 classification_result.probabily = probability;
 
-                spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI,
-                        (uint8_t *) &classification_result, sizeof(classification_result),
-                        QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES, &qspi_int);
+                qspi_dma_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
+                        QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES);
 
+                MXC_Delay(MXC_DELAY_MSEC(5));
                 max78000_statistics.cnn_duration_us = cnn_time;
-                spi_dma_send_packet(MAX78000_AUDIO_QSPI_DMA_CHANNEL, MAX78000_AUDIO_QSPI, (uint8_t *) &max78000_statistics,
-                                    sizeof(max78000_statistics), QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES, &qspi_int);
+                qspi_dma_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
+                        QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES);
 
 #ifdef ENABLE_CLASSIFICATION_DISPLAY
                 printf("\n----------------------------------------- \n");

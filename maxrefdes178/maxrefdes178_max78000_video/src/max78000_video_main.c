@@ -43,7 +43,6 @@
 #include <mxc.h>
 #include <mxc_delay.h>
 #include <rtc.h>
-#include <spi.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -77,7 +76,6 @@
 //-----------------------------------------------------------------------------
 mxc_gpio_cfg_t gpio_flash  = MAX78000_VIDEO_FLASH_PIN;
 mxc_gpio_cfg_t gpio_camera = MAX78000_VIDEO_CAMERA_PIN;
-mxc_gpio_cfg_t qspi_int    = MAX78000_VIDEO_HOST_INT_PIN;
 mxc_gpio_cfg_t gpio_red    = MAX78000_VIDEO_LED_RED_PIN;
 mxc_gpio_cfg_t gpio_green  = MAX78000_VIDEO_LED_GREEN_PIN;
 mxc_gpio_cfg_t gpio_blue   = MAX78000_VIDEO_LED_BLUE_PIN;
@@ -229,15 +227,6 @@ static void run_demo(void);
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void MAX78000_VIDEO_CAMERA_DMA_IRQ_HAND(void)
-{
-}
-
-void MAX78000_VIDEO_QSPI_DMA_IRQ_HAND(void)
-{
-    spi_dma_int_handler(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI);
-}
-
 int main(void)
 {
     int ret = 0;
@@ -249,11 +238,8 @@ int main(void)
     MXC_GPIO_Config(&gpio_camera);
 
     // Configure flash pin
+    GPIO_CLR(gpio_flash);
     MXC_GPIO_Config(&gpio_flash);
-
-    // Configure SPI int pin
-    GPIO_SET(qspi_int);
-    MXC_GPIO_Config(&qspi_int);
 
     // Configure LEDs
     GPIO_CLR(gpio_red);
@@ -288,25 +274,16 @@ int main(void)
     MXC_RTC_Init(0, 0);
     MXC_RTC_Start();
 
-    mxc_spi_pins_t qspi_pins;
-    qspi_pins.clock = TRUE;
-    qspi_pins.miso = TRUE;
-    qspi_pins.mosi = TRUE;
-    qspi_pins.sdio2 = TRUE;
-    qspi_pins.sdio3 = TRUE;
-    qspi_pins.ss0 = TRUE;
-    qspi_pins.ss1 = FALSE;
-    qspi_pins.ss2 = FALSE;
-
-    spi_dma_slave_init(MAX78000_VIDEO_QSPI, qspi_pins);
 
     if (MXC_DMA_Init() != E_NO_ERROR) {
         PR_ERROR("DMA INIT ERROR");
         fail();
     }
 
-//    NVIC_EnableIRQ(MAX78000_VIDEO_CAMERA_DMA_IRQ);
-    NVIC_EnableIRQ(MAX78000_VIDEO_QSPI_DMA_IRQ);
+    if (qspi_dma_slave_init() != E_NO_ERROR) {
+        PR_ERROR("qspi_dma_slave_init fail");
+        fail();
+    }
 
     // Initialize the camera driver.
     if (camera_init(CAMERA_FREQ) != E_NO_ERROR) {
@@ -412,8 +389,8 @@ static void run_demo(void)
                 PR_DEBUG("QSPI    : %lu", max78000_statistics.communication_duration_us);
                 PR_DEBUG("Total   : %lu\n\n", max78000_statistics.total_duration_us);
 
-                spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, (uint8_t *) &max78000_statistics,
-                                    sizeof(max78000_statistics), QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES, &qspi_int);
+                qspi_dma_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
+                        QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES);
             }
 
             time_counter++;
@@ -434,8 +411,7 @@ static void send_img(void)
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &imgLen, &w, &h);
 
-    spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, raw, imgLen,
-            QSPI_PACKET_TYPE_VIDEO_DATA_RES, &qspi_int);
+    qspi_dma_send_packet(raw, imgLen, QSPI_PACKET_TYPE_VIDEO_DATA_RES);
 //    MXC_Delay(MXC_DELAY_MSEC(3)); // Yield SPI DMA RAM read
 }
 
@@ -542,8 +518,8 @@ static void run_cnn(int x_offset, int y_offset)
         }
 
         if(decision != prev_decision){
-            spi_dma_send_packet(MAX78000_VIDEO_QSPI_DMA_CHANNEL, MAX78000_VIDEO_QSPI, (uint8_t *) &classification_result,
-                    sizeof(classification_result), QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES, &qspi_int);
+            qspi_dma_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
+                    QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES);
             PR_DEBUG("Result : %s\n", classification_result.result);
         }
     }

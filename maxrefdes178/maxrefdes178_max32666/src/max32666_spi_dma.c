@@ -126,13 +126,17 @@ void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi)
 }
 
 
-void spi_dma_master_init(mxc_spi_regs_t *spi, sys_map_t map, uint32_t speed, uint8_t quad)
+int spi_dma_master_init(mxc_spi_regs_t *spi, sys_map_t map, uint32_t speed, uint8_t quad)
 {
+    int ret;
+
     MXC_SPI_Shutdown(spi);
 
     // Configure the peripheral
-    if (MXC_SPI_Init(spi, 1, quad, 0, 0, speed, map) != 0) {
-        PR_ERROR("Error configuring spi");
+    ret = MXC_SPI_Init(spi, 1, quad, 0, 0, speed, map);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_SPI_Init fail %d", ret);
+        return ret;
     }
 
     // Switch SPI to master mode, else the state of the SS pin could cause the SPI periph to appear 'BUSY';
@@ -148,12 +152,15 @@ void spi_dma_master_init(mxc_spi_regs_t *spi, sys_map_t map, uint32_t speed, uin
     spi->ss_time = ((4 << MXC_F_SPI_SS_TIME_PRE_POS) |
                     (8 << MXC_F_SPI_SS_TIME_POST_POS) |
                     (16 << MXC_F_SPI_SS_TIME_INACT_POS));
+
+    return E_NO_ERROR;
 }
 
-void spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, mxc_dma_reqsel_t reqsel, void (*callback)(void))
+int spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, mxc_dma_reqsel_t reqsel, void (*callback)(void))
 {
     if (dma_busy_flag[ch]) {
         PR_ERROR("dma is busy");
+//        return E_BUSY;
     }
 
     // Stop SPI
@@ -269,6 +276,8 @@ void spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_i
 
     // Start the SPI transaction
     spi->ctrl0 |= (MXC_F_SPI_CTRL0_EN | MXC_F_SPI_CTRL0_START);
+
+    return E_NO_ERROR;
 }
 
 int spi_dma_wait(uint8_t ch, mxc_spi_regs_t *spi)
@@ -287,13 +296,13 @@ int spi_dma_wait(uint8_t ch, mxc_spi_regs_t *spi)
 
     if (cnt == 0) {
         PR_WARN("timeout");
-        return 1;
+        return E_TIME_OUT;
     }
 
-    return 0;
+    return E_NO_ERROR;
 }
 
-int spi_dma_busy_flag(uint8_t ch)
+uint8_t spi_dma_busy_flag(uint8_t ch)
 {
     return dma_busy_flag[ch];
 }

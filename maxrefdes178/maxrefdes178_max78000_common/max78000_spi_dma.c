@@ -64,176 +64,329 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static volatile uint8_t dma_busy_flag[MXC_DMA_CHANNELS] = {0};
-static void (*dma_callback[MXC_DMA_CHANNELS]) (void) = {0};
+static volatile uint8_t dma_busy_flag = 0;
+static volatile uint8_t cs_asserted = 0;
+static volatile uint8_t *tx_data = NULL;
+static volatile uint8_t *rx_data = NULL;
+static volatile uint32_t data_size = 0;
+
+#if defined(MAXREFDES178_MAX78000_AUDIO)
+static mxc_gpio_cfg_t qspi_int_pin = MAX78000_AUDIO_HOST_INT_PIN;
+static mxc_gpio_cfg_t qspi_cs_pin  = MAX78000_AUDIO_HOST_CS_PIN;
+static mxc_gpio_cfg_t qspi_rw_pin  = MAX78000_AUDIO_HOST_IO_PIN;
+static mxc_spi_regs_t *qspi        = MAX78000_AUDIO_QSPI;
+static uint8_t qspi_ch             = MAX78000_AUDIO_QSPI_DMA_CHANNEL;
+#elif defined(MAXREFDES178_MAX78000_VIDEO)
+static mxc_gpio_cfg_t qspi_int_pin = MAX78000_VIDEO_HOST_INT_PIN;
+static mxc_gpio_cfg_t qspi_cs_pin  = MAX78000_VIDEO_HOST_CS_PIN;
+static mxc_gpio_cfg_t qspi_rw_pin  = MAX78000_VIDEO_HOST_IO_PIN;
+static mxc_spi_regs_t *qspi        = MAX78000_VIDEO_QSPI;
+static uint8_t qspi_ch             = MAX78000_VIDEO_QSPI_DMA_CHANNEL;
+#else
+#error MAX78000 AUDIO or MAX78000 VIDEO flag should be set
+#endif
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static int qspi_dma(void);
+static int qspi_dma_trigger_and_wait(void);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi)
+#if defined(MAXREFDES178_MAX78000_AUDIO)
+void MAX78000_AUDIO_QSPI_DMA_IRQ_HAND(void)
+#else
+void MAX78000_VIDEO_QSPI_DMA_IRQ_HAND(void)
+#endif
 {
-    if (MXC_DMA->intfl & (0x1 << ch)) {
-        if (MXC_DMA->ch[ch].status & (MXC_F_DMA_STATUS_TO_IF | MXC_F_DMA_STATUS_BUS_ERR)) {
-            PR_ERROR("dma error %d", MXC_DMA->ch[ch].status);
+    if (MXC_DMA->intfl & (0x1 << qspi_ch)) {
+        if (MXC_DMA->ch[qspi_ch].status & (MXC_F_DMA_STATUS_TO_IF | MXC_F_DMA_STATUS_BUS_ERR)) {
+            PR_ERROR("dma error %d", MXC_DMA->ch[qspi_ch].status);
         }
 
-        if (MXC_DMA->ch[ch].status & MXC_F_DMA_STATUS_RLD_IF) {
+        if (MXC_DMA->ch[qspi_ch].status & MXC_F_DMA_STATUS_RLD_IF) {
             // reload interrupt, do nothing
         } else {
-            if (MXC_DMA->ch[ch].cnt) {
-                PR_ERROR("dma is not empty %d", MXC_DMA->ch[ch].cnt);
+            if (MXC_DMA->ch[qspi_ch].cnt) {
+                PR_ERROR("dma is not empty %d", MXC_DMA->ch[qspi_ch].cnt);
             }
 
-            // Stop DMA
-            MXC_DMA->ch[ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
-
-            // Stop SPI
-            spi->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
-
-            // Disable SPI DMA, flush FIFO
-            spi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
-
-            dma_busy_flag[ch] = 0;
-
-            // call callback
-            if (dma_callback[ch]) {
-                (*dma_callback[ch]) ();
-            }
+            dma_busy_flag = 0;
         }
 
         // Clear DMA int flags
-        MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
+        MXC_DMA->ch[qspi_ch].status = MXC_DMA->ch[qspi_ch].status;
     }
 }
 
-
-void spi_dma_slave_init(mxc_spi_regs_t *spi, mxc_spi_pins_t spi_pins)
+void qspi_dma_cs_handler(void *cbdata)
 {
-    if (MXC_SPI_Init(spi, 0, 1, 0, 0, 0, spi_pins) != E_NO_ERROR) {
-        PR_ERROR("SPI INITIALIZATION ERROR");
+    if (MXC_GPIO_InGet(qspi_cs_pin.port, qspi_cs_pin.mask)) {
+        // CS deassert
+
+        // Stop DMA and SPI
+        MXC_DMA->ch[qspi_ch].ctrl &= ~MXC_F_DMA_CTRL_EN;
+        qspi->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
+        qspi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
+
+        cs_asserted = 0;
+    } else {
+        // CS assert
+
+        if (qspi_rw_pin.port->in & qspi_rw_pin.mask) {
+            // Read request
+            if (tx_data) {
+                qspi_dma();
+            } else {
+                PR_ERROR("no data to tx");
+            }
+        } else {
+            // Write request.
+            if (rx_data) {
+//                qspi_dma();
+            } else {
+                PR_ERROR("no data to rx");
+            }
+        }
+
+        cs_asserted = 1;
     }
+}
+
+int qspi_dma_slave_init(void)
+{
+    int ret;
+
+    mxc_spi_pins_t qspi_pins;
+    qspi_pins.clock = TRUE;
+    qspi_pins.miso = TRUE;
+    qspi_pins.mosi = TRUE;
+    qspi_pins.sdio2 = TRUE;
+    qspi_pins.sdio3 = TRUE;
+    qspi_pins.ss0 = TRUE;
+    qspi_pins.ss1 = FALSE;
+    qspi_pins.ss2 = FALSE;
+
+    ret = MXC_SPI_Init(qspi, 0, 1, 0, 0, 0, qspi_pins);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_SPI_Init fail %d", ret);
+        return ret;
+    }
+
+    // Host interrupt output pin
+    GPIO_SET(qspi_int_pin);
+    MXC_GPIO_Config(&qspi_int_pin);
+
+    // Host cs interrupt input pin
+    MXC_GPIO_Config(&qspi_cs_pin);
+    MXC_GPIO_RegisterCallback(&qspi_cs_pin, qspi_dma_cs_handler, NULL);
+    MXC_GPIO_IntConfig(&qspi_cs_pin, MXC_GPIO_INT_BOTH);
+    MXC_GPIO_EnableInt(qspi_cs_pin.port, qspi_cs_pin.mask);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(qspi_cs_pin.port)));
+
+    // Host read/write input pin
+    MXC_GPIO_Config(&qspi_rw_pin);
 
     // Set data size
-    MXC_SETFIELD(spi->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, (8 << MXC_F_SPI_CTRL2_NUMBITS_POS));
+    MXC_SETFIELD(qspi->ctrl2, MXC_F_SPI_CTRL2_NUMBITS, (8 << MXC_F_SPI_CTRL2_NUMBITS_POS));
 
-    if (MXC_SPI_SetWidth(spi, SPI_WIDTH_QUAD) != E_NO_ERROR) {
-        PR_ERROR("SPI SET WIDTH ERROR");
+    ret = MXC_SPI_SetWidth(qspi, SPI_WIDTH_QUAD);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_SPI_SetWidth fail");
+        return ret;
     }
+
+#if defined(MAXREFDES178_MAX78000_AUDIO)
+    NVIC_EnableIRQ(MAX78000_AUDIO_QSPI_DMA_IRQ);
+#else
+    NVIC_EnableIRQ(MAX78000_VIDEO_QSPI_DMA_IRQ);
+#endif
+
+    return E_NO_ERROR;
 }
 
-void spi_dma_tx(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, mxc_gpio_cfg_t *spi_int, void (*callback)(void))
+int qspi_dma(void)
 {
-    if (dma_busy_flag[ch]) {
-        PR_ERROR("dma is busy");
+    if (dma_busy_flag) {
+//        PR_ERROR("dma is busy");
+//        return E_BUSY;
     }
 
     // Stop SPI
-    spi->ctrl0 &= ~(MXC_F_SPI_CTRL0_EN);
+    qspi->ctrl0 &= ~(MXC_F_SPI_CTRL0_EN);
 
     // Setup SPI
-    spi->ctrl1 = 0;
+    qspi->ctrl1 = 0;
 
-    // Number of characters to transmit from TX FIFO.
-    if (len > SPI_DMA_COUNTER_MAX) {
-        MXC_SETFIELD(spi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (SPI_DMA_COUNTER_MAX << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
-    } else {
-        MXC_SETFIELD(spi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (len << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
+    // Number of characters to transmit from TX or RX FIFO.
+    if (tx_data) {
+        if (data_size > SPI_DMA_COUNTER_MAX) {
+            MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (SPI_DMA_COUNTER_MAX << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
+        } else {
+            MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_TX_NUM_CHAR, (data_size << MXC_F_SPI_CTRL1_TX_NUM_CHAR_POS));
+        }
+    }
+    if (rx_data) {
+        if (data_size > SPI_DMA_COUNTER_MAX) {
+            MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_RX_NUM_CHAR, (SPI_DMA_COUNTER_MAX << MXC_F_SPI_CTRL1_RX_NUM_CHAR_POS));
+        } else {
+            MXC_SETFIELD(qspi->ctrl1, MXC_F_SPI_CTRL1_RX_NUM_CHAR, (data_size << MXC_F_SPI_CTRL1_RX_NUM_CHAR_POS));
+        }
     }
 
     // TX FIFO Enabled, clear TX and RX FIFO
-    spi->dma = (MXC_F_SPI_DMA_TX_FIFO_EN |
-                MXC_F_SPI_DMA_TX_FLUSH |
-                MXC_F_SPI_DMA_RX_FLUSH);
-
+    if (tx_data) {
+        qspi->dma = (MXC_F_SPI_DMA_TX_FIFO_EN |
+                    MXC_F_SPI_DMA_TX_FLUSH |
+                    MXC_F_SPI_DMA_RX_FLUSH);
+    }
+    if (rx_data) {
+        qspi->dma = (MXC_F_SPI_DMA_RX_FIFO_EN |
+                    MXC_F_SPI_DMA_TX_FLUSH |
+                    MXC_F_SPI_DMA_RX_FLUSH);
+    }
 
     // Set SPI DMA TX and RX Thresholds
-    MXC_SETFIELD(spi->dma, MXC_F_SPI_DMA_TX_THD_VAL, (4 << MXC_F_SPI_DMA_TX_THD_VAL_POS));
-    MXC_SETFIELD(spi->dma, MXC_F_SPI_DMA_RX_THD_VAL, (0 << MXC_F_SPI_DMA_RX_THD_VAL_POS));
-
-    // Enable SPI DMA
-    spi->dma |= MXC_F_SPI_DMA_DMA_TX_EN;
+    if (tx_data) {
+        MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_TX_THD_VAL, (4 << MXC_F_SPI_DMA_TX_THD_VAL_POS));
+        MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_RX_THD_VAL, (0 << MXC_F_SPI_DMA_RX_THD_VAL_POS));
+    }
+    if (rx_data) {
+        MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_TX_THD_VAL, (0 << MXC_F_SPI_DMA_TX_THD_VAL_POS));
+        MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_RX_THD_VAL, (4 << MXC_F_SPI_DMA_RX_THD_VAL_POS));
+    }
 
     // Enable SPI
-    spi->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
+    qspi->ctrl0 |= (MXC_F_SPI_CTRL0_EN);
+
+    // Enable SPI DMA
+    if (tx_data) {
+        qspi->dma |= MXC_F_SPI_DMA_DMA_TX_EN;
+    }
+    if (rx_data) {
+        qspi->dma |= MXC_F_SPI_DMA_DMA_RX_EN;
+    }
 
     // Setup DMA
-    dma_busy_flag[ch] = 1;
-    dma_callback[ch] = callback;
+    dma_busy_flag = 1;
 
     // Clear DMA int flags
-    MXC_DMA->ch[ch].status = MXC_DMA->ch[ch].status;
+    MXC_DMA->ch[qspi_ch].status = MXC_DMA->ch[qspi_ch].status;
 
     // Enable SRC increment, set request, set source and destination width, enable channel, Count-To-Zero int enable
-    MXC_DMA->ch[ch].ctrl = (MXC_F_DMA_CTRL_SRCINC |
-                            MXC_S_DMA_CTRL_REQUEST_SPI0TX |
-                            MXC_S_DMA_CTRL_SRCWD_WORD |
-                            MXC_S_DMA_CTRL_SRCWD_WORD |
-                            MXC_F_DMA_CTRL_CTZ_IE);
+    if (tx_data) {
+        MXC_DMA->ch[qspi_ch].ctrl = (MXC_F_DMA_CTRL_SRCINC |
+                                MXC_S_DMA_CTRL_REQUEST_SPI0TX |
+                                MXC_S_DMA_CTRL_SRCWD_WORD |
+                                MXC_S_DMA_CTRL_SRCWD_WORD |
+                                MXC_F_DMA_CTRL_CTZ_IE);
+    }
+    if (rx_data) {
+        MXC_DMA->ch[qspi_ch].ctrl = (MXC_F_DMA_CTRL_DSTINC |
+                                MXC_S_DMA_CTRL_REQUEST_SPI0RX |
+                                MXC_S_DMA_CTRL_SRCWD_WORD |
+                                MXC_S_DMA_CTRL_SRCWD_WORD |
+                                MXC_F_DMA_CTRL_CTZ_IE);
+    }
 
     // Set DMA source, destination, counter
-    MXC_DMA->ch[ch].cnt = len;
-    MXC_DMA->ch[ch].src = (unsigned int) data;
-    MXC_DMA->ch[ch].dst = 0;
+    MXC_DMA->ch[qspi_ch].cnt = data_size;
+    MXC_DMA->ch[qspi_ch].cntrld = 0;
+
+    if (tx_data) {
+        MXC_DMA->ch[qspi_ch].src = (unsigned int) tx_data;
+        MXC_DMA->ch[qspi_ch].dst = 0;
+    }
+    if (rx_data) {
+        MXC_DMA->ch[qspi_ch].src = 0;
+        MXC_DMA->ch[qspi_ch].dst = (unsigned int) rx_data;
+    }
 
     // if too big, set reload registers
-    if (len > SPI_DMA_COUNTER_MAX) {
-        MXC_DMA->ch[ch].cnt = SPI_DMA_COUNTER_MAX;
-        MXC_DMA->ch[ch].srcrld = (unsigned int) (data + SPI_DMA_COUNTER_MAX);
-        MXC_DMA->ch[ch].dstrld = 0;
-        MXC_DMA->ch[ch].cntrld = len - SPI_DMA_COUNTER_MAX;
+    if (data_size > SPI_DMA_COUNTER_MAX) {
+        MXC_DMA->ch[qspi_ch].cnt = SPI_DMA_COUNTER_MAX;
+        if (tx_data) {
+            MXC_DMA->ch[qspi_ch].srcrld = (unsigned int) (tx_data + SPI_DMA_COUNTER_MAX);
+            MXC_DMA->ch[qspi_ch].dstrld = 0;
+        }
+        if (rx_data) {
+            MXC_DMA->ch[qspi_ch].srcrld = 0;
+            MXC_DMA->ch[qspi_ch].dstrld = (unsigned int) (rx_data + SPI_DMA_COUNTER_MAX);
+        }
+        MXC_DMA->ch[qspi_ch].cntrld = data_size - SPI_DMA_COUNTER_MAX;
     }
 
     // Enable DMA int
-    MXC_DMA->inten |= (1 << ch);
+    MXC_DMA->inten |= (1 << qspi_ch);
 
     // Enable DMA
-    if (len > SPI_DMA_COUNTER_MAX) {
-        MXC_DMA->ch[ch].ctrl |= (MXC_F_DMA_CTRL_EN | MXC_F_DMA_CTRL_RLDEN);
+    if (data_size > SPI_DMA_COUNTER_MAX) {
+        MXC_DMA->ch[qspi_ch].ctrl |= (MXC_F_DMA_CTRL_EN | MXC_F_DMA_CTRL_RLDEN);
     } else {
-        MXC_DMA->ch[ch].ctrl |= MXC_F_DMA_CTRL_EN;
+        MXC_DMA->ch[qspi_ch].ctrl |= MXC_F_DMA_CTRL_EN;
     }
 
-    // Send interrupt to master
-    MXC_GPIO_OutClr(spi_int->port, spi_int->mask);
-    MXC_GPIO_OutSet(spi_int->port, spi_int->mask);
+    return E_NO_ERROR;
 }
 
-int spi_dma_wait(uint8_t ch)
+static int qspi_dma_trigger_and_wait(void)
 {
     uint32_t cnt = SPI_TIMEOUT_CNT;
 
-    while(dma_busy_flag[ch] && cnt) {
+    // Send interrupt to master
+    MXC_GPIO_OutClr(qspi_int_pin.port, qspi_int_pin.mask);
+    MXC_GPIO_OutSet(qspi_int_pin.port, qspi_int_pin.mask);
+
+    // Wait cs assert
+    while(!cs_asserted && cnt) {
+        cnt--;
+    }
+
+    // Wait cs deassert
+    while(cs_asserted && cnt) {
         cnt--;
     }
 
     if (cnt == 0) {
+        tx_data = NULL;
+        rx_data = NULL;
+        data_size = 0;
+
         PR_WARN("timeout");
-        return 1;
+        return E_TIME_OUT;
     }
 
-    return 0;
+    return E_NO_ERROR;
 }
 
-void spi_dma_send_packet(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data, uint32_t len, uint8_t data_type, mxc_gpio_cfg_t *spi_int)
+int qspi_dma_send_packet(uint8_t *data, uint32_t size, uint8_t data_type)
 {
     qspi_packet_header_t qspi_packet_header;
     qspi_packet_header.start_symbol = QSPI_START_SYMBOL;
-    qspi_packet_header.packet_size = len;
+    qspi_packet_header.packet_size = size;
     qspi_packet_header.packet_type = data_type;
 
     PR_DEBUG("spi tx started %d", data_type);
 
-    spi_dma_tx(ch, spi, (uint8_t*) &qspi_packet_header, sizeof(qspi_packet_header_t), spi_int, NULL);
-    spi_dma_wait(ch);
+    rx_data = NULL;
 
-    spi_dma_tx(ch, spi, data, len, spi_int, NULL);
-    spi_dma_wait(ch); // TODO
+    tx_data = (uint8_t*) &qspi_packet_header;
+    data_size = sizeof(qspi_packet_header_t);
+    qspi_dma_trigger_and_wait();
+
+    tx_data = data;
+    data_size = size;
+    qspi_dma_trigger_and_wait();
+
+    tx_data = NULL;
+    rx_data = NULL;
+    data_size = 0;
 
     PR_DEBUG("spi tx completed %d", data_type);
+
+    return E_NO_ERROR;
 }

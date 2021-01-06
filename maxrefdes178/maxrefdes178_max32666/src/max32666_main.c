@@ -494,12 +494,12 @@ int Core1_Main(void)
 
     PR_INFO("maxrefdes178_max32666 core1");
 
+    core1_irq_init();
+
     ret = ble_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("ble_init %d", ret);
     }
-
-    core1_irq_init();
 
     core1_init_done = 1;
 
@@ -538,7 +538,6 @@ static void core0_irq_init(void)
 
 static void core1_irq_init(void)
 {
-
     NVIC_DisableIRQ(GPIO0_IRQn);
     NVIC_DisableIRQ(GPIO1_IRQn);
 
