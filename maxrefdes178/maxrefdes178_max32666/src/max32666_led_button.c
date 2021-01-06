@@ -77,12 +77,12 @@ static volatile uint8_t led_toogle = 0;
 void button1_int(void *cbdata)
 {
     device_settings.enable_ble ^= 1;
-//    if (device_settings.enable_ble) {
+    if (device_settings.enable_ble) {
 //        printf("BLE enabled\n");
-//        Core1_Start();
-//    } else {
+        Core1_Start();
+    } else {
 //        printf("BLE disabled\n");
-//    }
+    }
 }
 
 void led_continuous_timer(void)

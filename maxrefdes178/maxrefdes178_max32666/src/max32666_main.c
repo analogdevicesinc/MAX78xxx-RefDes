@@ -284,7 +284,7 @@ static void run_application(void)
                     lcd_data.frame_color = WHITE;
                 }
 
-                if (device_settings.enable_send_classification && device_status.ble_connected) {
+                if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
                     ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES,
                         sizeof(device_status.classification_video), (uint8_t *) &device_status.classification_video);
                 }
@@ -318,11 +318,16 @@ static void run_application(void)
                     } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
                         device_settings.enable_lcd_statistics = 0;
                     }
+
+                    else if(strcmp(device_status.classification_audio.result, "TWO") == 0) {
+                        qspi_audio_send();
+                    }
+
                 }
 
 //                refresh_screen();
 
-                if (device_settings.enable_send_classification && device_status.ble_connected) {
+                if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
                     ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
                         sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
                 }
@@ -333,7 +338,7 @@ static void run_application(void)
         }
 
         // Send periodic statistics
-        if (device_settings.enable_send_statistics && device_status.ble_connected) {
+        if (device_settings.enable_ble_send_statistics && device_status.ble_connected) {
             if ((timer_ms_tick - timestamps.statistics_sent) > BLE_STATISTICS_INTERVAL) {
                 timestamps.statistics_sent = timer_ms_tick;
                 ble_command_send_single_packet(BLE_COMMAND_GET_STATISTICS_RES,
@@ -357,10 +362,12 @@ static void run_application(void)
         if (device_status.ble_status_changed) {
             device_status.ble_status_changed = 0;
 
-            if (device_status.ble_connected) {
-                ble_queue_flush();
-                ble_command_reset();
+            ble_queue_flush();
+            ble_command_reset();
+            device_settings.enable_ble_send_classification = 0;
+            device_settings.enable_ble_send_statistics = 0;
 
+            if (device_status.ble_connected) {
                 snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1,
                         "BLE %02X:%02X:%02X:%02X:%02X:%02X connected!",
                         device_status.ble_connected_peer_mac[5], device_status.ble_connected_peer_mac[4],
@@ -368,9 +375,6 @@ static void run_application(void)
                         device_status.ble_connected_peer_mac[1], device_status.ble_connected_peer_mac[0]);
                 timestamps.notification_received = timer_ms_tick;
             } else {
-                ble_queue_flush();
-                ble_command_reset();
-
                 snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE disconnected!");
                 timestamps.notification_received = timer_ms_tick;
             }

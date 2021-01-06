@@ -347,6 +347,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
         periphCb.connectionHandle = pMsg->connOpen.handle;
 
         device_status.ble_connected = 1;
+        device_status.ble_status_changed = 1;
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
         device_status.ble_max_packet_size = AttGetMtu(periphCb.connId) - 3;
@@ -367,6 +368,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
         periphCb.connected = FALSE;
 
         device_status.ble_connected = 0;
+        device_status.ble_status_changed = 1;
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
         memset(device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
@@ -706,20 +708,22 @@ int ble_worker(void)
 
         // If device is connected, send disconnect
         if (periphCb.connected) {
-            LlDisconnect(periphCb.connectionHandle, LL_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_POWER_OFF);
+//            LlDisconnect(periphCb.connectionHandle, LL_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_POWER_OFF);
+            AppConnClose(periphCb.connId);
             while (periphCb.connected) {
                 wsfOsDispatcher();
             }
         }
+//        AppAdvStop();
 //        PalBbDisable();
-//        Core1_Stop();
-        // sleep here, wake up from here
 
-        // TODO: BLE core1 sleep
-        while(!device_settings.enable_ble);
+        Core1_Stop();
+//        while(!device_settings.enable_ble);
+
+//        PalBbEnable();
+//        AppAdvStart(APP_MODE_AUTO_INIT);
 
         PR_INFO("Enable BLE");
-//        PalBbEnable();
     }
 
     return E_NO_ERROR;

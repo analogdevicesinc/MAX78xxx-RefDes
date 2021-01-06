@@ -74,8 +74,8 @@ device_settings_t device_settings = {
         .enable_max78000_video_and_audio_power = 1,
         .enable_lcd_statistics = 0,
         .enable_lcd_probabilty = 0,
-        .enable_send_statistics = 0,
-        .enable_send_classification = 0,
+        .enable_ble_send_statistics = 0,
+        .enable_ble_send_classification = 0,
 };
 
 //-----------------------------------------------------------------------------

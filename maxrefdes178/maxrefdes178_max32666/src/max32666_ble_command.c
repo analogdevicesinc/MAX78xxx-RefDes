@@ -85,7 +85,6 @@ static ble_command_buffer_t ble_command_buffer;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int ble_command_form_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload);
 static int ble_command_handle_rx(void);
 static int ble_command_handle_tx(void);
 
@@ -93,22 +92,6 @@ static int ble_command_handle_tx(void);
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-static int ble_command_form_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload)
-{
-    if (payload_size > sizeof(tmp_container.packet.command_packet.payload)) {
-        PR_ERROR("invalid command %d payload size %d", ble_command, payload_size);
-        return E_BAD_PARAM;
-    }
-    tmp_container.packet.command_packet.header.packet_info.type = BLE_PACKET_TYPE_COMMAND;
-    tmp_container.packet.command_packet.header.packet_info.seq = device_status.ble_next_tx_seq;
-    tmp_container.packet.command_packet.header.command = ble_command;
-    tmp_container.packet.command_packet.header.total_payload_size = payload_size;
-    memcpy(tmp_container.packet.command_packet.payload, payload, payload_size);
-    tmp_container.size = payload_size + sizeof(ble_command_packet_header_t);
-
-    return E_SUCCESS;
-}
-
 // TODO: handle small MTU, multiple packet cases
 int ble_command_send_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload)
 {
@@ -125,11 +108,16 @@ int ble_command_send_single_packet(ble_command_e ble_command, uint32_t payload_s
         return E_BAD_PARAM;
     }
 
-    ret = ble_command_form_single_packet(ble_command, payload_size, payload);
-    if (ret != E_SUCCESS) {
-        PR_ERROR("form_single_packet_command failed %d", ret);
-        return ret;
+    if (payload_size > sizeof(tmp_container.packet.command_packet.payload)) {
+        PR_ERROR("invalid command %d payload size %d", ble_command, payload_size);
+        return E_BAD_PARAM;
     }
+    tmp_container.packet.command_packet.header.packet_info.type = BLE_PACKET_TYPE_COMMAND;
+    tmp_container.packet.command_packet.header.packet_info.seq = device_status.ble_next_tx_seq;
+    tmp_container.packet.command_packet.header.command = ble_command;
+    tmp_container.packet.command_packet.header.total_payload_size = payload_size;
+    memcpy(tmp_container.packet.command_packet.payload, payload, payload_size);
+    tmp_container.size = payload_size + sizeof(ble_command_packet_header_t);
 
     ret = ble_queue_enq_tx(&tmp_container);
     if (ret != E_SUCCESS) {
@@ -358,28 +346,28 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        device_settings.enable_send_statistics = 1;
+        device_settings.enable_ble_send_statistics = 1;
         break;
     case BLE_COMMAND_DISABLE_SEND_STATISTICS_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        device_settings.enable_send_statistics = 0;
+        device_settings.enable_ble_send_statistics = 0;
         break;
     case BLE_COMMAND_ENABLE_SEND_CLASSIFICATION_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        device_settings.enable_send_classification = 1;
+        device_settings.enable_ble_send_classification = 1;
         break;
     case BLE_COMMAND_DISABLE_SEND_CLASSIFICATION_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        device_settings.enable_send_classification = 0;
+        device_settings.enable_ble_send_classification = 0;
         break;
     case BLE_COMMAND_SET_DEBUGGER_CMD:
         if (ble_command_buffer.total_payload_size != 1) {
