@@ -95,8 +95,8 @@
 
 // Common BLE
 #define BLE_MAX_MTU_SIZE                   256
-#define BLE_MAX_MTU_REQUEST_SIZE           (BLE_MAX_MTU_SIZE - 4)
-#define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_REQUEST_SIZE - 3)
+#define BLE_MAX_MTU_REQUEST_SIZE           (BLE_MAX_MTU_SIZE - 4) //252
+#define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_REQUEST_SIZE - 3) //249
 
 #define BLE_STATISTICS_INTERVAL            1000  // ms
 
@@ -522,7 +522,7 @@ typedef struct __attribute__((packed)) {
 } ble_payload_packet_header_t;
 
 // BLE command packet
-#define BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE    BLE_MAX_PACKET_SIZE - sizeof(ble_command_packet_header_t)
+#define BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE    BLE_MAX_PACKET_SIZE - sizeof(ble_command_packet_header_t) //243
 typedef struct __attribute__((packed)) {
     ble_command_packet_header_t header;
     uint8_t payload[BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE];
