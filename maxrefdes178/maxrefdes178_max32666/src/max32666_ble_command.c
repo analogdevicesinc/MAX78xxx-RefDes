@@ -45,6 +45,7 @@
 #include "max32666_expander.h"
 #include "max32666_lcd.h"
 #include "max32666_max20303.h"
+#include "max32666_qspi.h"
 #include "maxrefdes178_definitions.h"
 
 
@@ -159,9 +160,8 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        // TODO
-        ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
-            sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
+        qspi_send_video(ble_command_buffer.total_payload_buffer, ble_command_buffer.total_payload_size,
+                QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD);
         break;
     case BLE_COMMAND_DISABLE_BLE_CMD:
         if (ble_command_buffer.total_payload_size != 0) {

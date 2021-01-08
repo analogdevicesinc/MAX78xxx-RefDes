@@ -242,9 +242,9 @@ int main(void)
     }
     PR("\n");
 
-    // TODO: get max78000_video and max78000_audio version and serial num
-    // QSPI_PACKET_TYPE_VIDEO_VERSION_CMD QSPI_PACKET_TYPE_AUDIO_VERSION_CMD
-    // QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD
+    // TODO: get max78000_video and max78000_audio serial num
+    qspi_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
+    qspi_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
 
     // Print logo and version
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
@@ -326,6 +326,10 @@ static void run_application(void)
                     ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
                         sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
                 }
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
+                ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
+                    sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
                 break;
             default:
                 break;

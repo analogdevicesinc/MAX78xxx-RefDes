@@ -79,7 +79,7 @@ typedef struct {
     device_statistics_t statistics;      // TODO
     classification_result_t classification_video;
     classification_result_t classification_audio;
-    faceid_embed_update_status_e faceid_embed_update_status;  // TODO
+    uint8_t faceid_embed_update_status;
 
     uint8_t ble_status_changed;  // written by both core0 and core1
     uint8_t ble_connected;  // written by core1

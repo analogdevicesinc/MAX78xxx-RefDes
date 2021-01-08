@@ -185,7 +185,7 @@
 
 // BLE Communication buffer
 #define MAX32666_BLE_QUEUE_SIZE            10
-#define MAX32666_BLE_COMMAND_BUFFER_SIZE   1024 * 4
+#define MAX32666_BLE_COMMAND_BUFFER_SIZE   1024 * 10
 
 
 /*** MAX78000 AUDIO ***/
@@ -286,7 +286,7 @@ typedef enum {
     QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES,      // classification_result_t
     QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES,          // max78000_statistics_t
 
-    QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD, // None
+    QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD, // FaceID embeddings binary
     QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES, // faceid_embed_update_status_e
 
     QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD,       // None
@@ -304,6 +304,7 @@ typedef enum {
 
     QSPI_PACKET_TYPE_LAST
 } qspi_packet_type_e;
+
 
 // BLE packet types
 typedef enum {
@@ -500,6 +501,7 @@ typedef struct __attribute__((packed)) {
     uint32_t start_symbol;
     uint32_t packet_size;
     uint8_t packet_type;
+    uint32_t stop_symbol;
 } qspi_packet_header_t;
 
 // BLE packet info field

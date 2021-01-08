@@ -40,6 +40,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <spi.h>
+#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -50,12 +51,41 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+typedef enum {
+    QSPI_STATE_IDLE = 0,
+
+    QSPI_STATE_RX_STARTED,
+    QSPI_STATE_RX_HEADER_CS_ASSERTED,
+    QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE,
+    QSPI_STATE_RX_DATA_CS_ASSERTED,
+    QSPI_STATE_RX_COMPLETED,
+    QSPI_STATE_RX_FAILED,
+
+    QSPI_STATE_TX_STARTED,
+    QSPI_STATE_TX_HEADER_CS_ASSERTED,
+    QSPI_STATE_TX_WAITING_DATA_TO_SEND,
+    QSPI_STATE_TX_DATA_CS_ASSERTED,
+    QSPI_STATE_TX_COMPLETED,
+    QSPI_STATE_TX_FAILED,
+
+    QSPI_STATE_LAST
+} qspi_state_e;
+
+
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+extern volatile qspi_packet_header_t g_qspi_packet_header_rx;
+extern volatile qspi_state_e g_qspi_state;
 
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int qspi_dma_send_packet(uint8_t *data, uint32_t size, uint8_t data_type);
+int qspi_dma_send_packet(uint8_t *data, uint32_t data_size, uint8_t packet_type);
+int qspi_dma_set_rx_data(uint8_t *data, uint32_t data_size);
+int qspi_dma_trigger(void);
+int qspi_dma_wait(qspi_state_e qspi_state);
 int qspi_dma_slave_init(void);
 
 

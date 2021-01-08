@@ -210,6 +210,9 @@ static int8_t prev_decision = -2;
 static int8_t decision = -2;
 static uint32_t time_counter = 0;
 
+//serial_num_t serial_num = {0};
+version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
+
 #ifdef PRINT_TIME_CNN
 #define PR_TIMER(fmt, args...) if((time_counter % 10) == 0) printf("T[%-5s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
 #endif
@@ -258,7 +261,8 @@ int main(void)
     MXC_SYS_Clock_Select(MXC_SYS_CLOCK_IPO);
     SystemCoreClockUpdate();
 
-    PR_INFO("maxrefdes178_max78000_video v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
+    PR_INFO("maxrefdes178_max78000_video v%d.%d.%d [%s]",
+            version.major, version.minor, version.build, S_BUILD_TIMESTAMP);
 
     if (initCNN() < 0 ) {
         PR_ERROR("Could not initialize the CNN accelerator");
@@ -323,6 +327,8 @@ int main(void)
         fail();
     }
 
+//    MXC_SYS_GetUSN(serial_num, NULL);
+
     // Successfully initialize the program
     PR_INFO("Program initialized successfully");
 
@@ -357,6 +363,70 @@ static void run_demo(void)
     max78000_statistics_t max78000_statistics;
 
     while (1) { //Capture image and run CNN
+
+        /* Check if QSPI RX has data */
+        if (g_qspi_state == QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE) {
+            if (g_qspi_packet_header_rx.packet_type == QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD) {
+
+                // Use camera interface buffer for FaceID embeddings
+                MXC_PCIF_Stop();
+                uint8_t   *raw;
+                uint32_t  imgLen;
+                uint32_t  w, h;
+                camera_get_image(&raw, &imgLen, &w, &h);
+
+                qspi_dma_set_rx_data(raw, g_qspi_packet_header_rx.packet_size);
+                qspi_dma_trigger();
+                qspi_dma_wait(QSPI_STATE_RX_COMPLETED);
+                g_qspi_state = QSPI_STATE_IDLE;
+
+                PR_INFO("facied embeddings received %d", g_qspi_packet_header_rx.packet_size);
+                for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
+                    printf("%02hhX ", raw[i]);
+                }
+                printf("\n");
+                // TODO store embeddings
+
+                uint8_t faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_SUCCESS;
+                qspi_dma_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
+                camera_start_capture_image();
+            }
+        } else if (g_qspi_state == QSPI_STATE_RX_COMPLETED) {
+            g_qspi_state = QSPI_STATE_IDLE;
+            if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
+                PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
+            } else {
+                switch(g_qspi_packet_header_rx.packet_type) {
+                case QSPI_PACKET_TYPE_VIDEO_VERSION_CMD:
+                    qspi_dma_send_packet((uint8_t *) &version, sizeof(version),
+                            QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
+                    break;
+                case QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD:
+                    // TODO
+//                    qspi_dma_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
+//                            QSPI_PACKET_TYPE_AUDIO_SERIAL_RES);
+                    break;
+                case QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD:
+                    // TODO
+                    break;
+                case QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD:
+                    // TODO
+                    break;
+                case QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD:
+                    // TODO
+                    break;
+                case QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD:
+                    //TODO
+                    break;
+                case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD:
+                    // Do nothing
+                    break;
+                default:
+                    PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
+                    break;
+                }
+            }
+        }
 
         if (camera_is_image_rcv()) { // Check whether image is ready
             capture_completed_time = GET_RTC_MS();

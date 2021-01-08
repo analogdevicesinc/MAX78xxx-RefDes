@@ -115,8 +115,9 @@ static int32_t  y0, y1;
 
 volatile uint8_t i2s_flag = 0;
 int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
-
 max78000_statistics_t max78000_statistics = {0};
+//serial_num_t serial_num = {0};
+version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
 
 /* **** Constants **** */
 typedef enum _mic_processing_state {
@@ -213,7 +214,8 @@ int main(void)
     GPIO_CLR(gpio_blue);
     MXC_GPIO_Config(&gpio_blue);
 
-    PR_INFO("maxrefdes178_max78000_audio v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
+    PR_INFO("maxrefdes178_max78000_audio v%d.%d.%d [%s]",
+            version.major, version.minor, version.build, S_BUILD_TIMESTAMP);
 
     memset(pAI85Buffer, 0x0, sizeof(pAI85Buffer));
     memset(pPreambleCircBuffer, 0x0, sizeof(pPreambleCircBuffer));
@@ -244,12 +246,53 @@ int main(void)
     /* initialize I2S interface to Mic */
     I2SInit();
 
+//    MXC_SYS_GetUSN(serial_num, NULL);
+
     PR_INFO("** READY ***");
 
     GPIO_SET(gpio_green);
 
     /* Read samples */
     while (1) {
+        /* Check if QSPI RX has data */
+        if (g_qspi_state == QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE) {
+//            qspi_dma_set_rx_data(qspi_rx_buffer, sizeof(qspi_rx_buffer));
+//            qspi_dma_trigger();
+//            qspi_dma_wait(QSPI_STATE_RX_COMPLETED);
+        } else if (g_qspi_state == QSPI_STATE_RX_COMPLETED) {
+            if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
+                PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
+            } else {
+                switch(g_qspi_packet_header_rx.packet_type) {
+                case QSPI_PACKET_TYPE_AUDIO_VERSION_CMD:
+                    qspi_dma_send_packet((uint8_t *) &version, sizeof(version),
+                            QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
+                    break;
+                case QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD:
+                    // TODO
+//                    qspi_dma_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
+//                            QSPI_PACKET_TYPE_AUDIO_SERIAL_RES);
+                    break;
+                case QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD:
+                    // TODO
+                    break;
+                case QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD:
+                    // TODO
+                    break;
+                case QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD:
+                    // TODO
+                    break;
+                case QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD:
+                    //TODO
+                    break;
+                default:
+                    PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
+                    break;
+                }
+            }
+            g_qspi_state = QSPI_STATE_IDLE;
+        }
+
         /* Read from Mic driver to get CHUNK worth of samples, otherwise next sample*/
         if (MicReadChunk(pChunkBuff, &avg) == 0) {
             continue;

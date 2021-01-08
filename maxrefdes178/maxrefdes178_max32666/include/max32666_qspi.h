@@ -49,6 +49,7 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+// QSPI status codes
 typedef enum {
     QSPI_STATUS_IDLE = 0,
     QSPI_STATUS_SUCCESS_RX,
@@ -64,6 +65,8 @@ typedef enum {
 // Function declarations
 //-----------------------------------------------------------------------------
 int qspi_init(void);
+qspi_status_e qspi_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type);
+qspi_status_e qspi_send_audio(uint8_t *data, uint32_t data_size, uint8_t data_type);
 qspi_status_e qspi_worker(qspi_packet_type_e *qspi_packet_type);
 
 

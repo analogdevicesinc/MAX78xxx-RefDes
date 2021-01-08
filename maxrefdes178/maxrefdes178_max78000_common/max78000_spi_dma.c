@@ -64,24 +64,26 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static volatile uint8_t dma_busy_flag = 0;
-static volatile uint8_t cs_asserted = 0;
-static volatile uint8_t *tx_data = NULL;
-static volatile uint8_t *rx_data = NULL;
-static volatile uint32_t data_size = 0;
+static volatile uint8_t *g_tx_data = NULL;
+static volatile uint8_t *g_rx_data = NULL;
+static volatile uint32_t g_tx_data_size = 0;
+static volatile uint32_t g_rx_data_size = 0;
+static volatile qspi_packet_header_t g_qspi_packet_header_tx = {0};
+volatile qspi_packet_header_t g_qspi_packet_header_rx = {0};
+volatile qspi_state_e g_qspi_state = QSPI_STATE_IDLE;
 
 #if defined(MAXREFDES178_MAX78000_AUDIO)
-static mxc_gpio_cfg_t qspi_int_pin = MAX78000_AUDIO_HOST_INT_PIN;
-static mxc_gpio_cfg_t qspi_cs_pin  = MAX78000_AUDIO_HOST_CS_PIN;
-static mxc_gpio_cfg_t qspi_rw_pin  = MAX78000_AUDIO_HOST_IO_PIN;
-static mxc_spi_regs_t *qspi        = MAX78000_AUDIO_QSPI;
-static uint8_t qspi_ch             = MAX78000_AUDIO_QSPI_DMA_CHANNEL;
+static const mxc_gpio_cfg_t qspi_int_pin = MAX78000_AUDIO_HOST_INT_PIN;
+static const mxc_gpio_cfg_t qspi_cs_pin  = MAX78000_AUDIO_HOST_CS_PIN;
+static const mxc_gpio_cfg_t qspi_rw_pin  = MAX78000_AUDIO_HOST_IO_PIN;
+static const uint8_t qspi_ch             = MAX78000_AUDIO_QSPI_DMA_CHANNEL;
+static mxc_spi_regs_t *qspi              = MAX78000_AUDIO_QSPI;
 #elif defined(MAXREFDES178_MAX78000_VIDEO)
-static mxc_gpio_cfg_t qspi_int_pin = MAX78000_VIDEO_HOST_INT_PIN;
-static mxc_gpio_cfg_t qspi_cs_pin  = MAX78000_VIDEO_HOST_CS_PIN;
-static mxc_gpio_cfg_t qspi_rw_pin  = MAX78000_VIDEO_HOST_IO_PIN;
-static mxc_spi_regs_t *qspi        = MAX78000_VIDEO_QSPI;
-static uint8_t qspi_ch             = MAX78000_VIDEO_QSPI_DMA_CHANNEL;
+static const mxc_gpio_cfg_t qspi_int_pin = MAX78000_VIDEO_HOST_INT_PIN;
+static const mxc_gpio_cfg_t qspi_cs_pin  = MAX78000_VIDEO_HOST_CS_PIN;
+static const mxc_gpio_cfg_t qspi_rw_pin  = MAX78000_VIDEO_HOST_IO_PIN;
+static const uint8_t qspi_ch             = MAX78000_VIDEO_QSPI_DMA_CHANNEL;
+static mxc_spi_regs_t *qspi              = MAX78000_VIDEO_QSPI;
 #else
 #error MAX78000 AUDIO or MAX78000 VIDEO flag should be set
 #endif
@@ -90,8 +92,7 @@ static uint8_t qspi_ch             = MAX78000_VIDEO_QSPI_DMA_CHANNEL;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int qspi_dma(void);
-static int qspi_dma_trigger_and_wait(void);
+static int qspi_dma(uint8_t *tx_data, uint8_t *rx_data, uint32_t data_size);
 
 
 //-----------------------------------------------------------------------------
@@ -114,8 +115,6 @@ void MAX78000_VIDEO_QSPI_DMA_IRQ_HAND(void)
             if (MXC_DMA->ch[qspi_ch].cnt) {
                 PR_ERROR("dma is not empty %d", MXC_DMA->ch[qspi_ch].cnt);
             }
-
-            dma_busy_flag = 0;
         }
 
         // Clear DMA int flags
@@ -133,27 +132,83 @@ void qspi_dma_cs_handler(void *cbdata)
         qspi->ctrl0 &= ~MXC_F_SPI_CTRL0_EN;
         qspi->dma = (MXC_F_SPI_DMA_TX_FLUSH | MXC_F_SPI_DMA_RX_FLUSH);
 
-        cs_asserted = 0;
+        switch (g_qspi_state) {
+        case QSPI_STATE_TX_HEADER_CS_ASSERTED:
+            if (g_qspi_packet_header_tx.packet_size) {
+                g_qspi_state = QSPI_STATE_TX_WAITING_DATA_TO_SEND;
+            } else {
+                // Completed if no data to send
+                g_qspi_state = QSPI_STATE_TX_COMPLETED;
+            }
+            break;
+        case QSPI_STATE_TX_DATA_CS_ASSERTED:
+            g_qspi_state = QSPI_STATE_TX_COMPLETED;
+            break;
+        case QSPI_STATE_RX_HEADER_CS_ASSERTED:
+            if (g_qspi_packet_header_rx.packet_size) {
+                g_qspi_state = QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE;
+            } else {
+                // Completed if no data to send
+                g_qspi_state = QSPI_STATE_RX_COMPLETED;
+            }
+            break;
+        case QSPI_STATE_RX_DATA_CS_ASSERTED:
+            g_qspi_state = QSPI_STATE_RX_COMPLETED;
+            break;
+        default:
+            PR_ERROR("invalid state %d", g_qspi_state);
+            break;
+        }
     } else {
         // CS assert
 
         if (qspi_rw_pin.port->in & qspi_rw_pin.mask) {
-            // Read request
-            if (tx_data) {
-                qspi_dma();
-            } else {
-                PR_ERROR("no data to tx");
+            // TX request
+
+            switch (g_qspi_state) {
+            case QSPI_STATE_TX_STARTED:
+                g_qspi_state = QSPI_STATE_TX_HEADER_CS_ASSERTED;
+                qspi_dma((uint8_t *) &g_qspi_packet_header_tx, NULL, sizeof(g_qspi_packet_header_tx));
+                break;
+            case QSPI_STATE_TX_WAITING_DATA_TO_SEND:
+                if (g_tx_data) {
+                    g_qspi_state = QSPI_STATE_TX_DATA_CS_ASSERTED;
+                    qspi_dma((uint8_t *) g_tx_data, NULL, g_tx_data_size);
+                    g_tx_data = NULL;
+                    g_tx_data_size = 0;
+                } else {
+                    g_qspi_state = QSPI_STATE_TX_FAILED;
+                    PR_ERROR("no data to tx");
+                }
+                break;
+            default:
+                PR_ERROR("invalid state %d", g_qspi_state);
+                break;
             }
         } else {
-            // Write request.
-            if (rx_data) {
-//                qspi_dma();
-            } else {
-                PR_ERROR("no data to rx");
+            // RX request
+
+            switch (g_qspi_state) {
+            case QSPI_STATE_IDLE:
+                g_qspi_state = QSPI_STATE_RX_HEADER_CS_ASSERTED;
+                qspi_dma(NULL, (uint8_t *) &g_qspi_packet_header_rx, sizeof(g_qspi_packet_header_rx));
+                break;
+            case QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE:
+                if (g_rx_data) {
+                    g_qspi_state = QSPI_STATE_RX_DATA_CS_ASSERTED;
+                    qspi_dma(NULL, (uint8_t *) g_rx_data, g_rx_data_size);
+                    g_rx_data = NULL;
+                    g_rx_data_size = 0;
+                } else {
+                    g_qspi_state = QSPI_STATE_RX_FAILED;
+                    PR_ERROR("no data to rx");
+                }
+                break;
+            default:
+                PR_ERROR("invalid state %d", g_qspi_state);
+                break;
             }
         }
-
-        cs_asserted = 1;
     }
 }
 
@@ -209,13 +264,8 @@ int qspi_dma_slave_init(void)
     return E_NO_ERROR;
 }
 
-int qspi_dma(void)
+static int qspi_dma(uint8_t *tx_data, uint8_t *rx_data, uint32_t data_size)
 {
-    if (dma_busy_flag) {
-//        PR_ERROR("dma is busy");
-//        return E_BUSY;
-    }
-
     // Stop SPI
     qspi->ctrl0 &= ~(MXC_F_SPI_CTRL0_EN);
 
@@ -257,7 +307,7 @@ int qspi_dma(void)
     }
     if (rx_data) {
         MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_TX_THD_VAL, (0 << MXC_F_SPI_DMA_TX_THD_VAL_POS));
-        MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_RX_THD_VAL, (4 << MXC_F_SPI_DMA_RX_THD_VAL_POS));
+        MXC_SETFIELD(qspi->dma, MXC_F_SPI_DMA_RX_THD_VAL, (0 << MXC_F_SPI_DMA_RX_THD_VAL_POS));
     }
 
     // Enable SPI
@@ -270,9 +320,6 @@ int qspi_dma(void)
     if (rx_data) {
         qspi->dma |= MXC_F_SPI_DMA_DMA_RX_EN;
     }
-
-    // Setup DMA
-    dma_busy_flag = 1;
 
     // Clear DMA int flags
     MXC_DMA->ch[qspi_ch].status = MXC_DMA->ch[qspi_ch].status;
@@ -333,60 +380,67 @@ int qspi_dma(void)
     return E_NO_ERROR;
 }
 
-static int qspi_dma_trigger_and_wait(void)
+int qspi_dma_trigger(void)
 {
-    uint32_t cnt = SPI_TIMEOUT_CNT;
-
     // Send interrupt to master
     MXC_GPIO_OutClr(qspi_int_pin.port, qspi_int_pin.mask);
     MXC_GPIO_OutSet(qspi_int_pin.port, qspi_int_pin.mask);
 
-    // Wait cs assert
-    while(!cs_asserted && cnt) {
-        cnt--;
-    }
+    return E_NO_ERROR;
+}
 
-    // Wait cs deassert
-    while(cs_asserted && cnt) {
+int qspi_dma_wait(qspi_state_e qspi_state)
+{
+    uint32_t cnt = SPI_TIMEOUT_CNT;
+
+    while((g_qspi_state != qspi_state) && cnt) {
         cnt--;
     }
 
     if (cnt == 0) {
-        tx_data = NULL;
-        rx_data = NULL;
-        data_size = 0;
-
-        PR_WARN("timeout");
+        PR_WARN("timeout %d", qspi_state);
         return E_TIME_OUT;
     }
 
     return E_NO_ERROR;
 }
 
-int qspi_dma_send_packet(uint8_t *data, uint32_t size, uint8_t data_type)
+int qspi_dma_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
 {
-    qspi_packet_header_t qspi_packet_header;
-    qspi_packet_header.start_symbol = QSPI_START_SYMBOL;
-    qspi_packet_header.packet_size = size;
-    qspi_packet_header.packet_type = data_type;
+    if (g_qspi_state != QSPI_STATE_IDLE) {
+        PR_ERROR("qspi is not idle");
+        return E_BUSY;
+    }
 
     PR_DEBUG("spi tx started %d", data_type);
 
-    rx_data = NULL;
+    g_qspi_packet_header_tx.start_symbol = QSPI_START_SYMBOL;
+    g_qspi_packet_header_tx.packet_size = data_size;
+    g_qspi_packet_header_tx.packet_type = data_type;
+    g_tx_data = data;
+    g_tx_data_size = data_size;
 
-    tx_data = (uint8_t*) &qspi_packet_header;
-    data_size = sizeof(qspi_packet_header_t);
-    qspi_dma_trigger_and_wait();
+    g_qspi_state = QSPI_STATE_TX_STARTED;
 
-    tx_data = data;
-    data_size = size;
-    qspi_dma_trigger_and_wait();
+    // Send header
+    qspi_dma_trigger();
+    qspi_dma_wait(QSPI_STATE_TX_WAITING_DATA_TO_SEND);
 
-    tx_data = NULL;
-    rx_data = NULL;
-    data_size = 0;
+    // Send data
+    qspi_dma_trigger();
+    qspi_dma_wait(QSPI_STATE_TX_COMPLETED); // TODO
+
+    g_qspi_state = QSPI_STATE_IDLE;
 
     PR_DEBUG("spi tx completed %d", data_type);
+
+    return E_NO_ERROR;
+}
+
+int qspi_dma_set_rx_data(uint8_t *data, uint32_t data_size)
+{
+    g_rx_data = data;
+    g_rx_data_size = data_size;
 
     return E_NO_ERROR;
 }
