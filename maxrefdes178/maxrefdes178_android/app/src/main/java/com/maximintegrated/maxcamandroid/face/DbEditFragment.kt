@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
@@ -16,7 +17,9 @@ import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.utils.EventObserver
 import com.theartofdev.edmodo.cropper.CropImage
 import com.theartofdev.edmodo.cropper.CropImageView
+import kotlinx.android.synthetic.main.edit_text_alert_dialog.view.*
 import kotlinx.android.synthetic.main.fragment_db_edit.*
+import timber.log.Timber
 import java.io.File
 
 class DbEditFragment : Fragment(), PersonListener {
@@ -67,6 +70,24 @@ class DbEditFragment : Fragment(), PersonListener {
         faceIdViewModel.warningEvent.observe(viewLifecycleOwner, EventObserver {
             Snackbar.make(view, it, Snackbar.LENGTH_SHORT).show()
         })
+
+        newPersonFab.setOnClickListener {
+            showNewDatabaseDialog()
+        }
+    }
+
+    private fun showNewDatabaseDialog() {
+        val alert = AlertDialog.Builder(requireContext())
+        val layout = layoutInflater.inflate(R.layout.edit_text_alert_dialog, null)
+        layout.dialogTitleTextView.text = requireContext().getString(R.string.new_database)
+        layout.dialogEditText.hint = requireContext().getString(R.string.enter_a_database_name)
+        alert.setView(layout)
+        alert.setPositiveButton(getString(R.string.create)) { dialog, _ ->
+            val name = layout.dialogEditText.text.toString().trim()
+            faceIdViewModel.createPerson(name)
+            dialog.dismiss()
+        }
+        alert.show()
     }
 
     override fun onRenameRequested(personModel: PersonModel, name: String) {
@@ -95,14 +116,16 @@ class DbEditFragment : Fragment(), PersonListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            val result = CropImage.getActivityResult(data)
             if (resultCode == Activity.RESULT_OK && data != null) {
-                val result = CropImage.getActivityResult(data)
-                faceIdViewModel.onImageAdded(result.uri)
+                faceIdViewModel.onImageAdded(result!!.uri)
                 Toast.makeText(
                     requireContext(),
                     "Cropping successful!",
                     Toast.LENGTH_SHORT
                 ).show()
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                result?.let {  Timber.e(it.error) }
             }
         }
     }

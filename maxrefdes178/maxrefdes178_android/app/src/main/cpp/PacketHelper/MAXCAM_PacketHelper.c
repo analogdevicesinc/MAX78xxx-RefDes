@@ -42,6 +42,7 @@
 #include "MAXCAM_Structure.h"
 #include "MAXCAM_Packet.h"
 #include "MAXCAM_PacketHelper.h"
+#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -389,6 +390,18 @@ void PacketHelper_LoadImage(const char *fileName)
         SendNotification(packetSize, packet);
     }
 
+}
+
+void PacketHelper_RequestVersion(void){
+    uint8_t packet[BLE_MAX_PACKET_SIZE] = {0};
+    uint16_t packetSize = 0;
+
+    // These should be called initially to get version and usn
+    packetSize = ble_packet_form_command_packet(BLE_COMMAND_GET_VERSION_CMD, mySequenceNumber++, 0, 0, NULL, packet);
+    //send_packet(packetSize , packet);
+    if (SendNotification) {
+        SendNotification(packetSize, packet);
+    }
 }
 
 

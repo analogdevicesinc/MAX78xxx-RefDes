@@ -1,5 +1,6 @@
 package com.maximintegrated.maxcamandroid
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.Intent
@@ -48,7 +49,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
     }
 
     private val dataReceivedObserver = Observer<ByteArray> { data ->
-        Timber.d("data size = ${data.size}")
+        Timber.d("data size = ${data.size} data = ${data.contentToString()}")
         mainViewModel.onBleDataReceived(data)
     }
 
@@ -61,8 +62,12 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         maxCamNativeLibrary.setJniListener(this)
         appVersion.text = getString(R.string.app_version, BuildConfig.VERSION_NAME)
         bluetoothDevice = intent.getParcelableExtra(KEY_BLUETOOTH_DEVICE)
+
+        /*
         val text = "${bluetoothDevice?.name} - ${maxCamNativeLibrary.version}"
         firmwareVersion.text = text
+
+         */
         addFragment(fragment = MainFragment.newInstance(), backStackName = ROOT_FRAGMENT)
         mainViewModel =
             ViewModelProvider(
@@ -76,6 +81,10 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         maxCamViewModel.connectionState
             .observe(this) { connectionState ->
                 val device = maxCamViewModel.bluetoothDevice
+                if (connectionState == BluetoothAdapter.STATE_CONNECTED) {
+                    maxCamNativeLibrary.bleReset()
+                }
+
                 toolbar.connectionInfo = if (device != null) {
                     BleConnectionInfo(connectionState, device.name, device.address)
                 } else {
@@ -85,6 +94,9 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
 
         maxCamViewModel.mtuSize.observe(this) {
             mainViewModel.onMtuSizeChanged(it)
+
+            val text = "${bluetoothDevice?.name} - ${maxCamNativeLibrary.version}"
+            firmwareVersion.text = text
         }
 
         maxCamViewModel.receivedData.observeForever(dataReceivedObserver)

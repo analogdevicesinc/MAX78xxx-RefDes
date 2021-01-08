@@ -110,6 +110,21 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun createPerson(name: String) {
+        selectedDatabase?.let {
+            val person = File(it.dbFolder, name)
+            if (!person.exists()) {
+                person.mkdirs()
+                val list = _persons.value?.toMutableList()
+                val model = PersonModel(person)
+                list?.add(model)
+                _persons.value = list
+            } else {
+                _warningEvent.value = Event(R.string.person_name_exists)
+            }
+        }
+    }
+
     fun deleteDatabase(db: DbModel) {
         val list = _databases.value?.toMutableList()
         db.delete()
@@ -198,6 +213,9 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
             val timestamp = System.currentTimeMillis()
             val name = "MAXCAM_" + timestamp + ".png"
             val file = File(selectedPerson?.personFolder, name)
+            file.createNewFile()
+            file.setReadable(true)
+            file.setWritable(true)
             val fOut = FileOutputStream(file)
 
             //val source = ImageDecoder.createSource(app.contentResolver, uri)
@@ -208,7 +226,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
 //            val stream = ByteArrayOutputStream()
 //            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
 //            val bytes = stream.toByteArray()
-            fOut.flush()
+            //fOut.flush()
             fOut.close()
 
             selectedPerson?.refreshImages()

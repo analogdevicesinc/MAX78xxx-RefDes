@@ -40,6 +40,7 @@
 #include <string>
 #include "MAXCAM_Packet.h"
 #include "MAXCAM_PacketHelper.h"
+#include "maxrefdes178_definitions.h"
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -135,9 +136,10 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_initialize(JNIEnv *env,
                                                                                     jobject thiz) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
     g_thiz_MaxCamNativeLibrary = thiz;
     g_env_MaxCamNativeLibrary = env;
-
     /*
      * Register BLE Functions to Packet Helper
      */
@@ -159,15 +161,24 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getMaxMtu(JNIEnv *env,
                                                                                    jobject thiz) {
-    return MAXCAM_BLE_MAX_MTU_SIZE;
+    return BLE_MAX_MTU_REQUEST_SIZE;
 }
 
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getVersion(JNIEnv *env,
                                                                                     jobject thiz) {
+    jclass thisClass = env->GetObjectClass(thiz);
+    javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
+    g_thiz_MaxCamNativeLibrary = thiz;
+    g_env_MaxCamNativeLibrary = env;
+
     char version[64];
-    Packet_GetVersion(version);
+    PacketHelper_RequestVersion();
+
+    version[0] = 'f';
+    version[1] = 0;
+
     return env->NewStringUTF(version);
 }
 
@@ -184,7 +195,8 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_sendFil
 
     const char *nativeFileName = env->GetStringUTFChars(file_name, 0);
     // Get the input array from Java
-    unsigned char *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data, 0));
+    unsigned char *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data,
+                                                                                            0));
     uint32_t inputLen = env->GetArrayLength(data);
 
     PacketHelper_SendFile(nativeFileName, (const char *) (inputArray), inputLen);
@@ -200,7 +212,8 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_bleData
     g_thiz_MaxCamNativeLibrary = thiz;
     g_env_MaxCamNativeLibrary = env;
 
-    unsigned char *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data, 0));
+    unsigned char *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data,
+                                                                                            0));
     uint32_t packetLen = env->GetArrayLength(data);
 
     PacketHelper_Receive(packetLen, inputArray);

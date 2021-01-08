@@ -12,7 +12,7 @@ data class PersonModel(
     }
 
     val nameSurname: String get() = personFolder.nameWithoutExtension
-    var images = ArrayList<File>()
+    var images : MutableList<File> = mutableListOf()
 
     init {
         initializeModel()
@@ -30,7 +30,7 @@ data class PersonModel(
 
     fun refreshImages() {
         if (personFolder.exists()) {
-            images = (personFolder.listFiles()?.toList() ?: arrayListOf()) as ArrayList<File>
+            images = personFolder.listFiles()?.toMutableList() ?: mutableListOf()
             images.forEach { File(it.toURI().path) }
             images.add(createTempFile())
         }

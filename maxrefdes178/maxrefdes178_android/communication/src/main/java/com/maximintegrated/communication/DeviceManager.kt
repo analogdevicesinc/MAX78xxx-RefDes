@@ -79,7 +79,7 @@ class DeviceManager(context: Context) : BleManager<DeviceManagerCallbacks>(conte
 
         override fun initialize() {
             super.initialize()
-            enableCharacteristicNotifications()
+            enableCharacteristicIndications()
         }
 
     }
@@ -101,11 +101,11 @@ class DeviceManager(context: Context) : BleManager<DeviceManagerCallbacks>(conte
         }
     }
 
-    fun enableCharacteristicNotifications() {
+    fun enableCharacteristicIndications() {
         if (isConnected) {
-            setNotificationCallback(writeCharacteristic)
+            setIndicationCallback(writeCharacteristic)
                 .with(dataReceivedCallback)
-            enableNotifications(writeCharacteristic)
+            enableIndications(writeCharacteristic)
                 .done { device ->
                     Timber.i(
                         "Enabled notifications (Device: %s)",
@@ -128,20 +128,20 @@ class DeviceManager(context: Context) : BleManager<DeviceManagerCallbacks>(conte
     }
 
     public fun sendData(data: ByteArray?) {
-        if(!isConnected || data == null || data.isEmpty()) return
+        if (!isConnected || data == null || data.isEmpty()) return
         var packetLength = maxCamBleMtu - 3
         var currentIndex = 0
-        while(currentIndex < data.size){
+        while (currentIndex < data.size) {
             val messageLength = data.size - currentIndex
-            packetLength = if(packetLength > messageLength) messageLength else packetLength
+            packetLength = if (packetLength > messageLength) messageLength else packetLength
             val buffer = ByteArray(packetLength)
-            for(i in 0 until packetLength){
+            for (i in 0 until packetLength) {
                 buffer[i] = data[currentIndex + i]
             }
             currentIndex += packetLength
-            writeCharacteristic(writeCharacteristic, buffer).with{_, _ ->
+            writeCharacteristic(writeCharacteristic, buffer).with { _, _ ->
                 mCallbacks.onWriteCompleted(currentIndex, data.size)
-            }.fail{ _, _ ->
+            }.fail { _, _ ->
                 mCallbacks.onWriteCompleted(-1, data.size)
             }.enqueue()
         }

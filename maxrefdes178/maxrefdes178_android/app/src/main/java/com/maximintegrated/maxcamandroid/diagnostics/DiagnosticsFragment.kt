@@ -107,7 +107,7 @@ class DiagnosticsFragment : Fragment() {
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
                 val result = CropImage.getActivityResult(data)
-                mainViewModel.onImageSelected(result.uri)
+                mainViewModel.onImageSelected(result!!.uri)
                 Toast.makeText(
                     requireContext(),
                     "Cropping successful!",
