@@ -145,7 +145,10 @@ void qspi_dma_cs_handler(void *cbdata)
             g_qspi_state = QSPI_STATE_TX_COMPLETED;
             break;
         case QSPI_STATE_RX_HEADER_CS_ASSERTED:
-            if (g_qspi_packet_header_rx.packet_size) {
+            if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
+                PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
+                g_qspi_state = QSPI_STATE_IDLE;
+            } else if (g_qspi_packet_header_rx.packet_size) {
                 g_qspi_state = QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE;
             } else {
                 // Completed if no data to send
@@ -177,7 +180,7 @@ void qspi_dma_cs_handler(void *cbdata)
                     g_tx_data = NULL;
                     g_tx_data_size = 0;
                 } else {
-                    g_qspi_state = QSPI_STATE_TX_FAILED;
+                    g_qspi_state = QSPI_STATE_IDLE;
                     PR_ERROR("no data to tx");
                 }
                 break;
@@ -200,7 +203,7 @@ void qspi_dma_cs_handler(void *cbdata)
                     g_rx_data = NULL;
                     g_rx_data_size = 0;
                 } else {
-                    g_qspi_state = QSPI_STATE_RX_FAILED;
+                    g_qspi_state = QSPI_STATE_IDLE;
                     PR_ERROR("no data to rx");
                 }
                 break;
@@ -408,7 +411,7 @@ int qspi_dma_wait(qspi_state_e qspi_state)
 int qspi_dma_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
 {
     if (g_qspi_state != QSPI_STATE_IDLE) {
-        PR_ERROR("qspi is not idle");
+        PR_ERROR("qspi is not idle %d", g_qspi_state);
         return E_BUSY;
     }
 

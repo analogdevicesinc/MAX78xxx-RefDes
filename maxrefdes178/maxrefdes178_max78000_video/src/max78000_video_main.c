@@ -209,6 +209,7 @@ static const uint8_t camera_settings[][2] = {
 static int8_t prev_decision = -2;
 static int8_t decision = -2;
 static uint32_t time_counter = 0;
+static int8_t enable_cnn = 1;
 
 //serial_num_t serial_num = {0};
 version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
@@ -399,12 +400,12 @@ static void run_demo(void)
                 switch(g_qspi_packet_header_rx.packet_type) {
                 case QSPI_PACKET_TYPE_VIDEO_VERSION_CMD:
                     qspi_dma_send_packet((uint8_t *) &version, sizeof(version),
-                            QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
+                            QSPI_PACKET_TYPE_VIDEO_VERSION_RES);
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD:
                     // TODO
 //                    qspi_dma_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
-//                            QSPI_PACKET_TYPE_AUDIO_SERIAL_RES);
+//                            QSPI_PACKET_TYPE_VIDEO_SERIAL_RES);
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD:
                     // TODO
@@ -413,10 +414,10 @@ static void run_demo(void)
                     // TODO
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD:
-                    // TODO
+                    enable_cnn = 1;
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD:
-                    //TODO
+                    enable_cnn = 0;
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD:
                     // Do nothing
@@ -431,16 +432,18 @@ static void run_demo(void)
         if (camera_is_image_rcv()) { // Check whether image is ready
             capture_completed_time = GET_RTC_MS();
 
-            run_cnn(0, 0);
-            if ((run_count % 2) == 0){
-                run_count = 0;
-                run_cnn(-10, -10);
-                run_cnn(10, 10);
-            } else {
-                run_cnn(-10, 10);
-                run_cnn(10, -10);
+            if (enable_cnn) {
+                run_cnn(0, 0);
+                if ((run_count % 2) == 0){
+                    run_count = 0;
+                    run_cnn(-10, -10);
+                    run_cnn(10, 10);
+                } else {
+                    run_cnn(-10, 10);
+                    run_cnn(10, -10);
+                }
+                run_count++;
             }
-            run_count++;
 
             cnn_completed_time = GET_RTC_MS();
 

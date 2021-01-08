@@ -260,6 +260,7 @@ int main(void)
 //            qspi_dma_trigger();
 //            qspi_dma_wait(QSPI_STATE_RX_COMPLETED);
         } else if (g_qspi_state == QSPI_STATE_RX_COMPLETED) {
+            g_qspi_state = QSPI_STATE_IDLE;
             if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
                 PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
             } else {
@@ -290,7 +291,6 @@ int main(void)
                     break;
                 }
             }
-            g_qspi_state = QSPI_STATE_IDLE;
         }
 
         /* Read from Mic driver to get CHUNK worth of samples, otherwise next sample*/
