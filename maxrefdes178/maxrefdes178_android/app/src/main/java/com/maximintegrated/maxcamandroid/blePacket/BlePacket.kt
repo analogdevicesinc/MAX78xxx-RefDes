@@ -1,4 +1,4 @@
-package com.maximintegrated.maxcamandroid.payload
+package com.maximintegrated.maxcamandroid.blePacket
 
 class BlePacket : IBlePacket {
 }
