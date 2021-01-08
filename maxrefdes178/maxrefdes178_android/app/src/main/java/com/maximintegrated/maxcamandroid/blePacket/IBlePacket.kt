@@ -1,6 +1,5 @@
 package com.maximintegrated.maxcamandroid.blePacket
 
-import androidx.databinding.InverseBindingListener
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -23,7 +22,7 @@ data class ble_command_packet_t(
     var payload: ByteArray
 ) {
     init {
-        payload = ByteArray(Definitions.BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE)
+        payload = ByteArray(BleDefinitions.BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE)
     }
 }
 
@@ -245,11 +244,7 @@ enum class ble_command_e {
 }
 
 
-class Definitions {
-    fun parse(commandInt: Int, arr: ByteArray): IBlePacket {
-        return ble_command_e.values()[commandInt].parse(arr)
-    }
-
+class BleDefinitions {
     companion object {
         const val BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE = 243
     }

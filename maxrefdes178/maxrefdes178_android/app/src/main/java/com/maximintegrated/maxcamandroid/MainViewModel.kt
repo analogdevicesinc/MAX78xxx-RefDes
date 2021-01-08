@@ -7,10 +7,13 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.*
+import com.maximintegrated.maxcamandroid.blePacket.IBlePacket
+import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
+import com.maximintegrated.maxcamandroid.blePacket.device_version_t
+import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.utils.concatenate
 import com.maximintegrated.maxcamandroid.utils.toHexToString
 import com.maximintegrated.maxcamandroid.utils.toInt
-import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.view.CustomTreeItem
 import com.maximintegrated.maxcamandroid.view.TreeNodeType
 import kotlinx.coroutines.Dispatchers
@@ -136,6 +139,45 @@ class MainViewModel(
 
     @ExperimentalUnsignedTypes
     fun onPayloadReceived(data: ByteArray) {
+
+        //ble_command_e.values()[commandInt].parse(data)
+        var commandInt: Int = ble_command_e.BLE_COMMAND_GET_VERSION_RES as Int
+
+        var command: ble_command_e = ble_command_e.values()[commandInt]
+
+        var rawPacket: IBlePacket = command.parse(data)
+
+        when (command) {
+            ble_command_e.BLE_COMMAND_GET_VERSION_RES -> {
+                val packet: device_version_t = rawPacket as device_version_t
+
+                Timber.d(
+                    "MAX32666 version %d.%d.%d".format(
+                        packet.max32666.major,
+                        packet.max32666.minor,
+                        packet.max32666.build
+                    )
+                )
+                Timber.d(
+                    "MAX7800 Video version %d.%d.%d".format(
+                        packet.max78000_video.major,
+                        packet.max78000_video.minor,
+                        packet.max78000_video.build
+                    )
+                )
+                Timber.d(
+                    "MAX7800 Audio version %d.%d.%d".format(
+                        packet.max78000_audio.major,
+                        packet.max78000_audio.minor,
+                        packet.max78000_audio.build
+                    )
+                )
+
+            }
+
+        }
+
+
         payload = if (payload != null) {
             payload?.concatenate(data)
         } else {
