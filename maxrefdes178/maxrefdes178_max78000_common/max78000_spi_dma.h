@@ -54,17 +54,11 @@
 typedef enum {
     QSPI_STATE_IDLE = 0,
 
-    QSPI_STATE_RX_STARTED,
-    QSPI_STATE_RX_HEADER_CS_ASSERTED,
-    QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE,
-    QSPI_STATE_RX_DATA_CS_ASSERTED,
-    QSPI_STATE_RX_COMPLETED,
-
-    QSPI_STATE_TX_STARTED,
-    QSPI_STATE_TX_HEADER_CS_ASSERTED,
-    QSPI_STATE_TX_WAITING_DATA_TO_SEND,
-    QSPI_STATE_TX_DATA_CS_ASSERTED,
-    QSPI_STATE_TX_COMPLETED,
+    QSPI_STATE_STARTED,
+    QSPI_STATE_CS_ASSERTED_HEADER,
+    QSPI_STATE_CS_DEASSERTED_HEADER,
+    QSPI_STATE_CS_ASSERTED_DATA,
+    QSPI_STATE_COMPLETED,
 
     QSPI_STATE_LAST
 } qspi_state_e;
@@ -74,7 +68,7 @@ typedef enum {
 // Global variables
 //-----------------------------------------------------------------------------
 extern volatile qspi_packet_header_t g_qspi_packet_header_rx;
-extern volatile qspi_state_e g_qspi_state;
+extern volatile qspi_state_e g_qspi_state_rx;
 
 
 //-----------------------------------------------------------------------------
@@ -82,8 +76,8 @@ extern volatile qspi_state_e g_qspi_state;
 //-----------------------------------------------------------------------------
 int qspi_dma_send_packet(uint8_t *data, uint32_t data_size, uint8_t packet_type);
 int qspi_dma_set_rx_data(uint8_t *data, uint32_t data_size);
+int qspi_dma_wait_rx(qspi_state_e qspi_state);
 int qspi_dma_trigger(void);
-int qspi_dma_wait(qspi_state_e qspi_state);
 int qspi_dma_slave_init(void);
 
 

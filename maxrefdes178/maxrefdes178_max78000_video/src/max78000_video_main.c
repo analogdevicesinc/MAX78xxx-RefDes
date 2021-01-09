@@ -366,7 +366,7 @@ static void run_demo(void)
     while (1) { //Capture image and run CNN
 
         /* Check if QSPI RX has data */
-        if (g_qspi_state == QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE) {
+        if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
             if (g_qspi_packet_header_rx.packet_type == QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD) {
 
                 // Use camera interface buffer for FaceID embeddings
@@ -378,8 +378,8 @@ static void run_demo(void)
 
                 qspi_dma_set_rx_data(raw, g_qspi_packet_header_rx.packet_size);
                 qspi_dma_trigger();
-                qspi_dma_wait(QSPI_STATE_RX_COMPLETED);
-                g_qspi_state = QSPI_STATE_IDLE;
+                qspi_dma_wait_rx(QSPI_STATE_COMPLETED);
+                g_qspi_state_rx = QSPI_STATE_IDLE;
 
                 PR_INFO("facied embeddings received %d", g_qspi_packet_header_rx.packet_size);
                 for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
@@ -392,8 +392,8 @@ static void run_demo(void)
                 qspi_dma_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
                 camera_start_capture_image();
             }
-        } else if (g_qspi_state == QSPI_STATE_RX_COMPLETED) {
-            g_qspi_state = QSPI_STATE_IDLE;
+        } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
+            g_qspi_state_rx = QSPI_STATE_IDLE;
             if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
                 PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
             } else {
@@ -403,7 +403,6 @@ static void run_demo(void)
                             QSPI_PACKET_TYPE_VIDEO_VERSION_RES);
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD:
-                    // TODO
 //                    qspi_dma_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
 //                            QSPI_PACKET_TYPE_VIDEO_SERIAL_RES);
                     break;
@@ -414,9 +413,11 @@ static void run_demo(void)
                     // TODO
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD:
+                    PR_INFO("CNN is started");
                     enable_cnn = 1;
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD:
+                    PR_INFO("CNN is stopped");
                     enable_cnn = 0;
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD:

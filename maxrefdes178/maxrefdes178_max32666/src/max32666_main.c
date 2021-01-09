@@ -246,6 +246,9 @@ int main(void)
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
 
+    // Wait max78000_video and max78000
+    MXC_Delay(MXC_DELAY_MSEC(300));
+
     // TODO: get max78000_video and max78000_audio serial num
     qspi_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
     qspi_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
@@ -303,10 +306,8 @@ static void run_application(void)
                     if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
                         device_settings.enable_lcd = 0;
                         lcd_backlight(0);
-                        qspi_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
                     } else if(strcmp(device_status.classification_audio.result, "ON") == 0) {
                         device_settings.enable_lcd = 1;
-                        qspi_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
                         lcd_backlight(1);
                     } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
                         device_settings.enable_max78000_video_cnn = 1;

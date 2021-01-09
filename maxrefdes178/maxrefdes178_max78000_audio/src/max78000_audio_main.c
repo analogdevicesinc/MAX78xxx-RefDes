@@ -255,12 +255,12 @@ int main(void)
     /* Read samples */
     while (1) {
         /* Check if QSPI RX has data */
-        if (g_qspi_state == QSPI_STATE_RX_WAITING_DATA_TO_RECEIVE) {
+        if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
 //            qspi_dma_set_rx_data(qspi_rx_buffer, sizeof(qspi_rx_buffer));
 //            qspi_dma_trigger();
-//            qspi_dma_wait(QSPI_STATE_RX_COMPLETED);
-        } else if (g_qspi_state == QSPI_STATE_RX_COMPLETED) {
-            g_qspi_state = QSPI_STATE_IDLE;
+//            qspi_dma_wait_rx(QSPI_STATE_RX_COMPLETED);
+        } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
+            g_qspi_state_rx = QSPI_STATE_IDLE;
             if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
                 PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
             } else {
@@ -270,7 +270,6 @@ int main(void)
                             QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
                     break;
                 case QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD:
-                    // TODO
 //                    qspi_dma_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
 //                            QSPI_PACKET_TYPE_AUDIO_SERIAL_RES);
                     break;
@@ -284,7 +283,7 @@ int main(void)
                     // TODO
                     break;
                 case QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD:
-                    //TODO
+                    // TODO
                     break;
                 default:
                     PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
