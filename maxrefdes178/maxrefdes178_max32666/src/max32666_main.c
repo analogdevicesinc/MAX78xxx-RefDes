@@ -59,7 +59,7 @@
 #include "max32666_led_button.h"
 #include "max32666_max20303.h"
 #include "max32666_max34417.h"
-#include "max32666_qspi.h"
+#include "max32666_qspi_master.h"
 #include "max32666_sdcard.h"
 #include "max32666_spi_dma.h"
 #include "max32666_utils.h"
@@ -194,9 +194,9 @@ int main(void)
 //        while(1);
 //    }
 
-    ret = qspi_init();
+    ret = qspi_master_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("qspi_init failed %d", ret);
+        PR_ERROR("qspi_naster_init failed %d", ret);
         max20303_led_red(1);
         while(1);
     }
@@ -246,12 +246,12 @@ int main(void)
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
 
-    // Wait max78000_video and max78000
-    MXC_Delay(MXC_DELAY_MSEC(300));
+    // Wait max78000_video and max78000_audio
+    MXC_Delay(MXC_DELAY_MSEC(200));
 
     // TODO: get max78000_video and max78000_audio serial num
-    qspi_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
-    qspi_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
+    qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
+    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
 
     PR_INFO("core 0 init completed");
 
@@ -269,7 +269,7 @@ static void run_application(void)
     // Main application loop
     while (1) {
         // Handle received QSPI packets
-        if (qspi_worker(&qspi_packet_type) == QSPI_STATUS_SUCCESS_RX) {
+        if (qspi_master_worker(&qspi_packet_type) == QSPI_STATE_COMPLETED) {
             switch(qspi_packet_type) {
             case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
                 refresh_screen();
@@ -311,10 +311,10 @@ static void run_application(void)
                         lcd_backlight(1);
                     } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
                         device_settings.enable_max78000_video_cnn = 1;
-                        qspi_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
+                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
                     } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
                         device_settings.enable_max78000_video_cnn = 0;
-                        qspi_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
+                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
                     } else if (strcmp(device_status.classification_audio.result, "UP") == 0) {
                         device_settings.enable_lcd_probabilty = 1;
                     } else if(strcmp(device_status.classification_audio.result, "DOWN") == 0) {

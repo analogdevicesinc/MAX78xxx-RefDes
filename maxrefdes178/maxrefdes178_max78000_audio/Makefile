@@ -72,7 +72,7 @@ export CMSIS_ROOT
 SRCS  = max78000_audio_main.c
 SRCS += max78000_audio_cnn.c
 SRCS += max78000_softmax.c
-SRCS += max78000_spi_dma.c
+SRCS += max78000_qspi_slave.c
 
 # Where to find source files for this test
 VPATH += src

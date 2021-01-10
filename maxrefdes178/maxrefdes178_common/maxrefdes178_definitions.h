@@ -305,6 +305,18 @@ typedef enum {
     QSPI_PACKET_TYPE_LAST
 } qspi_packet_type_e;
 
+// QSPI states
+typedef enum {
+    QSPI_STATE_IDLE = 0,
+
+    QSPI_STATE_STARTED,
+    QSPI_STATE_CS_ASSERTED_HEADER,
+    QSPI_STATE_CS_DEASSERTED_HEADER,
+    QSPI_STATE_CS_ASSERTED_DATA,
+    QSPI_STATE_COMPLETED,
+
+    QSPI_STATE_LAST
+} qspi_state_e;
 
 // BLE packet types
 typedef enum {

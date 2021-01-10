@@ -33,14 +33,12 @@
  *******************************************************************************
  */
 
-#ifndef _MAX78000_SPI_DMA_H_
-#define _MAX78000_SPI_DMA_H_
+#ifndef _MAX32666_QSPI_MASTER_H_
+#define _MAX32666_QSPI_MASTER_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <spi.h>
-#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -51,34 +49,15 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
-typedef enum {
-    QSPI_STATE_IDLE = 0,
-
-    QSPI_STATE_STARTED,
-    QSPI_STATE_CS_ASSERTED_HEADER,
-    QSPI_STATE_CS_DEASSERTED_HEADER,
-    QSPI_STATE_CS_ASSERTED_DATA,
-    QSPI_STATE_COMPLETED,
-
-    QSPI_STATE_LAST
-} qspi_state_e;
-
-
-//-----------------------------------------------------------------------------
-// Global variables
-//-----------------------------------------------------------------------------
-extern volatile qspi_packet_header_t g_qspi_packet_header_rx;
-extern volatile qspi_state_e g_qspi_state_rx;
 
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int qspi_dma_send_packet(uint8_t *data, uint32_t data_size, uint8_t packet_type);
-int qspi_dma_set_rx_data(uint8_t *data, uint32_t data_size);
-int qspi_dma_wait_rx(qspi_state_e qspi_state);
-int qspi_dma_trigger(void);
-int qspi_dma_slave_init(void);
+int qspi_master_init(void);
+int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type);
+int qspi_master_send_audio(uint8_t *data, uint32_t data_size, uint8_t data_type);
+qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type);
 
 
-#endif /* _MAX78000_SPI_DMA_H_ */
+#endif /* _MAX32666_QSPI_MASTER_H_ */

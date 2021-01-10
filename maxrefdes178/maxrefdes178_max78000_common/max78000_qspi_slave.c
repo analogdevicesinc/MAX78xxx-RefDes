@@ -33,9 +33,6 @@
  *******************************************************************************
  */
 
-#define S_MODULE_NAME   "spi_dma"
-
-
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
@@ -46,13 +43,15 @@
 #include <stdio.h>
 
 #include "max78000_debug.h"
-#include "max78000_spi_dma.h"
+#include "max78000_qspi_slave.h"
 #include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
+#define S_MODULE_NAME   "qspi"
+
 #define SPI_DMA_COUNTER_MAX  0xffff
 
 
@@ -93,8 +92,8 @@ static mxc_spi_regs_t *qspi              = MAX78000_VIDEO_QSPI;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int qspi_dma(uint8_t *tx_data, uint8_t *rx_data, uint32_t data_size);
-static int qspi_dma_wait_tx(qspi_state_e qspi_state);
+static int qspi_slave_dma(uint8_t *tx_data, uint8_t *rx_data, uint32_t data_size);
+static int qspi_slave_wait_tx(qspi_state_e qspi_state);
 
 
 //-----------------------------------------------------------------------------
@@ -124,7 +123,7 @@ void MAX78000_VIDEO_QSPI_DMA_IRQ_HAND(void)
     }
 }
 
-void qspi_dma_cs_handler(void *cbdata)
+void qspi_slave_cs_handler(void *cbdata)
 {
     if (MXC_GPIO_InGet(qspi_cs_pin.port, qspi_cs_pin.mask)) {
         // CS deassert
@@ -182,17 +181,17 @@ void qspi_dma_cs_handler(void *cbdata)
             switch (g_qspi_state_tx) {
             case QSPI_STATE_STARTED:
                 g_qspi_state_tx = QSPI_STATE_CS_ASSERTED_HEADER;
-                qspi_dma((uint8_t *) &g_qspi_packet_header_tx, NULL, sizeof(g_qspi_packet_header_tx));
+                qspi_slave_dma((uint8_t *) &g_qspi_packet_header_tx, NULL, sizeof(g_qspi_packet_header_tx));
                 break;
             case QSPI_STATE_CS_DEASSERTED_HEADER:
                 if (g_tx_data) {
-                    g_qspi_state_tx = QSPI_STATE_CS_ASSERTED_DATA;
-                    qspi_dma((uint8_t *) g_tx_data, NULL, g_tx_data_size);
+                    qspi_slave_dma((uint8_t *) g_tx_data, NULL, g_tx_data_size);
                     g_tx_data = NULL;
                     g_tx_data_size = 0;
+                    g_qspi_state_tx = QSPI_STATE_CS_ASSERTED_DATA;
                 } else {
-                    g_qspi_state_tx = QSPI_STATE_IDLE;
                     PR_ERROR("no data to tx");
+                    g_qspi_state_tx = QSPI_STATE_IDLE;
                 }
                 break;
             default:
@@ -203,18 +202,18 @@ void qspi_dma_cs_handler(void *cbdata)
             // RX request
             switch (g_qspi_state_rx) {
             case QSPI_STATE_IDLE:
+                qspi_slave_dma(NULL, (uint8_t *) &g_qspi_packet_header_rx, sizeof(g_qspi_packet_header_rx));
                 g_qspi_state_rx = QSPI_STATE_CS_ASSERTED_HEADER;
-                qspi_dma(NULL, (uint8_t *) &g_qspi_packet_header_rx, sizeof(g_qspi_packet_header_rx));
                 break;
             case QSPI_STATE_CS_DEASSERTED_HEADER:
                 if (g_rx_data) {
-                    g_qspi_state_rx = QSPI_STATE_CS_ASSERTED_DATA;
-                    qspi_dma(NULL, (uint8_t *) g_rx_data, g_rx_data_size);
+                    qspi_slave_dma(NULL, (uint8_t *) g_rx_data, g_rx_data_size);
                     g_rx_data = NULL;
                     g_rx_data_size = 0;
+                    g_qspi_state_rx = QSPI_STATE_CS_ASSERTED_DATA;
                 } else {
-                    g_qspi_state_rx = QSPI_STATE_IDLE;
                     PR_ERROR("no data to rx");
+                    g_qspi_state_rx = QSPI_STATE_IDLE;
                 }
                 break;
             default:
@@ -225,7 +224,7 @@ void qspi_dma_cs_handler(void *cbdata)
     }
 }
 
-int qspi_dma_slave_init(void)
+int qspi_slave_init(void)
 {
     int ret;
 
@@ -251,7 +250,7 @@ int qspi_dma_slave_init(void)
 
     // Host cs interrupt input pin
     MXC_GPIO_Config(&qspi_cs_pin);
-    MXC_GPIO_RegisterCallback(&qspi_cs_pin, qspi_dma_cs_handler, NULL);
+    MXC_GPIO_RegisterCallback(&qspi_cs_pin, qspi_slave_cs_handler, NULL);
     MXC_GPIO_IntConfig(&qspi_cs_pin, MXC_GPIO_INT_BOTH);
     MXC_GPIO_EnableInt(qspi_cs_pin.port, qspi_cs_pin.mask);
     NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(qspi_cs_pin.port)));
@@ -277,7 +276,7 @@ int qspi_dma_slave_init(void)
     return E_NO_ERROR;
 }
 
-static int qspi_dma(uint8_t *tx_data, uint8_t *rx_data, uint32_t data_size)
+static int qspi_slave_dma(uint8_t *tx_data, uint8_t *rx_data, uint32_t data_size)
 {
     // Stop SPI
     qspi->ctrl0 &= ~(MXC_F_SPI_CTRL0_EN);
@@ -393,7 +392,7 @@ static int qspi_dma(uint8_t *tx_data, uint8_t *rx_data, uint32_t data_size)
     return E_NO_ERROR;
 }
 
-int qspi_dma_trigger(void)
+int qspi_slave_trigger(void)
 {
     // Send interrupt to master
     MXC_GPIO_OutClr(qspi_int_pin.port, qspi_int_pin.mask);
@@ -402,7 +401,7 @@ int qspi_dma_trigger(void)
     return E_NO_ERROR;
 }
 
-int qspi_dma_wait_rx(qspi_state_e qspi_state)
+int qspi_slave_wait_rx(qspi_state_e qspi_state)
 {
     uint32_t cnt = SPI_TIMEOUT_CNT;
 
@@ -418,7 +417,7 @@ int qspi_dma_wait_rx(qspi_state_e qspi_state)
     return E_NO_ERROR;
 }
 
-static int qspi_dma_wait_tx(qspi_state_e qspi_state)
+static int qspi_slave_wait_tx(qspi_state_e qspi_state)
 {
     uint32_t cnt = SPI_TIMEOUT_CNT;
 
@@ -434,15 +433,15 @@ static int qspi_dma_wait_tx(qspi_state_e qspi_state)
     return E_NO_ERROR;
 }
 
-int qspi_dma_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
+int qspi_slave_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
 {
     if (g_qspi_state_tx != QSPI_STATE_IDLE) {
-        PR_ERROR("qspi is not idle %d", g_qspi_state_tx);
+        PR_WARN("qspi is not idle %d", g_qspi_state_tx);
         return E_BUSY;
     }
 
     if (g_qspi_state_rx != QSPI_STATE_IDLE) {
-        PR_ERROR("qspi is not idle %d", g_qspi_state_rx);
+        PR_WARN("qspi is not idle %d", g_qspi_state_rx);
         return E_BUSY;
     }
 
@@ -457,12 +456,12 @@ int qspi_dma_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
     g_qspi_state_tx = QSPI_STATE_STARTED;
 
     // Send header
-    qspi_dma_trigger();
-    qspi_dma_wait_tx(QSPI_STATE_CS_DEASSERTED_HEADER);
+    qspi_slave_trigger();
+    qspi_slave_wait_tx(QSPI_STATE_CS_DEASSERTED_HEADER);
 
     // Send data
-    qspi_dma_trigger();
-    qspi_dma_wait_tx(QSPI_STATE_COMPLETED); // TODO
+    qspi_slave_trigger();
+    qspi_slave_wait_tx(QSPI_STATE_COMPLETED); // TODO
 
     g_qspi_state_tx = QSPI_STATE_IDLE;
 
@@ -471,7 +470,7 @@ int qspi_dma_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
     return E_NO_ERROR;
 }
 
-int qspi_dma_set_rx_data(uint8_t *data, uint32_t data_size)
+int qspi_slave_set_rx_data(uint8_t *data, uint32_t data_size)
 {
     g_rx_data = data;
     g_rx_data_size = data_size;

@@ -48,7 +48,7 @@
 #include <string.h>
 
 #include "max78000_debug.h"
-#include "max78000_spi_dma.h"
+#include "max78000_qspi_slave.h"
 #include "max78000_video_cnn.h"
 #include "max78000_video_embedding_process.h"
 #include "max78000_video_weights.h"
@@ -285,7 +285,7 @@ int main(void)
         fail();
     }
 
-    if (qspi_dma_slave_init() != E_NO_ERROR) {
+    if (qspi_slave_init() != E_NO_ERROR) {
         PR_ERROR("qspi_dma_slave_init fail");
         fail();
     }
@@ -376,9 +376,9 @@ static void run_demo(void)
                 uint32_t  w, h;
                 camera_get_image(&raw, &imgLen, &w, &h);
 
-                qspi_dma_set_rx_data(raw, g_qspi_packet_header_rx.packet_size);
-                qspi_dma_trigger();
-                qspi_dma_wait_rx(QSPI_STATE_COMPLETED);
+                qspi_slave_set_rx_data(raw, g_qspi_packet_header_rx.packet_size);
+                qspi_slave_trigger();
+                qspi_slave_wait_rx(QSPI_STATE_COMPLETED);
                 g_qspi_state_rx = QSPI_STATE_IDLE;
 
                 PR_INFO("facied embeddings received %d", g_qspi_packet_header_rx.packet_size);
@@ -389,7 +389,7 @@ static void run_demo(void)
                 // TODO store embeddings
 
                 uint8_t faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_SUCCESS;
-                qspi_dma_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
+                qspi_slave_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
                 camera_start_capture_image();
             }
         } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
@@ -399,11 +399,11 @@ static void run_demo(void)
             } else {
                 switch(g_qspi_packet_header_rx.packet_type) {
                 case QSPI_PACKET_TYPE_VIDEO_VERSION_CMD:
-                    qspi_dma_send_packet((uint8_t *) &version, sizeof(version),
+                    qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
                             QSPI_PACKET_TYPE_VIDEO_VERSION_RES);
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD:
-//                    qspi_dma_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
+//                    qspi_slave_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
 //                            QSPI_PACKET_TYPE_VIDEO_SERIAL_RES);
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD:
@@ -463,7 +463,7 @@ static void run_demo(void)
                 PR_DEBUG("QSPI    : %lu", max78000_statistics.communication_duration_us);
                 PR_DEBUG("Total   : %lu\n\n", max78000_statistics.total_duration_us);
 
-                qspi_dma_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
+                qspi_slave_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
                         QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES);
             }
 
@@ -485,7 +485,7 @@ static void send_img(void)
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &imgLen, &w, &h);
 
-    qspi_dma_send_packet(raw, imgLen, QSPI_PACKET_TYPE_VIDEO_DATA_RES);
+    qspi_slave_send_packet(raw, imgLen, QSPI_PACKET_TYPE_VIDEO_DATA_RES);
 //    MXC_Delay(MXC_DELAY_MSEC(3)); // Yield SPI DMA RAM read
 }
 
@@ -592,7 +592,7 @@ static void run_cnn(int x_offset, int y_offset)
         }
 
         if(decision != prev_decision){
-            qspi_dma_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
+            qspi_slave_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
                     QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES);
             PR_DEBUG("Result : %s\n", classification_result.result);
         }

@@ -55,7 +55,7 @@
 
 #include "max78000_audio_cnn.h"
 #include "max78000_debug.h"
-#include "max78000_spi_dma.h"
+#include "max78000_qspi_slave.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_version.h"
 
@@ -229,8 +229,8 @@ int main(void)
         fail();
     }
 
-    if (qspi_dma_slave_init() != E_NO_ERROR) {
-        PR_ERROR("qspi_dma_slave_init fail");
+    if (qspi_slave_init() != E_NO_ERROR) {
+        PR_ERROR("qspi_slave_init fail");
         fail();
     }
 
@@ -256,9 +256,9 @@ int main(void)
     while (1) {
         /* Check if QSPI RX has data */
         if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
-//            qspi_dma_set_rx_data(qspi_rx_buffer, sizeof(qspi_rx_buffer));
-//            qspi_dma_trigger();
-//            qspi_dma_wait_rx(QSPI_STATE_RX_COMPLETED);
+//            qspi_slave_set_rx_data(qspi_rx_buffer, sizeof(qspi_rx_buffer));
+//            qspi_slave_trigger();
+//            qspi_slave_wait_rx(QSPI_STATE_RX_COMPLETED);
         } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
             g_qspi_state_rx = QSPI_STATE_IDLE;
             if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
@@ -266,11 +266,11 @@ int main(void)
             } else {
                 switch(g_qspi_packet_header_rx.packet_type) {
                 case QSPI_PACKET_TYPE_AUDIO_VERSION_CMD:
-                    qspi_dma_send_packet((uint8_t *) &version, sizeof(version),
+                    qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
                             QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
                     break;
                 case QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD:
-//                    qspi_dma_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
+//                    qspi_slave_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
 //                            QSPI_PACKET_TYPE_AUDIO_SERIAL_RES);
                     break;
                 case QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD:
@@ -492,12 +492,12 @@ int main(void)
                 memcpy(classification_result.result, keywords[out_class], sizeof(classification_result.result));
                 classification_result.probabily = probability;
 
-                qspi_dma_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
+                qspi_slave_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
                         QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES);
 
                 MXC_Delay(MXC_DELAY_MSEC(5));
                 max78000_statistics.cnn_duration_us = cnn_time;
-                qspi_dma_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
+                qspi_slave_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
                         QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES);
 
 #ifdef ENABLE_CLASSIFICATION_DISPLAY
