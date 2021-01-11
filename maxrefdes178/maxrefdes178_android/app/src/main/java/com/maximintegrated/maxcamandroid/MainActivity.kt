@@ -93,12 +93,15 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
             }
 
         mainViewModel.maxcamVersion.observe(this) {
-            firmwareVersion.text = "${bluetoothDevice?.name} - ${it.max32666}"
+            firmwareVersion.text =
+                "${bluetoothDevice?.name} - ${it.max32666}\n" +
+                        "Video - ${it.max78000_video}\n" +
+                        "Audio - ${it.max78000_audio}"
         }
         maxCamViewModel.mtuSize.observe(this) {
             mainViewModel.onMtuSizeChanged(it)
-
-            val text = "${bluetoothDevice?.name} - ${maxCamNativeLibrary.version}"
+            //val text = "${bluetoothDevice?.name} - ${maxCamNativeLibrary.version}"
+            val text = "${bluetoothDevice?.name}"
             firmwareVersion.text = text
 
             sendNotification(byteArrayOf(2, 3, 0, 0, 0, 0))
