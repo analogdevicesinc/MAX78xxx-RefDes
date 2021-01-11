@@ -118,6 +118,7 @@ int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
 max78000_statistics_t max78000_statistics = {0};
 //serial_num_t serial_num = {0};
 version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
+//static uint8_t qspi_rx_buffer[1000];
 
 /* **** Constants **** */
 typedef enum _mic_processing_state {
@@ -256,9 +257,15 @@ int main(void)
     while (1) {
         /* Check if QSPI RX has data */
         if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
-//            qspi_slave_set_rx_data(qspi_rx_buffer, sizeof(qspi_rx_buffer));
+//            qspi_slave_set_rx_data(qspi_rx_buffer, g_qspi_packet_header_rx.packet_size);
 //            qspi_slave_trigger();
-//            qspi_slave_wait_rx(QSPI_STATE_RX_COMPLETED);
+//            qspi_slave_wait_rx(QSPI_STATE_COMPLETED);
+//
+//            PR_INFO("size %d", g_qspi_packet_header_rx.packet_size);
+//            for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
+//                printf("%02hhX ", qspi_rx_buffer[i]);
+//            }
+//            printf("\n");
         } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
             g_qspi_state_rx = QSPI_STATE_IDLE;
             if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {

@@ -364,23 +364,21 @@ static void run_demo(void)
     max78000_statistics_t max78000_statistics;
 
     while (1) { //Capture image and run CNN
-
         /* Check if QSPI RX has data */
         if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
+            // Use camera interface buffer for FaceID embeddings
+            MXC_PCIF_Stop();
+            uint8_t   *raw;
+            uint32_t  imgLen;
+            uint32_t  w, h;
+            camera_get_image(&raw, &imgLen, &w, &h);
+
+            qspi_slave_set_rx_data(raw, g_qspi_packet_header_rx.packet_size);
+            qspi_slave_trigger();
+            qspi_slave_wait_rx(QSPI_STATE_COMPLETED);
+            g_qspi_state_rx = QSPI_STATE_IDLE;
+
             if (g_qspi_packet_header_rx.packet_type == QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD) {
-
-                // Use camera interface buffer for FaceID embeddings
-                MXC_PCIF_Stop();
-                uint8_t   *raw;
-                uint32_t  imgLen;
-                uint32_t  w, h;
-                camera_get_image(&raw, &imgLen, &w, &h);
-
-                qspi_slave_set_rx_data(raw, g_qspi_packet_header_rx.packet_size);
-                qspi_slave_trigger();
-                qspi_slave_wait_rx(QSPI_STATE_COMPLETED);
-                g_qspi_state_rx = QSPI_STATE_IDLE;
-
                 PR_INFO("facied embeddings received %d", g_qspi_packet_header_rx.packet_size);
                 for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
                     printf("%02hhX ", raw[i]);
@@ -390,8 +388,9 @@ static void run_demo(void)
 
                 uint8_t faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_SUCCESS;
                 qspi_slave_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
-                camera_start_capture_image();
             }
+
+            camera_start_capture_image();
         } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
             g_qspi_state_rx = QSPI_STATE_IDLE;
             if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
