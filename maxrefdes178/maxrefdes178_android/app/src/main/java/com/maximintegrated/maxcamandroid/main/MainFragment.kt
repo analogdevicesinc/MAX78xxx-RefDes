@@ -14,6 +14,7 @@ import com.maximintegrated.maxcamandroid.diagnostics.DiagnosticsFragment
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.face.DbSelectionFragment
 import com.maximintegrated.maxcamandroid.fileOperations.FileOperationsFragment
+import com.maximintegrated.maxcamandroid.settings.SettingsFragment
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_main.*
 
@@ -50,6 +51,9 @@ class MainFragment : Fragment(), LandingPage {
 
         faceIdButton.setOnClickListener {
             requireActivity().addFragment(DbSelectionFragment.newInstance())
+        }
+        settingsButton.setOnClickListener {
+            requireActivity().addFragment(SettingsFragment.newInstance())
         }
     }
 }

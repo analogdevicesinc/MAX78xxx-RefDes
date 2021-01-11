@@ -36,7 +36,11 @@ data class version_t(
     var major: Byte,
     var minor: Byte,
     var build: Int
-)
+) {
+    override fun toString(): String {
+        return "" + major.toInt() + "." + minor.toInt() + "." + build
+    }
+}
 
 data class device_version_t(
     var max32666: version_t,

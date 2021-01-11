@@ -72,15 +72,15 @@ class DbEditFragment : Fragment(), PersonListener {
         })
 
         newPersonFab.setOnClickListener {
-            showNewDatabaseDialog()
+            showNewPersonDialog()
         }
     }
 
-    private fun showNewDatabaseDialog() {
+    private fun showNewPersonDialog() {
         val alert = AlertDialog.Builder(requireContext())
         val layout = layoutInflater.inflate(R.layout.edit_text_alert_dialog, null)
-        layout.dialogTitleTextView.text = requireContext().getString(R.string.new_database)
-        layout.dialogEditText.hint = requireContext().getString(R.string.enter_a_database_name)
+        layout.dialogTitleTextView.text = requireContext().getString(R.string.new_person)
+        layout.dialogEditText.hint = requireContext().getString(R.string.enter_a_person_name)
         alert.setView(layout)
         alert.setPositiveButton(getString(R.string.create)) { dialog, _ ->
             val name = layout.dialogEditText.text.toString().trim()

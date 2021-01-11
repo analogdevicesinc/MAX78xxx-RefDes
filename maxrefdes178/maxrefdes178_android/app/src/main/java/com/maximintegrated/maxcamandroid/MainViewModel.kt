@@ -60,11 +60,21 @@ class MainViewModel(
 
     private var lsFileSize = 0
 
+
+
+    private val _maxcamVersion = MutableLiveData<device_version_t>()
+    val maxcamVersion: LiveData<device_version_t> = _maxcamVersion
+
+    fun setMaxcamVersion(deviceVersion : device_version_t){
+        _maxcamVersion.value = deviceVersion
+    }
+
     private val _demoBitmap = MutableLiveData<Bitmap?>()
     val demoBitmap: LiveData<Bitmap?> = _demoBitmap
 
     fun onBleDataReceived(data: ByteArray) {
         maxCamNativeLibrary.bleDataReceived(data)
+        onPayloadReceived(data)
     }
 
     fun onMtuSizeChanged(mtu: Int) {
@@ -141,16 +151,16 @@ class MainViewModel(
     fun onPayloadReceived(data: ByteArray) {
 
         //ble_command_e.values()[commandInt].parse(data)
-        var commandInt: Int = ble_command_e.BLE_COMMAND_GET_VERSION_RES as Int
+        var commandInt: Int = ble_command_e.BLE_COMMAND_GET_VERSION_RES.ordinal
 
         var command: ble_command_e = ble_command_e.values()[commandInt]
 
-        var rawPacket: IBlePacket = command.parse(data)
+        var rawPacket: IBlePacket = command.parse(data.sliceArray(6 until data.size))
 
         when (command) {
             ble_command_e.BLE_COMMAND_GET_VERSION_RES -> {
                 val packet: device_version_t = rawPacket as device_version_t
-
+                setMaxcamVersion(packet)
                 Timber.d(
                     "MAX32666 version %d.%d.%d".format(
                         packet.max32666.major,
