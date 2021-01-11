@@ -53,10 +53,6 @@ data class ble_command_packet_t(
     var header: ble_command_packet_header_t,
     var payload: ByteArray
 ) {
-    init {
-        payload = ByteArray(BleDefinitions.BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE)
-    }
-
     companion object {
         fun parse(arr: ByteArray): ble_command_packet_t {
             var header = ble_command_packet_header_t.parse(arr.sliceArray(0 until 6))
@@ -125,7 +121,8 @@ enum class ble_command_e {
     BLE_COMMAND_GET_VERSION_RES {
         override fun parse(arr: ByteArray): device_version_t {
 
-            val max32666: version_t = parseVersion(arr.sliceArray(0..5))
+            val verArr = arr.sliceArray(0..5)
+            val max32666: version_t = parseVersion(verArr)
             val max78000_video: version_t = parseVersion(arr.sliceArray(6..11))
             val max78000_audio: version_t = parseVersion(arr.sliceArray(12..17))
 

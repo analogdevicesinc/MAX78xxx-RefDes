@@ -7,9 +7,7 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.*
-import com.maximintegrated.maxcamandroid.blePacket.IBlePacket
-import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
-import com.maximintegrated.maxcamandroid.blePacket.device_version_t
+import com.maximintegrated.maxcamandroid.blePacket.*
 import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.utils.concatenate
 import com.maximintegrated.maxcamandroid.utils.toHexToString
@@ -61,11 +59,10 @@ class MainViewModel(
     private var lsFileSize = 0
 
 
-
     private val _maxcamVersion = MutableLiveData<device_version_t>()
     val maxcamVersion: LiveData<device_version_t> = _maxcamVersion
 
-    fun setMaxcamVersion(deviceVersion : device_version_t){
+    fun setMaxcamVersion(deviceVersion: device_version_t) {
         _maxcamVersion.value = deviceVersion
     }
 
@@ -150,43 +147,50 @@ class MainViewModel(
     @ExperimentalUnsignedTypes
     fun onPayloadReceived(data: ByteArray) {
 
-        //ble_command_e.values()[commandInt].parse(data)
-        var commandInt: Int = ble_command_e.BLE_COMMAND_GET_VERSION_RES.ordinal
 
-        var command: ble_command_e = ble_command_e.values()[commandInt]
+        var packet_info = ble_packet_info_t.parse(data[0]);
+        if (packet_info.type == ble_packet_type_e.BLE_PACKET_TYPE_COMMAND) {
 
-        var rawPacket: IBlePacket = command.parse(data.sliceArray(6 until data.size))
+            var commandPacket = ble_command_packet_t.parse(data)
 
-        when (command) {
-            ble_command_e.BLE_COMMAND_GET_VERSION_RES -> {
-                val packet: device_version_t = rawPacket as device_version_t
-                setMaxcamVersion(packet)
-                Timber.d(
-                    "MAX32666 version %d.%d.%d".format(
-                        packet.max32666.major,
-                        packet.max32666.minor,
-                        packet.max32666.build
+
+            var blePacket : IBlePacket = commandPacket.header.command.parse(commandPacket.payload)
+
+            when (commandPacket.header.command) {
+                ble_command_e.BLE_COMMAND_GET_VERSION_RES -> {
+                    val packet: device_version_t = blePacket as device_version_t
+                    setMaxcamVersion(packet)
+                    Timber.d(
+                        "MAX32666 version %d.%d.%d".format(
+                            packet.max32666.major,
+                            packet.max32666.minor,
+                            packet.max32666.build
+                        )
                     )
-                )
-                Timber.d(
-                    "MAX7800 Video version %d.%d.%d".format(
-                        packet.max78000_video.major,
-                        packet.max78000_video.minor,
-                        packet.max78000_video.build
+                    Timber.d(
+                        "MAX7800 Video version %d.%d.%d".format(
+                            packet.max78000_video.major,
+                            packet.max78000_video.minor,
+                            packet.max78000_video.build
+                        )
                     )
-                )
-                Timber.d(
-                    "MAX7800 Audio version %d.%d.%d".format(
-                        packet.max78000_audio.major,
-                        packet.max78000_audio.minor,
-                        packet.max78000_audio.build
+                    Timber.d(
+                        "MAX7800 Audio version %d.%d.%d".format(
+                            packet.max78000_audio.major,
+                            packet.max78000_audio.minor,
+                            packet.max78000_audio.build
+                        )
                     )
-                )
+
+                }
 
             }
 
-        }
+        } else //packet_info.type == ble_packet_type_e.BLE_PACKET_TYPE_PAYLOAD
+        {
 
+
+        }
 
         payload = if (payload != null) {
             payload?.concatenate(data)

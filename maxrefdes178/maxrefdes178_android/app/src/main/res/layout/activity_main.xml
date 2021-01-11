@@ -78,7 +78,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/mainFab"
         app:layout_constraintTop_toBottomOf="@id/bottomDivider"
-        tools:text="FW version: 1.0.0" />
+        tools:text="FW version: 1.0.0\n0.3.0\n0.0.5" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/bottomView"
