@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 interface IBlePacket {
-//    fun getCommandType() = ble_command_e.BLE_COMMAND_ABORT_CMD
+    //    fun getCommandType() = ble_command_e.BLE_COMMAND_ABORT_CMD
 }
 
 enum class ble_packet_type_e {
@@ -13,9 +13,41 @@ enum class ble_packet_type_e {
 }
 
 data class ble_packet_info_t(
-    var type: ble_packet_type_e = ble_packet_type_e.BLE_PACKET_TYPE_COMMAND,
-    var seq: Int
-)
+    var type: ble_packet_type_e = ble_packet_type_e.BLE_PACKET_TYPE_COMMAND, // 1 bit
+    var seq: Byte // 7 bit
+) {
+    companion object {
+        fun parse(data: Byte): ble_packet_info_t {
+            //todo
+            var type = ble_packet_type_e.values()[(data.toInt() and 0x01)]
+            var seq = (data.toInt() and 0x7f).toByte()
+            return ble_packet_info_t(type, seq)
+        }
+    }
+
+    fun toByte(): Byte {
+        return (type.ordinal or seq.toInt()).toByte()
+    }
+}
+
+data class ble_command_packet_header_t(
+    var packet_info: ble_packet_info_t, //1 Byte
+    var command: ble_command_e, //1 Byte
+    var total_payload_size: Int
+) {
+    companion object {
+        fun parse(arr: ByteArray): ble_command_packet_header_t {
+            var info = ble_packet_info_t.parse(arr[0])
+            var command = ble_command_e.values()[arr[1].toInt()]
+            val buffer = ByteBuffer.wrap(arr.sliceArray(2 until arr.size))
+                .apply { order(ByteOrder.LITTLE_ENDIAN) }
+            var size = buffer.int
+
+            return ble_command_packet_header_t(info, command, size)
+
+        }
+    }
+}
 
 data class ble_command_packet_t(
     var header: ble_command_packet_header_t,
@@ -24,13 +56,16 @@ data class ble_command_packet_t(
     init {
         payload = ByteArray(BleDefinitions.BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE)
     }
+
+    companion object {
+        fun parse(arr: ByteArray): ble_command_packet_t {
+            var header = ble_command_packet_header_t.parse(arr.sliceArray(0 until 6))
+            var payload = arr.sliceArray(6 until arr.size)
+            return ble_command_packet_t(header, payload)
+        }
+    }
 }
 
-data class ble_command_packet_header_t(
-    var packet_info: ble_packet_info_t,
-    var command: Int,
-    var total_payload_size: Int
-)
 
 data class version_t(
     var major: Byte,
