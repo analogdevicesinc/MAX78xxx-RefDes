@@ -29,10 +29,12 @@
 Script to generate Face Id embeddings
 """
 import argparse
+import os
 import os.path as path
 from ai85.ai85_adapter import AI85SimulatorAdapter
 from mtcnn.mtcnn import MTCNN
 from utils import append_db_file_from_path, save_embedding_db, create_embeddings_include_file
+from com.chaquo.python import Python
 
 CURRENT_DIR = path.abspath(path.dirname(path.abspath(__file__)))
 MODEL_PATH = path.join(CURRENT_DIR, 'model', 'ai85-streaming_seqfaceid_nobias_x6.pth.tar') 
