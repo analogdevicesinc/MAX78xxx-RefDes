@@ -5,6 +5,8 @@ import java.nio.ByteOrder
 
 interface IBlePacket {
     //    fun getCommandType() = ble_command_e.BLE_COMMAND_ABORT_CMD
+    fun size(): Int = -1
+    fun toByteArray(): ByteArray = byteArrayOf()
 }
 
 enum class ble_packet_type_e {
@@ -15,7 +17,7 @@ enum class ble_packet_type_e {
 data class ble_packet_info_t(
     var type: ble_packet_type_e = ble_packet_type_e.BLE_PACKET_TYPE_COMMAND, // 1 bit
     var seq: Byte // 7 bit
-) {
+) : IBlePacket {
     companion object {
         fun parse(data: Byte): ble_packet_info_t {
             //todo
@@ -23,10 +25,16 @@ data class ble_packet_info_t(
             var seq = (data.toInt() and 0x7f).toByte()
             return ble_packet_info_t(type, seq)
         }
+
+        fun size() = 1
     }
 
-    fun toByte(): Byte {
-        return (type.ordinal or seq.toInt()).toByte()
+    override fun toByteArray(): ByteArray {
+        return byteArrayOf((type.ordinal or seq.toInt()).toByte())
+    }
+
+    override fun size(): Int {
+        return ble_packet_info_t.size()
     }
 }
 
@@ -34,7 +42,7 @@ data class ble_command_packet_header_t(
     var packet_info: ble_packet_info_t, //1 Byte
     var command: ble_command_e, //1 Byte
     var total_payload_size: Int
-) {
+) : IBlePacket {
     companion object {
         fun parse(arr: ByteArray): ble_command_packet_header_t {
             var info = ble_packet_info_t.parse(arr[0])
@@ -46,20 +54,113 @@ data class ble_command_packet_header_t(
             return ble_command_packet_header_t(info, command, size)
 
         }
+
+        fun size() = ble_packet_info_t.size() + ble_command_e.size() + 4
+    }
+
+    override fun toByteArray(): ByteArray {
+        return packet_info.toByteArray()
+            .plus(command.ordinal.toByte())
+            .plus(total_payload_size.toByte())
+
+    }
+
+    override fun size(): Int {
+        return ble_command_packet_header_t.size()
     }
 }
 
 data class ble_command_packet_t(
     var header: ble_command_packet_header_t,
     var payload: ByteArray
-) {
+) : IBlePacket {
     companion object {
         fun parse(arr: ByteArray): ble_command_packet_t {
             var header = ble_command_packet_header_t.parse(arr.sliceArray(0 until 6))
             var payload = arr.sliceArray(6 until arr.size)
             return ble_command_packet_t(header, payload)
         }
+
+        fun from(
+            command: ble_command_e,
+            payload: ByteArray,
+            command_packet_payload_size: Int,
+            total_payload_size: Int,
+            sequenceNumber: Int = 0
+        ): ble_command_packet_t {
+
+            var header = ble_command_packet_header_t(
+                ble_packet_info_t(
+                    ble_packet_type_e.BLE_PACKET_TYPE_COMMAND,
+                    sequenceNumber.toByte()
+                ), command, total_payload_size
+            )
+
+            return ble_command_packet_t(
+                header,
+                payload.sliceArray(0 until command_packet_payload_size)
+            )
+        }
     }
+
+    override fun size(): Int {
+        return header.size() + payload.size
+    }
+
+    override fun toByteArray(): ByteArray {
+        return header.toByteArray().plus(payload)
+    }
+}
+
+data class ble_payload_packet_header_t( // 1 Byte
+    var packet_info: ble_packet_info_t
+) : IBlePacket {
+    companion object {
+        fun size() = ble_packet_info_t.size()
+    }
+
+    override fun size(): Int {
+        return ble_payload_packet_header_t.size()
+    }
+
+    override fun toByteArray(): ByteArray {
+        return packet_info.toByteArray()
+    }
+}
+
+data class ble_payload_packet_t(
+    var header: ble_payload_packet_header_t, // 1 Byte
+    val payload: ByteArray
+) : IBlePacket {
+    companion object {
+        fun from(
+            payload: ByteArray,
+            payload_packet_payload_size: Int,
+            sequenceNumber: Int = 0
+        ): ble_payload_packet_t {
+
+            var header = ble_payload_packet_header_t(
+                ble_packet_info_t(
+                    ble_packet_type_e.BLE_PACKET_TYPE_PAYLOAD,
+                    sequenceNumber.toByte()
+                )
+            )
+
+            return ble_payload_packet_t(
+                header,
+                payload.sliceArray(0 until payload_packet_payload_size)
+            )
+        }
+    }
+
+    override fun size(): Int {
+        return header.size() + payload.size
+    }
+
+    override fun toByteArray(): ByteArray {
+        return header.toByteArray().plus(payload)
+    }
+
 }
 
 
@@ -276,6 +377,11 @@ enum class ble_command_e {
 
     open fun parse(arr: ByteArray): IBlePacket {
         return device_serial_num_t(byteArrayOf(0), byteArrayOf(0), byteArrayOf(0))
+    }
+
+    companion object {
+
+        fun size() = 1
     }
 }
 

@@ -176,7 +176,7 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getVers
     char version[64];
     PacketHelper_RequestVersion();
 
-    version[0] = 'f';
+    version[0] = 'b';
     version[1] = 0;
 
     return env->NewStringUTF(version);

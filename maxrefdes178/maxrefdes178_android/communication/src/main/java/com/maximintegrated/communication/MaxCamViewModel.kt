@@ -9,7 +9,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import timber.log.Timber
 
-class MaxCamViewModel(application: Application) : AndroidViewModel(application), DeviceManagerCallbacks{
+class MaxCamViewModel(application: Application) : AndroidViewModel(application),
+    DeviceManagerCallbacks {
 
     var bluetoothDevice: BluetoothDevice? = null
         private set
@@ -39,6 +40,7 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
     val mtuSize: LiveData<Int>
         get() = _mtuSize
 
+    val packetSize: Int get() = _mtuSize.value!! - 3
     private val _writeStatus = MutableLiveData<Pair<Int, Int>>(Pair(0, 0))
     val writeStatus: LiveData<Pair<Int, Int>>
         get() = _writeStatus
@@ -49,13 +51,13 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
 
     override fun onCleared() {
         super.onCleared()
-        if(deviceManager.isConnected){
+        if (deviceManager.isConnected) {
             disconnect()
         }
     }
 
-    fun connect(device: BluetoothDevice, requestedMtu: Int){
-        if(bluetoothDevice == null){
+    fun connect(device: BluetoothDevice, requestedMtu: Int) {
+        if (bluetoothDevice == null) {
             bluetoothDevice = device
             deviceManager.connect(device).enqueue()
             deviceManager.requestMtu(requestedMtu)
@@ -83,7 +85,7 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
         }
     }
 
-    fun sendData(data: ByteArray){
+    fun sendData(data: ByteArray) {
         deviceManager.sendData(data)
     }
 
