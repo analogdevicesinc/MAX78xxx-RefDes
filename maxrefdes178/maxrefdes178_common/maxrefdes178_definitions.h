@@ -185,7 +185,7 @@
 
 // BLE Communication buffer
 #define MAX32666_BLE_QUEUE_SIZE            10
-#define MAX32666_BLE_COMMAND_BUFFER_SIZE   1024 * 10
+#define MAX32666_BLE_COMMAND_BUFFER_SIZE   1024 * 30
 
 
 /*** MAX78000 AUDIO ***/

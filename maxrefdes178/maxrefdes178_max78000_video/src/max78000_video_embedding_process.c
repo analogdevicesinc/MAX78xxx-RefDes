@@ -46,13 +46,12 @@
 
 #include "max78000_debug.h"
 #include "max78000_video_embedding_process.h"
-#include "max78000_video_embeddings.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_MODULE_NAME   "embedding"
+#define S_MODULE_NAME   "embed"
 
 
 //-----------------------------------------------------------------------------
@@ -77,7 +76,8 @@ typedef struct  __attribute__((packed)) sDistance {
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static const uint8_t embeddings[] = EMBEDDINGS;
+extern uint32_t _embeddings_start_, _embeddings_end_;
+static const uint8_t *embeddings = (uint8_t *) &_embeddings_start_;
 
 tsFaceIDFile *pDatabaseInfo = NULL;
 tsDistance *pDistance = NULL;
@@ -133,6 +133,26 @@ int init_database(void)
     }
 
 	return 0;
+}
+
+int uninit_database(void)
+{
+    free(pDistance);
+    pDistance = NULL;
+
+    free(pMeanDistance);
+    pMeanDistance = NULL;
+
+    free(pMinDistance);
+    pMinDistance = NULL;
+
+    free(pClosestSubId);
+    pClosestSubId = NULL;
+
+    free(pMinDistanceCounter);
+    pMinDistanceCounter = NULL;
+
+    return 0;
 }
 
 char *get_subject(int ID)

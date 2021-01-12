@@ -71,6 +71,8 @@ typedef struct  __attribute__((packed)) sMinDistance {
 //-----------------------------------------------------------------------------
 int init_database(void);
 
+int uninit_database(void);
+
 char *get_subject(int ID);
 
 int calculate_minDistance(const uint8_t *embedding);

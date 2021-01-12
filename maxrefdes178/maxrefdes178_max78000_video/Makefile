@@ -67,6 +67,7 @@ CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 export CMSIS_ROOT
 
 # LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/max78000_arm.ld
+LINKERFILE=maxrefdes178_max78000_video.ld
 
 # Source files for this test (add path to VPATH below)
 SRCS  = max78000_video_main.c
