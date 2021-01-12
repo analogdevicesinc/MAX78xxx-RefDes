@@ -73,6 +73,8 @@ int init_database(void);
 
 int uninit_database(void);
 
+int update_database(uint8_t *db, uint32_t db_size);
+
 char *get_subject(int ID);
 
 int calculate_minDistance(const uint8_t *embedding);

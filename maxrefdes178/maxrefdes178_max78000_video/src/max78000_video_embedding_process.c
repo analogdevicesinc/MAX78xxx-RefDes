@@ -38,8 +38,12 @@
 //-----------------------------------------------------------------------------
 
 #include <board.h>
+#include <flc.h>
 #include <math.h>
 #include <mxc_device.h>
+#include <mxc_errors.h>
+#include <nvic_table.h>
+#include <icc.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,22 +107,22 @@ int init_database(void)
 
 	pDistance = (tsDistance *)malloc(sizeof(tsDistance)*pDatabaseInfo->numberOfEmbeddings);
 	if (pDistance == NULL) {
-		return -1;
+		return E_NULL_PTR;
 	}
 
 	pMeanDistance = (tsMeanDistance *)malloc(sizeof(tsMeanDistance)*pDatabaseInfo->numberOfSubjects);
 	if (pMeanDistance == NULL) {
-		return -1;
+		return E_NULL_PTR;
 	}
 
 	pMinDistance = (tsMinDistance *)malloc(sizeof(tsMinDistance)*3);
 	if (pMinDistance == NULL) {
-		return -1;
+		return E_NULL_PTR;
 	}
 
     pClosestSubId = (int8_t *)malloc(closest_sub_buffer_size);
     if (pClosestSubId == NULL) {
-		return -1;
+		return E_NULL_PTR;
 	}
     for(int i=0; i<closest_sub_buffer_size; ++i){
         pClosestSubId[i] = -1;
@@ -126,7 +130,7 @@ int init_database(void)
 
     pMinDistanceCounter = (uint8_t *)malloc(pDatabaseInfo->numberOfSubjects);
     if (pMinDistanceCounter == NULL) {
-		return -1;
+		return E_NULL_PTR;
 	}
     for(int i=0; i<pDatabaseInfo->numberOfSubjects; ++i){
         pMinDistanceCounter[i] = 0;
@@ -138,21 +142,84 @@ int init_database(void)
 int uninit_database(void)
 {
     free(pDistance);
-    pDistance = NULL;
-
     free(pMeanDistance);
-    pMeanDistance = NULL;
-
     free(pMinDistance);
+    free(pClosestSubId);
+    free(pMinDistanceCounter);
+
+    pDatabaseInfo = NULL;
+    pDistance = NULL;
+    pMeanDistance = NULL;
     pMinDistance = NULL;
 
-    free(pClosestSubId);
     pClosestSubId = NULL;
-
-    free(pMinDistanceCounter);
+    closestSubIdBufIdx = 0;
     pMinDistanceCounter = NULL;
 
-    return 0;
+    return E_NO_ERROR;
+}
+
+void FLC0_IRQHandler(void)
+{
+    uint32_t temp;
+    temp = MXC_FLC0->intr;
+
+    if (temp & MXC_F_FLC_INTR_DONE) {
+        MXC_FLC0->intr &= ~MXC_F_FLC_INTR_DONE;
+    }
+
+    if (temp & MXC_F_FLC_INTR_AF) {
+        MXC_FLC0->intr &= ~MXC_F_FLC_INTR_AF;
+    }
+}
+
+int update_database(uint8_t *db, uint32_t db_size)
+{
+    int ret = E_NO_ERROR;
+
+    if (db_size > ((&_embeddings_end_ - &_embeddings_start_) * 4)) {
+        PR_ERROR("db_size too big %d > %d", db_size, ((&_embeddings_end_ - &_embeddings_start_) * 4));
+        return E_BAD_PARAM;
+    }
+
+    // Set flash clock divider to generate a 1MHz clock from the APB clock
+    // APB clock is 54MHz on the real silicon
+    MXC_FLC0->clkdiv = 24;
+
+    // Setup and enable interrupt
+    NVIC_SetVector(FLC0_IRQn, FLC0_IRQHandler);
+    NVIC_EnableIRQ(FLC0_IRQn);
+    __enable_irq();
+
+    MXC_FLC_EnableInt(MXC_F_FLC_INTR_DONEIE | MXC_F_FLC_INTR_AFIE);
+
+    MXC_ICC_Disable(MXC_ICC0);
+
+    for (uint32_t page_addr = (uint32_t)&_embeddings_start_; page_addr < (uint32_t)&_embeddings_end_; page_addr += MXC_FLASH_PAGE_SIZE) {
+        ret = MXC_FLC_PageErase(page_addr);
+        if (ret != E_NO_ERROR) {
+            PR_ERROR("MXC_FLC_PageErase failed %d %d", page_addr, ret);
+            goto bail;
+        }
+    }
+
+    ret = MXC_FLC_Write((uint32_t)&_embeddings_start_, db_size, (uint32_t* )db);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("MXC_FLC_Write failed %d", ret);
+        goto bail;
+    }
+
+    for (int i = 0; i < db_size; i++) {
+        if (db[i] != embeddings[i]) {
+            PR_ERROR("verify fail at %d %02hhX != %02hhX", i, db[i], embeddings[i]);
+            goto bail;
+        }
+    }
+
+bail:
+    MXC_ICC_Enable(MXC_ICC0);
+
+    return ret;
 }
 
 char *get_subject(int ID)

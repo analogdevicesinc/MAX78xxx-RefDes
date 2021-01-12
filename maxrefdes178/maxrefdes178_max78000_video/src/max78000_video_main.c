@@ -265,34 +265,47 @@ int main(void)
     PR_INFO("maxrefdes178_max78000_video v%d.%d.%d [%s]",
             version.major, version.minor, version.build, S_BUILD_TIMESTAMP);
 
-    if (initCNN() < 0 ) {
-        PR_ERROR("Could not initialize the CNN accelerator");
+    ret = initCNN();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("Could not initialize the CNN accelerator %d", ret);
         fail();
     }
 
-    if (init_database() < 0 ) {
-        PR_ERROR("Could not initialize the database");
+    ret = init_database();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("Could not initialize the database, %d", ret);
         fail();
     }
 
     /* Initialize RTC */
-    MXC_RTC_Init(0, 0);
-    MXC_RTC_Start();
-
-
-    if (MXC_DMA_Init() != E_NO_ERROR) {
-        PR_ERROR("DMA INIT ERROR");
+    ret = MXC_RTC_Init(0, 0);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("Could not initialize rtc, %d", ret);
         fail();
     }
 
-    if (qspi_slave_init() != E_NO_ERROR) {
-        PR_ERROR("qspi_dma_slave_init fail");
+    ret = MXC_RTC_Start();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("Could not start rtc, %d", ret);
+        fail();
+    }
+
+    ret = MXC_DMA_Init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("DMA INIT ERROR %d", ret);
+        fail();
+    }
+
+    ret = qspi_slave_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("qspi_dma_slave_init fail %d", ret);
         fail();
     }
 
     // Initialize the camera driver.
-    if (camera_init(CAMERA_FREQ) != E_NO_ERROR) {
-        PR_ERROR("Camera init failed!");
+    ret = camera_init(CAMERA_FREQ);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("Camera init failed! %d", ret);
         fail();
     }
 
@@ -380,13 +393,23 @@ static void run_demo(void)
 
             if (g_qspi_packet_header_rx.packet_type == QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD) {
                 PR_INFO("facied embeddings received %d", g_qspi_packet_header_rx.packet_size);
-                for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
-                    printf("%02hhX ", raw[i]);
-                }
-                printf("\n");
-                // TODO store embeddings
+//                for (int i = 0; i < g_qspi_packet_header_rx.packet_size && i < 100; i++) {
+//                    printf("%02hhX ", raw[i]);
+//                }
+//                printf("\n");
 
-                uint8_t faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_SUCCESS;
+                uninit_database();
+
+                uint8_t faceid_embed_update_status;
+                if (update_database(raw, g_qspi_packet_header_rx.packet_size) != E_NO_ERROR) {
+                    PR_ERROR("Could not update the database");
+                    faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_ERROR_UNKNOWN;
+                } else if (init_database() != E_NO_ERROR) {
+                    PR_ERROR("Could not initialize the database");
+                    faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_ERROR_UNKNOWN;
+                } else {
+                    faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_SUCCESS;
+                }
                 qspi_slave_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
             }
 
