@@ -40,6 +40,7 @@ from matplotlib.image import imread
 import matplotlib.pyplot as plt
 from PIL import Image, ExifTags
 
+
 def load_db(db_path, subj_name_file_path=None):
     """Loads embeddings from binary file to a dictionary
     """
@@ -94,12 +95,12 @@ def load_embedding_list(db_path):
     embedding_list = []
 
     with open(db_path, "rb") as file:
-        _ = int.from_bytes(file.read(1), byteorder='big', signed=False) # pylint: disable=invalid-name
-        L = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        N = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
+        _ = int.from_bytes(file.read(1), byteorder='little', signed=False) # pylint: disable=invalid-name
+        L = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        N = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
 
         for _ in range(N):
-            subj_list.append(int.from_bytes(file.read(1), byteorder='big', signed=False))
+            subj_list.append(int.from_bytes(file.read(1), byteorder='little', signed=False))
             embedding_list.append(list(file.read(L)))
 
     subj_list = np.array(subj_list)
@@ -369,7 +370,9 @@ def save_embedding_db(emb_db, db_path, add_prev_imgs=False):
     subject_arr = subject_arr.astype(np.uint8)
     embedding_arr = embedding_arr.astype(np.int8)
 
-    names_str = '  '.join(subject_names)
+    #names_str = '  '.join(subject_names)
+    names_str = '\0'.join(subject_names) + '\0'
+    print(names_str)
     names_bytes = bytearray()
     names_bytes.extend(map(ord, names_str))
 
@@ -380,12 +383,12 @@ def save_embedding_db(emb_db, db_path, add_prev_imgs=False):
     H = 160 # pylint: disable=invalid-name
 
     db_data = bytearray(np.uint8([S]))
-    db_data.extend(L.to_bytes(2, 'big', signed=False))
-    db_data.extend(N.to_bytes(2, 'big', signed=False))
-    db_data.extend(W.to_bytes(2, 'big', signed=False))
-    db_data.extend(H.to_bytes(2, 'big', signed=False))
+    db_data.extend(L.to_bytes(2, 'little', signed=False))
+    db_data.extend(N.to_bytes(2, 'little', signed=False))
+    db_data.extend(W.to_bytes(2, 'little', signed=False))
+    db_data.extend(H.to_bytes(2, 'little', signed=False))
 
-    db_data.extend(K.to_bytes(2, 'big', signed=False))
+    db_data.extend(K.to_bytes(2, 'little', signed=False))
     db_data.extend(names_bytes)
 
     for i, emb in enumerate(embedding_arr):
@@ -399,7 +402,7 @@ def save_embedding_db(emb_db, db_path, add_prev_imgs=False):
     with open(db_path, 'wb') as file:
         file.write(db_data)
 
-    print(f'(save_embedding_db)Binary embedding file is saved to "{db_path}".')
+    print(f'Binary embedding file is saved to "{db_path}".')
 
 
 def load_data_arrs(db_path, load_img_prevs=True):
@@ -407,21 +410,22 @@ def load_data_arrs(db_path, load_img_prevs=True):
     """
 
     with open(db_path, "rb") as file:
-        _ = int.from_bytes(file.read(1), byteorder='big', signed=False) # pylint: disable=invalid-name
-        L = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        N = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        W = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        H = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        K = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
+        _ = int.from_bytes(file.read(1), byteorder='little', signed=False) # pylint: disable=invalid-name
+        L = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        N = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        W = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        H = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        K = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
 
         subject_names_str = file.read(K).decode('ascii')
-        subject_names_list = subject_names_str.split('  ')
+        #subject_names_list = subject_names_str.split('  ')
+        subject_names_list = subject_names_str.split('\0')
 
         subj_list = []
         embedding_list = []
 
         for _ in range(N):
-            subj_list.append(int.from_bytes(file.read(1), byteorder='big', signed=False))
+            subj_list.append(int.from_bytes(file.read(1), byteorder='little', signed=False))
             embedding_list.append(list(file.read(L)))
 
         embedding_list = np.array(embedding_list).astype(np.int8)
@@ -483,16 +487,16 @@ def create_embeddings_include_file(db_folder, db_filename, include_folder):
     data_bin = bytearray()
 
     with open(db_path, "rb") as file:
-        S = int.from_bytes(file.read(1), byteorder='big', signed=False) # pylint: disable=invalid-name
-        L = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        N = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        W = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        H = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
-        K = int.from_bytes(file.read(2), byteorder='big', signed=False) # pylint: disable=invalid-name
+        S = int.from_bytes(file.read(1), byteorder='little', signed=False) # pylint: disable=invalid-name
+        L = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        N = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        W = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        H = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
+        K = int.from_bytes(file.read(2), byteorder='little', signed=False) # pylint: disable=invalid-name
 
         subject_names_str = file.read(K).decode('ascii')
-        subject_names_list = subject_names_str.split('  ')
-        subject_names_str = '\0'.join(subject_names_list) + '\0'
+        #subject_names_list = subject_names_str.split('  ')
+        #subject_names_str = '\0'.join(subject_names_list) + '\0'
 
         names_bytes = bytearray()
         names_bytes.extend(map(ord, subject_names_str))
@@ -522,14 +526,11 @@ def create_embeddings_include_file(db_folder, db_filename, include_folder):
 
     data_arr.append(','.join(data_line))
     data = ', \\\n  '.join(data_arr)
-    
-    print(f'(create_embeddings_include_file)db_folder: {db_folder}')
 
     db_h_path = os.path.join(include_folder, db_filename + '.h')
-    print(f'(create_embeddings_include_file)db_h_path: {db_h_path}')
     with open(db_h_path, 'w') as h_file:
         h_file.write('#define EMBEDDINGS { \\\n  ')
         h_file.write(data)
         h_file.write(' \\\n}')
 
-    print(f'(create_embeddings_include_file)Embedding file is saved to {include_folder}')
+    print(f'Embedding file is saved to {db_h_path}')
