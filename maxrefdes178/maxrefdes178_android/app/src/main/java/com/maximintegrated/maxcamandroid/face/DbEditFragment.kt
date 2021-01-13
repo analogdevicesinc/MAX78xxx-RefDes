@@ -49,6 +49,7 @@ class DbEditFragment : Fragment(), PersonListener {
             personAdapter.submitList(it)
             emptyViews.isVisible = it.isEmpty()
             recyclerView.isVisible = it.isNotEmpty()
+            updateNewPersonFabVisibility()
         }
 
         faceIdViewModel.personImageAddedEvent.observe(viewLifecycleOwner) {
@@ -70,9 +71,18 @@ class DbEditFragment : Fragment(), PersonListener {
         faceIdViewModel.warningEvent.observe(viewLifecycleOwner, EventObserver {
             Snackbar.make(view, it, Snackbar.LENGTH_SHORT).show()
         })
+        updateNewPersonFabVisibility()
 
         newPersonFab.setOnClickListener {
             showNewPersonDialog()
+        }
+    }
+
+    private fun updateNewPersonFabVisibility() {
+        if (faceIdViewModel.persons.value!!.size < DbModel.PERSON_LIMIT) {
+            newPersonFab.visibility = View.VISIBLE
+        } else {
+            newPersonFab.visibility = View.GONE
         }
     }
 
@@ -125,7 +135,7 @@ class DbEditFragment : Fragment(), PersonListener {
                     Toast.LENGTH_SHORT
                 ).show()
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                result?.let {  Timber.e(it.error) }
+                result?.let { Timber.e(it.error) }
             }
         }
     }

@@ -35,7 +35,7 @@ class PersonImageAdapter(
     }
 
     override fun onBindViewHolder(holder: PersonImageViewHolder, position: Int) {
-        holder.bind(getItem(position), itemCount - 1 == position)
+        holder.bind(getItem(position))
     }
 
     class PersonImageViewHolder(
@@ -49,9 +49,9 @@ class PersonImageAdapter(
         private val imageCard: CardView by lazy { itemView.image_card }
 
 
-        fun bind(imageFile: File, isLast: Boolean) {
+        fun bind(imageFile: File) {
 
-            if (isLast) {
+            if (imageFile.isDirectory) {
                 imageCard.setOnClickListener {
                     listener.onAddImageClicked(personModel)
                 }

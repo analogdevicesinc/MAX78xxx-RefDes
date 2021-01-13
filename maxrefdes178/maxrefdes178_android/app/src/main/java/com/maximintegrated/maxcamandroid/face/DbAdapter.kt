@@ -53,7 +53,7 @@ class DbAdapter(private val listener: DbListener) :
             databaseNameTextView.text = dbModel.dbName
             var imageCount = 0
             for (person in dbModel.persons) {
-                imageCount += person.images.size
+                imageCount += person.imageCount
             }
             imageCountTextView.text = imageCount.toString()
             personCountTextView.text = dbModel.persons.size.toString()

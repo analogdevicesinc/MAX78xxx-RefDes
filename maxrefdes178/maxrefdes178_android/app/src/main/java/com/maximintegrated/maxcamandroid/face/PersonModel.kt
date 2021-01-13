@@ -7,12 +7,17 @@ import java.io.File
 data class PersonModel(
     var personFolder: File
 ) : Comparable<PersonModel> {
+    companion object {
+        const val PHOTO_LIMIT = 8
+    }
+
     override fun compareTo(other: PersonModel): Int {
         return this.nameSurname.compareTo(other.nameSurname)
     }
 
     val nameSurname: String get() = personFolder.nameWithoutExtension
-    var images : MutableList<File> = mutableListOf()
+    var images: MutableList<File> = mutableListOf()
+    val imageCount: Int get() = images.count { !it.isDirectory }
 
     init {
         initializeModel()
@@ -32,7 +37,9 @@ data class PersonModel(
         if (personFolder.exists()) {
             images = personFolder.listFiles()?.toMutableList() ?: mutableListOf()
             images.forEach { File(it.toURI().path) }
-            images.add(createTempFile())
+            if (images.size < PHOTO_LIMIT) {
+                images.add(createTempDir())
+            }
         }
     }
 

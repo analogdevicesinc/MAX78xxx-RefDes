@@ -181,6 +181,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
             if (it.images.contains(image)) {
                 it.images.remove(image)
                 image.delete()
+                it.refreshImages()
             }
         }
         _personImageDeletedEvent.value = Event(Unit)

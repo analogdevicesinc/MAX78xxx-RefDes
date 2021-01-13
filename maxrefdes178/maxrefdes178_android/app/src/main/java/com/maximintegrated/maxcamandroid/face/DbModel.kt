@@ -7,6 +7,10 @@ const val DB_FOLDER_NAME = "/Databases"
 data class DbModel(
     var dbFolder: File
 ) {
+    companion object {
+        const val PERSON_LIMIT = 6
+    }
+
 
     val persons: ArrayList<PersonModel> = arrayListOf()
     val dbName: String get() = dbFolder.nameWithoutExtension
