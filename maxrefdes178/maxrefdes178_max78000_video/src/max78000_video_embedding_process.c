@@ -50,6 +50,7 @@
 
 #include "max78000_debug.h"
 #include "max78000_video_embedding_process.h"
+#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -83,14 +84,14 @@ typedef struct  __attribute__((packed)) sDistance {
 extern uint32_t _embeddings_start_, _embeddings_end_;
 static const uint8_t *embeddings = (uint8_t *) &_embeddings_start_;
 
-tsFaceIDFile *pDatabaseInfo = NULL;
-tsDistance *pDistance = NULL;
-tsMeanDistance *pMeanDistance = NULL;
-tsMinDistance *pMinDistance = NULL;
+static tsMeanDistance gMeanDistance[FACEID_MAX_SUBJECT];
+static tsMinDistance gMinDistance[sizeof(tsMinDistance) * 3];
+static int8_t gClosestSubId[closest_sub_buffer_size];
+static uint8_t gMinDistanceCounter[FACEID_MAX_SUBJECT];
+static tsDistance gDistance[FACEID_MAX_SUBJECT * FACEID_MAX_PHOTO_PER_SUBJECT];
 
-int8_t *pClosestSubId = NULL;
-uint32_t closestSubIdBufIdx = 0;
-uint8_t *pMinDistanceCounter = NULL;
+static tsFaceIDFile *pDatabaseInfo = NULL;
+static uint32_t gClosestSubIdBufIdx = 0;
 
 
 //-----------------------------------------------------------------------------
@@ -101,39 +102,41 @@ uint8_t *pMinDistanceCounter = NULL;
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
+
+/*  embeddings db layout:
+ *  1 byte : number of subjects (S)
+ *  2 bytes: length of embeddings (L)
+ *  2 bytes: number of embeddings (N)
+ *  2 bytes: length of image width (W)
+ *  2 bytes: length of image height (H)
+ *  2 bytes: length of subject names (K)
+ *  K bytes: subject names
+ *  (L+1)*N bytes: embeddings
+ *     1 byte : subject id
+ *     L bytes: embedding
+ *  (W*H*3)*N bytes: image
+ *
+ *  embeddings maximum sizes:
+ *  1         1 byte : number of subjects (S)        6
+ *  2-3       2 bytes: length of embeddings (L)      512
+ *  4-5       2 bytes: number of embeddings (N)      6*8=48
+ *  6-7       2 bytes: length of image width (W)     120
+ *  8-9       2 bytes: length of image height (H)    160
+ *  10-11     2 bytes: length of subject names (K)   (15+1)*6 + 1 = 97
+ *  12-108    K=97 bytes: subject names
+ *  109-24732 (L+1)*N=24624 bytes: embeddings
+ */
+
 int init_database(void)
 {
 	pDatabaseInfo = (tsFaceIDFile *)embeddings;
 
-	pDistance = (tsDistance *)malloc(sizeof(tsDistance)*pDatabaseInfo->numberOfEmbeddings);
-	if (pDistance == NULL) {
-		return E_NULL_PTR;
-	}
-
-	pMeanDistance = (tsMeanDistance *)malloc(sizeof(tsMeanDistance)*pDatabaseInfo->numberOfSubjects);
-	if (pMeanDistance == NULL) {
-		return E_NULL_PTR;
-	}
-
-	pMinDistance = (tsMinDistance *)malloc(sizeof(tsMinDistance)*3);
-	if (pMinDistance == NULL) {
-		return E_NULL_PTR;
-	}
-
-    pClosestSubId = (int8_t *)malloc(closest_sub_buffer_size);
-    if (pClosestSubId == NULL) {
-		return E_NULL_PTR;
-	}
     for(int i=0; i<closest_sub_buffer_size; ++i){
-        pClosestSubId[i] = -1;
+        gClosestSubId[i] = -1;
     }
 
-    pMinDistanceCounter = (uint8_t *)malloc(pDatabaseInfo->numberOfSubjects);
-    if (pMinDistanceCounter == NULL) {
-		return E_NULL_PTR;
-	}
     for(int i=0; i<pDatabaseInfo->numberOfSubjects; ++i){
-        pMinDistanceCounter[i] = 0;
+        gMinDistanceCounter[i] = 0;
     }
 
 	return 0;
@@ -141,20 +144,8 @@ int init_database(void)
 
 int uninit_database(void)
 {
-    free(pDistance);
-    free(pMeanDistance);
-    free(pMinDistance);
-    free(pClosestSubId);
-    free(pMinDistanceCounter);
-
     pDatabaseInfo = NULL;
-    pDistance = NULL;
-    pMeanDistance = NULL;
-    pMinDistance = NULL;
-
-    pClosestSubId = NULL;
-    closestSubIdBufIdx = 0;
-    pMinDistanceCounter = NULL;
+    gClosestSubIdBufIdx = 0;
 
     return E_NO_ERROR;
 }
@@ -248,12 +239,12 @@ char *get_subject(int ID)
 }
 
 void get_min_dist_counter(uint8_t **counter, uint8_t *counter_len){
-    *counter = pMinDistanceCounter;
+    *counter = gMinDistanceCounter;
     *counter_len = pDatabaseInfo->numberOfSubjects;
 }
 
 tsMinDistance *get_min_distance(){
-    return pMinDistance;
+    return gMinDistance;
 }
 
 int calculate_minDistance(const uint8_t *embedding)
@@ -261,8 +252,8 @@ int calculate_minDistance(const uint8_t *embedding)
     int8_t *theEmbedding = (int8_t *)embedding;
     int8_t *theEmbeddingOrigin = theEmbedding;
 
-    tsDistance *dist = pDistance;
-    tsMeanDistance *meanDist = pMeanDistance;
+    tsDistance *dist = gDistance;
+    tsMeanDistance *meanDist = gMeanDistance;
 
     int8_t *pData =  (int8_t *)((uint32_t)(pDatabaseInfo+1) + pDatabaseInfo->lengthOfSubjectNames);
 
@@ -279,7 +270,7 @@ int calculate_minDistance(const uint8_t *embedding)
         dist++;
     }
 
-    dist = pDistance;
+    dist = gDistance;
 
     for (int i = 0; i < pDatabaseInfo->numberOfSubjects; i++) {
         meanDist[i].subID = i;
@@ -288,66 +279,66 @@ int calculate_minDistance(const uint8_t *embedding)
     }
 
     for (int i = 0; i < pDatabaseInfo->numberOfEmbeddings; i++) {
-        meanDist = pMeanDistance + dist->subID;
+        meanDist = gMeanDistance + dist->subID;
         meanDist->distance += dist->distance;
         meanDist->number++;
         dist++;
     }
 
-    meanDist = pMeanDistance;
+    meanDist = gMeanDistance;
 
     for (int i = 0; i < pDatabaseInfo->numberOfSubjects; i++) {
         meanDist->distance = meanDist->distance / meanDist->number;
         meanDist++;
     }
 
-    meanDist = pMeanDistance;
+    meanDist = gMeanDistance;
 
 #define MAX_DISTANCE 1000000
 
     for (int i = 0; i < 3; i++) {
-    	pMinDistance[i].subID = 0xFF;
-    	pMinDistance[i].distance = MAX_DISTANCE;
+        gMinDistance[i].subID = 0xFF;
+        gMinDistance[i].distance = MAX_DISTANCE;
     }
 
     for (int i = 0; i < pDatabaseInfo->numberOfSubjects; i++)
     {
-        if (meanDist[i].distance < pMinDistance[0].distance) {         /* Check if current element is less than firstMin, then update first, second and third */
-        	pMinDistance[2].distance = pMinDistance[1].distance;
-        	pMinDistance[2].subID = pMinDistance[1].subID;
-            pMinDistance[1].distance = pMinDistance[0].distance;
-            pMinDistance[1].subID = pMinDistance[0].subID;
-            pMinDistance[0].distance = meanDist[i].distance;
-            pMinDistance[0].subID  = meanDist[i].subID;
-        } else if (meanDist[i].distance < pMinDistance[1].distance) {    /* Check if current element is less than secmin then update second and third */
-        	pMinDistance[2].distance = pMinDistance[1].distance;
-        	pMinDistance[2].subID = pMinDistance[1].subID;
-            pMinDistance[1].distance = meanDist[i].distance;
-            pMinDistance[1].subID  = meanDist[i].subID;
-        } else if (meanDist[i].distance < pMinDistance[2].distance) {  /* Check if current element is less than then update third */
-        	pMinDistance[2].distance = meanDist[i].distance;
-        	pMinDistance[2].subID  = meanDist[i].subID;
+        if (meanDist[i].distance < gMinDistance[0].distance) {         /* Check if current element is less than firstMin, then update first, second and third */
+            gMinDistance[2].distance = gMinDistance[1].distance;
+            gMinDistance[2].subID = gMinDistance[1].subID;
+            gMinDistance[1].distance = gMinDistance[0].distance;
+            gMinDistance[1].subID = gMinDistance[0].subID;
+            gMinDistance[0].distance = meanDist[i].distance;
+            gMinDistance[0].subID  = meanDist[i].subID;
+        } else if (meanDist[i].distance < gMinDistance[1].distance) {    /* Check if current element is less than secmin then update second and third */
+            gMinDistance[2].distance = gMinDistance[1].distance;
+            gMinDistance[2].subID = gMinDistance[1].subID;
+            gMinDistance[1].distance = meanDist[i].distance;
+            gMinDistance[1].subID  = meanDist[i].subID;
+        } else if (meanDist[i].distance < gMinDistance[2].distance) {  /* Check if current element is less than then update third */
+            gMinDistance[2].distance = meanDist[i].distance;
+            gMinDistance[2].subID  = meanDist[i].subID;
         }
 
     }
 
-    uint32_t bufferIdx = closestSubIdBufIdx % (closest_sub_buffer_size);
-    if (pClosestSubId[bufferIdx] >= 0){
-        --pMinDistanceCounter[pClosestSubId[bufferIdx]];
+    uint32_t bufferIdx = gClosestSubIdBufIdx % (closest_sub_buffer_size);
+    if (gClosestSubId[bufferIdx] >= 0){
+        --gMinDistanceCounter[gClosestSubId[bufferIdx]];
     }
 
-    if (pMinDistance[0].distance < thresh_for_unknown_subject){
-        pClosestSubId[bufferIdx] = pMinDistance[0].subID;
-        ++pMinDistanceCounter[pClosestSubId[bufferIdx]];
+    if (gMinDistance[0].distance < thresh_for_unknown_subject){
+        gClosestSubId[bufferIdx] = gMinDistance[0].subID;
+        ++gMinDistanceCounter[gClosestSubId[bufferIdx]];
     } else {
-        pClosestSubId[bufferIdx] = -1;
+        gClosestSubId[bufferIdx] = -1;
     }
-    ++closestSubIdBufIdx;
+    ++gClosestSubIdBufIdx;
     
     PR_DEBUG("Results:");
-    PR_DEBUG("1. : %d, distance: %d", pMinDistance[0].subID, pMinDistance[0].distance);
-    PR_DEBUG("2. : %d, distance: %d", pMinDistance[1].subID, pMinDistance[1].distance);
-    PR_DEBUG("3. : %d, distance: %d", pMinDistance[2].subID, pMinDistance[2].distance);
+    PR_DEBUG("1. : %d, distance: %d", gMinDistance[0].subID, gMinDistance[0].distance);
+    PR_DEBUG("2. : %d, distance: %d", gMinDistance[1].subID, gMinDistance[1].distance);
+    PR_DEBUG("3. : %d, distance: %d", gMinDistance[2].subID, gMinDistance[2].distance);
     
 //    printf("\t");
 //    for(int i=0; i<closest_sub_buffer_size; ++i){
@@ -360,5 +351,5 @@ int calculate_minDistance(const uint8_t *embedding)
 //    }
 //    printf("\n\n");
 
-    return (closestSubIdBufIdx % 3);
+    return (gClosestSubIdBufIdx % 3);
 }
