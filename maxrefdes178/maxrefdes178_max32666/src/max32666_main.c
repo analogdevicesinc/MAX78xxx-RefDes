@@ -151,12 +151,6 @@ int main(void)
         }
     }
 
-    ret = MXC_SEMA_Init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("MXC_SEMA_Init failed %d", ret);
-        while(1);
-    }
-
     ret = expander_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("expander_init failed %d", ret);
@@ -201,11 +195,11 @@ int main(void)
         while(1);
     }
 
-    ret = sdcard_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("sdcard_init failed %d", ret);
-//        max20303_led_red(1);
-    }
+//    ret = sdcard_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("sdcard_init failed %d", ret);
+////        max20303_led_red(1);
+//    }
 
     ret = led_button_init();
     if (ret != E_NO_ERROR) {
@@ -378,9 +372,23 @@ static void run_application(void)
                         device_status.ble_connected_peer_mac[5], device_status.ble_connected_peer_mac[4],
                         device_status.ble_connected_peer_mac[3], device_status.ble_connected_peer_mac[2],
                         device_status.ble_connected_peer_mac[1], device_status.ble_connected_peer_mac[0]);
+                lcd_data.notification_color = BLUE;
                 timestamps.notification_received = timer_ms_tick;
             } else {
                 snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE disconnected!");
+                lcd_data.notification_color = BLUE;
+                timestamps.notification_received = timer_ms_tick;
+            }
+        }
+
+        // Check battery SOC
+        if ((timer_ms_tick - timestamps.battery_soc) > MAX32666_SOC_INTERVAL) {
+            timestamps.battery_soc = timer_ms_tick;
+            max20303_soc(&device_status.statistics.battery_soc);
+            if (device_status.statistics.battery_soc < MAX32666_SOC_WARNING_LEVEL) {
+                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1,
+                        "Battery level %d is low!", device_status.statistics.battery_soc);
+                lcd_data.notification_color = RED;
                 timestamps.notification_received = timer_ms_tick;
             }
         }
@@ -402,7 +410,7 @@ static void refresh_screen(void)
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "Bat:%d", device_status.statistics.battery_level);
+        snprintf(statistics_string, sizeof(statistics_string) - 1, "Bat:%d", device_status.statistics.battery_soc);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 

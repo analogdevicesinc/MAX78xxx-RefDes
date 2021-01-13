@@ -195,6 +195,9 @@
 #define MAX32666_BLE_QUEUE_SIZE            10
 #define MAX32666_BLE_COMMAND_BUFFER_SIZE   FACEID_MAX_EMBEDDINGS_SIZE + 1024
 
+// PMIC and Fuel Gauge
+#define MAX32666_SOC_INTERVAL              10000  // ms
+#define MAX32666_SOC_WARNING_LEVEL         10
 
 /*** MAX78000 AUDIO ***/
 // MAX78000 AUDIO PINS
@@ -604,7 +607,7 @@ typedef struct __attribute__((packed)) {
     max78000_statistics_t max78000_video;
     max78000_statistics_t max78000_audio;
     float lcd_fps;
-    uint8_t battery_level;
+    uint8_t battery_soc;
     uint32_t max78000_video_power_uw;
     uint32_t max78000_audio_power_uw;
 } device_statistics_t;

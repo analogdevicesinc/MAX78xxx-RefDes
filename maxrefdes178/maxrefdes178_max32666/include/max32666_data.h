@@ -105,6 +105,7 @@ typedef struct {
     uint32_t notification_received;
     uint32_t screen_drew;
     uint32_t statistics_sent;
+    uint32_t battery_soc;
 } timestamps_t;
 
 
