@@ -1,5 +1,6 @@
 package com.maximintegrated.maxcamandroid.blePacket
 
+import com.maximintegrated.maxcamandroid.utils.toLittleEndianByte
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -55,14 +56,13 @@ data class ble_command_packet_header_t(
 
         }
 
-        fun size() = ble_packet_info_t.size() + ble_command_e.size() + 4
+        fun size() = ble_packet_info_t.size() + ble_command_e.size() + Int.SIZE_BYTES
     }
 
     override fun toByteArray(): ByteArray {
         return packet_info.toByteArray()
             .plus(command.ordinal.toByte())
-            .plus(total_payload_size.toByte())
-
+            .plus(total_payload_size.toLittleEndianByte())
     }
 
     override fun size(): Int {

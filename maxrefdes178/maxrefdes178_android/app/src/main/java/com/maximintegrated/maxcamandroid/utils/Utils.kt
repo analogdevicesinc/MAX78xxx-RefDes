@@ -5,8 +5,9 @@ import android.os.Environment
 import androidx.appcompat.app.AlertDialog
 import com.maximintegrated.maxcamandroid.FileWriter
 import com.maximintegrated.maxcamandroid.R
-import com.maximintegrated.maxcamandroid.face.DbModel
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.Executors
 
 const val ROOT_FRAGMENT = "ROOT_FRAGMENT"
@@ -26,6 +27,10 @@ fun ByteArray.toInt(): Int {
         shift += 8
     }
     return result
+}
+
+fun Int.toLittleEndianByte(): ByteArray {
+    return ByteBuffer.allocate(Int.SIZE_BYTES).putInt(this).array().reversedArray()
 }
 
 fun ByteArray.toHexToString(): String {
@@ -70,7 +75,11 @@ interface DeleteListener {
     fun onDeleteButtonClicked(vararg model: Any)
 }
 
-public fun askUserForDeleteOperation(context: Context, listener: DeleteListener, vararg model: Any) {
+public fun askUserForDeleteOperation(
+    context: Context,
+    listener: DeleteListener,
+    vararg model: Any
+) {
     val alert = AlertDialog.Builder(context)
     alert.setMessage(context.getString(R.string.are_you_sure_to_delete_it))
     alert.setPositiveButton(context.getString(R.string.yes)) { dialog, _ ->
