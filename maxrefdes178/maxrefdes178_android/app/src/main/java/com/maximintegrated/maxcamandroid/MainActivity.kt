@@ -14,6 +14,8 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.observe
 import com.maximintegrated.bluetooth.devicelist.OnBluetoothDeviceClickListener
 import com.maximintegrated.communication.MaxCamViewModel
+import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
+import com.maximintegrated.maxcamandroid.blePacket.ble_command_packet_t
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.exts.getCurrentFragment
 import com.maximintegrated.maxcamandroid.main.LandingPage
@@ -104,6 +106,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
             val text = "${bluetoothDevice?.name}"
             firmwareVersion.text = text
 
+            maxCamViewModel.sendData(ble_command_packet_t.from(ble_command_e.BLE_COMMAND_GET_VERSION_CMD).toByteArray())
             sendNotification(byteArrayOf(2, 3, 0, 0, 0, 0))
         }
 

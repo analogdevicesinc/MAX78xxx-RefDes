@@ -81,6 +81,10 @@ data class ble_command_packet_t(
             return ble_command_packet_t(header, payload)
         }
 
+        fun from(command: ble_command_e, sequenceNumber: Int = 0): ble_command_packet_t {
+            return from(command, byteArrayOf(),0,0,sequenceNumber)
+        }
+
         fun from(
             command: ble_command_e,
             payload: ByteArray,
