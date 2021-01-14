@@ -317,7 +317,6 @@ static void run_application(void)
                     } else if (strcmp(device_status.classification_audio.result, "YES") == 0) {
                         device_settings.enable_lcd_statistics = 1;
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
-                        timestamps.faceid_subject_names_received = timer_ms_tick;
                     } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
                         device_settings.enable_lcd_statistics = 0;
                     }
@@ -333,6 +332,9 @@ static void run_application(void)
             case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
                 ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
                     sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
+                timestamps.faceid_subject_names_received = timer_ms_tick;
                 break;
             default:
                 break;

@@ -527,10 +527,11 @@ typedef enum {
 // Typedef Structs
 // QSPI packet
 typedef struct __attribute__((packed)) {
+    uint32_t start_dummy;
     uint32_t start_symbol;
     uint32_t packet_size;
     uint8_t packet_type;
-    uint32_t stop_symbol;
+    uint32_t stop_dummy;
 } qspi_packet_header_t;
 
 // BLE packet info field
