@@ -220,7 +220,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_INFO("video result %s %d %0.1f", device_status.classification_video.result, device_status.classification_video.classification, (double)device_status.classification_video.probabily);
+            PR_INFO("video %s %d %0.1f", device_status.classification_video.result, device_status.classification_video.classification, (double)device_status.classification_video.probabily);
 
             return QSPI_STATE_COMPLETED;
             break;
@@ -255,7 +255,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_INFO("MAX78000 Video version v%d.%d.%d", device_info.device_version.max78000_video.major, device_info.device_version.max78000_video.minor, device_info.device_version.max78000_video.build);
+            PR_INFO("MAX78000 Video v%d.%d.%d", device_info.device_version.max78000_video.major, device_info.device_version.max78000_video.minor, device_info.device_version.max78000_video.build);
 
             return QSPI_STATE_COMPLETED;
             break;
@@ -271,7 +271,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_INFO("MAX78000 Video serial number: ");
+            PR_INFO("MAX78000 Video serial: ");
             for (int i = 0; i < sizeof(device_info.device_serial_num.max78000_video); i++) {
                 PR("%02X", device_info.device_serial_num.max78000_video[i]);
             }
@@ -291,7 +291,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_INFO("FaceID embeddings update status: %d", device_status.faceid_embed_update_status);
+            PR_INFO("FaceID stat %d", device_status.faceid_embed_update_status);
 
             return QSPI_STATE_COMPLETED;
             break;
@@ -309,7 +309,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
 
             device_status.faceid_embed_subject_names_size = qspi_packet_header_rx.packet_size;
 
-            PR_INFO("FaceID embeddings names size: %d", device_status.faceid_embed_subject_names_size);
+            PR_INFO("FaceID names %d", device_status.faceid_embed_subject_names_size);
             for (int i = 0; i < device_status.faceid_embed_subject_names_size;
                     i += printf("%s\n", &device_status.faceid_embed_subject_names[i])) {}
 
@@ -355,7 +355,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
-            PR_INFO("audio result %s %d %0.1f", device_status.classification_audio.result, device_status.classification_audio.classification, (double)device_status.classification_audio.probabily);
+            PR_INFO("audio %s %d %0.1f", device_status.classification_audio.result, device_status.classification_audio.classification, (double)device_status.classification_audio.probabily);
 
             return QSPI_STATE_COMPLETED;
             break;
@@ -387,7 +387,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
-            PR_INFO("MAX78000 Audio version v%d.%d.%d", device_info.device_version.max78000_audio.major, device_info.device_version.max78000_audio.minor, device_info.device_version.max78000_audio.build);
+            PR_INFO("MAX78000 Audio v%d.%d.%d", device_info.device_version.max78000_audio.major, device_info.device_version.max78000_audio.minor, device_info.device_version.max78000_audio.build);
 
             return QSPI_STATE_COMPLETED;
             break;
@@ -403,7 +403,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
-            PR_INFO("MAX78000 Audio serial number: ");
+            PR_INFO("MAX78000 Audio serial: ");
             for (int i = 0; i < sizeof(device_info.device_serial_num.max78000_audio); i++) {
                 PR("%02X", device_info.device_serial_num.max78000_audio[i]);
             }

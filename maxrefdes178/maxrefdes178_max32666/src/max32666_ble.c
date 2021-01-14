@@ -353,10 +353,10 @@ static void periphProcMsg(dmEvt_t *pMsg)
         device_status.ble_max_packet_size = AttGetMtu(periphCb.connId) - 3;
         memcpy(device_status.ble_connected_peer_mac, pMsg->connOpen.peerAddr, sizeof(device_status.ble_connected_peer_mac));
 
-        PR_INFO("Connection opened");
+        PR_INFO("connected");
         PR_DEBUG("connId: %d", pMsg->connOpen.hdr.param);
         PR_DEBUG("handle: %d", pMsg->connOpen.handle);
-        PR_INFO("peerAddr: %02X:%02X:%02X:%02X:%02X:%02X",
+        PR_INFO("peer %02X:%02X:%02X:%02X:%02X:%02X",
                 pMsg->connOpen.peerAddr[5], pMsg->connOpen.peerAddr[4], pMsg->connOpen.peerAddr[3],
                 pMsg->connOpen.peerAddr[2], pMsg->connOpen.peerAddr[1], pMsg->connOpen.peerAddr[0]);
         PR_DEBUG("MTU: %d", AttGetMtu(periphCb.connId));
@@ -373,7 +373,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
         device_status.ble_next_tx_seq = 0;
         memset(device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
 
-        PR_INFO("Connection closed status 0x%02hhX, reason 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
+        PR_INFO("disconnected 0x%02hhX 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
         switch (pMsg->connClose.reason)
         {
         case HCI_ERR_CONN_TIMEOUT:      PR_INFO(" TIMEOUT");         break;
@@ -387,8 +387,8 @@ static void periphProcMsg(dmEvt_t *pMsg)
         break;
 
      case DM_CONN_DATA_LEN_CHANGE_IND:
-         PR_INFO("Data len changed maxTxOctets: %d, maxRxOctets: %d", pMsg->dataLenChange.maxTxOctets, pMsg->dataLenChange.maxRxOctets);
-         PR_INFO("MTU: %d", AttGetMtu(periphCb.connId));
+         PR_INFO("MTU changed %d tx %d rx %d", AttGetMtu(periphCb.connId),
+                 pMsg->dataLenChange.maxTxOctets, pMsg->dataLenChange.maxRxOctets);
          device_status.ble_max_packet_size = AttGetMtu(periphCb.connId) - 3;
          uiEvent = DM_CONN_DATA_LEN_CHANGE_IND;
          break;
@@ -612,7 +612,7 @@ static void ble_receive(uint16_t dataLen, uint8_t *data)
 {
     ble_packet_container_t ble_packet_container;
 
-//    PR_INFO("RX len: %d", dataLen);
+//    PR_INFO("BLE RX %d", dataLen);
 //    for (int i = 0; i < dataLen; i++) {
 //      PR("%02hhX ", data[i]);
 //    }
@@ -650,11 +650,11 @@ int ble_send_indication(uint16_t dataLen, uint8_t *data)
       return E_BAD_STATE;
     }
 
-    PR_INFO("TX indication len: %d", dataLen);
-    for (int i = 0; i < dataLen; i++) {
-        PR("%02hhX ", data[i]);
-    }
-    PR("\n");
+    PR_INFO("BLE TX %d", dataLen);
+//    for (int i = 0; i < dataLen; i++) {
+//        PR("%02hhX ", data[i]);
+//    }
+//    PR("\n");
 
     for (int try = 0; try < 3; try++) {
         periphCb.indicationStatus = ATT_RSP_PENDING;
