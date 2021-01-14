@@ -398,6 +398,7 @@ int max20303_boost(int on, uint8_t boost_output_level)
 
 int max20303_power_off(void)
 {
-    i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_APREG_POWEROFF, 0xB2);
+    i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0xB2);
+    i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_POWEROFF);
     return E_NO_ERROR;
 }

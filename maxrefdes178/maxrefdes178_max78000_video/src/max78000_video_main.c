@@ -467,6 +467,12 @@ static void run_demo(void)
 
                     camera_start_capture_image();
                     break;
+                case QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD:
+                    GPIO_SET(gpio_flash);
+                    break;
+                case QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD:
+                    GPIO_CLR(gpio_flash);
+                    break;
                 default:
                     PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
                     break;
