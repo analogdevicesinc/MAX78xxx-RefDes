@@ -131,12 +131,12 @@ int ble_command_send_single_packet(ble_command_e ble_command, uint32_t payload_s
 
 static int ble_command_execute_rx_command(void)
 {
-    PR_INFO("Execute command %d", ble_command_buffer.command);
-    PR_INFO("Total payload: %d", ble_command_buffer.total_payload_size);
-    for (int i = 0; i < ble_command_buffer.total_payload_size; i++) {
-        PR("%02hhX ", ble_command_buffer.total_payload_buffer[i]);
-    }
-    PR("\n");
+    PR_INFO("Execute command %d with total payload size %d", ble_command_buffer.command,
+            ble_command_buffer.total_payload_size);
+//    for (int i = 0; i < ble_command_buffer.total_payload_size; i++) {
+//        PR("%02hhX ", ble_command_buffer.total_payload_buffer[i]);
+//    }
+//    PR("\n");
 
     switch (ble_command_buffer.command) {
     case BLE_COMMAND_GET_VERSION_CMD:
@@ -395,21 +395,21 @@ static int ble_command_handle_rx(void)
 
     // Check sequence number of the packet
     if (device_status.ble_expected_rx_seq != tmp_container.packet.packet_info.seq) {
-        PR_ERROR("Incorrect seq expected %d received %d", device_status.ble_expected_rx_seq,
-                tmp_container.packet.packet_info.seq);
+//        PR_ERROR("Incorrect seq expected %d received %d", device_status.ble_expected_rx_seq,
+//                tmp_container.packet.packet_info.seq);
 //        return E_BAD_STATE;
     }
 
     PR_INFO("BLE RX packet size %d", tmp_container.size);
     if (tmp_container.packet.packet_info.type == BLE_PACKET_TYPE_COMMAND) {
         packet_payload_size = tmp_container.size - sizeof(ble_command_packet_header_t);
-        PR_INFO("Command %d", tmp_container.packet.command_packet.header.command);
-        PR_INFO("Total payload size %d", tmp_container.packet.command_packet.header.total_payload_size);
-        PR_INFO("Payload: %d", packet_payload_size);
-        for (int i = 0; i < packet_payload_size; i++) {
-            PR("%02hhX ", tmp_container.packet.command_packet.payload[i]);
-        }
-        PR("\n");
+        PR_INFO("Command %d with total payload size %d", tmp_container.packet.command_packet.header.command,
+                tmp_container.packet.command_packet.header.total_payload_size);
+//        PR_INFO("Payload: %d", packet_payload_size);
+//        for (int i = 0; i < packet_payload_size; i++) {
+//            PR("%02hhX ", tmp_container.packet.command_packet.payload[i]);
+//        }
+//        PR("\n");
 
         // Check abort command
         if (tmp_container.packet.command_packet.header.command == BLE_COMMAND_ABORT_CMD) {
@@ -456,10 +456,10 @@ static int ble_command_handle_rx(void)
         packet_payload_size = tmp_container.size - sizeof(ble_payload_packet_header_t);
         PR_INFO("Payload %d (%d/%d): ", packet_payload_size, ble_command_buffer.received_payload_size,
                 ble_command_buffer.total_payload_size);
-        for (int i = 0; i < packet_payload_size; i++) {
-            PR("%02hhX ", tmp_container.packet.payload_packet.payload[i]);
-        }
-        PR("\n");
+//        for (int i = 0; i < packet_payload_size; i++) {
+//            PR("%02hhX ", tmp_container.packet.payload_packet.payload[i]);
+//        }
+//        PR("\n");
 
         // Check state
         if (ble_command_buffer.command_state != BLE_COMMAND_STATE_RX_RUNNING) {

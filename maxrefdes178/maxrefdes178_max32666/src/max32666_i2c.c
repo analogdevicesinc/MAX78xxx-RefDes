@@ -41,6 +41,7 @@
 
 #include "max32666_debug.h"
 #include "max32666_i2c.h"
+#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -87,6 +88,8 @@ static inline void i2c_flush(mxc_i2c_regs_t *i2c)
 
 int i2c_master_byte_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t val)
 {
+    uint32_t cnt = I2C_TIMEOUT_CNT;
+
     i2c_flush(i2c);
 
     i2c->fifo = addr;
@@ -94,8 +97,15 @@ int i2c_master_byte_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t val)
     i2c->fifo = val;
     i2c->m |= MXC_F_I2C_M_STOP;
 
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP) && cnt) {
+            cnt--;
+    }
     i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    if (cnt == 0) {
+        PR_WARN("timeout");
+        return E_TIME_OUT;
+    }
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
@@ -119,6 +129,8 @@ int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t
 //    }
 //    return E_NO_ERROR;
 
+    uint32_t cnt = I2C_TIMEOUT_CNT;
+
     i2c_flush(i2c);
 
     i2c->fifo = addr;
@@ -127,14 +139,23 @@ int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t
     i2c->fifo = val;
     i2c->m |= MXC_F_I2C_M_STOP;
 
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP) && cnt) {
+        cnt--;
+    }
     i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    if (cnt == 0) {
+        PR_WARN("timeout");
+        return E_TIME_OUT;
+    }
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
 
 int i2c_master_reg_write_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t* buf, int len)
 {
+    uint32_t cnt = I2C_TIMEOUT_CNT;
+
     /* Limit write length to one FIFOs worth of data.
        This module in its current state would not benefit from the
        additional complexity. */
@@ -154,14 +175,23 @@ int i2c_master_reg_write_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uin
 
     i2c->m |= MXC_F_I2C_M_STOP;
 
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP) && cnt) {
+        cnt--;
+    }
     i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    if (cnt == 0) {
+        PR_WARN("timeout");
+        return E_TIME_OUT;
+    }
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
 
 int i2c_master_reg_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf)
 {
+    uint32_t cnt = I2C_TIMEOUT_CNT;
+
     i2c_flush(i2c);
 
     i2c->fifo = addr;
@@ -170,22 +200,35 @@ int i2c_master_reg_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t 
 
     i2c->rx_ctrl1 = 1;
     i2c->m = MXC_F_I2C_M_RESTART;
-    while (i2c->m & MXC_F_I2C_M_RESTART);
+    while ((i2c->m & MXC_F_I2C_M_RESTART) && cnt) {
+        cnt--;
+    }
     i2c->fifo = addr | 0x01;
 
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_RX_THRESH));
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_RX_THRESH) && cnt) {
+        cnt--;
+    }
     *buf = i2c->fifo;
     i2c->int_fl0 = MXC_F_I2C_INT_FL0_RX_THRESH;
 
     i2c->m = MXC_F_I2C_M_STOP;
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP) && cnt) {
+        cnt--;
+    }
     i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    if (cnt == 0) {
+        PR_WARN("timeout");
+        return E_TIME_OUT;
+    }
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
 
 int i2c_master_reg_read_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, int len)
 {
+    uint32_t cnt = I2C_TIMEOUT_CNT;
+
     i2c_flush(i2c);
 
     i2c->fifo = addr;
@@ -194,10 +237,14 @@ int i2c_master_reg_read_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint
 
     i2c->rx_ctrl1 = 1;
     i2c->m = MXC_F_I2C_M_RESTART;
-    while (i2c->m & MXC_F_I2C_M_RESTART);
+    while ((i2c->m & MXC_F_I2C_M_RESTART) && cnt) {
+        cnt--;
+    }
     i2c->fifo = addr | 0x01;
 
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_RX_THRESH));
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_RX_THRESH) && cnt) {
+        cnt--;
+    }
 
     while (len--) {
         *buf = i2c->fifo;
@@ -205,8 +252,15 @@ int i2c_master_reg_read_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint
     i2c->int_fl0 = MXC_F_I2C_INT_FL0_RX_THRESH;
 
     i2c->m = MXC_F_I2C_M_STOP;
-    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP));
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP) && cnt) {
+        cnt--;
+    }
     i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    if (cnt == 0) {
+        PR_WARN("timeout");
+        return E_TIME_OUT;
+    }
 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }

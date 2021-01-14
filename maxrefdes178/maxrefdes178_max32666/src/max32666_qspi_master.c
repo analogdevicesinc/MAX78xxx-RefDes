@@ -295,6 +295,26 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
 
             return QSPI_STATE_COMPLETED;
             break;
+        case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
+            if (qspi_packet_header_rx.packet_size > sizeof(device_status.faceid_embed_subject_names) ) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
+                return QSPI_STATE_IDLE;
+            }
+
+            GPIO_CLR(video_cs_pin);
+            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_subject_names, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+            GPIO_SET(video_cs_pin);
+
+            device_status.faceid_embed_subject_names_size = qspi_packet_header_rx.packet_size;
+
+            PR_INFO("FaceID embeddings names size: %d", device_status.faceid_embed_subject_names_size);
+            for (int i = 0; i < device_status.faceid_embed_subject_names_size;
+                    i += printf("%s\n", &device_status.faceid_embed_subject_names[i])) {}
+
+            return QSPI_STATE_COMPLETED;
+            break;
         default:
             PR_ERROR("Unknown qspi video packet");
             return QSPI_STATE_IDLE;

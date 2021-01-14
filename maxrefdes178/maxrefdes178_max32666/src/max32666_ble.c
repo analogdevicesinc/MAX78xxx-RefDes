@@ -612,11 +612,11 @@ static void ble_receive(uint16_t dataLen, uint8_t *data)
 {
     ble_packet_container_t ble_packet_container;
 
-    PR_INFO("RX len: %d", dataLen);
-    for (int i = 0; i < dataLen; i++) {
-      PR("%02hhX ", data[i]);
-    }
-    PR("\n");
+//    PR_INFO("RX len: %d", dataLen);
+//    for (int i = 0; i < dataLen; i++) {
+//      PR("%02hhX ", data[i]);
+//    }
+//    PR("\n");
 
     if ((dataLen > sizeof(ble_packet_container.packet)) ||
         (dataLen < sizeof(ble_packet_container.packet.packet_info))) {

@@ -213,7 +213,7 @@ bail:
     return ret;
 }
 
-char *get_subject(int ID)
+char *get_subject_name(int ID)
 {
 	char *point = (char *)(pDatabaseInfo+1);
 
@@ -235,10 +235,20 @@ char *get_subject(int ID)
 	}
 
 	return 0;
-
 }
 
-void get_min_dist_counter(uint8_t **counter, uint8_t *counter_len){
+uint8_t get_subject_count(void)
+{
+    return pDatabaseInfo->numberOfSubjects;
+}
+
+uint16_t get_subject_names_len(void)
+{
+    return pDatabaseInfo->lengthOfSubjectNames;
+}
+
+void get_min_dist_counter(uint8_t **counter, uint8_t *counter_len)
+{
     *counter = gMinDistanceCounter;
     *counter_len = pDatabaseInfo->numberOfSubjects;
 }

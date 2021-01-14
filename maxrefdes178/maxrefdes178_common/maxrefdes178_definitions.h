@@ -54,6 +54,7 @@
 
 // Common I2C
 #define I2C_SPEED                          100000  // hz
+#define I2C_TIMEOUT_CNT                    10000000  // loop counter
 
 #define I2C_ADDR_MAX20303_PMIC             0x50  // 0x50 for writes, 0x51 for reads
 #define I2C_ADDR_MAX20303_FUEL_GAUGE       0x6C  // 0x6C for writes, 0x6D for reads
@@ -299,6 +300,9 @@ typedef enum {
 
     QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD, // FaceID embeddings binary
     QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES, // faceid_embed_update_status_e
+
+    QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD,     // None
+    QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES,     // Subject names string list
 
     QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD,       // None
     QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD,      // None

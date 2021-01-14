@@ -259,6 +259,7 @@ static void run_application(void)
     qspi_packet_type_e qspi_packet_type = 0;
     lcd_data.notification_color = BLUE;
     lcd_data.frame_color = WHITE;
+    device_status.faceid_embed_subject_names_size = 0;
 
     // Main application loop
     while (1) {
@@ -315,6 +316,8 @@ static void run_application(void)
                         device_settings.enable_lcd_probabilty = 0;
                     } else if (strcmp(device_status.classification_audio.result, "YES") == 0) {
                         device_settings.enable_lcd_statistics = 1;
+                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
+                        timestamps.faceid_subject_names_received = timer_ms_tick;
                     } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
                         device_settings.enable_lcd_statistics = 0;
                     }
@@ -382,8 +385,8 @@ static void run_application(void)
         }
 
         // Check battery SOC
-        if ((timer_ms_tick - timestamps.battery_soc) > MAX32666_SOC_INTERVAL) {
-            timestamps.battery_soc = timer_ms_tick;
+        if (device_status.fuel_gauge_working && ((timer_ms_tick - timestamps.battery_soc_drew) > MAX32666_SOC_INTERVAL)) {
+            timestamps.battery_soc_drew = timer_ms_tick;
             max20303_soc(&device_status.statistics.battery_soc);
             if (device_status.statistics.battery_soc < MAX32666_SOC_WARNING_LEVEL) {
                 snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1,
@@ -397,7 +400,7 @@ static void run_application(void)
 
 static void refresh_screen(void)
 {
-    static char statistics_string[20] = {0};
+    static char line_string[20] = {0};
 
     if (!device_settings.enable_lcd) {
         return;
@@ -406,37 +409,46 @@ static void refresh_screen(void)
     if (device_settings.enable_lcd_statistics) {
         int line_pos = 3;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(line_string, sizeof(line_string) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "Bat:%d", device_status.statistics.battery_soc);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(line_string, sizeof(line_string) - 1, "Bat:%d", device_status.statistics.battery_soc);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(line_string, sizeof(line_string) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_us / 1000);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCNN:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(line_string, sizeof(line_string) - 1, "vCNN:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(line_string, sizeof(line_string) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_us / 1000);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "vPow:%d", device_status.statistics.max78000_video_power_uw / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+//        snprintf(line_string, sizeof(line_string) - 1, "vPow:%d", device_status.statistics.max78000_video_power_uw / 1000);
+//        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+//        line_pos += 12;
+
+        snprintf(line_string, sizeof(line_string) - 1, "aCNN:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "aCNN:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
+//        snprintf(line_string, sizeof(line_string) - 1, "aPow:%d", device_status.statistics.max78000_audio_power_uw / 1000);
+//        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+//        line_pos += 12;
 
-        snprintf(statistics_string, sizeof(statistics_string) - 1, "aPow:%d", device_status.statistics.max78000_audio_power_uw / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, statistics_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
+        if ((timestamps.screen_drew - timestamps.faceid_subject_names_received) < LCD_NOTIFICATION_DURATION) {
+            line_pos += 5;
+            for (int i = 0; i < device_status.faceid_embed_subject_names_size; i += strlen(&device_status.faceid_embed_subject_names[i]) + 1) {
+                snprintf(line_string, sizeof(line_string) - 1, "%s", &device_status.faceid_embed_subject_names[i]);
+                fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, CYAN, 0, 0, lcd_data.buffer);
+                line_pos += 12;
+            }
+        }
     }
 
     // Draw FaceID frame and result

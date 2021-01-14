@@ -80,6 +80,10 @@ typedef struct {
     classification_result_t classification_video;
     classification_result_t classification_audio;
     uint8_t faceid_embed_update_status;
+    char faceid_embed_subject_names[FACEID_MAX_SUBJECT * (FACEID_MAX_SUBJECT_NAME_SIZE + 1)];
+    uint16_t faceid_embed_subject_names_size;
+
+    uint8_t fuel_gauge_working;
 
     uint8_t ble_status_changed;  // written by both core0 and core1
     uint8_t ble_connected;  // written by core1
@@ -103,9 +107,10 @@ typedef struct {
 typedef struct {
     uint32_t audio_result_received;
     uint32_t notification_received;
+    uint32_t faceid_subject_names_received;
     uint32_t screen_drew;
     uint32_t statistics_sent;
-    uint32_t battery_soc;
+    uint32_t battery_soc_drew;
 } timestamps_t;
 
 

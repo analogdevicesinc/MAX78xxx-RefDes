@@ -41,6 +41,7 @@
 #include <stdio.h>
 
 #include "max32666_debug.h"
+#include "max32666_data.h"
 #include "max32666_i2c.h"
 #include "max32666_max20303.h"
 
@@ -177,16 +178,15 @@
 int max20303_init(void)
 {
     int err;
-	uint8_t pmic_hw_id;
-	uint8_t fuel_gauge_soc;
+	uint8_t regval;
 
     // Test connectivity by reading hardware ID
-    if ((err = i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_HARDWARE_ID, &pmic_hw_id)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_HARDWARE_ID, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
-    if (pmic_hw_id != MAX20303_HARDWARE_ID) {
-        PR_ERROR("hw_id is not supported %d", pmic_hw_id);
+    if (regval != MAX20303_HARDWARE_ID) {
+        PR_ERROR("hw_id is not supported %d", regval);
         return E_NOT_SUPPORTED;
     }
 
@@ -241,8 +241,13 @@ int max20303_init(void)
     max20303_enable_video_audio(1);
     MXC_Delay(MXC_DELAY_MSEC(100));
 
-    // Read SOC
-    max20303_soc(&fuel_gauge_soc);
+    // Try to read fuel gauge soc
+    if ((err = max20303_soc(&regval)) != E_NO_ERROR) {
+        PR_ERROR("Fuel gauge is not responding");
+        device_status.fuel_gauge_working = 0;
+    } else {
+        device_status.fuel_gauge_working = 1;
+    }
 
     return E_NO_ERROR;
 }

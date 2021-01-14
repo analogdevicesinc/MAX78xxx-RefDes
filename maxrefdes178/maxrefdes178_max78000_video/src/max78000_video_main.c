@@ -367,23 +367,28 @@ static void fail(void)
 static void run_demo(void)
 {
     uint8_t run_count = 0;
-
-    camera_start_capture_image();
-
     uint32_t capture_started_time = GET_RTC_MS();
     uint32_t cnn_completed_time;
     uint32_t qspi_completed_time;
     uint32_t capture_completed_time;
     max78000_statistics_t max78000_statistics;
 
+    uint8_t   *raw;
+    uint32_t  imgLen;
+    uint32_t  w, h;
+
+    PR_INFO("Embeddings subject names:");
+    for (int i = 0; i < get_subject_count(); i++) {
+          PR_INFO("  %s", get_subject_name(i));
+    }
+
+    camera_start_capture_image();
+
     while (1) { //Capture image and run CNN
         /* Check if QSPI RX has data */
         if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
             // Use camera interface buffer for FaceID embeddings
             MXC_PCIF_Stop();
-            uint8_t   *raw;
-            uint32_t  imgLen;
-            uint32_t  w, h;
             camera_get_image(&raw, &imgLen, &w, &h);
 
             qspi_slave_set_rx_data(raw, g_qspi_packet_header_rx.packet_size);
@@ -408,9 +413,16 @@ static void run_demo(void)
                     PR_ERROR("Could not initialize the database");
                     faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_ERROR_UNKNOWN;
                 } else {
+                    PR_INFO("Embeddings update completed");
+                    for (int i = 0; i < get_subject_count(); i++) {
+                        PR_INFO("  %s", get_subject_name(i));
+                    }
                     faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_SUCCESS;
                 }
                 qspi_slave_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
+
+                memcpy(raw, get_subject_name(0), get_subject_names_len());
+                qspi_slave_send_packet(raw, get_subject_names_len(), QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES);
             }
 
             camera_start_capture_image();
@@ -444,6 +456,16 @@ static void run_demo(void)
                     break;
                 case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD:
                     // Do nothing
+                    break;
+                case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD:
+                    // Use camera interface buffer for FaceID embeddings subject names
+                    MXC_PCIF_Stop();
+
+                    camera_get_image(&raw, &imgLen, &w, &h);
+                    memcpy(raw, get_subject_name(0), get_subject_names_len());
+                    qspi_slave_send_packet(raw, get_subject_names_len(), QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES);
+
+                    camera_start_capture_image();
                     break;
                 default:
                     PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
@@ -596,7 +618,7 @@ static void run_cnn(int x_offset, int y_offset)
         decision = -3;
         for(uint8_t id=0; id<counter_len; ++id){
             if (counter[id] >= (closest_sub_buffer_size-4)){
-                strncpy(classification_result.result, get_subject(id), sizeof(classification_result.result) - 1);
+                strncpy(classification_result.result, get_subject_name(id), sizeof(classification_result.result) - 1);
                 decision = id;
                 classification_result.classification = CLASSIFICATION_DETECTED;
                 break;
