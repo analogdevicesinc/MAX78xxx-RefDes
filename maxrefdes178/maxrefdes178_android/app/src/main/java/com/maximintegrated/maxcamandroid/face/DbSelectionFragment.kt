@@ -91,7 +91,9 @@ class DbSelectionFragment : Fragment(), DbListener {
     }
 
     override fun onDeleteButtonClicked(vararg model: Any) {
-        model?.let { faceIdViewModel.deleteDatabase(it[0] as DbModel) }
+        if (model != null) {
+            faceIdViewModel.deleteDatabase((model[0] as Array<*>)[0] as DbModel)
+        }
 
     }
 }

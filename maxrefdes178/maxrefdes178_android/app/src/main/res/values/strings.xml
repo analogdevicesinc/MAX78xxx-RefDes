@@ -13,6 +13,7 @@
     <string name="step2">Step 2:</string>
     <string name="send_the_file_when_ready">Send the file when ready</string>
     <string name="send_file">Send File</string>
+    <string name="send">Send</string>
     <string name="choose_a_file">Choose a file</string>
     <string name="no_file_is_selected">No file is selected</string>
     <string name="content">Content</string>
@@ -26,6 +27,7 @@
     <string name="capture_image_from_device">Capture Image From Device</string>
     <string name="send_image_from_mobile">Send Image From Mobile</string>
     <string name="other_operations">Other Operations</string>
+    <string name="select_debugger">Select Debugger</string>
     <string name="read_manufacturer_name">Read Manufacturer Name</string>
     <string name="read_serial_number">Read Serial Number</string>
     <string name="load_image">Load Image</string>
@@ -35,6 +37,8 @@
     <string name="done">Done</string>
     <string name="no_saved_scenarios">There are no saved scenarios.</string>
     <string name="select">Select</string>
+    <string name="enable">Enable</string>
+    <string name="disable">Disable</string>
     <string name="enter_a_scenario_name">Enter a scenario name</string>
     <string name="new_scenario">New Scenario</string>
     <string name="create">Create</string>
@@ -99,4 +103,5 @@
     <string name="send_signature_text">Click the below button to send the signature to the device.</string>
     <string name="create_signature">Create Signature</string>
     <string name="send_signature">Send Signature</string>
+    <string name="command_operation">Command Operation</string>
 </resources>

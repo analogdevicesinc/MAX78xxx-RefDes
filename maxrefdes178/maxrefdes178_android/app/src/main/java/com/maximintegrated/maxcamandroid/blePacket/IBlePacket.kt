@@ -82,7 +82,15 @@ data class ble_command_packet_t(
         }
 
         fun from(command: ble_command_e, sequenceNumber: Int = 0): ble_command_packet_t {
-            return from(command, byteArrayOf(),0,0,sequenceNumber)
+            return from(command, byteArrayOf(), 0, 0, sequenceNumber)
+        }
+
+        fun from(
+            command: ble_command_e,
+            payload: ByteArray,
+            sequenceNumber: Int = 0
+        ): ble_command_packet_t {
+            return from(command, payload, payload.size, payload.size, sequenceNumber)
         }
 
         fun from(
@@ -214,12 +222,32 @@ data class device_statistics_t(
     var max78000_audio_power_uw: Int
 ) : IBlePacket
 
+enum class debugger_select_e(val value: String = "") : IBlePacket {
+    DEBUGGER_SELECT_MAX32666_CORE1("MAX32666 CORE1"),
+    DEBUGGER_SELECT_MAX78000_VIDEO("MAX78000 VIDEO"),
+    DEBUGGER_SELECT_MAX78000_AUDIO("MAX78000 AUDIO"),
+    DEBUGGER_SELECT_LAST;
+
+    override fun toString(): String {
+        return if (value.isNotEmpty()) value else name
+    }
+
+    override fun toByteArray(): ByteArray {
+        return byteArrayOf(ordinal.toByte())
+    }
+
+    override fun size(): Int {
+        return 1
+    }
+}
+
 enum class ble_command_e {
     //  Command                             Command Payload Description
     // Communication
     BLE_COMMAND_ABORT_CMD,           // None
     BLE_COMMAND_INVALID_RES,             // None
     BLE_COMMAND_NOP_CMD,                 // None
+    BLE_COMMAND_MTU_CHANGE_RES,
 
     // Version
     BLE_COMMAND_GET_VERSION_CMD,         // None

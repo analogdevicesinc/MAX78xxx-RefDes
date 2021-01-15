@@ -59,12 +59,23 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
     fun connect(device: BluetoothDevice, requestedMtu: Int) {
         if (bluetoothDevice == null) {
             bluetoothDevice = device
-            deviceManager.connect(device).enqueue()
-            deviceManager.requestMtu(requestedMtu)
-                .with { _, mtu ->
-                    deviceManager.maxCamBleMtu = mtu
-                    _mtuSize.value = mtu
+            deviceManager.connect(device)
+                .fail { device, status ->
+                    Timber.e("BLE Connection Failed!! $device - $status")
+                }
+                .done {
+                    deviceManager.requestMtu(requestedMtu)
+                        .fail { device, status ->
+                            Timber.e("BLE requestMtu Failed!! $device - $status")
+                        }
+                        .with { _, mtu ->
+                            deviceManager.maxCamBleMtu = mtu
+                        }.done {
+                            _mtuSize.postValue(deviceManager.maxCamBleMtu)
+                        }
+                        .enqueue()
                 }.enqueue()
+
         }
     }
 

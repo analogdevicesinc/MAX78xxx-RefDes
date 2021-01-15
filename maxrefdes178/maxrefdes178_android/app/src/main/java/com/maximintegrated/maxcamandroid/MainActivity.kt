@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
             ).get(MainViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(this).get(MaxCamViewModel::class.java)
         bluetoothDevice?.let {
-            maxCamViewModel.connect(it, maxCamNativeLibrary.maxMtu)
+            maxCamViewModel.connect(it,550)// maxCamNativeLibrary.maxMtu
         }
         maxCamViewModel.connectionState
             .observe(this) { connectionState ->
@@ -105,9 +105,8 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
             //val text = "${bluetoothDevice?.name} - ${maxCamNativeLibrary.version}"
             val text = "${bluetoothDevice?.name}"
             firmwareVersion.text = text
-
+            Thread.sleep(750)
             maxCamViewModel.sendData(ble_command_packet_t.from(ble_command_e.BLE_COMMAND_GET_VERSION_CMD).toByteArray())
-            sendNotification(byteArrayOf(2, 3, 0, 0, 0, 0))
         }
 
         maxCamViewModel.receivedData.observeForever(dataReceivedObserver)

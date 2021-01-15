@@ -30,7 +30,8 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
-            <include
+
+                <include
                     android:id="@+id/max78000VideoCnnItem"
                     layout="@layout/settings_item"
                     android:layout_width="match_parent"
@@ -48,10 +49,67 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
+
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/max78000VideoCnnItem" />
+
+                <include
+                    android:id="@+id/lcdSetting"
+                    layout="@layout/settings_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/max78000VideoFlashLedItem" />
+
+                <include
+                    android:id="@+id/lcdStats"
+                    layout="@layout/settings_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/lcdSetting" />
+
+                <include
+                    android:id="@+id/lcdProbability"
+                    layout="@layout/settings_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/lcdStats" />
+
+                <include
+                    android:id="@+id/sendStats"
+                    layout="@layout/settings_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+
+                    app:layout_constraintTop_toBottomOf="@id/lcdProbability" />
+
+                <include
+                    android:id="@+id/sendClass"
+                    layout="@layout/settings_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+
+                    app:layout_constraintTop_toBottomOf="@id/sendStats" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -78,6 +136,48 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
+
+
+                <TextView
+                    android:id="@+id/selectDebuggerTextViewTitle"
+                    style="@style/CardViewBoldTextView"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/select_debugger"
+
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/otherOperationsTitleTextView" />
+
+
+                <Spinner
+                    android:id="@+id/debuggerSelectSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginHorizontal="10dp"
+                    android:background="@android:drawable/editbox_background_normal"
+                    app:layout_constraintBottom_toBottomOf="@id/sendDebuggerButton"
+                    app:layout_constraintEnd_toStartOf="@id/sendDebuggerButton"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/sendDebuggerButton" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_arrow_down"
+                    app:layout_constraintBottom_toBottomOf="@id/debuggerSelectSpinner"
+                    app:layout_constraintEnd_toEndOf="@id/debuggerSelectSpinner"
+                    app:layout_constraintTop_toTopOf="@id/debuggerSelectSpinner" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/sendDebuggerButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:text="@string/send"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/selectDebuggerTextViewTitle" />
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
