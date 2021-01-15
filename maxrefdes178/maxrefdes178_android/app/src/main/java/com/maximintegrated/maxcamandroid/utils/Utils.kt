@@ -133,3 +133,11 @@ fun SettingsItemBinding.setup(
     }
 }
 
+fun SettingsItemBinding.setEnabled(
+    isEnabled: Boolean
+) {
+    descriptionTextView.isEnabled = isEnabled
+    enableButton.isEnabled = isEnabled
+    disableButton.isEnabled = isEnabled
+}
+

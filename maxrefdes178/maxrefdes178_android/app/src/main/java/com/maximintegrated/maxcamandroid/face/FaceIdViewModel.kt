@@ -47,6 +47,9 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
     private val _embeddingsFileEvent = MutableLiveData<Event<File>>()
     val embeddingsFileEvent: LiveData<Event<File>> = _embeddingsFileEvent
 
+    private val _scriptInProgress = MutableLiveData<Boolean>(false)
+    val scriptInProgress: LiveData<Boolean> = _scriptInProgress
+
     var selectedDatabase: DbModel? = null
         private set
     var selectedPerson: PersonModel? = null
@@ -71,6 +74,12 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
         selectedDatabase?.let {
             _persons.value = it.persons
         }
+    }
+
+    fun deleteEmbeddingsFile() {
+        selectedDatabase?.embeddingsFile?.delete()
+        selectedDatabase?.findEmbeddingsFile()
+        _embeddingsFileEvent.value = Event(createTempDir())
     }
 
     fun getDatabaseList() {
@@ -253,6 +262,8 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     fun onCreateSignatureButtonClicked() {
+        deleteEmbeddingsFile()
+        _scriptInProgress.value = true
         val python = Python.getInstance()
         val script = python.getModule("db_gen.generate_face_db")
         viewModelScope.launch {
@@ -273,6 +284,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
                 }
             }
             getEmbeddingsFile()
+            _scriptInProgress.value = false
         }
     }
 }

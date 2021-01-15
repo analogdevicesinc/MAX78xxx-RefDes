@@ -42,10 +42,47 @@ class DemoFragment : Fragment() {
         faceIdViewModel = ViewModelProviders.of(requireActivity()).get(FaceIdViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
 
+
+        faceIdViewModel.scriptInProgress.observe(viewLifecycleOwner) {
+            val sdf = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault())
+            if (it) {
+                embeddingsTextView.text = getString(
+                    R.string.script_in_progress
+                )
+                sendButton.isEnabled = false
+            } else {
+                val file = faceIdViewModel.selectedDatabase?.embeddingsFile
+                if (file == null) {
+                    embeddingsTextView.text = getString(
+                        R.string.signature_not_found
+                    )
+                    sendButton.isEnabled = false
+                } else {
+                    embeddingsTextView.text = getString(
+                        R.string.signature_created_at,
+                        sdf.format(Date(file.lastModified()))
+                    )
+                    sendButton.isEnabled = true
+                }
+
+            }
+
+            progressBar.isVisible = it
+            signatureButton.isEnabled = !it
+
+        }
+
         faceIdViewModel.embeddingsFileEvent.observe(viewLifecycleOwner, EventObserver {
             val sdf = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault())
-            embeddingsTextView.text =
-                getString(R.string.signature_created_at, sdf.format(Date(it.lastModified())))
+
+            embeddingsTextView.text = if (!it.isDirectory) getString(
+                R.string.signature_created_at,
+                sdf.format(Date(it.lastModified()))
+            )
+            else
+                getString(
+                    R.string.signature_not_found
+                )
 
             progressBar.isVisible = false
         })
@@ -57,6 +94,7 @@ class DemoFragment : Fragment() {
         }
         signatureButton.setOnClickListener {
             progressBar.isVisible = true
+            //faceIdViewModel.selectedDatabase?.embeddingsFile?.delete()
             faceIdViewModel.onCreateSignatureButtonClicked()
         }
         faceIdViewModel.getEmbeddingsFile()
