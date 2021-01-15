@@ -2,9 +2,12 @@ package com.maximintegrated.maxcamandroid.utils
 
 import android.content.Context
 import android.os.Environment
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.maximintegrated.maxcamandroid.FileWriter
 import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
+import com.maximintegrated.maxcamandroid.databinding.SettingsItemBinding
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -108,5 +111,25 @@ fun getMaxCamFile(fileName: String): File {
     )
 
 
+}
+
+interface SettingsItemListener {
+    fun onEnableButtonClick(itemName: String, command: ble_command_e)
+    fun onDisableButtonClick(itemName: String, command: ble_command_e)
+}
+
+fun SettingsItemBinding.setup(
+    itemName: String,
+    enableCommand: ble_command_e,
+    disableCommand: ble_command_e,
+    listener: SettingsItemListener
+) {
+    descriptionTextView.text = itemName
+    enableButton.setOnClickListener {
+        listener.onEnableButtonClick(itemName, enableCommand)
+    }
+    disableButton.setOnClickListener {
+        listener.onDisableButtonClick(itemName, disableCommand)
+    }
 }
 

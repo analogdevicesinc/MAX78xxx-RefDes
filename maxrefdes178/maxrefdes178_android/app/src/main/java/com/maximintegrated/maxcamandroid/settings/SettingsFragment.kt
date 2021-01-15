@@ -10,21 +10,16 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
-import androidx.lifecycle.observe
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.MainViewModel
 import com.maximintegrated.maxcamandroid.MainViewModelFactory
 import com.maximintegrated.maxcamandroid.MaxCamApplication
-import com.maximintegrated.maxcamandroid.R
-import com.maximintegrated.maxcamandroid.nativeLibrary.MaxCamNativeLibrary
-import com.maximintegrated.maxcamandroid.view.CustomTreeItem
-import com.maximintegrated.maxcamandroid.view.TreeNodeType
-import com.maximintegrated.maxcamandroid.view.TreeViewHolder
+import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
+import com.maximintegrated.maxcamandroid.databinding.FragmentSettingsBinding
+import com.maximintegrated.maxcamandroid.utils.SettingsItemListener
+import com.maximintegrated.maxcamandroid.utils.setup
 import com.theartofdev.edmodo.cropper.CropImage
-import com.theartofdev.edmodo.cropper.CropImageView
 import com.unnamed.b.atv.model.TreeNode
-import com.unnamed.b.atv.view.AndroidTreeView
-import kotlinx.android.synthetic.main.fragment_settings.*
 
 class SettingsFragment : Fragment() {
 
@@ -40,11 +35,30 @@ class SettingsFragment : Fragment() {
 
     private var previousTreeNode: TreeNode? = null
 
+    private var _binding: FragmentSettingsBinding? = null
+    private val binding get() = _binding!!
+
+    private var settingsItemListener: SettingsItemListener = object : SettingsItemListener {
+        override fun onEnableButtonClick(itemName: String, command: ble_command_e) {
+            //maxCamViewModel.sendData()
+        }
+
+        override fun onDisableButtonClick(itemName: String, command: ble_command_e) {
+            //maxCamViewModel.sendData()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_settings, container, false)
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -57,8 +71,13 @@ class SettingsFragment : Fragment() {
                     (requireActivity().application as MaxCamApplication).maxCamNativeLibrary
                 )
             ).get(MainViewModel::class.java)
+
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
 
+        binding.max78000VideoCnnItem.setup("MAX78000 VIDEO CNN",ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD, ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD, settingsItemListener)
+        binding.max78000VideoFlashLedItem.setup("MAX78000 VIDEO Flash Led",ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD, ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD, settingsItemListener)
+
+        /*
         mainViewModel.selectedTreeItem.observe(viewLifecycleOwner) {
             loadImageTextView.text = it?.text ?: ""
         }
@@ -66,6 +85,7 @@ class SettingsFragment : Fragment() {
         mainViewModel.treeItemList.observe(viewLifecycleOwner) {
             updateTreeView(it)
         }
+
 
         getContentButton.setOnClickListener {
             mainViewModel.onGetContentButtonClicked()
@@ -98,8 +118,8 @@ class SettingsFragment : Fragment() {
             }
             maxCamViewModel.sendData(array)
         }
-
         updateTreeView(arrayListOf())
+*/
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -116,7 +136,7 @@ class SettingsFragment : Fragment() {
             }
         }
     }
-
+/*
     private fun updateTreeView(list: ArrayList<CustomTreeItem>) {
         diagnosticsTreeViewLinearLayout.removeAllViews()
         previousTreeNode = null
@@ -158,5 +178,5 @@ class SettingsFragment : Fragment() {
         diagnosticsTreeViewLinearLayout.addView(treeView.view)
         treeView.expandAll()
     }
-
+*/
 }

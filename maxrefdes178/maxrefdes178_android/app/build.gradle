@@ -142,6 +142,9 @@ android {
         exclude 'META-INF/AL2.0'
         exclude 'META-INF/LGPL2.1'
     }
+    buildFeatures {
+        viewBinding true
+    }
 
     // Always show the result of every unit test when running via command line, even if it passes.
     testOptions {
