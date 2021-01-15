@@ -45,6 +45,7 @@
 #include "max32666_max20303.h"
 #include "max32666_spi_dma.h"
 #include "maxrefdes178_definitions.h"
+#include "maxrefdes178_utility.h"
 
 
 //-----------------------------------------------------------------------------

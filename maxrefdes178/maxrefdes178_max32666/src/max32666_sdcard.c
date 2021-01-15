@@ -55,6 +55,7 @@
 #include "max32666_debug.h"
 #include "max32666_sdcard.h"
 #include "maxrefdes178_definitions.h"
+#include "maxrefdes178_utility.h"
 
 
 //-----------------------------------------------------------------------------

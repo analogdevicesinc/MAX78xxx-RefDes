@@ -98,7 +98,7 @@ endif
 
 # Where to find source files for this test
 VPATH = src
-VPATH = ../maxrefdes178_common
+VPATH += ../maxrefdes178_common
 ifeq ($(MAKECMDGOALS),sla)
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 endif
