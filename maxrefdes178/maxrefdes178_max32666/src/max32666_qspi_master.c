@@ -46,14 +46,13 @@
 #include "max32666_qspi_master.h"
 #include "max32666_spi_dma.h"
 #include "maxrefdes178_definitions.h"
+#include "maxrefdes178_utility.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "qspi"
-
-#define CS_ASSERT_WAIT 10   // TODO
 
 
 //-----------------------------------------------------------------------------
@@ -177,7 +176,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
         GPIO_SET(video_rw_pin); // RX request
 
         GPIO_CLR(video_cs_pin);
-        MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+        MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
         spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_packet_header_rx, sizeof(qspi_packet_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(video_cs_pin);
@@ -199,7 +198,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(video_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.buffer, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
@@ -215,7 +214,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(video_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.classification_video, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
@@ -231,7 +230,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(video_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.statistics.max78000_video, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
@@ -250,7 +249,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(video_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_version.max78000_video, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
@@ -266,7 +265,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(video_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_serial_num.max78000_video, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
@@ -286,7 +285,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(video_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_update_status, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
@@ -302,7 +301,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(video_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_subject_names, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
@@ -328,7 +327,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
         GPIO_SET(audio_rw_pin); // RX request
 
         GPIO_CLR(audio_cs_pin);
-        MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+        MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
         spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_packet_header_rx, sizeof(qspi_packet_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(audio_cs_pin);
@@ -350,7 +349,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(audio_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.classification_audio, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
@@ -366,7 +365,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(audio_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.statistics.max78000_audio, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
@@ -382,7 +381,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(audio_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_version.max78000_audio, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
@@ -398,7 +397,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
 
             GPIO_CLR(audio_cs_pin);
-            MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+            MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
             spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_serial_num.max78000_audio, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
@@ -424,15 +423,25 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
 int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type)
 {
     qspi_packet_header_t qspi_packet_header_tx = {
+            .start_dummy = 0,
             .start_symbol = QSPI_START_SYMBOL,
-            .packet_type = data_type,
+            .crc16 = 0,
             .packet_size = data_size,
+            .packet_type = data_type,
+            .stop_dummy = 0,
     };
+
+    if (data_size) {
+//        uint32_t hw_crc;
+//        MXC_TPU_CRC_Config();
+//        MXC_TPU_CRC(data, data_size, MXC_TPU_CRC16, &hw_crc);
+        qspi_packet_header_tx.crc16 = crc16_sw(data, data_size);
+    }
 
     GPIO_CLR(video_rw_pin); // TX request
 
     GPIO_CLR(video_cs_pin);
-    MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+    MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
     spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (uint8_t *) &qspi_packet_header_tx, NULL, sizeof(qspi_packet_header_t), MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
     spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
     GPIO_SET(video_cs_pin);
@@ -442,7 +451,7 @@ int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type)
         qspi_video_int_flag = 0;
 
         GPIO_CLR(video_cs_pin);
-        MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+        MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
         spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, data, NULL, data_size, MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(video_cs_pin);
@@ -454,15 +463,25 @@ int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type)
 int qspi_master_send_audio(uint8_t *data, uint32_t data_size, uint8_t data_type)
 {
     qspi_packet_header_t qspi_packet_header_tx = {
+            .start_dummy = 0,
             .start_symbol = QSPI_START_SYMBOL,
-            .packet_type = data_type,
+            .crc16 = 0,
             .packet_size = data_size,
+            .packet_type = data_type,
+            .stop_dummy = 0,
     };
+
+    if (data_size) {
+//        uint32_t hw_crc;
+//        MXC_TPU_CRC_Config();
+//        MXC_TPU_CRC(data, data_size, MXC_TPU_CRC16, &hw_crc);
+        qspi_packet_header_tx.crc16 = crc16_sw(data, data_size);
+    }
 
     GPIO_CLR(audio_rw_pin); // TX request
 
     GPIO_CLR(audio_cs_pin);
-    MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+    MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
     spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, (uint8_t *) &qspi_packet_header_tx, NULL, sizeof(qspi_packet_header_t), MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
     spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
     GPIO_SET(audio_cs_pin);
@@ -472,7 +491,7 @@ int qspi_master_send_audio(uint8_t *data, uint32_t data_size, uint8_t data_type)
         qspi_audio_int_flag = 0;
 
         GPIO_CLR(audio_cs_pin);
-        MXC_Delay(MXC_DELAY_USEC(CS_ASSERT_WAIT));
+        MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
         spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, data, NULL, data_size, MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(audio_cs_pin);

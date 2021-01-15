@@ -73,9 +73,11 @@ SRCS  = max78000_audio_main.c
 SRCS += max78000_audio_cnn.c
 SRCS += max78000_softmax.c
 SRCS += max78000_qspi_slave.c
+SRCS += maxrefdes178_utility.c
 
 # Where to find source files for this test
 VPATH += src
+VPATH += ../maxrefdes178_common
 VPATH += ../maxrefdes178_max78000_common
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 

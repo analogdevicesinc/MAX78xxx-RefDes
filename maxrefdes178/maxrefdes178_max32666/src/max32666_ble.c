@@ -618,7 +618,8 @@ static void ble_send_mtu_change_response(void)
     command_packet.header.packet_info.seq = device_status.ble_next_tx_seq;
     command_packet.header.command = BLE_COMMAND_MTU_CHANGE_RES;
     command_packet.header.total_payload_size = 2;
-    *((uint16_t *)command_packet.payload) = AttGetMtu(periphCb.connId);
+    command_packet.payload[0] = AttGetMtu(periphCb.connId) & 0xff;
+    command_packet.payload[1] = (AttGetMtu(periphCb.connId) >> 8) & 0xff;
 
     ble_send_indication(sizeof(ble_command_packet_header_t) + command_packet.header.total_payload_size, (uint8_t *)&command_packet);
 }

@@ -47,8 +47,9 @@
 //-----------------------------------------------------------------------------
 /*** Common ***/
 // Common SPI
-#define QSPI_SPEED                         10000000UL  // hz
+#define QSPI_SPEED                         8000000UL  // 7-12
 #define QSPI_START_SYMBOL                  0xAABBCCDD
+#define QSPI_CS_ASSERT_WAIT                10         // us
 
 #define SPI_TIMEOUT_CNT                    10000000  // loop counter
 
@@ -263,12 +264,6 @@
 #define MAX78000_VIDEO_CAMERA_DMA_CHANNEL  0
 #define MAX78000_VIDEO_CAMERA_DMA_IRQ      DMA0_IRQn
 #define MAX78000_VIDEO_CAMERA_DMA_IRQ_HAND DMA0_IRQHandler
-
-// UTILITY
-#define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
-#define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
-
-#define GET_RTC_MS()  ((MXC_RTC_GetSecond() * 1000) + (( MXC_RTC_GetSubSecond() / 4096.0)*1000))
 
 
 //-----------------------------------------------------------------------------
@@ -530,8 +525,9 @@ typedef enum {
 typedef struct __attribute__((packed)) {
     uint32_t start_dummy;
     uint32_t start_symbol;
+    uint16_t crc16;
     uint32_t packet_size;
-    uint8_t packet_type;
+    uint16_t packet_type;
     uint32_t stop_dummy;
 } qspi_packet_header_t;
 

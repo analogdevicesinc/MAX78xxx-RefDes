@@ -74,9 +74,11 @@ SRCS  = max78000_video_main.c
 SRCS += max78000_video_cnn.c
 SRCS += max78000_video_embedding_process.c
 SRCS += max78000_qspi_slave.c
+SRCS += maxrefdes178_utility.c
 
 # Where to find source files for this test
 VPATH += src
+VPATH += ../maxrefdes178_common
 VPATH += ../maxrefdes178_max78000_common
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 

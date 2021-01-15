@@ -53,6 +53,7 @@
 #include "max78000_video_embedding_process.h"
 #include "max78000_video_weights.h"
 #include "maxrefdes178_definitions.h"
+#include "maxrefdes178_utility.h"
 #include "maxrefdes178_version.h"
 
 
@@ -211,7 +212,6 @@ static int8_t decision = -2;
 static uint32_t time_counter = 0;
 static int8_t enable_cnn = 1;
 
-//serial_num_t serial_num = {0};
 version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
 
 #ifdef PRINT_TIME_CNN
@@ -341,8 +341,6 @@ int main(void)
         fail();
     }
 
-//    MXC_SYS_GetUSN(serial_num, NULL);
-
     // Successfully initialize the program
     PR_INFO("Program initialized successfully");
 
@@ -396,12 +394,22 @@ static void run_demo(void)
             qspi_slave_wait_rx(QSPI_STATE_COMPLETED);
             g_qspi_state_rx = QSPI_STATE_IDLE;
 
-            if (g_qspi_packet_header_rx.packet_type == QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD) {
-                PR_INFO("facied embeddings received %d", g_qspi_packet_header_rx.packet_size);
-//                for (int i = 0; i < g_qspi_packet_header_rx.packet_size && i < 100; i++) {
+            if (g_qspi_packet_header_rx.packet_size) {
+                uint32_t crc = crc16_sw(raw, g_qspi_packet_header_rx.packet_size);
+                if (g_qspi_packet_header_rx.crc16 != crc) {
+                    PR_ERROR("crc mismatch %x != %x", g_qspi_packet_header_rx.crc16, crc);
+                    camera_start_capture_image();
+                    continue;
+                }
+//                PR_INFO("size %d", g_qspi_packet_header_rx.packet_size);
+//                for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
 //                    printf("%02hhX ", raw[i]);
 //                }
 //                printf("\n");
+            }
+
+            if (g_qspi_packet_header_rx.packet_type == QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD) {
+                PR_INFO("facied embeddings received %d", g_qspi_packet_header_rx.packet_size);
 
                 uninit_database();
 
@@ -430,53 +438,52 @@ static void run_demo(void)
             g_qspi_state_rx = QSPI_STATE_IDLE;
             if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
                 PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
-            } else {
-                switch(g_qspi_packet_header_rx.packet_type) {
-                case QSPI_PACKET_TYPE_VIDEO_VERSION_CMD:
-                    qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
-                            QSPI_PACKET_TYPE_VIDEO_VERSION_RES);
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD:
-//                    qspi_slave_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
-//                            QSPI_PACKET_TYPE_VIDEO_SERIAL_RES);
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD:
-                    // TODO
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD:
-                    // TODO
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD:
-                    PR_INFO("CNN is started");
-                    enable_cnn = 1;
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD:
-                    PR_INFO("CNN is stopped");
-                    enable_cnn = 0;
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD:
-                    // Do nothing
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD:
-                    // Use camera interface buffer for FaceID embeddings subject names
-                    MXC_PCIF_Stop();
+                continue;
+            }
+            switch(g_qspi_packet_header_rx.packet_type) {
+            case QSPI_PACKET_TYPE_VIDEO_VERSION_CMD:
+                qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
+                        QSPI_PACKET_TYPE_VIDEO_VERSION_RES);
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD:
+                // TODO
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD:
+                // TODO
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD:
+                // TODO
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD:
+                PR_INFO("CNN is started");
+                enable_cnn = 1;
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD:
+                PR_INFO("CNN is stopped");
+                enable_cnn = 0;
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD:
+                // Do nothing
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD:
+                // Use camera interface buffer for FaceID embeddings subject names
+                MXC_PCIF_Stop();
 
-                    camera_get_image(&raw, &imgLen, &w, &h);
-                    memcpy(raw, get_subject_name(0), get_subject_names_len());
-                    qspi_slave_send_packet(raw, get_subject_names_len(), QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES);
+                camera_get_image(&raw, &imgLen, &w, &h);
+                memcpy(raw, get_subject_name(0), get_subject_names_len());
+                qspi_slave_send_packet(raw, get_subject_names_len(), QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES);
 
-                    camera_start_capture_image();
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD:
-                    GPIO_SET(gpio_flash);
-                    break;
-                case QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD:
-                    GPIO_CLR(gpio_flash);
-                    break;
-                default:
-                    PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
-                    break;
-                }
+                camera_start_capture_image();
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD:
+                GPIO_SET(gpio_flash);
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD:
+                GPIO_CLR(gpio_flash);
+                break;
+            default:
+                PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
+                break;
             }
         }
 

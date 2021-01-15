@@ -45,6 +45,7 @@
 #include "max78000_debug.h"
 #include "max78000_qspi_slave.h"
 #include "maxrefdes178_definitions.h"
+#include "maxrefdes178_utility.h"
 
 
 //-----------------------------------------------------------------------------

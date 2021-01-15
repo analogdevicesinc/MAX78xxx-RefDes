@@ -57,6 +57,7 @@
 #include "max78000_debug.h"
 #include "max78000_qspi_slave.h"
 #include "maxrefdes178_definitions.h"
+#include "maxrefdes178_utility.h"
 #include "maxrefdes178_version.h"
 
 
@@ -116,9 +117,8 @@ static int32_t  y0, y1;
 volatile uint8_t i2s_flag = 0;
 int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
 max78000_statistics_t max78000_statistics = {0};
-//serial_num_t serial_num = {0};
 version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
-//static uint8_t qspi_rx_buffer[1000];
+static uint8_t qspi_rx_buffer[100];
 
 /* **** Constants **** */
 typedef enum _mic_processing_state {
@@ -247,8 +247,6 @@ int main(void)
     /* initialize I2S interface to Mic */
     I2SInit();
 
-//    MXC_SYS_GetUSN(serial_num, NULL);
-
     PR_INFO("** READY ***");
 
     GPIO_SET(gpio_green);
@@ -257,45 +255,51 @@ int main(void)
     while (1) {
         /* Check if QSPI RX has data */
         if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
-//            qspi_slave_set_rx_data(qspi_rx_buffer, g_qspi_packet_header_rx.packet_size);
-//            qspi_slave_trigger();
+            if (sizeof(qspi_rx_buffer) < g_qspi_packet_header_rx.packet_size) {
+                PR_ERROR("payload too big %d", g_qspi_packet_header_rx.packet_size);
+                continue;
+            }
+            qspi_slave_set_rx_data(qspi_rx_buffer, g_qspi_packet_header_rx.packet_size);
+            qspi_slave_trigger();
 //            qspi_slave_wait_rx(QSPI_STATE_COMPLETED);
-//
-//            PR_INFO("size %d", g_qspi_packet_header_rx.packet_size);
-//            for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
-//                printf("%02hhX ", qspi_rx_buffer[i]);
-//            }
-//            printf("\n");
         } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
             g_qspi_state_rx = QSPI_STATE_IDLE;
-            if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
-                PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
-            } else {
-                switch(g_qspi_packet_header_rx.packet_type) {
-                case QSPI_PACKET_TYPE_AUDIO_VERSION_CMD:
-                    qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
-                            QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
-                    break;
-                case QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD:
-//                    qspi_slave_send_packet((uint8_t *) &serial_num, sizeof(serial_num),
-//                            QSPI_PACKET_TYPE_AUDIO_SERIAL_RES);
-                    break;
-                case QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD:
-                    // TODO
-                    break;
-                case QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD:
-                    // TODO
-                    break;
-                case QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD:
-                    // TODO
-                    break;
-                case QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD:
-                    // TODO
-                    break;
-                default:
-                    PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
-                    break;
+            if (g_qspi_packet_header_rx.packet_size) {
+                uint32_t crc = crc16_sw(qspi_rx_buffer, g_qspi_packet_header_rx.packet_size);
+                if (g_qspi_packet_header_rx.crc16 != crc) {
+                    PR_ERROR("crc mismatch %x != %x", g_qspi_packet_header_rx.crc16, crc);
+                    continue;
                 }
+                PR_INFO("size %d", g_qspi_packet_header_rx.packet_size);
+//                for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
+//                    printf("%02hhX ", qspi_rx_buffer[i]);
+//                }
+//                printf("\n");
+            }
+
+            switch(g_qspi_packet_header_rx.packet_type) {
+            case QSPI_PACKET_TYPE_AUDIO_VERSION_CMD:
+                qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
+                        QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
+                break;
+            case QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD:
+                // TODO
+                break;
+            case QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD:
+                // TODO
+                break;
+            case QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD:
+                // TODO
+                break;
+            case QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD:
+                // TODO
+                break;
+            case QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD:
+                // TODO
+                break;
+            default:
+                PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
+                break;
             }
         }
 
