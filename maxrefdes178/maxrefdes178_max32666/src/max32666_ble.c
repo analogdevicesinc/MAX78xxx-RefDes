@@ -217,6 +217,7 @@ static void PeriphStart(void);
 static void StackInitPeriph(void);
 static void mainWsfInit(void);
 static void ble_receive(uint16_t dataLen, uint8_t *data);
+static void ble_send_mtu_change_response(void);
 
 
 //-----------------------------------------------------------------------------
@@ -390,6 +391,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
          PR_INFO("MTU changed %d tx %d rx %d", AttGetMtu(periphCb.connId),
                  pMsg->dataLenChange.maxTxOctets, pMsg->dataLenChange.maxRxOctets);
          device_status.ble_max_packet_size = AttGetMtu(periphCb.connId) - 3;
+         ble_send_mtu_change_response();
          uiEvent = DM_CONN_DATA_LEN_CHANGE_IND;
          break;
 
@@ -607,6 +609,20 @@ static void mainWsfInit(void)
     StackInitPeriph();
     PeriphStart();
 }
+
+static void ble_send_mtu_change_response(void)
+{
+    ble_command_packet_t command_packet;
+
+    command_packet.header.packet_info.type = BLE_PACKET_TYPE_COMMAND;
+    command_packet.header.packet_info.seq = device_status.ble_next_tx_seq;
+    command_packet.header.command = BLE_COMMAND_MTU_CHANGE_RES;
+    command_packet.header.total_payload_size = 2;
+    *((uint16_t *)command_packet.payload) = AttGetMtu(periphCb.connId);
+
+    ble_send_indication(sizeof(ble_command_packet_header_t) + command_packet.header.total_payload_size, (uint8_t *)&command_packet);
+}
+
 
 static void ble_receive(uint16_t dataLen, uint8_t *data)
 {

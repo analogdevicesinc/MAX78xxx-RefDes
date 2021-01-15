@@ -348,6 +348,7 @@ typedef enum {
     BLE_COMMAND_ABORT_CMD = 0,           // None
     BLE_COMMAND_INVALID_RES,             // None
     BLE_COMMAND_NOP_CMD,                 // None
+    BLE_COMMAND_MTU_CHANGE_RES,          // uint16_t MTU
 
     // Version
     BLE_COMMAND_GET_VERSION_CMD,         // None
