@@ -17,6 +17,7 @@
             android:layout_width="0dp"
             android:layout_height="60dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:layout_marginTop="5dp"
 
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -47,6 +48,17 @@
             android:src="@drawable/ic_edit"
             android:tint="@color/color_primary"
             app:layout_constraintStart_toEndOf="@id/databaseNameTextView"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/deleteImageView"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="10dp"
+            android:background="?selectableItemBackground"
+            android:src="@drawable/ic_delete"
+            android:tint="@color/color_error"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

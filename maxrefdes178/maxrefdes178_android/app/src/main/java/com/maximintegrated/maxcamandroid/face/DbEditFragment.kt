@@ -52,7 +52,7 @@ class DbEditFragment : Fragment(), PersonListener {
             updateNewPersonFabVisibility()
         }
 
-        faceIdViewModel.personImageAddedEvent.observe(viewLifecycleOwner) {
+        faceIdViewModel.personUpdatedEvent.observe(viewLifecycleOwner) {
             personAdapter.notifyDataSetChanged()
         }
 
@@ -104,7 +104,7 @@ class DbEditFragment : Fragment(), PersonListener {
         faceIdViewModel.renamePerson(personModel, name)
     }
 
-    override fun onDatabaseSelected(personModel: PersonModel) {
+    override fun onPersonDeleteRequested(personModel: PersonModel) {
         TODO("Not yet implemented")
     }
 
@@ -121,6 +121,10 @@ class DbEditFragment : Fragment(), PersonListener {
             .setMinCropWindowSize(120, 160)
             .setRequestedSize(480, 640)
             .start(requireContext(), this)
+    }
+
+    override fun onDeleteButtonClicked(vararg model: Any) {
+        faceIdViewModel.deletePerson((model[0] as Array<*>)[0] as PersonModel)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

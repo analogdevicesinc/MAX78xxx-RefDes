@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
             ).get(MainViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(this).get(MaxCamViewModel::class.java)
         bluetoothDevice?.let {
-            maxCamViewModel.connect(it,550)// maxCamNativeLibrary.maxMtu
+            maxCamViewModel.connect(it, 550)// maxCamNativeLibrary.maxMtu
         }
         maxCamViewModel.connectionState
             .observe(this) { connectionState ->
@@ -96,9 +96,9 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
 
         mainViewModel.maxcamVersion.observe(this) {
             firmwareVersion.text =
-                "${bluetoothDevice?.name} - ${it.max32666}\n" +
-                        "Video - ${it.max78000_video}\n" +
-                        "Audio - ${it.max78000_audio}"
+                "MAX32666 - ${it.max32666}\n" +
+                        "MAX78000 Video - ${it.max78000_video}\n" +
+                        "MAX78000 Audio - ${it.max78000_audio}"
         }
         maxCamViewModel.mtuSize.observe(this) {
             mainViewModel.onMtuSizeChanged(it)
@@ -106,12 +106,14 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
             val text = "${bluetoothDevice?.name}"
             firmwareVersion.text = text
             Thread.sleep(750)
-            maxCamViewModel.sendData(ble_command_packet_t.from(ble_command_e.BLE_COMMAND_GET_VERSION_CMD).toByteArray())
+            maxCamViewModel.sendData(
+                ble_command_packet_t.from(ble_command_e.BLE_COMMAND_GET_VERSION_CMD).toByteArray()
+            )
         }
 
         maxCamViewModel.receivedData.observeForever(dataReceivedObserver)
 
-        toolbar.pageTitle = "MAXCAM AI85"
+        toolbar.pageTitle = "MAXREFDES178"
 
         mainFab.setOnClickListener {
             if (getCurrentFragment() as? LandingPage == null) {

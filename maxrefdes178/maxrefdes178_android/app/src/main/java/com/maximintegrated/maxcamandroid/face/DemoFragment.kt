@@ -44,8 +44,9 @@ class DemoFragment : Fragment() {
 
         faceIdViewModel.embeddingsFileEvent.observe(viewLifecycleOwner, EventObserver {
             val sdf = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault())
-            embeddingsTextView.text = it.name
-            embeddingsDateTextView.text = sdf.format(Date(it.lastModified()))
+            embeddingsTextView.text =
+                getString(R.string.signature_created_at, sdf.format(Date(it.lastModified())))
+
             progressBar.isVisible = false
         })
         stepperView.onBackButtonClicked {

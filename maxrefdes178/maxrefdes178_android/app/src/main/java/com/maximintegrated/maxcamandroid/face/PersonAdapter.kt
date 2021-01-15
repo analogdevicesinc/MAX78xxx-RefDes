@@ -10,7 +10,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.utils.DeleteListener
+import com.maximintegrated.maxcamandroid.utils.askUserForDeleteOperation
 import kotlinx.android.synthetic.main.edit_text_alert_dialog.view.*
+import kotlinx.android.synthetic.main.fragment_image_view.*
 import kotlinx.android.synthetic.main.person_item.view.*
 import java.io.File
 
@@ -50,6 +53,7 @@ class PersonAdapter(private val listener: PersonListener) :
         private val personNameTextView: TextView by lazy { itemView.databaseNameTextView }
         private val personNameEditImageView: ImageView by lazy { itemView.editImageView }
         private val recyclerView: RecyclerView by lazy { itemView.recyclerView }
+        private val deleteImageView: ImageView by lazy { itemView.deleteImageView }
 
         fun bind(model: PersonModel) {
             val layoutManager =
@@ -63,10 +67,14 @@ class PersonAdapter(private val listener: PersonListener) :
 
             personNameTextView.text = model.nameSurname
             personNameEditImageView.setOnClickListener { showEditPersonDialog(model) }
-
-
+            deleteImageView.setOnClickListener {
+                askUserForDeleteOperation(
+                    parent.context,
+                    listener,
+                    model
+                )
+            }
         }
-
 
         private fun showEditPersonDialog(person: PersonModel) {
             val context = parent.context
@@ -74,8 +82,8 @@ class PersonAdapter(private val listener: PersonListener) :
             val layout = LayoutInflater.from(context).inflate(
                 R.layout.edit_text_alert_dialog, parent, false
             )
-            layout.dialogTitleTextView.text = context.getString(R.string.rename_database)
-            layout.dialogEditText.hint = context.getString(R.string.enter_a_database_name)
+            layout.dialogTitleTextView.text = context.getString(R.string.rename_person)
+            layout.dialogEditText.hint = context.getString(R.string.enter_a_person_name)
             layout.dialogEditText.setText(person.nameSurname)
             alert.setView(layout)
             alert.setPositiveButton(context.getString(R.string.rename)) { dialog, _ ->
@@ -99,7 +107,7 @@ class PersonAdapter(private val listener: PersonListener) :
     }
 }
 
-interface PersonListener : PersonImageListener {
+interface PersonListener : PersonImageListener, DeleteListener {
     fun onRenameRequested(personModel: PersonModel, name: String)
-    fun onDatabaseSelected(personModel: PersonModel)
+    fun onPersonDeleteRequested(personModel: PersonModel)
 }

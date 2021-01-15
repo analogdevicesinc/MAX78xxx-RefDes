@@ -14,7 +14,6 @@ import com.maximintegrated.maxcamandroid.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
@@ -36,8 +35,8 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
     private val _personImageDeletedEvent = MutableLiveData<Event<Unit>>()
     val personImageDeletedEvent: LiveData<Event<Unit>> = _personImageDeletedEvent
 
-    private val _personImageAddedEvent = MutableLiveData<Event<Unit>>()
-    val personImageAddedEvent: LiveData<Event<Unit>> = _personImageAddedEvent
+    private val _personUpdatedEvent = MutableLiveData<Event<Unit>>()
+    val personUpdatedEvent: LiveData<Event<Unit>> = _personUpdatedEvent
 
     private val _warningEvent = MutableLiveData<Event<Int>>()
     val warningEvent: LiveData<Event<Int>> = _warningEvent
@@ -123,6 +122,13 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
                 _warningEvent.value = Event(R.string.person_name_exists)
             }
         }
+    }
+
+    fun deletePerson(person: PersonModel) {
+        selectedDatabase?.persons?.remove(person)
+        person.personFolder.deleteRecursively()
+        _persons.value = selectedDatabase?.persons
+        _warningEvent.value = Event(R.string.person_is_deleted)
     }
 
     fun deleteDatabase(db: DbModel) {
@@ -212,7 +218,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
     fun onImageAdded(uri: Uri) {
         try {
             val timestamp = System.currentTimeMillis()
-            val name = "MAXCAM_" + timestamp + ".png"
+            val name = "MAXREFDES178_" + timestamp + ".png"
             val file = File(selectedPerson?.personFolder, name)
             file.createNewFile()
             file.setReadable(true)
@@ -238,7 +244,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
 //            _persons.value = list
 //            list?.add(index!!, selectedPerson!!)
 //            _persons.value = list
-            _personImageAddedEvent.value = Event(Unit)
+            _personUpdatedEvent.value = Event(Unit)
 
 
         } catch (e: Exception) {
