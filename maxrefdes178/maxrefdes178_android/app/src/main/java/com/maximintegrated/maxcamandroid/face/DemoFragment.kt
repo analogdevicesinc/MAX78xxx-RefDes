@@ -8,6 +8,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import com.maximintegrated.communication.MaxCamViewModel
+import com.maximintegrated.maxcamandroid.MainViewModel
 import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.blePacket.*
 import com.maximintegrated.maxcamandroid.utils.EventObserver
@@ -27,6 +28,7 @@ class DemoFragment : Fragment() {
 
     private lateinit var faceIdViewModel: FaceIdViewModel
     private lateinit var maxCamViewModel: MaxCamViewModel
+    private lateinit var mainViewModel: MainViewModel
 
 
     override fun onCreateView(
@@ -41,7 +43,7 @@ class DemoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         faceIdViewModel = ViewModelProviders.of(requireActivity()).get(FaceIdViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
-
+        mainViewModel = ViewModelProviders.of(requireActivity()).get(MainViewModel::class.java)
 
         faceIdViewModel.scriptInProgress.observe(viewLifecycleOwner) {
             val sdf = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault())
@@ -98,16 +100,22 @@ class DemoFragment : Fragment() {
             faceIdViewModel.onCreateSignatureButtonClicked()
         }
         faceIdViewModel.getEmbeddingsFile()
+
         sendButton.setOnClickListener {
             faceIdViewModel.selectedDatabase!!.embeddingsFile?.let {
                 sendEmbeddings(it)
             }
         }
+        mainViewModel.embeddingsSendInProgress.observe(viewLifecycleOwner) {
+            progressBar.isVisible = it
+            sendButton.isEnabled = !it
+        }
+
     }
 
     fun sendEmbeddings(embeddingsFile: File) {
+        mainViewModel.setEmbeddingsSendInProgress(true)
         var embeddingsArr: ByteArray = embeddingsFile.readBytes()
-
 
         var command_packet_payload_size: Int =
             maxCamViewModel.packetSize - ble_command_packet_header_t.size()
@@ -115,7 +123,6 @@ class DemoFragment : Fragment() {
             maxCamViewModel.packetSize - ble_payload_packet_header_t.size()
         var spentPayloadSize = 0
         var remainingSize = embeddingsArr.size
-
 
         var commandPacket = ble_command_packet_t.from(
             ble_command_e.BLE_COMMAND_FACEID_EMBED_UPDATE_CMD,
@@ -137,6 +144,5 @@ class DemoFragment : Fragment() {
             spentPayloadSize += payload_packet_payload_size
             remainingSize -= payload_packet_payload_size
         }
-
     }
 }

@@ -51,6 +51,13 @@ class MainViewModel(
     private val _selectedTreeItem = MutableLiveData<CustomTreeItem?>(null)
     val selectedTreeItem: LiveData<CustomTreeItem?> = _selectedTreeItem
 
+    private val _embeddingsSendInProgress = MutableLiveData<Boolean>(false)
+    val embeddingsSendInProgress: LiveData<Boolean> = _embeddingsSendInProgress
+
+    fun setEmbeddingsSendInProgress(inProgress: Boolean) {
+        _embeddingsSendInProgress.value = inProgress
+    }
+
     var latestReceivedTreeItem: CustomTreeItem? = null
         private set
 
@@ -205,6 +212,7 @@ class MainViewModel(
                             R.string.signature_update_fail,
                         Toast.LENGTH_LONG
                     ).show()
+                    setEmbeddingsSendInProgress(false)
 
 
                 }
