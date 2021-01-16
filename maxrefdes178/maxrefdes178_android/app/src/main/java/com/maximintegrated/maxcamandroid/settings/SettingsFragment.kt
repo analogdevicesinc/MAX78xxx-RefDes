@@ -126,7 +126,10 @@ class SettingsFragment : Fragment() {
             settingsItemListener
         )
 
-        setupAdapter(debuggerSelectSpinner, debugger_select_e.values().toList())
+        setupAdapter(
+            debuggerSelectSpinner,
+            debugger_select_e.values().toList().slice(0 until debugger_select_e.values().size - 1)
+        )
         sendDebuggerButton.setOnClickListener {
             maxCamViewModel.sendData(
                 ble_command_packet_t.from(
