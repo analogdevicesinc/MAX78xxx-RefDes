@@ -14,6 +14,7 @@
     <string name="send_the_file_when_ready">Send the file when ready</string>
     <string name="send_file">Send File</string>
     <string name="send">Send</string>
+    <string name="shut_down_device">Shut Down Device</string>
     <string name="choose_a_file">Choose a file</string>
     <string name="no_file_is_selected">No file is selected</string>
     <string name="content">Content</string>
@@ -82,6 +83,7 @@
     <string name="save_scenario">Save Scenario</string>
     <string name="delete">Delete</string>
     <string name="are_you_sure_to_delete_it">Are you sure you want to delete it?</string>
+    <string name="are_you_sure_to_shut_device_down">Are you sure you want to shut device down?</string>
     <string name="yes">Yes</string>
     <string name="cancel">Cancel</string>
     <string name="new_person">New Person</string>

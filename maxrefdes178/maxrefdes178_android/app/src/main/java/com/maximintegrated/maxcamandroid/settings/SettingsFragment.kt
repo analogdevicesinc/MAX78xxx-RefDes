@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
@@ -137,6 +138,19 @@ class SettingsFragment : Fragment() {
                     (debuggerSelectSpinner.selectedItem as debugger_select_e).toByteArray()
                 ).toByteArray()
             )
+        }
+
+        shutdownButton.setOnClickListener {
+            val alert = AlertDialog.Builder(requireContext())
+            alert.setMessage(getString(com.maximintegrated.maxcamandroid.R.string.are_you_sure_to_shut_device_down))
+            alert.setPositiveButton(getString(com.maximintegrated.maxcamandroid.R.string.yes)) { dialog, _ ->
+                dialog.dismiss()
+                maxCamViewModel.sendData(ble_command_packet_t.from(ble_command_e.BLE_COMMAND_SHUT_DOWN_DEVICE_CMD).toByteArray())
+            }
+            alert.setNegativeButton(getString(com.maximintegrated.maxcamandroid.R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            alert.show()
         }
     }
 
