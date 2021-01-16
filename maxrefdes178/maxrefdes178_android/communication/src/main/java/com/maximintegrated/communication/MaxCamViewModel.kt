@@ -49,6 +49,10 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
         deviceManager.setGattCallbacks(this)
     }
 
+    fun setMtu(mtu: Int) {
+        _mtuSize.value = mtu
+    }
+
     override fun onCleared() {
         super.onCleared()
         if (deviceManager.isConnected) {

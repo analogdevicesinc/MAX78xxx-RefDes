@@ -222,6 +222,12 @@ data class device_statistics_t(
     var max78000_audio_power_uw: Int
 ) : IBlePacket
 
+data class ble_mtu_response(var mtu : Int):IBlePacket{
+    override fun size(): Int {
+        return Int.SIZE_BYTES
+    }
+}
+
 enum class debugger_select_e(val value: String = "") : IBlePacket {
     DEBUGGER_SELECT_MAX32666_CORE1("MAX32666 CORE1"),
     DEBUGGER_SELECT_MAX78000_VIDEO("MAX78000 VIDEO"),
@@ -247,7 +253,11 @@ enum class ble_command_e {
     BLE_COMMAND_ABORT_CMD,           // None
     BLE_COMMAND_INVALID_RES,             // None
     BLE_COMMAND_NOP_CMD,                 // None
-    BLE_COMMAND_MTU_CHANGE_RES,
+    BLE_COMMAND_MTU_CHANGE_RES{
+        override fun parse(arr: ByteArray): ble_mtu_response {
+            return ble_mtu_response(ByteBuffer.wrap(arr).order(ByteOrder.LITTLE_ENDIAN).short.toInt())
+        }
+    },
 
     // Version
     BLE_COMMAND_GET_VERSION_CMD,         // None

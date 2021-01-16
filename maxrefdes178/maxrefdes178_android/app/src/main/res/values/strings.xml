@@ -110,4 +110,6 @@
     <string name="send_signature">Send Signature</string>
     <string name="command_operation">Command Operation</string>
     <string name="signature_created_at">Signature created at %1$s</string>
+    <string name="signature_update_success">Signature updated successfully!</string>
+    <string name="signature_update_fail">Signature update failed!</string>
 </resources>

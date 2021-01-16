@@ -100,15 +100,18 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
                         "MAX78000 Video - ${it.max78000_video}\n" +
                         "MAX78000 Audio - ${it.max78000_audio}"
         }
-        maxCamViewModel.mtuSize.observe(this) {
-            mainViewModel.onMtuSizeChanged(it)
-            //val text = "${bluetoothDevice?.name} - ${maxCamNativeLibrary.version}"
-            val text = "${bluetoothDevice?.name}"
-            firmwareVersion.text = text
-            Thread.sleep(750)
+        mainViewModel.mtuResponse.observe(this){
+            maxCamViewModel.setMtu(it.mtu)
+
             maxCamViewModel.sendData(
                 ble_command_packet_t.from(ble_command_e.BLE_COMMAND_GET_VERSION_CMD).toByteArray()
             )
+        }
+
+        maxCamViewModel.mtuSize.observe(this) {
+            mainViewModel.onMtuSizeChanged(it)
+            val text = "${bluetoothDevice?.name}"
+            firmwareVersion.text = text
         }
 
         maxCamViewModel.receivedData.observeForever(dataReceivedObserver)

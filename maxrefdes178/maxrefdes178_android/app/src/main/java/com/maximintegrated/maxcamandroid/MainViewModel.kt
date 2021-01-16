@@ -1,10 +1,12 @@
 package com.maximintegrated.maxcamandroid
 
 import android.app.Application
+import android.app.TaskStackBuilder
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.*
 import com.maximintegrated.maxcamandroid.blePacket.*
@@ -62,6 +64,10 @@ class MainViewModel(
     private val _maxcamVersion = MutableLiveData<device_version_t>()
     val maxcamVersion: LiveData<device_version_t> = _maxcamVersion
 
+
+    private val _mtuResponse = MutableLiveData<ble_mtu_response>()
+    val mtuResponse: LiveData<ble_mtu_response> = _mtuResponse
+
     fun setMaxcamVersion(deviceVersion: device_version_t) {
         _maxcamVersion.value = deviceVersion
     }
@@ -70,7 +76,7 @@ class MainViewModel(
     val demoBitmap: LiveData<Bitmap?> = _demoBitmap
 
     fun onBleDataReceived(data: ByteArray) {
-        maxCamNativeLibrary.bleDataReceived(data)
+        //maxCamNativeLibrary.bleDataReceived(data)
         onPayloadReceived(data)
     }
 
@@ -147,14 +153,12 @@ class MainViewModel(
     @ExperimentalUnsignedTypes
     fun onPayloadReceived(data: ByteArray) {
 
-
         var packet_info = ble_packet_info_t.parse(data[0]);
         if (packet_info.type == ble_packet_type_e.BLE_PACKET_TYPE_COMMAND) {
 
             var commandPacket = ble_command_packet_t.parse(data)
 
-
-            var blePacket : IBlePacket = commandPacket.header.command.parse(commandPacket.payload)
+            var blePacket: IBlePacket = commandPacket.header.command.parse(commandPacket.payload)
 
             when (commandPacket.header.command) {
                 ble_command_e.BLE_COMMAND_GET_VERSION_RES -> {
@@ -183,6 +187,28 @@ class MainViewModel(
                     )
 
                 }
+                ble_command_e.BLE_COMMAND_MTU_CHANGE_RES -> {
+                    val packet: ble_mtu_response = blePacket as ble_mtu_response
+                    _mtuResponse.value = packet
+
+                }
+                ble_command_e.BLE_COMMAND_FACEID_EMBED_UPDATE_RES -> {
+                    val packet: faceid_embed_update_status_e =
+                        blePacket as faceid_embed_update_status_e
+                    val context = app.applicationContext
+
+                    Toast.makeText(
+                        context,
+                        if (packet == faceid_embed_update_status_e.FACEID_EMBED_UPDATE_STATUS_SUCCESS)
+                            R.string.signature_update_success
+                        else
+                            R.string.signature_update_fail,
+                        Toast.LENGTH_LONG
+                    ).show()
+
+
+                }
+
 
             }
 
