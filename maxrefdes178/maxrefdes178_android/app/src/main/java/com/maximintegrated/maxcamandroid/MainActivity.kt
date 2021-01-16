@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
@@ -78,10 +79,17 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
             ).get(MainViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(this).get(MaxCamViewModel::class.java)
         bluetoothDevice?.let {
-            maxCamViewModel.connect(it, 550)// maxCamNativeLibrary.maxMtu
+            maxCamViewModel.connect(it, maxCamNativeLibrary.maxMtu)
         }
         maxCamViewModel.connectionState
             .observe(this) { connectionState ->
+                Timber.i("Connection state is changed! $connectionState")
+                if (connectionState == BluetoothAdapter.STATE_DISCONNECTED && (maxCamViewModel.previousConnectionState == BluetoothAdapter.STATE_CONNECTED || maxCamViewModel.previousConnectionState == BluetoothAdapter.STATE_DISCONNECTING)) {
+                    Toast.makeText(applicationContext, "Connection is lost!", Toast.LENGTH_LONG)
+                        .show()
+                    startScannerActivity()
+                }
+
                 val device = maxCamViewModel.bluetoothDevice
                 if (connectionState == BluetoothAdapter.STATE_CONNECTED) {
                     maxCamNativeLibrary.bleReset()
@@ -100,7 +108,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
                         "MAX78000 Video - ${it.max78000_video}\n" +
                         "MAX78000 Audio - ${it.max78000_audio}"
         }
-        mainViewModel.mtuResponse.observe(this){
+        mainViewModel.mtuResponse.observe(this) {
             maxCamViewModel.setMtu(it.mtu)
 
             maxCamViewModel.sendData(
@@ -129,13 +137,17 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         val fragment = getCurrentFragment()
 
         if (fragment == null || fragment as? LandingPage != null) {
-            startActivity(
-                Intent(this, ScannerActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                })
+            startScannerActivity()
         } else {
             super.onBackPressed()
         }
+    }
+
+    private fun startScannerActivity() {
+        startActivity(
+            Intent(this, ScannerActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
     }
 
     override fun onDestroy() {

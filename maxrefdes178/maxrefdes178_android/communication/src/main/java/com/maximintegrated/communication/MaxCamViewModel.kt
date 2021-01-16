@@ -19,6 +19,13 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
     val connectionState: LiveData<Int>
         get() = _connectionState
 
+    var previousConnectionState = -1
+
+    private fun setConnectionState(state: Int) {
+        previousConnectionState = connectionState.value ?: -1
+        _connectionState.value = state
+    }
+
     private val _receivedData = MutableLiveData<ByteArray>()
     val receivedData: LiveData<ByteArray>
         get() = _receivedData
@@ -66,6 +73,7 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
             deviceManager.connect(device)
                 .fail { device, status ->
                     Timber.e("BLE Connection Failed!! $device - $status")
+                    reconnect()
                 }
                 .done {
                     deviceManager.requestMtu(requestedMtu)
@@ -105,22 +113,22 @@ class MaxCamViewModel(application: Application) : AndroidViewModel(application),
     }
 
     override fun onDeviceDisconnecting(device: BluetoothDevice) {
-        _connectionState.value = BluetoothProfile.STATE_DISCONNECTING
+        setConnectionState(BluetoothProfile.STATE_DISCONNECTING)
         Timber.i("Disconnecting from device $device")
     }
 
     override fun onDeviceDisconnected(device: BluetoothDevice) {
-        _connectionState.value = BluetoothProfile.STATE_DISCONNECTED
+        setConnectionState(BluetoothProfile.STATE_DISCONNECTED)
         Timber.i("Disconnected from device $device")
     }
 
     override fun onDeviceConnecting(device: BluetoothDevice) {
-        _connectionState.value = BluetoothProfile.STATE_CONNECTING
+        setConnectionState(BluetoothProfile.STATE_CONNECTING)
         Timber.i("Connecting to device $device")
     }
 
     override fun onDeviceConnected(device: BluetoothDevice) {
-        _connectionState.value = BluetoothProfile.STATE_CONNECTED
+        setConnectionState(BluetoothProfile.STATE_CONNECTED)
         Timber.i("Connected to device $device")
     }
 
