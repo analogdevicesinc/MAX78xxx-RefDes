@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
@@ -126,35 +127,40 @@ class DemoFragment : Fragment() {
     }
 
     fun sendEmbeddings(embeddingsFile: File) {
-        mainViewModel.setEmbeddingsSendInProgress(true)
-        var embeddingsArr: ByteArray = embeddingsFile.readBytes()
+        if (maxCamViewModel.mtuSize.value != null) {
+            mainViewModel.setEmbeddingsSendInProgress(true)
+            var embeddingsArr: ByteArray = embeddingsFile.readBytes()
 
-        var command_packet_payload_size: Int =
-            maxCamViewModel.packetSize - ble_command_packet_header_t.size()
-        var payload_packet_payload_size: Int =
-            maxCamViewModel.packetSize - ble_payload_packet_header_t.size()
-        var spentPayloadSize = 0
-        var remainingSize = embeddingsArr.size
+            var command_packet_payload_size: Int =
+                maxCamViewModel.packetSize - ble_command_packet_header_t.size()
+            var payload_packet_payload_size: Int =
+                maxCamViewModel.packetSize - ble_payload_packet_header_t.size()
+            var spentPayloadSize = 0
+            var remainingSize = embeddingsArr.size
 
-        var commandPacket = ble_command_packet_t.from(
-            ble_command_e.BLE_COMMAND_FACEID_EMBED_UPDATE_CMD,
-            embeddingsArr,
-            min(command_packet_payload_size, embeddingsArr.size),
-            embeddingsArr.size
-        )
-
-        maxCamViewModel.sendData(commandPacket.toByteArray())
-
-        spentPayloadSize += command_packet_payload_size
-        remainingSize -= command_packet_payload_size
-        while (remainingSize > 0) {
-            var payloadPacket = ble_payload_packet_t.from(
-                embeddingsArr.sliceArray(spentPayloadSize until embeddingsArr.size),
-                min(payload_packet_payload_size, remainingSize)
+            var commandPacket = ble_command_packet_t.from(
+                ble_command_e.BLE_COMMAND_FACEID_EMBED_UPDATE_CMD,
+                embeddingsArr,
+                min(command_packet_payload_size, embeddingsArr.size),
+                embeddingsArr.size
             )
-            maxCamViewModel.sendData(payloadPacket.toByteArray())
-            spentPayloadSize += payload_packet_payload_size
-            remainingSize -= payload_packet_payload_size
+
+            maxCamViewModel.sendData(commandPacket.toByteArray())
+
+            spentPayloadSize += command_packet_payload_size
+            remainingSize -= command_packet_payload_size
+            while (remainingSize > 0) {
+                var payloadPacket = ble_payload_packet_t.from(
+                    embeddingsArr.sliceArray(spentPayloadSize until embeddingsArr.size),
+                    min(payload_packet_payload_size, remainingSize)
+                )
+                maxCamViewModel.sendData(payloadPacket.toByteArray())
+                spentPayloadSize += payload_packet_payload_size
+                remainingSize -= payload_packet_payload_size
+            }
+        } else {
+            Toast.makeText(context, "Connection issue!\nMtu is not set yet", Toast.LENGTH_LONG)
+                .show()
         }
     }
 }
