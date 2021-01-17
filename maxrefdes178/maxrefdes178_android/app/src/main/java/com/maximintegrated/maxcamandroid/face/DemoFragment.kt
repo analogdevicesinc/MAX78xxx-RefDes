@@ -107,8 +107,20 @@ class DemoFragment : Fragment() {
             }
         }
         mainViewModel.embeddingsSendInProgress.observe(viewLifecycleOwner) {
-            progressBar.isVisible = it
-            sendButton.isEnabled = !it
+            sendButton.isEnabled = false
+            progressBar.isVisible = true
+            signatureButton.isEnabled = false
+            if (!it) {
+                faceIdViewModel.selectedDatabase?.embeddingsFile?.let {
+                    if (!it.isDirectory) {
+                        sendButton.isEnabled = true
+                    }
+                }
+                faceIdViewModel.scriptInProgress.value?.let {
+                    progressBar.isVisible = it
+                    signatureButton.isEnabled = true
+                }
+            }
         }
 
     }
