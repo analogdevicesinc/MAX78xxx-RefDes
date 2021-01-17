@@ -38,7 +38,9 @@
 //-----------------------------------------------------------------------------
 #include <jni.h>
 #include <string>
+/*
 #include "MAXCAM_Packet.h"
+ */
 #include "MAXCAM_PacketHelper.h"
 #include "maxrefdes178_definitions.h"
 
@@ -143,9 +145,11 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_initial
     /*
      * Register BLE Functions to Packet Helper
      */
+    /*
     PacketHelper_RegisterSendNotification(Ble_SendNotification);
     PacketHelper_RegisterPayloadReceived(Ble_PayloadReceived);
     PacketHelper_RegisterGetCurrentMtu(Ble_GetCurrentMtu);
+     */
 }
 
 
@@ -174,8 +178,9 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getVers
     g_env_MaxCamNativeLibrary = env;
 
     char version[64];
+    /*
     PacketHelper_RequestVersion();
-
+*/
     version[0] = 'b';
     version[1] = 0;
 
@@ -198,8 +203,9 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_sendFil
     unsigned char *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data,
                                                                                             0));
     uint32_t inputLen = env->GetArrayLength(data);
-
+/*
     PacketHelper_SendFile(nativeFileName, (const char *) (inputArray), inputLen);
+    */
 }
 
 extern "C"
@@ -215,8 +221,9 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_bleData
     unsigned char *inputArray = reinterpret_cast<unsigned char *>(env->GetByteArrayElements(data,
                                                                                             0));
     uint32_t packetLen = env->GetArrayLength(data);
-
+/*
     PacketHelper_Receive(packetLen, inputArray);
+    */
 }
 
 extern "C"
@@ -227,7 +234,9 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getDire
     javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
     g_thiz_MaxCamNativeLibrary = thiz;
     g_env_MaxCamNativeLibrary = env;
+    /*
     PacketHelper_RequestGetDir();
+     */
 }
 
 extern "C"
@@ -240,14 +249,18 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_getFile
     g_thiz_MaxCamNativeLibrary = thiz;
     g_env_MaxCamNativeLibrary = env;
     const char *nativeFileName = env->GetStringUTFChars(file_name, 0);
+    /*
     PacketHelper_RequestGetFile(nativeFileName);
+     */
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_bleReset(JNIEnv *env,
                                                                                   jobject thiz) {
+    /*
     PacketHelper_ResetPacketNumber();
+     */
 }
 
 extern "C"
@@ -258,7 +271,9 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_enterDe
     javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
     g_thiz_MaxCamNativeLibrary = thiz;
     g_env_MaxCamNativeLibrary = env;
+    /*
     PacketHelper_EnterDEMO();
+     */
 }
 
 extern "C"
@@ -270,7 +285,9 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_capture
     javaSendNotification = env->GetMethodID(thisClass, "sendNotification", "([B)V");
     g_thiz_MaxCamNativeLibrary = thiz;
     g_env_MaxCamNativeLibrary = env;
+    /*
     PacketHelper_CaptureImage(static_cast<const uint32_t>(file_length));
+     */
 }
 
 extern "C"
@@ -283,7 +300,9 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_loadIma
     g_thiz_MaxCamNativeLibrary = thiz;
     g_env_MaxCamNativeLibrary = env;
     const char *nativeFileName = env->GetStringUTFChars(filename, 0);
+    /*
     PacketHelper_LoadImage(nativeFileName);
+     */
 }
 
 extern "C"
@@ -300,7 +319,9 @@ Java_com_maximintegrated_maxcamandroid_nativeLibrary_MaxCamNativeLibrary_sendIma
     // Get the input array from Java
     char *inputArray = reinterpret_cast<char *>(env->GetByteArrayElements(content, 0));
     auto inputLen = static_cast<uint32_t>(env->GetArrayLength(content));
+    /*
     PacketHelper_SendImage(nativeFileName, inputArray, inputLen);
+     */
 }
 extern "C"
 JNIEXPORT void JNICALL

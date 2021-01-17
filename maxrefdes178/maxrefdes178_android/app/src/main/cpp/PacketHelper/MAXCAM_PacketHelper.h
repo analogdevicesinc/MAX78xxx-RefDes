@@ -44,10 +44,11 @@ extern "C" {
 //-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
-
+/*
 #include "MAXCAM_Definitions.h"
 #include "MAXCAM_Structure.h"
 #include "MAXCAM_Packet.h"
+ */
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_ble_packet.h"
 
@@ -71,6 +72,7 @@ typedef uint16_t (*GetCurrentMtuFPtr)(void);
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
+/*
 void PacketHelper_SendFile(const char *fileName, const char *fileContent, const uint32_t fileLength);
 void PacketHelper_Receive(const uint16_t packetLen, const uint8_t *packet);
 void PacketHelper_RegisterSendNotification(SendNotificationFPtr fptr);
@@ -83,9 +85,11 @@ void PacketHelper_EnterDEMO(void);
 void PacketHelper_CaptureImage(const uint32_t fileLength);
 void PacketHelper_SendImage(const char *fileName, const char *fileContent, const uint32_t fileLength);
 void PacketHelper_LoadImage(const char *fileName);
-
+*/
 //MAXREFDES178_COMMON
+/*
 void PacketHelper_RequestVersion(void);
+ */
 
 #ifdef __cplusplus
 }

@@ -11,7 +11,7 @@ set(ROOT_PATH ./../../../../../)
 # Add module
 add_subdirectory(PacketHelper)
 
-include_directories( ${ROOT_PATH}/include ${ROOT_PATH}/maxcam/include/ ${ROOT_PATH}/maxrefdes178_common/ ./PacketHelper/ )
+include_directories( ${ROOT_PATH}/maxrefdes178_common/ ./PacketHelper/ )
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.

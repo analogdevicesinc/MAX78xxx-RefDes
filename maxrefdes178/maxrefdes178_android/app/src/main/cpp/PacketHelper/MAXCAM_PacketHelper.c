@@ -38,9 +38,6 @@
 //-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
-#include "MAXCAM_Definitions.h"
-#include "MAXCAM_Structure.h"
-#include "MAXCAM_Packet.h"
 #include "MAXCAM_PacketHelper.h"
 #include "maxrefdes178_definitions.h"
 
@@ -75,6 +72,8 @@ static PayloadReceivedFPtr PayloadReceived;
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
+
+/*
 void PacketHelper_RegisterSendNotification(SendNotificationFPtr fptr)
 {
     if(fptr != NULL) {
@@ -98,6 +97,7 @@ void PacketHelper_RegisterGetCurrentMtu(GetCurrentMtuFPtr fptr)
 
 void PacketHelper_SendFile(const char *fileName, const char *fileContent, const uint32_t fileLength)
 {
+
     uint8_t packet[MAXCAM_BLE_MAX_PACKET_SIZE] = {0};
     uint8_t payload[MAXCAM_BLE_MAX_PACKET_SIZE - sizeof(tsCommandPackage)] = {0};
     uint16_t packetSize = 0;
@@ -216,7 +216,7 @@ void PacketHelper_Receive(const uint16_t packetLen, const uint8_t *packet)
         }
     }
 }
-
+*/
 //static void PacketHelper_RequestRetransmission(const uint8_t requestedSequenceNumber)
 //{
 //    uint8_t packet[MAXCAM_BLE_MAX_PACKET_SIZE] = {0};
@@ -232,7 +232,7 @@ void PacketHelper_Receive(const uint16_t packetLen, const uint8_t *packet)
 //        SendNotification(packetSize, packet);
 //    }
 //}
-
+/*
 void PacketHelper_RequestGetDir(void)
 {
     uint8_t packet[MAXCAM_BLE_MAX_PACKET_SIZE] = {0};
@@ -304,7 +304,7 @@ void PacketHelper_CaptureImage(const uint32_t fileLength)
     payloadSize = sizeof(uint32_t) + sizeof(uint16_t);
 
     *((uint32_t *)payload) = fileLength;
-    /* data packet size for qspi communication */
+    // data packet size for qspi communication
     *((uint16_t *)(payload+sizeof(uint32_t))) = GetCurrentMtu() - sizeof(tsDataPackage);
 
     packetSize = Packet_FormCommandPacket(MAXCAM_ANDROID, MAXCAM_BLE,
@@ -403,5 +403,4 @@ void PacketHelper_RequestVersion(void){
         SendNotification(packetSize, packet);
     }
 }
-
-
+*/
