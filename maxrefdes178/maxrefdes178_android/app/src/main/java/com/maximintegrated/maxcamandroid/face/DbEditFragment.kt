@@ -50,10 +50,12 @@ class DbEditFragment : Fragment(), PersonListener {
             emptyViews.isVisible = it.isEmpty()
             recyclerView.isVisible = it.isNotEmpty()
             updateNewPersonFabVisibility()
+            enableNextButton()
         }
 
         faceIdViewModel.personUpdatedEvent.observe(viewLifecycleOwner) {
             personAdapter.notifyDataSetChanged()
+            enableNextButton()
         }
 
         stepperView.onBackButtonClicked {
@@ -98,6 +100,12 @@ class DbEditFragment : Fragment(), PersonListener {
             dialog.dismiss()
         }
         alert.show()
+    }
+
+    private fun enableNextButton() {
+        var imageCount = 0
+        faceIdViewModel.selectedDatabase?.persons?.forEach { personModel -> imageCount += personModel.imageCount }
+        stepperView.enableNextButton = imageCount > 0
     }
 
     override fun onRenameRequested(personModel: PersonModel, name: String) {
