@@ -64,12 +64,13 @@ def create_db(db, db_filename):
     if not embedding_db:
         print(f'Cannot create a DB file. No face could be detected from the images in folder ',
               f'`{db}`')
-        return
+        return False
     print(f'(create_db)db: {db}')
     save_embedding_db(embedding_db, path.join(db, db_filename + '.bin'),
                       add_prev_imgs=False)
     print(f'(create_db)db: {db}')                  
     create_embeddings_include_file(db, db_filename, path.join(path.dirname(CURRENT_DIR), 'include'))
+    return True
 
 def create_db_from_folder(args):
     """

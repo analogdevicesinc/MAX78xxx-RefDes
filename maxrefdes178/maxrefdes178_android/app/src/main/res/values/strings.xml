@@ -114,4 +114,5 @@
     <string name="signature_created_at">Signature created at %1$s</string>
     <string name="signature_update_success">Signature updated successfully!</string>
     <string name="signature_update_fail">Signature update failed!</string>
+    <string name="signature_create_fail">Signature can not be created!</string>
 </resources>

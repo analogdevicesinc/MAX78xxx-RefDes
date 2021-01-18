@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.google.android.material.snackbar.Snackbar
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.MainViewModel
 import com.maximintegrated.maxcamandroid.R
@@ -45,6 +46,10 @@ class DemoFragment : Fragment() {
         faceIdViewModel = ViewModelProviders.of(requireActivity()).get(FaceIdViewModel::class.java)
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
         mainViewModel = ViewModelProviders.of(requireActivity()).get(MainViewModel::class.java)
+
+        faceIdViewModel.warningEvent.observe(viewLifecycleOwner, EventObserver {
+            Snackbar.make(view, it, Snackbar.LENGTH_SHORT).show()
+        })
 
         faceIdViewModel.scriptInProgress.observe(viewLifecycleOwner) {
             val sdf = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault())
@@ -112,14 +117,14 @@ class DemoFragment : Fragment() {
             progressBar.isVisible = true
             signatureButton.isEnabled = false
             if (!it) {
-                faceIdViewModel.selectedDatabase?.embeddingsFile?.let {
-                    if (!it.isDirectory) {
+                faceIdViewModel.selectedDatabase?.embeddingsFile?.let { file ->
+                    if (!file.isDirectory) {
                         sendButton.isEnabled = true
                     }
                 }
-                faceIdViewModel.scriptInProgress.value?.let {
-                    progressBar.isVisible = it
-                    signatureButton.isEnabled = true
+                faceIdViewModel.scriptInProgress.value?.let { inProgress ->
+                    progressBar.isVisible = inProgress
+                    signatureButton.isEnabled = !inProgress
                 }
             }
         }
@@ -159,8 +164,14 @@ class DemoFragment : Fragment() {
                 remainingSize -= payload_packet_payload_size
             }
         } else {
-            Toast.makeText(context, "Connection issue!\nMtu is not set yet", Toast.LENGTH_LONG)
-                .show()
+
+            Snackbar.make(
+                requireView(),
+                "Connection issue! Mtu is not set yet",
+                Snackbar.LENGTH_LONG
+            ).show()
+
+
         }
     }
 }

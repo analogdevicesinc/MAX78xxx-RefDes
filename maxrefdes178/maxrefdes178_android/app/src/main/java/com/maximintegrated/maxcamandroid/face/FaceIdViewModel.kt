@@ -14,6 +14,7 @@ import com.maximintegrated.maxcamandroid.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 
@@ -266,25 +267,37 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
         _scriptInProgress.value = true
         val python = Python.getInstance()
         val script = python.getModule("db_gen.generate_face_db")
+        var status = false
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                selectedDatabase?.let {
-                    script.callAttr("create_db", it.dbFolder.path, "embeddings")
-                    /*val obj1 = script.callAttr("get_current_dir")
-                    val obj2 = script.callAttr("get_file_dir", it.dbFile.path)
-                    val obj3 = script.callAttr("get_include_dir")
-                    Timber.d("obj1: $obj1")
-                    Timber.d("obj2: $obj2")
-                    Timber.d("obj3: $obj3")*/
-                    /*
-                        obj1: /data/user/0/com.maximintegrated.maxcamandroid/files/chaquopy/AssetFinder/app/db_gen
-                        obj2: /storage/emulated/0/Android/data/com.maximintegrated.maxcamandroid/files/Databases/Database #1
-                        obj3: /data/user/0/com.maximintegrated.maxcamandroid/files/chaquopy/AssetFinder/app/include
-                    */
+                try {
+                    selectedDatabase?.let {
+                        val obj = script.callAttr("create_db", it.dbFolder.path, "embeddings")
+                        status = obj.toBoolean()
+                        /*val obj1 = script.callAttr("get_current_dir")
+                        val obj2 = script.callAttr("get_file_dir", it.dbFile.path)
+                        val obj3 = script.callAttr("get_include_dir")
+                        Timber.d("obj1: $obj1")
+                        Timber.d("obj2: $obj2")
+                        Timber.d("obj3: $obj3")*/
+                        /*
+                            obj1: /data/user/0/com.maximintegrated.maxcamandroid/files/chaquopy/AssetFinder/app/db_gen
+                            obj2: /storage/emulated/0/Android/data/com.maximintegrated.maxcamandroid/files/Databases/Database #1
+                            obj3: /data/user/0/com.maximintegrated.maxcamandroid/files/chaquopy/AssetFinder/app/include
+                        */
+                        Timber.i("Python response : " + status)
+                    }
+                } catch (e: Exception) {
+                    status = false
+
                 }
+
             }
             getEmbeddingsFile()
             _scriptInProgress.value = false
+            if (!status) {
+                _warningEvent.value = Event(R.string.signature_create_fail)
+            }
         }
     }
 }
