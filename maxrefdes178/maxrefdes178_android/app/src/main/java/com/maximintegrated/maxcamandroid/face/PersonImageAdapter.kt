@@ -52,6 +52,8 @@ class PersonImageAdapter(
         fun bind(imageFile: File) {
 
             if (imageFile.isDirectory) {
+                Glide.with(parent.context).load(R.drawable.ic_add_black).centerCrop()
+                    .placeholder(R.drawable.ic_add_black).into(itemView.image_card.imageView)
                 imageCard.setOnClickListener {
                     listener.onAddImageClicked(personModel)
                 }
