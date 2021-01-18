@@ -73,7 +73,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
     fun getPersonList() {
         //if not null
         selectedDatabase?.let {
-            _persons.value = it.persons
+            _persons.value = ArrayList(it.persons)
         }
     }
 
@@ -124,10 +124,9 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
             val person = File(it.dbFolder, name)
             if (!person.exists()) {
                 person.mkdirs()
-                val list = _persons.value?.toMutableList()
                 val model = PersonModel(person)
-                list?.add(model)
-                _persons.value = list
+                it.persons.add(model)
+                getPersonList()
             } else {
                 _warningEvent.value = Event(R.string.person_name_exists)
             }
@@ -137,7 +136,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
     fun deletePerson(person: PersonModel) {
         selectedDatabase?.persons?.remove(person)
         person.personFolder.deleteRecursively()
-        _persons.value = selectedDatabase?.persons
+        getPersonList()
         _warningEvent.value = Event(R.string.person_is_deleted)
     }
 
@@ -151,20 +150,19 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
 
     fun renamePerson(person: PersonModel, name: String) {
         viewModelScope.launch {
-            selectedDatabase?.dbFolder?.let {
-                val file = File(it, name)
+            selectedDatabase?.let {
+                val file = File(it.dbFolder, name)
                 if (file.exists()) {
                     _warningEvent.value = Event(R.string.person_name_exists)
                 } else {
-                    val list = _persons.value?.toMutableList()
-                    list?.remove(person)
-                    _persons.value = list
+                    val index = it.persons.indexOf(person)
+                    it.persons.remove(person)
+                    getPersonList()
                     withContext(Dispatchers.IO) {
                         person.rename(file)
                     }
-                    list?.add(person)
-                    //list?.sort()
-                    _persons.value = list
+                    it.persons.add(index, person)
+                    getPersonList()
                     _warningEvent.value = Event(R.string.person_is_renamed)
                 }
             }
