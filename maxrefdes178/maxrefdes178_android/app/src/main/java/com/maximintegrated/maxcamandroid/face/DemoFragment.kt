@@ -164,14 +164,11 @@ class DemoFragment : Fragment() {
                 remainingSize -= payload_packet_payload_size
             }
         } else {
-
-            Snackbar.make(
-                requireView(),
+            Toast.makeText(
+                context,
                 "Connection issue! Mtu is not set yet",
-                Snackbar.LENGTH_LONG
+                Toast.LENGTH_LONG
             ).show()
-
-
         }
     }
 }

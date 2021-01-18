@@ -65,7 +65,7 @@
         app:cardElevation="8dp"
         app:currentStep="second"
         app:enableBackButton="true"
-        app:enableNextButton="true"
+        app:enableNextButton="false"
         app:firstStepDescription="@string/db_selection"
         app:firstStepNumber="1"
         app:layout_constraintBottom_toBottomOf="parent"
