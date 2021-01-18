@@ -23,6 +23,7 @@ import com.maximintegrated.maxcamandroid.main.LandingPage
 import com.maximintegrated.maxcamandroid.main.MainFragment
 import com.maximintegrated.maxcamandroid.nativeLibrary.IMaxCamNativeLibrary
 import com.maximintegrated.maxcamandroid.utils.ROOT_FRAGMENT
+import com.maximintegrated.maxcamandroid.utils.startScannerActivity
 import com.maximintegrated.maxcamandroid.view.BleConnectionInfo
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_layout.*
@@ -87,7 +88,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
                 if (connectionState == BluetoothAdapter.STATE_DISCONNECTED && (maxCamViewModel.previousConnectionState == BluetoothAdapter.STATE_CONNECTED || maxCamViewModel.previousConnectionState == BluetoothAdapter.STATE_DISCONNECTING)) {
                     Toast.makeText(applicationContext, "Connection is lost!", Toast.LENGTH_LONG)
                         .show()
-                    startScannerActivity()
+                    startScannerActivity(this)
                 }
 
                 val device = maxCamViewModel.bluetoothDevice
@@ -137,17 +138,10 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
         val fragment = getCurrentFragment()
 
         if (fragment == null || fragment as? LandingPage != null) {
-            startScannerActivity()
+            startScannerActivity(this)
         } else {
             super.onBackPressed()
         }
-    }
-
-    private fun startScannerActivity() {
-        startActivity(
-            Intent(this, ScannerActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
     }
 
     override fun onDestroy() {

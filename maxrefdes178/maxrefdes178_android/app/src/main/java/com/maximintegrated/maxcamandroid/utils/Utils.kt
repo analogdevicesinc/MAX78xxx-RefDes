@@ -1,16 +1,17 @@
 package com.maximintegrated.maxcamandroid.utils
 
 import android.content.Context
+import android.content.Intent
+import android.os.AsyncTask
 import android.os.Environment
-import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.maximintegrated.maxcamandroid.FileWriter
 import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.ScannerActivity
 import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
 import com.maximintegrated.maxcamandroid.databinding.SettingsItemBinding
 import java.io.File
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.concurrent.Executors
 
 const val ROOT_FRAGMENT = "ROOT_FRAGMENT"
@@ -139,5 +140,19 @@ fun SettingsItemBinding.setEnabled(
     descriptionTextView.isEnabled = isEnabled
     enableButton.isEnabled = isEnabled
     disableButton.isEnabled = isEnabled
+}
+
+class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
+    override fun doInBackground(vararg params: Void?): Void? {
+        handler()
+        return null
+    }
+}
+
+fun startScannerActivity(packageContext: Context) {
+    packageContext.startActivity(
+        Intent(packageContext, ScannerActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
 }
 

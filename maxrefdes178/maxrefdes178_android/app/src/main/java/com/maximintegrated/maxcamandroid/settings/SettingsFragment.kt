@@ -24,6 +24,7 @@ import com.maximintegrated.maxcamandroid.blePacket.debugger_select_e
 import com.maximintegrated.maxcamandroid.databinding.FragmentSettingsBinding
 import com.maximintegrated.maxcamandroid.utils.SettingsItemListener
 import com.maximintegrated.maxcamandroid.utils.setup
+import com.maximintegrated.maxcamandroid.utils.startScannerActivity
 import com.theartofdev.edmodo.cropper.CropImage
 import com.unnamed.b.atv.model.TreeNode
 import kotlinx.android.synthetic.main.fragment_settings.*
@@ -145,7 +146,11 @@ class SettingsFragment : Fragment() {
             alert.setMessage(getString(com.maximintegrated.maxcamandroid.R.string.are_you_sure_to_shut_device_down))
             alert.setPositiveButton(getString(com.maximintegrated.maxcamandroid.R.string.yes)) { dialog, _ ->
                 dialog.dismiss()
-                maxCamViewModel.sendData(ble_command_packet_t.from(ble_command_e.BLE_COMMAND_SHUT_DOWN_DEVICE_CMD).toByteArray())
+                maxCamViewModel.sendData(
+                    ble_command_packet_t.from(ble_command_e.BLE_COMMAND_SHUT_DOWN_DEVICE_CMD)
+                        .toByteArray()
+                )
+                startScannerActivity(it.context)
             }
             alert.setNegativeButton(getString(com.maximintegrated.maxcamandroid.R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
