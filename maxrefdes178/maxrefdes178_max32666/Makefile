@@ -90,7 +90,6 @@ SRCS += max32666_max34417.c
 SRCS += max32666_qspi_master.c
 SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
-SRCS += max32666_utils.c
 SRCS += maxrefdes178_utility.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c

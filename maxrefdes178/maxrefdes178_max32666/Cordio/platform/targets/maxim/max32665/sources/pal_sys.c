@@ -56,8 +56,8 @@ extern unsigned int __HeapLimit;
 unsigned long __heap_end__;
 unsigned long __heap_start__;
 
-extern unsigned int __StackTop;
-extern unsigned int __StackLimit;
+extern unsigned int __StackTop_Core1;
+extern unsigned int __StackLimit_Core1;
 unsigned long __stack_limit__;
 unsigned long __stack_top__;
 
@@ -169,8 +169,8 @@ void PalSysInit(void)
   __heap_start__ = (uint32_t)&__HeapBase;
 
   /* Initialize stack variables. */
-  __stack_limit__ = (uint32_t)&__StackLimit;
-  __stack_top__ = (uint32_t)& __StackTop;
+  __stack_limit__ = (uint32_t)&__StackLimit_Core1;
+  __stack_top__ = (uint32_t)& __StackTop_Core1;
 
   palSysAssertCount = 0;
   PalSysAssertTrapEnable = TRUE;
@@ -179,9 +179,9 @@ void PalSysInit(void)
   /* Divide 96 MHz system clock to 48 MHz */
 //  MXC_SYS_Clock_Div(MXC_SYS_SYSTEM_DIV_2);
 
-  PalLedInit();
-  PalLedOff(PAL_LED_ID_ERROR);
-  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
+//  PalLedInit();
+//  PalLedOff(PAL_LED_ID_ERROR);
+//  PalLedOn(PAL_LED_ID_CPU_ACTIVE);
 //  PalCryptoInit();
 //  PalRtcInit();
 

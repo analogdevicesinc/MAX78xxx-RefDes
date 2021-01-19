@@ -39,6 +39,7 @@
 #include <board.h>
 #include <core1.h>
 #include <dma.h>
+#include <icc_regs.h>
 #include <mxc_delay.h>
 #include <mxc_sys.h>
 #include <nvic_table.h>
@@ -62,7 +63,6 @@
 #include "max32666_qspi_master.h"
 #include "max32666_sdcard.h"
 #include "max32666_spi_dma.h"
-#include "max32666_utils.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_version.h"
 
@@ -109,6 +109,12 @@ int main(void)
     MXC_GPIO0->vssel =  0x00;
     MXC_GPIO1->vssel =  0x00;
 
+    // Disable Core0 ICC0 Instruction cache
+    MXC_ICC0->invalidate = 1;
+    while (!(MXC_ICC0->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+    MXC_ICC0->cache_ctrl &= ~MXC_F_ICC_CACHE_CTRL_EN;
+    while (!(MXC_ICC0->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+
     ret = MXC_SEMA_Init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_SEMA_Init failed %d", ret);
@@ -142,12 +148,11 @@ int main(void)
     core0_irq_init();
     Core1_Start();
 
-    for(uint32_t cnt = 20000000; !core1_init_done && cnt; cnt--) {
+    for(uint32_t cnt = 10000000; !core1_init_done && cnt; cnt--) {
         if (cnt == 1) {
             PR_ERROR("timeout, reset");
             MXC_Delay(MXC_DELAY_MSEC(100));
             MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
-//            MXC_GCR->rstr0 = 0xffffffff;
         }
     }
 
@@ -531,6 +536,12 @@ int Core1_Main(void)
 {
     //  __asm__("BKPT");
 
+    // Disable Core1 ICC1 Instruction cache
+    MXC_ICC1->invalidate = 1;
+    while (!(MXC_ICC1->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+    MXC_ICC1->cache_ctrl &= ~MXC_F_ICC_CACHE_CTRL_EN;
+    while (!(MXC_ICC1->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+
     int ret = 0;
 
     PR_INFO("maxrefdes178_max32666 core1");
@@ -556,6 +567,8 @@ int Core1_Main(void)
 static void core0_irq_init(void)
 {
     // Disable all interrupts used by core1
+    NVIC_DisableIRQ(SysTick_IRQn);
+
     NVIC_DisableIRQ(BTLE_TX_DONE_IRQn);
     NVIC_DisableIRQ(BTLE_RX_RCVD_IRQn);
     NVIC_DisableIRQ(BTLE_RX_ENG_DET_IRQn);
@@ -579,6 +592,8 @@ static void core0_irq_init(void)
 
 static void core1_irq_init(void)
 {
+    NVIC_DisableIRQ(SysTick_IRQn);
+
     NVIC_DisableIRQ(GPIO0_IRQn);
     NVIC_DisableIRQ(GPIO1_IRQn);
 
