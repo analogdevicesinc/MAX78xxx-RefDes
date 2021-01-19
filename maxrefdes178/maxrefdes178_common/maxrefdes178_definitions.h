@@ -55,7 +55,7 @@
 
 // Common I2C
 #define I2C_SPEED                          100000  // hz
-#define I2C_TIMEOUT_CNT                    10000000  // loop counter
+#define I2C_TIMEOUT_CNT                    1000000  // loop counter
 
 #define I2C_ADDR_MAX20303_PMIC             0x50  // 0x50 for writes, 0x51 for reads
 #define I2C_ADDR_MAX20303_FUEL_GAUGE       0x6C  // 0x6C for writes, 0x6D for reads
