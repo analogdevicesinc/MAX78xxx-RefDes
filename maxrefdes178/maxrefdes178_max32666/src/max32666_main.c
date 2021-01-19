@@ -575,7 +575,7 @@ int Core1_Main(void)
 static void core0_irq_init(void)
 {
     // Disable all interrupts used by core1
-    NVIC_DisableIRQ(SysTick_IRQn);
+//    NVIC_DisableIRQ(SysTick_IRQn);
 
     NVIC_DisableIRQ(BTLE_TX_DONE_IRQn);
     NVIC_DisableIRQ(BTLE_RX_RCVD_IRQn);
@@ -600,7 +600,7 @@ static void core0_irq_init(void)
 
 static void core1_irq_init(void)
 {
-    NVIC_DisableIRQ(SysTick_IRQn);
+//    NVIC_DisableIRQ(SysTick_IRQn);
 
     NVIC_DisableIRQ(GPIO0_IRQn);
     NVIC_DisableIRQ(GPIO1_IRQn);

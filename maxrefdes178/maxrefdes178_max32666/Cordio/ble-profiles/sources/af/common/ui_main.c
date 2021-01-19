@@ -428,7 +428,7 @@ void UiDurationDialogSetExtText(char *pText)
   else
   {
     /* Set the extended text in the dialog */
-    strncpy(uiDurationExtText, pText, sizeof(uiDurationExtText));
+    strncpy(uiDurationExtText, pText, sizeof(uiDurationExtText) - 1);
     uiDurationDlg.pSelectItems = uiDurationSelectListExt;
 
     UiRefresh();
