@@ -131,7 +131,7 @@ int ble_command_send_single_packet(ble_command_e ble_command, uint32_t payload_s
 
 static int ble_command_execute_rx_command(void)
 {
-    PR_INFO("exec cmd %d %d", ble_command_buffer.command,
+    PR_INFO("exec %d %d", ble_command_buffer.command,
             ble_command_buffer.total_payload_size);
 //    for (int i = 0; i < ble_command_buffer.total_payload_size; i++) {
 //        PR("%02hhX ", ble_command_buffer.total_payload_buffer[i]);
@@ -376,10 +376,10 @@ static int ble_command_handle_rx(void)
 //        return E_BAD_STATE;
     }
 
-    PR_INFO("BLE RX %d", tmp_container.size);
+//    PR_INFO("BLE RX %d", tmp_container.size);
     if (tmp_container.packet.packet_info.type == BLE_PACKET_TYPE_COMMAND) {
         packet_payload_size = tmp_container.size - sizeof(ble_command_packet_header_t);
-        PR_INFO("cmd %d %d", tmp_container.packet.command_packet.header.command,
+        PR_INFO("C %d %d", tmp_container.packet.command_packet.header.command,
                 tmp_container.packet.command_packet.header.total_payload_size);
 //        PR_INFO("Payload: %d", packet_payload_size);
 //        for (int i = 0; i < packet_payload_size; i++) {

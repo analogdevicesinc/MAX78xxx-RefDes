@@ -159,7 +159,7 @@ int spi_dma_master_init(mxc_spi_regs_t *spi, sys_map_t map, uint32_t speed, uint
 int spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, mxc_dma_reqsel_t reqsel, void (*callback)(void))
 {
     if (dma_busy_flag[ch]) {
-        PR_ERROR("dma is busy");
+        PR_ERROR("dma is busy %d", ch);
 //        return E_BUSY;
     }
 

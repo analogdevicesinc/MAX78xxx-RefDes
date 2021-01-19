@@ -193,11 +193,11 @@
 #define MAX32666_TIMER_LED                 MXC_TMR2
 #define MAX32666_TIMER_MS                  MXC_TMR3
 
-// BLE Communication buffer
+// MAX32666 BLE Communication buffer
 #define MAX32666_BLE_QUEUE_SIZE            10
 #define MAX32666_BLE_COMMAND_BUFFER_SIZE   FACEID_MAX_EMBEDDINGS_SIZE + 1024
 
-// PMIC and Fuel Gauge
+// MAX32666 PMIC and Fuel Gauge
 #define MAX32666_SOC_INTERVAL              10000  // ms
 #define MAX32666_SOC_WARNING_LEVEL         10
 
@@ -273,7 +273,10 @@
 // QSPI packet types
 typedef enum {
 //  QSPI Packet                                 QSPI Packet Payload Description
-    QSPI_PACKET_TYPE_VIDEO_VERSION_CMD = 0,  // None
+    QSPI_PACKET_TYPE_NOTHING = 0,            // None
+    QSPI_PACKET_TYPE_ACKNOWLEDGE,            // qspi_packet_type_e
+
+    QSPI_PACKET_TYPE_VIDEO_VERSION_CMD,      // None
     QSPI_PACKET_TYPE_VIDEO_VERSION_RES,      // version_t
 
     QSPI_PACKET_TYPE_AUDIO_VERSION_CMD,      // None
@@ -521,13 +524,19 @@ typedef enum {
 } classification_e;
 
 // Typedef Structs
-// QSPI packet
+// QSPI packet info
+typedef struct __attribute__((packed)) {
+    uint32_t packet_size;
+    uint16_t packet_type;
+} qspi_packet_header_info_t;
+
+// QSPI packet header
 typedef struct __attribute__((packed)) {
     uint32_t start_dummy;
     uint32_t start_symbol;
-    uint16_t crc16;
-    uint32_t packet_size;
-    uint16_t packet_type;
+    uint16_t header_crc16;
+    uint16_t payload_crc16;
+    qspi_packet_header_info_t info;
     uint32_t stop_dummy;
 } qspi_packet_header_t;
 

@@ -312,9 +312,10 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
  */
 void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
 {
-//    if (spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
-//        return;
-//    }
+    if (spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
+        PR_WARN("lcd spi busy");
+        return;
+    }
 
     lcd_setAddrWindow(x, y, x + w - 1, y + h - 1);
 

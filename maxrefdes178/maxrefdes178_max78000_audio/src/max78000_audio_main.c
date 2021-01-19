@@ -173,6 +173,8 @@ int main(void)
     uint16_t avgSilenceCounter = 0;
 
     classification_result_t classification_result = {0};
+    qspi_state_e qspi_rx_state;
+    qspi_packet_header_t qspi_rx_header;
 
     mic_processing_state procState = STOP;
 
@@ -253,32 +255,52 @@ int main(void)
 
     /* Read samples */
     while (1) {
+
         /* Check if QSPI RX has data */
-        if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
-            if (sizeof(qspi_rx_buffer) < g_qspi_packet_header_rx.packet_size) {
-                PR_ERROR("payload too big %d", g_qspi_packet_header_rx.packet_size);
+        qspi_rx_state = qspi_slave_get_rx_state();
+        if (qspi_rx_state == QSPI_STATE_CS_DEASSERTED_HEADER) {
+            qspi_rx_header = qspi_slave_get_rx_header();
+
+            if (sizeof(qspi_rx_buffer) < qspi_rx_header.info.packet_size) {
+                PR_ERROR("payload too big %d", qspi_rx_header.info.packet_size);
+                qspi_slave_set_rx_state(QSPI_STATE_IDLE);
                 continue;
             }
-            qspi_slave_set_rx_data(qspi_rx_buffer, g_qspi_packet_header_rx.packet_size);
+
+            qspi_slave_set_rx_data(qspi_rx_buffer, qspi_rx_header.info.packet_size);
             qspi_slave_trigger();
-//            qspi_slave_wait_rx(QSPI_STATE_COMPLETED);
-        } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
-            g_qspi_state_rx = QSPI_STATE_IDLE;
-            if (g_qspi_packet_header_rx.packet_size) {
-                uint32_t crc = crc16_sw(qspi_rx_buffer, g_qspi_packet_header_rx.packet_size);
-                if (g_qspi_packet_header_rx.crc16 != crc) {
-                    PR_ERROR("crc mismatch %x != %x", g_qspi_packet_header_rx.crc16, crc);
-                    continue;
-                }
-                PR_INFO("size %d", g_qspi_packet_header_rx.packet_size);
-//                for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
-//                    printf("%02hhX ", qspi_rx_buffer[i]);
-//                }
-//                printf("\n");
+            qspi_slave_wait_rx();
+
+            // Check payload crc again
+            if (qspi_rx_header.payload_crc16 != crc16_sw(qspi_rx_buffer, qspi_rx_header.info.packet_size)) {
+                PR_ERROR("Invalid payload crc %x", qspi_rx_header.payload_crc16);
+                qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+                continue;
             }
 
-            switch(g_qspi_packet_header_rx.packet_type) {
+            // QSPI commands with payload
+            switch(qspi_rx_header.info.packet_type) {
+            case QSPI_PACKET_TYPE_TEST:
+                PR_INFO("test data received %d", qspi_rx_header.info.packet_size);
+                for (int i = 0; i < qspi_rx_header.info.packet_size; i++) {
+                    printf("%02hhX ", qspi_rx_buffer[i]);
+                }
+                printf("\n");
+                break;
+            default:
+                PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
+                break;
+            }
+
+            qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+
+        } else if (qspi_rx_state == QSPI_STATE_COMPLETED) {
+            qspi_rx_header = qspi_slave_get_rx_header();
+
+            // QSPI commands without payload
+            switch(qspi_rx_header.info.packet_type) {
             case QSPI_PACKET_TYPE_AUDIO_VERSION_CMD:
+                qspi_slave_set_rx_state(QSPI_STATE_IDLE);
                 qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
                         QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
                 break;
@@ -298,9 +320,12 @@ int main(void)
                 // TODO
                 break;
             default:
-                PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
+                PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
                 break;
             }
+
+            qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+
         }
 
         /* Read from Mic driver to get CHUNK worth of samples, otherwise next sample*/

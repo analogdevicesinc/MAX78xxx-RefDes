@@ -73,12 +73,15 @@ static const mxc_gpio_cfg_t audio_rw_pin  = MAX32666_AUDIO_IO_PIN;
 static volatile int qspi_video_int_flag = 0;
 static volatile int qspi_audio_int_flag = 0;
 
+static qspi_packet_header_info_t qspi_header_buff_video_tx = {0};
+static qspi_packet_header_info_t qspi_header_buff_audio_tx = {0};
+static uint8_t qspi_payload_buff_video_tx[MAX32666_BLE_COMMAND_BUFFER_SIZE];
+static uint8_t qspi_payload_buff_audio_tx[100];
+
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int qspi_wait_video_int(void);
-static int qspi_wait_audio_int(void);
 
 
 //-----------------------------------------------------------------------------
@@ -99,7 +102,7 @@ void qspi_audio_int(void *cbdata)
     qspi_audio_int_flag = 1;
 }
 
-static int qspi_wait_video_int(void)
+int qspi_master_wait_video_int(void)
 {
     uint32_t cnt = SPI_TIMEOUT_CNT;
 
@@ -115,7 +118,7 @@ static int qspi_wait_video_int(void)
     return E_NO_ERROR;
 }
 
-static int qspi_wait_audio_int(void)
+int qspi_master_wait_audio_int(void)
 {
     uint32_t cnt = SPI_TIMEOUT_CNT;
 
@@ -166,9 +169,10 @@ int qspi_master_init(void)
     return E_NO_ERROR;
 }
 
-qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
+qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
 {
     static qspi_packet_header_t qspi_packet_header_rx;
+    qspi_state_e ret = QSPI_STATE_IDLE;
 
     if (qspi_video_int_flag) {
         qspi_video_int_flag = 0;
@@ -180,58 +184,63 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
         spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_packet_header_rx, sizeof(qspi_packet_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(video_cs_pin);
-        *qspi_packet_type = qspi_packet_header_rx.packet_type;
+        *qspi_packet_type_rx = qspi_packet_header_rx.info.packet_type;
 
         if (qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
             PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_packet_header_rx.start_symbol);
-            return QSPI_STATE_IDLE;
+            goto bail;
         }
 
-        qspi_wait_video_int();
+        if (qspi_packet_header_rx.header_crc16 != crc16_sw((uint8_t *) &qspi_packet_header_rx.info, sizeof(qspi_packet_header_rx.info))) {
+            PR_ERROR("Invalid header crc %x", qspi_packet_header_rx.header_crc16);
+            goto bail;
+        }
+
+        qspi_master_wait_video_int();
         qspi_video_int_flag = 0;
 
-        switch(qspi_packet_header_rx.packet_type) {
+        switch(qspi_packet_header_rx.info.packet_type) {
         case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
-            if (qspi_packet_header_rx.packet_size != LCD_DATA_SIZE) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != LCD_DATA_SIZE) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(video_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (void *)lcd_data.buffer, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *)lcd_data.buffer, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            PR_DEBUG("video %u", qspi_packet_header_rx.packet_size);
+            PR_DEBUG("video %u", qspi_packet_header_rx.info.packet_size);
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(classification_result_t)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(classification_result_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(video_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.classification_video, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.classification_video, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
             PR_INFO("video %s %d %0.1f", device_status.classification_video.result, device_status.classification_video.classification, (double)device_status.classification_video.probabily);
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(max78000_statistics_t)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(max78000_statistics_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(video_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.statistics.max78000_video, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.statistics.max78000_video, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
@@ -240,33 +249,33 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             PR_DEBUG("video qspi    : %lu", device_status.statistics.max78000_video.communication_duration_us);
             PR_DEBUG("video total   : %lu", device_status.statistics.max78000_video.total_duration_us);
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_VIDEO_VERSION_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(version_t)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(version_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(video_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_version.max78000_video, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_version.max78000_video, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
             PR_INFO("MAX78000 Video v%d.%d.%d", device_info.device_version.max78000_video.major, device_info.device_version.max78000_video.minor, device_info.device_version.max78000_video.build);
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_VIDEO_SERIAL_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(serial_num_t)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(serial_num_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(video_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_serial_num.max78000_video, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_serial_num.max78000_video, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
@@ -276,48 +285,53 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
             PR("\n");
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(faceid_embed_update_status_e)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(faceid_embed_update_status_e)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(video_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_update_status, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_update_status, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
             PR_INFO("FaceID stat %d", device_status.faceid_embed_update_status);
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
-            if (qspi_packet_header_rx.packet_size > sizeof(device_status.faceid_embed_subject_names) ) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size > sizeof(device_status.faceid_embed_subject_names) ) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(video_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_subject_names, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.faceid_embed_subject_names, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(video_cs_pin);
 
-            device_status.faceid_embed_subject_names_size = qspi_packet_header_rx.packet_size;
+            device_status.faceid_embed_subject_names_size = qspi_packet_header_rx.info.packet_size;
 
             PR_INFO("FaceID names %d", device_status.faceid_embed_subject_names_size);
             for (int i = 0; i < device_status.faceid_embed_subject_names_size;
                     i += printf("%s\n", &device_status.faceid_embed_subject_names[i])) {}
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         default:
             PR_ERROR("Unknown qspi video packet");
-            return QSPI_STATE_IDLE;
             break;
+        }
+
+        // Check if waiting TX
+        if (qspi_header_buff_video_tx.packet_type) {
+            qspi_master_send_video(qspi_payload_buff_video_tx, qspi_header_buff_video_tx.packet_size, qspi_header_buff_video_tx.packet_type);
+            qspi_header_buff_video_tx.packet_type = 0;
         }
     }
 
@@ -331,74 +345,79 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
         spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &qspi_packet_header_rx, sizeof(qspi_packet_header_t), MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(audio_cs_pin);
-        *qspi_packet_type = qspi_packet_header_rx.packet_type;
+        *qspi_packet_type_rx = qspi_packet_header_rx.info.packet_type;
 
         if (qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
             PR_ERROR("Invalid QSPI start byte 0x%08hhX", qspi_packet_header_rx.start_symbol);
-            return QSPI_STATE_IDLE;
+            goto bail;
         }
 
-        qspi_wait_audio_int();
+        if (qspi_packet_header_rx.header_crc16 != crc16_sw((uint8_t *) &qspi_packet_header_rx.info, sizeof(qspi_packet_header_rx.info))) {
+            PR_ERROR("Invalid header crc %x", qspi_packet_header_rx.header_crc16);
+            goto bail;
+        }
+
+        qspi_master_wait_audio_int();
         qspi_audio_int_flag = 0;
 
-        switch(qspi_packet_header_rx.packet_type) {
+        switch(qspi_packet_header_rx.info.packet_type) {
         case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(classification_result_t)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(classification_result_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(audio_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.classification_audio, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.classification_audio, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
             PR_INFO("audio %s %d %0.1f", device_status.classification_audio.result, device_status.classification_audio.classification, (double)device_status.classification_audio.probabily);
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(max78000_statistics_t)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(max78000_statistics_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(audio_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.statistics.max78000_audio, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_status.statistics.max78000_audio, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
             PR_DEBUG("audio cnn: %lu", device_status.statistics.max78000_audio.cnn_duration_us);
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_AUDIO_VERSION_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(version_t)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(version_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(audio_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_version.max78000_audio, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_version.max78000_audio, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
             PR_INFO("MAX78000 Audio v%d.%d.%d", device_info.device_version.max78000_audio.major, device_info.device_version.max78000_audio.minor, device_info.device_version.max78000_audio.build);
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_AUDIO_SERIAL_RES:
-            if (qspi_packet_header_rx.packet_size != sizeof(serial_num_t)) {
-                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.packet_size);
-                return QSPI_STATE_IDLE;
+            if (qspi_packet_header_rx.info.packet_size != sizeof(serial_num_t)) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
             }
 
             GPIO_CLR(audio_cs_pin);
             MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
-            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_serial_num.max78000_audio, qspi_packet_header_rx.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+            spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) &device_info.device_serial_num.max78000_audio, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
             spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
             GPIO_SET(audio_cs_pin);
 
@@ -408,16 +427,23 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type)
             }
             PR("\n");
 
-            return QSPI_STATE_COMPLETED;
+            ret = QSPI_STATE_COMPLETED;
             break;
         default:
             PR_ERROR("Unknown qspi audio packet");
-            return QSPI_STATE_IDLE;
             break;
+        }
+
+        // Check if waiting TX
+        if (qspi_header_buff_audio_tx.packet_type) {
+            qspi_master_send_audio(qspi_payload_buff_audio_tx, qspi_header_buff_audio_tx.packet_size, qspi_header_buff_audio_tx.packet_type);
+            qspi_header_buff_audio_tx.packet_type = 0;
         }
     }
 
-    return QSPI_STATE_IDLE;
+bail:
+
+    return ret;
 }
 
 int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type)
@@ -425,20 +451,35 @@ int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type)
     qspi_packet_header_t qspi_packet_header_tx = {
             .start_dummy = 0,
             .start_symbol = QSPI_START_SYMBOL,
-            .crc16 = 0,
-            .packet_size = data_size,
-            .packet_type = data_type,
+            .header_crc16 = 0,
+            .payload_crc16 = 0,
+            .info.packet_size = data_size,
+            .info.packet_type = data_type,
             .stop_dummy = 0,
     };
 
-    if (data_size) {
-//        uint32_t hw_crc;
-//        MXC_TPU_CRC_Config();
-//        MXC_TPU_CRC(data, data_size, MXC_TPU_CRC16, &hw_crc);
-        qspi_packet_header_tx.crc16 = crc16_sw(data, data_size);
-    }
+    // Wait LCD dma since it disrupts QSPI write
+    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 
     GPIO_CLR(video_rw_pin); // TX request
+
+    qspi_packet_header_tx.header_crc16 = crc16_sw((uint8_t *) &qspi_packet_header_tx.info, sizeof(qspi_packet_header_tx.info));
+    if (data_size) {
+        qspi_packet_header_tx.payload_crc16 = crc16_sw(data, data_size);
+    }
+
+    if (data_size && qspi_video_int_flag) {
+        if (qspi_header_buff_video_tx.packet_type) {
+            PR_ERROR("slave wants to send and no tx buffer, abort");
+            return E_BUSY;
+        } else {
+            PR_WARN("slave wants to send, save request");
+            qspi_header_buff_video_tx.packet_type = data_type;
+            qspi_header_buff_video_tx.packet_size = data_size;
+            memcpy(qspi_payload_buff_video_tx, data, MIN(sizeof(qspi_payload_buff_video_tx), data_size));
+            return E_NO_ERROR;
+        }
+    }
 
     GPIO_CLR(video_cs_pin);
     MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
@@ -447,7 +488,8 @@ int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type)
     GPIO_SET(video_cs_pin);
 
     if (data_size) {
-        qspi_wait_video_int();
+        qspi_video_int_flag = 0;
+        qspi_master_wait_video_int();
         qspi_video_int_flag = 0;
 
         GPIO_CLR(video_cs_pin);
@@ -465,20 +507,35 @@ int qspi_master_send_audio(uint8_t *data, uint32_t data_size, uint8_t data_type)
     qspi_packet_header_t qspi_packet_header_tx = {
             .start_dummy = 0,
             .start_symbol = QSPI_START_SYMBOL,
-            .crc16 = 0,
-            .packet_size = data_size,
-            .packet_type = data_type,
+            .header_crc16 = 0,
+            .payload_crc16 = 0,
+            .info.packet_size = data_size,
+            .info.packet_type = data_type,
             .stop_dummy = 0,
     };
 
-    if (data_size) {
-//        uint32_t hw_crc;
-//        MXC_TPU_CRC_Config();
-//        MXC_TPU_CRC(data, data_size, MXC_TPU_CRC16, &hw_crc);
-        qspi_packet_header_tx.crc16 = crc16_sw(data, data_size);
-    }
+    // Wait LCD dma since it disrupts QSPI write
+    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 
     GPIO_CLR(audio_rw_pin); // TX request
+
+    qspi_packet_header_tx.header_crc16 = crc16_sw((uint8_t *) &qspi_packet_header_tx.info, sizeof(qspi_packet_header_tx.info));
+    if (data_size) {
+        qspi_packet_header_tx.payload_crc16 = crc16_sw(data, data_size);
+    }
+
+    if (data_size && qspi_audio_int_flag) {
+        if (qspi_header_buff_audio_tx.packet_type) {
+            PR_ERROR("slave wants to send and no tx buffer, abort");
+            return E_BUSY;
+        } else {
+            PR_WARN("slave wants to send, save request");
+            qspi_header_buff_audio_tx.packet_type = data_type;
+            qspi_header_buff_audio_tx.packet_size = data_size;
+            memcpy(qspi_payload_buff_audio_tx, data, MIN(sizeof(qspi_payload_buff_audio_tx), data_size));
+            return E_NO_ERROR;
+        }
+    }
 
     GPIO_CLR(audio_cs_pin);
     MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
@@ -487,7 +544,8 @@ int qspi_master_send_audio(uint8_t *data, uint32_t data_size, uint8_t data_type)
     GPIO_SET(audio_cs_pin);
 
     if (data_size) {
-        qspi_wait_audio_int();
+        qspi_audio_int_flag = 0;
+        qspi_master_wait_audio_int();
         qspi_audio_int_flag = 0;
 
         GPIO_CLR(audio_cs_pin);

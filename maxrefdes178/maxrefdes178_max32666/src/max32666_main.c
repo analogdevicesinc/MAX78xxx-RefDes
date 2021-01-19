@@ -240,13 +240,6 @@ int main(void)
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
 
-    // Wait max78000_video and max78000_audio
-    MXC_Delay(MXC_DELAY_MSEC(200));
-
-    // TODO: get max78000_video and max78000_audio serial num
-    qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
-    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
-
     PR_INFO("core 0 init completed");
 
     run_application();
@@ -256,16 +249,29 @@ int main(void)
 
 static void run_application(void)
 {
-    qspi_packet_type_e qspi_packet_type = 0;
+    qspi_packet_type_e qspi_packet_type_rx = 0;
     lcd_data.notification_color = BLUE;
     lcd_data.frame_color = WHITE;
     device_status.faceid_embed_subject_names_size = 0;
 
+    // Get information from MAX78000
+    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
+    qspi_master_wait_video_int();
+    qspi_master_worker(&qspi_packet_type_rx);
+
+    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
+    qspi_master_wait_video_int();
+    qspi_master_worker(&qspi_packet_type_rx);
+
+    qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
+    qspi_master_wait_video_int();
+    qspi_master_worker(&qspi_packet_type_rx);
+
     // Main application loop
     while (1) {
         // Handle received QSPI packets
-        if (qspi_master_worker(&qspi_packet_type) == QSPI_STATE_COMPLETED) {
-            switch(qspi_packet_type) {
+        if (qspi_master_worker(&qspi_packet_type_rx) == QSPI_STATE_COMPLETED) {
+            switch(qspi_packet_type_rx) {
             case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
                 refresh_screen();
                 break;
@@ -316,7 +322,7 @@ static void run_application(void)
                         device_settings.enable_lcd_probabilty = 0;
                     } else if (strcmp(device_status.classification_audio.result, "YES") == 0) {
                         device_settings.enable_lcd_statistics = 1;
-                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
+                        timestamps.faceid_subject_names_received = timer_ms_tick;
                     } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
                         device_settings.enable_lcd_statistics = 0;
                     }
@@ -330,8 +336,11 @@ static void run_application(void)
                 }
                 break;
             case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
-                ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
-                    sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
+                if (device_status.ble_connected) {
+                    ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
+                        sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
+                }
+                qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
                 break;
             case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
                 timestamps.faceid_subject_names_received = timer_ms_tick;

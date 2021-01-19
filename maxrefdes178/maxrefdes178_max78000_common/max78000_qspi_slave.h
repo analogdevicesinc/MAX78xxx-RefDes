@@ -56,16 +56,17 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-extern volatile qspi_packet_header_t g_qspi_packet_header_rx;
-extern volatile qspi_state_e g_qspi_state_rx;
 
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
 int qspi_slave_send_packet(uint8_t *data, uint32_t data_size, uint8_t packet_type);
+void qspi_slave_set_rx_state(qspi_state_e rx_state);
+qspi_state_e qspi_slave_get_rx_state(void);
+qspi_packet_header_t qspi_slave_get_rx_header(void);
 int qspi_slave_set_rx_data(uint8_t *data, uint32_t data_size);
-int qspi_slave_wait_rx(qspi_state_e qspi_state);
+int qspi_slave_wait_rx(void);
 int qspi_slave_trigger(void);
 int qspi_slave_init(void);
 

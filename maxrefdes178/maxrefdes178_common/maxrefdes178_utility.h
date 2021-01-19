@@ -51,6 +51,8 @@
 
 #define GET_RTC_MS()        ((MXC_RTC_GetSecond() * 1000) + (( MXC_RTC_GetSubSecond() / 4096.0)*1000))
 
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 
 //-----------------------------------------------------------------------------
 // Typedefs

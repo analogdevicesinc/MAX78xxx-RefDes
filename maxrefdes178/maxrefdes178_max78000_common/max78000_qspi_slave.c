@@ -70,8 +70,8 @@ static volatile uint32_t g_tx_data_size = 0;
 static volatile uint32_t g_rx_data_size = 0;
 static volatile qspi_packet_header_t g_qspi_packet_header_tx = {0};
 static volatile qspi_state_e g_qspi_state_tx = QSPI_STATE_IDLE;
-volatile qspi_packet_header_t g_qspi_packet_header_rx = {0};
-volatile qspi_state_e g_qspi_state_rx = QSPI_STATE_IDLE;
+static volatile qspi_packet_header_t g_qspi_packet_header_rx = {0};
+static volatile qspi_state_e g_qspi_state_rx = QSPI_STATE_IDLE;
 
 #if defined(MAXREFDES178_MAX78000_AUDIO)
 static const mxc_gpio_cfg_t qspi_int_pin = MAX78000_AUDIO_HOST_INT_PIN;
@@ -138,7 +138,7 @@ void qspi_slave_cs_handler(void *cbdata)
             // TX request
             switch (g_qspi_state_tx) {
             case QSPI_STATE_CS_ASSERTED_HEADER:
-                if (g_qspi_packet_header_tx.packet_size) {
+                if (g_qspi_packet_header_tx.info.packet_size) {
                     g_qspi_state_tx = QSPI_STATE_CS_DEASSERTED_HEADER;
                 } else {
                     // Completed if no data to send
@@ -157,9 +157,12 @@ void qspi_slave_cs_handler(void *cbdata)
             switch (g_qspi_state_rx) {
             case QSPI_STATE_CS_ASSERTED_HEADER:
                 if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
-                    PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
+                    PR_ERROR("Invalid start %x", g_qspi_packet_header_rx.start_symbol);
                     g_qspi_state_rx = QSPI_STATE_IDLE;
-                } else if (g_qspi_packet_header_rx.packet_size) {
+                } else if (g_qspi_packet_header_rx.header_crc16 != crc16_sw((uint8_t *) &g_qspi_packet_header_rx.info, sizeof(g_qspi_packet_header_rx.info))) {
+                    PR_ERROR("Invalid header crc %x", g_qspi_packet_header_rx.start_symbol);
+                    g_qspi_state_rx = QSPI_STATE_IDLE;
+                } else if (g_qspi_packet_header_rx.info.packet_size) {
                     g_qspi_state_rx = QSPI_STATE_CS_DEASSERTED_HEADER;
                 } else {
                     // Completed if no data to send
@@ -167,7 +170,12 @@ void qspi_slave_cs_handler(void *cbdata)
                 }
                 break;
             case QSPI_STATE_CS_ASSERTED_DATA:
-                g_qspi_state_rx = QSPI_STATE_COMPLETED;
+                if (g_qspi_packet_header_rx.payload_crc16 != crc16_sw((uint8_t *) g_rx_data, g_rx_data_size)) {
+                    PR_ERROR("Invalid payload crc %x", g_qspi_packet_header_rx.payload_crc16);
+                    g_qspi_state_rx = QSPI_STATE_IDLE;
+                } else {
+                    g_qspi_state_rx = QSPI_STATE_COMPLETED;
+                }
                 break;
             default:
                 PR_ERROR("invalid rx state %d", g_qspi_state_rx);
@@ -209,8 +217,6 @@ void qspi_slave_cs_handler(void *cbdata)
             case QSPI_STATE_CS_DEASSERTED_HEADER:
                 if (g_rx_data) {
                     qspi_slave_dma(NULL, (uint8_t *) g_rx_data, g_rx_data_size);
-                    g_rx_data = NULL;
-                    g_rx_data_size = 0;
                     g_qspi_state_rx = QSPI_STATE_CS_ASSERTED_DATA;
                 } else {
                     PR_ERROR("no data to rx");
@@ -402,16 +408,22 @@ int qspi_slave_trigger(void)
     return E_NO_ERROR;
 }
 
-int qspi_slave_wait_rx(qspi_state_e qspi_state)
+int qspi_slave_wait_rx(void)
 {
     uint32_t cnt = SPI_TIMEOUT_CNT;
 
-    while((g_qspi_state_rx != qspi_state) && cnt) {
+    while((g_qspi_state_rx != QSPI_STATE_COMPLETED) &&
+          (g_qspi_state_rx != QSPI_STATE_IDLE) && cnt) {
         cnt--;
     }
 
+    if (g_qspi_state_rx == QSPI_STATE_IDLE) {
+        PR_WARN("rx fail");
+        return E_BAD_STATE;
+    }
+
     if (cnt == 0) {
-        PR_WARN("timeout %d", qspi_state);
+        PR_WARN("timeout");
         return E_TIME_OUT;
     }
 
@@ -449,8 +461,10 @@ int qspi_slave_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
     PR_DEBUG("spi tx started %d", data_type);
 
     g_qspi_packet_header_tx.start_symbol = QSPI_START_SYMBOL;
-    g_qspi_packet_header_tx.packet_size = data_size;
-    g_qspi_packet_header_tx.packet_type = data_type;
+    g_qspi_packet_header_tx.info.packet_size = data_size;
+    g_qspi_packet_header_tx.info.packet_type = data_type;
+    g_qspi_packet_header_tx.header_crc16 = crc16_sw((uint8_t *) &g_qspi_packet_header_tx.info, sizeof(g_qspi_packet_header_tx.info));
+//    g_qspi_packet_header_tx.payload_crc16 = crc16_sw(data, data_size);
     g_tx_data = data;
     g_tx_data_size = data_size;
 
@@ -458,17 +472,38 @@ int qspi_slave_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
 
     // Send header
     qspi_slave_trigger();
-    qspi_slave_wait_tx(QSPI_STATE_CS_DEASSERTED_HEADER);
+    if (qspi_slave_wait_tx(QSPI_STATE_CS_DEASSERTED_HEADER) != E_NO_ERROR) {
+        g_qspi_state_tx = QSPI_STATE_IDLE;
+        return E_BAD_STATE;
+    }
 
     // Send data
     qspi_slave_trigger();
-    qspi_slave_wait_tx(QSPI_STATE_COMPLETED); // TODO
+    if (qspi_slave_wait_tx(QSPI_STATE_COMPLETED) != E_NO_ERROR) {
+        g_qspi_state_tx = QSPI_STATE_IDLE;
+        return E_BAD_STATE;
+    }
 
     g_qspi_state_tx = QSPI_STATE_IDLE;
 
     PR_DEBUG("spi tx completed %d", data_type);
 
     return E_NO_ERROR;
+}
+
+void qspi_slave_set_rx_state(qspi_state_e rx_state)
+{
+    g_qspi_state_rx = rx_state;
+}
+
+qspi_state_e qspi_slave_get_rx_state(void)
+{
+    return g_qspi_state_rx;
+}
+
+qspi_packet_header_t qspi_slave_get_rx_header(void)
+{
+    return g_qspi_packet_header_rx;
 }
 
 int qspi_slave_set_rx_data(uint8_t *data, uint32_t data_size)

@@ -211,6 +211,7 @@ static int8_t prev_decision = -2;
 static int8_t decision = -2;
 static uint32_t time_counter = 0;
 static int8_t enable_cnn = 1;
+static uint8_t *qspi_payload_buffer = NULL;
 
 version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
 
@@ -341,6 +342,13 @@ int main(void)
         fail();
     }
 
+    // Use camera interface buffer for QSPI payload buffer
+    {
+        uint32_t  imgLen;
+        uint32_t  w, h;
+        camera_get_image(&qspi_payload_buffer, &imgLen, &w, &h);
+    }
+
     // Successfully initialize the program
     PR_INFO("Program initialized successfully");
 
@@ -370,10 +378,8 @@ static void run_demo(void)
     uint32_t qspi_completed_time;
     uint32_t capture_completed_time;
     max78000_statistics_t max78000_statistics;
-
-    uint8_t   *raw;
-    uint32_t  imgLen;
-    uint32_t  w, h;
+    qspi_packet_header_t qspi_rx_header;
+    qspi_state_e qspi_rx_state;
 
     PR_INFO("Embeddings subject names:");
     for (int i = 0; i < get_subject_count(); i++) {
@@ -383,65 +389,74 @@ static void run_demo(void)
     camera_start_capture_image();
 
     while (1) { //Capture image and run CNN
+
         /* Check if QSPI RX has data */
-        if (g_qspi_state_rx == QSPI_STATE_CS_DEASSERTED_HEADER) {
-            // Use camera interface buffer for FaceID embeddings
+        qspi_rx_state = qspi_slave_get_rx_state();
+        if (qspi_rx_state == QSPI_STATE_CS_DEASSERTED_HEADER) {
+            qspi_rx_header = qspi_slave_get_rx_header();
+
+            // Use camera interface buffer for QSPI payload
             MXC_PCIF_Stop();
-            camera_get_image(&raw, &imgLen, &w, &h);
 
-            qspi_slave_set_rx_data(raw, g_qspi_packet_header_rx.packet_size);
+            qspi_slave_set_rx_data(qspi_payload_buffer, qspi_rx_header.info.packet_size);
             qspi_slave_trigger();
-            qspi_slave_wait_rx(QSPI_STATE_COMPLETED);
-            g_qspi_state_rx = QSPI_STATE_IDLE;
+            qspi_slave_wait_rx();
 
-            if (g_qspi_packet_header_rx.packet_size) {
-                uint32_t crc = crc16_sw(raw, g_qspi_packet_header_rx.packet_size);
-                if (g_qspi_packet_header_rx.crc16 != crc) {
-                    PR_ERROR("crc mismatch %x != %x", g_qspi_packet_header_rx.crc16, crc);
-                    camera_start_capture_image();
-                    continue;
-                }
-//                PR_INFO("size %d", g_qspi_packet_header_rx.packet_size);
-//                for (int i = 0; i < g_qspi_packet_header_rx.packet_size; i++) {
-//                    printf("%02hhX ", raw[i]);
-//                }
-//                printf("\n");
-            }
-
-            if (g_qspi_packet_header_rx.packet_type == QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD) {
-                PR_INFO("facied embeddings received %d", g_qspi_packet_header_rx.packet_size);
-
-                uninit_database();
-
-                uint8_t faceid_embed_update_status;
-                if (update_database(raw, g_qspi_packet_header_rx.packet_size) != E_NO_ERROR) {
-                    PR_ERROR("Could not update the database");
-                    faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_ERROR_UNKNOWN;
-                } else if (init_database() != E_NO_ERROR) {
-                    PR_ERROR("Could not initialize the database");
-                    faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_ERROR_UNKNOWN;
-                } else {
-                    PR_INFO("Embeddings update completed");
-                    for (int i = 0; i < get_subject_count(); i++) {
-                        PR_INFO("  %s", get_subject_name(i));
-                    }
-                    faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_SUCCESS;
-                }
-                qspi_slave_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
-
-                memcpy(raw, get_subject_name(0), get_subject_names_len());
-                qspi_slave_send_packet(raw, get_subject_names_len(), QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES);
-            }
-
-            camera_start_capture_image();
-        } else if (g_qspi_state_rx == QSPI_STATE_COMPLETED) {
-            g_qspi_state_rx = QSPI_STATE_IDLE;
-            if (g_qspi_packet_header_rx.start_symbol != QSPI_START_SYMBOL) {
-                PR_ERROR("Invalid QSPI start byte 0x%08hhX", g_qspi_packet_header_rx.start_symbol);
+            // Check payload crc again
+            if (qspi_rx_header.payload_crc16 != crc16_sw(qspi_payload_buffer, qspi_rx_header.info.packet_size)) {
+                PR_ERROR("Invalid payload crc %x", qspi_rx_header.payload_crc16);
+                qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+                camera_start_capture_image();
                 continue;
             }
-            switch(g_qspi_packet_header_rx.packet_type) {
+
+            // QSPI commands with payload
+            switch(qspi_rx_header.info.packet_type) {
+                case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD:
+                    PR_INFO("facied embeddings received %d", qspi_rx_header.info.packet_size);
+
+                    uninit_database();
+
+                    uint8_t faceid_embed_update_status;
+                    if (update_database(qspi_payload_buffer, qspi_rx_header.info.packet_size) != E_NO_ERROR) {
+                        PR_ERROR("Could not update the database");
+                        faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_ERROR_UNKNOWN;
+                    } else if (init_database() != E_NO_ERROR) {
+                        PR_ERROR("Could not initialize the database");
+                        faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_ERROR_UNKNOWN;
+                    } else {
+                        PR_INFO("Embeddings update completed");
+                        for (int i = 0; i < get_subject_count(); i++) {
+                            PR_INFO("  %s", get_subject_name(i));
+                        }
+                        faceid_embed_update_status = FACEID_EMBED_UPDATE_STATUS_SUCCESS;
+                    }
+                    qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+                    qspi_slave_send_packet(&faceid_embed_update_status, 1, QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES);
+
+                    break;
+                case QSPI_PACKET_TYPE_TEST:
+                    PR_INFO("test data received %d", qspi_rx_header.info.packet_size);
+                    for (int i = 0; i < qspi_rx_header.info.packet_size; i++) {
+                        printf("%02hhX ", qspi_payload_buffer[i]);
+                    }
+                    printf("\n");
+                    break;
+                default:
+                    PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
+                    break;
+            }
+
+            qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+            camera_start_capture_image();
+
+        } else if (qspi_rx_state == QSPI_STATE_COMPLETED) {
+            qspi_rx_header = qspi_slave_get_rx_header();
+
+            // QSPI commands without payload
+            switch(qspi_rx_header.info.packet_type) {
             case QSPI_PACKET_TYPE_VIDEO_VERSION_CMD:
+                qspi_slave_set_rx_state(QSPI_STATE_IDLE);
                 qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
                         QSPI_PACKET_TYPE_VIDEO_VERSION_RES);
                 break;
@@ -449,42 +464,42 @@ static void run_demo(void)
                 // TODO
                 break;
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD:
-                // TODO
+                PR_INFO("enable video");
+                camera_start_capture_image();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD:
-                // TODO
+                PR_INFO("disable video");
+                MXC_PCIF_Stop();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD:
-                PR_INFO("CNN is started");
+                PR_INFO("enable cnn");
                 enable_cnn = 1;
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD:
-                PR_INFO("CNN is stopped");
+                PR_INFO("disable cnn");
                 enable_cnn = 0;
-                break;
-            case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_CMD:
-                // Do nothing
                 break;
             case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD:
                 // Use camera interface buffer for FaceID embeddings subject names
                 MXC_PCIF_Stop();
 
-                camera_get_image(&raw, &imgLen, &w, &h);
-                memcpy(raw, get_subject_name(0), get_subject_names_len());
-                qspi_slave_send_packet(raw, get_subject_names_len(), QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES);
+                memcpy(qspi_payload_buffer, get_subject_name(0), get_subject_names_len());
+                qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+                qspi_slave_send_packet(qspi_payload_buffer, get_subject_names_len(), QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES);
 
                 camera_start_capture_image();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD:
                 GPIO_SET(gpio_flash);
+                PR_INFO("enable flash");
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD:
                 GPIO_CLR(gpio_flash);
-                break;
-            default:
-                PR_ERROR("Invalid packet %d", g_qspi_packet_header_rx.packet_type);
+                PR_INFO("disable flash");
                 break;
             }
+
+            qspi_slave_set_rx_state(QSPI_STATE_IDLE);
         }
 
         if (camera_is_image_rcv()) { // Check whether image is ready
