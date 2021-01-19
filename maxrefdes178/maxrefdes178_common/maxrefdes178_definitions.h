@@ -47,7 +47,7 @@
 //-----------------------------------------------------------------------------
 /*** Common ***/
 // Common SPI
-#define QSPI_SPEED                         8000000UL  // 7-12
+#define QSPI_SPEED                         10000000UL  // 7-12
 #define QSPI_START_SYMBOL                  0xAABBCCDD
 #define QSPI_CS_ASSERT_WAIT                10         // us
 

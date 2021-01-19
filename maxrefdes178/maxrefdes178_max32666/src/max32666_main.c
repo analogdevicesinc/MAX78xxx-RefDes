@@ -92,6 +92,8 @@ static volatile uint32_t timer_ms_tick = 0;
 //-----------------------------------------------------------------------------
 static void core0_irq_init(void);
 static void core1_irq_init(void);
+static void core0_icc(int enable);
+static void core1_icc(int enable);
 static void run_application(void);
 static void refresh_screen(void);
 static int ms_timer_init(void);
@@ -110,10 +112,7 @@ int main(void)
     MXC_GPIO1->vssel =  0x00;
 
     // Disable Core0 ICC0 Instruction cache
-    MXC_ICC0->invalidate = 1;
-    while (!(MXC_ICC0->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
-    MXC_ICC0->cache_ctrl &= ~MXC_F_ICC_CACHE_CTRL_EN;
-    while (!(MXC_ICC0->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+    core0_icc(0);
 
     ret = MXC_SEMA_Init();
     if (ret != E_NO_ERROR) {
@@ -418,6 +417,8 @@ static void refresh_screen(void)
 {
     static char line_string[20] = {0};
 
+    core0_icc(1);
+
     if (!device_settings.enable_lcd) {
         return;
     }
@@ -502,6 +503,8 @@ static void refresh_screen(void)
     device_status.statistics.lcd_fps = (float) 1000.0 / (float)(timer_ms_tick - timestamps.screen_drew);
     timestamps.screen_drew = timer_ms_tick;
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data.buffer);
+
+    core0_icc(0);
 }
 
 void ms_timer(void)
@@ -537,10 +540,7 @@ int Core1_Main(void)
     //  __asm__("BKPT");
 
     // Disable Core1 ICC1 Instruction cache
-    MXC_ICC1->invalidate = 1;
-    while (!(MXC_ICC1->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
-    MXC_ICC1->cache_ctrl &= ~MXC_F_ICC_CACHE_CTRL_EN;
-    while (!(MXC_ICC1->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+    core1_icc(0);
 
     int ret = 0;
 
@@ -599,4 +599,28 @@ static void core1_irq_init(void)
 
     NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_LED)));
     NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)));
+}
+
+static void core0_icc(int enable)
+{
+    MXC_ICC0->invalidate = 1;
+    while (!(MXC_ICC0->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+    if (enable) {
+        MXC_ICC0->cache_ctrl |= MXC_F_ICC_CACHE_CTRL_EN;
+    } else {
+        MXC_ICC0->cache_ctrl &= ~MXC_F_ICC_CACHE_CTRL_EN;
+    }
+    while (!(MXC_ICC0->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+}
+
+static void core1_icc(int enable)
+{
+    MXC_ICC1->invalidate = 1;
+    while (!(MXC_ICC1->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
+    if (enable) {
+        MXC_ICC1->cache_ctrl |= MXC_F_ICC_CACHE_CTRL_EN;
+    } else {
+        MXC_ICC1->cache_ctrl &= ~MXC_F_ICC_CACHE_CTRL_EN;
+    }
+    while (!(MXC_ICC1->cache_ctrl & MXC_F_ICC_CACHE_CTRL_RDY));
 }
