@@ -348,7 +348,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
         periphCb.connectionHandle = pMsg->connOpen.handle;
 
         device_status.ble_connected = 1;
-        device_status.ble_status_changed = 1;
+        device_status.ble_connected_status_changed = 1;
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
         device_status.ble_max_packet_size = AttGetMtu(periphCb.connId) - 3;
@@ -369,7 +369,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
         periphCb.connected = FALSE;
 
         device_status.ble_connected = 0;
-        device_status.ble_status_changed = 1;
+        device_status.ble_connected_status_changed = 1;
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
         memset(device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
@@ -731,14 +731,14 @@ int ble_worker(void)
                 wsfOsDispatcher();
             }
         }
-//        AppAdvStop();
+        AppAdvStop();
 //        PalBbDisable();
 
-        Core1_Stop();
-//        while(!device_settings.enable_ble);
+        device_status.ble_running_status_changed = 1;
+        while(!device_settings.enable_ble);
 
 //        PalBbEnable();
-//        AppAdvStart(APP_MODE_AUTO_INIT);
+        AppAdvStart(APP_MODE_AUTO_INIT);
 
         PR_INFO("Enable BLE");
     }

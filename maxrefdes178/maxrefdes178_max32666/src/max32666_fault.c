@@ -240,7 +240,7 @@ void ReportHardFault(uint32_t *stack_frame, uint32_t exc)
     printf("\n\n\n");
 
     // Wait a little before reset to avoid reset loop
-    for (unsigned int i = 0; i < 30000000; i++) {}
+    for (unsigned int i = 0; i < 10000000; i++) {}
     MXC_GCR->rstr0 = 0xffffffff;
 }
 

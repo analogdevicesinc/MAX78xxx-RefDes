@@ -376,8 +376,8 @@ static void run_application(void)
         }
 
         // Check if BLE status changed
-        if (device_status.ble_status_changed) {
-            device_status.ble_status_changed = 0;
+        if (device_status.ble_connected_status_changed) {
+            device_status.ble_connected_status_changed = 0;
 
             ble_queue_flush();
             ble_command_reset();
@@ -397,6 +397,14 @@ static void run_application(void)
                 lcd_data.notification_color = BLUE;
                 timestamps.notification_received = timer_ms_tick;
             }
+        }
+        if (device_status.ble_running_status_changed) {
+            if (device_settings.enable_ble) {
+                Core1_Start();
+            } else {
+                Core1_Stop();
+            }
+            device_status.ble_running_status_changed = 0;
         }
 
         // Check battery SOC

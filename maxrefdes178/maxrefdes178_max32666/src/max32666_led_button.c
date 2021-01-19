@@ -78,8 +78,8 @@ void button1_int(void *cbdata)
 {
     device_settings.enable_ble ^= 1;
     if (device_settings.enable_ble) {
+        device_status.ble_running_status_changed = 1;
 //        printf("BLE enabled\n");
-        Core1_Start();
     } else {
 //        printf("BLE disabled\n");
     }

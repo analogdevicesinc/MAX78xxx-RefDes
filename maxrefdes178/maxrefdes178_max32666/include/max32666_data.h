@@ -85,7 +85,8 @@ typedef struct {
 
     uint8_t fuel_gauge_working;
 
-    uint8_t ble_status_changed;  // written by both core0 and core1
+    uint8_t ble_running_status_changed;  // written by both core0 and core1
+    uint8_t ble_connected_status_changed;  // written by both core0 and core1
     uint8_t ble_connected;  // written by core1
     uint8_t ble_connected_peer_mac[6];  // written by core1
     uint16_t ble_max_packet_size; // written by core1
