@@ -330,8 +330,9 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
 
         // Check if waiting TX
         if (qspi_header_buff_video_tx.packet_type) {
-            qspi_master_send_video(qspi_payload_buff_video_tx, qspi_header_buff_video_tx.packet_size, qspi_header_buff_video_tx.packet_type);
-            qspi_header_buff_video_tx.packet_type = 0;
+            if (qspi_master_send_video(qspi_payload_buff_video_tx, qspi_header_buff_video_tx.packet_size, qspi_header_buff_video_tx.packet_type) == E_NO_ERROR) {
+                qspi_header_buff_video_tx.packet_type = 0;
+            }
         }
     }
 
@@ -436,8 +437,9 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
 
         // Check if waiting TX
         if (qspi_header_buff_audio_tx.packet_type) {
-            qspi_master_send_audio(qspi_payload_buff_audio_tx, qspi_header_buff_audio_tx.packet_size, qspi_header_buff_audio_tx.packet_type);
-            qspi_header_buff_audio_tx.packet_type = 0;
+            if (qspi_master_send_audio(qspi_payload_buff_audio_tx, qspi_header_buff_audio_tx.packet_size, qspi_header_buff_audio_tx.packet_type) == E_NO_ERROR) {
+                qspi_header_buff_audio_tx.packet_type = 0;
+            }
         }
     }
 
@@ -469,11 +471,14 @@ int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type)
     }
 
     if (data_size && qspi_video_int_flag) {
-        if (qspi_header_buff_video_tx.packet_type) {
-            PR_ERROR("slave wants to send and no tx buffer, abort");
+        if (qspi_header_buff_video_tx.packet_type && (qspi_header_buff_video_tx.packet_type != data_type)) {
+            PR_ERROR("slave wants to send and no tx buffer available, abort %d", data_type);
+            return E_BUSY;
+        } else if (qspi_header_buff_video_tx.packet_type && (qspi_header_buff_video_tx.packet_type == data_type)) {
+            PR_ERROR("slave still wants to send, try again %d", data_type);
             return E_BUSY;
         } else {
-            PR_WARN("slave wants to send, save request");
+            PR_WARN("slave wants to send, save request %d", data_type);
             qspi_header_buff_video_tx.packet_type = data_type;
             qspi_header_buff_video_tx.packet_size = data_size;
             memcpy(qspi_payload_buff_video_tx, data, MIN(sizeof(qspi_payload_buff_video_tx), data_size));
@@ -525,11 +530,14 @@ int qspi_master_send_audio(uint8_t *data, uint32_t data_size, uint8_t data_type)
     }
 
     if (data_size && qspi_audio_int_flag) {
-        if (qspi_header_buff_audio_tx.packet_type) {
-            PR_ERROR("slave wants to send and no tx buffer, abort");
+        if (qspi_header_buff_audio_tx.packet_type && (qspi_header_buff_audio_tx.packet_type != data_type)) {
+            PR_ERROR("slave wants to send and no tx buffer available, abort %d", data_type);
+            return E_BUSY;
+        } else if (qspi_header_buff_audio_tx.packet_type && (qspi_header_buff_audio_tx.packet_type == data_type)) {
+            PR_ERROR("slave still wants to send, try again %d", data_type);
             return E_BUSY;
         } else {
-            PR_WARN("slave wants to send, save request");
+            PR_WARN("slave wants to send, save request %d", data_type);
             qspi_header_buff_audio_tx.packet_type = data_type;
             qspi_header_buff_audio_tx.packet_size = data_size;
             memcpy(qspi_payload_buff_audio_tx, data, MIN(sizeof(qspi_payload_buff_audio_tx), data_size));

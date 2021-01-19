@@ -259,17 +259,31 @@ static void run_application(void)
     device_status.faceid_embed_subject_names_size = 0;
 
     // Get information from MAX78000
-    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
-    qspi_master_wait_video_int();
-    qspi_master_worker(&qspi_packet_type_rx);
+    for (int try = 0; try < 3; try++) {
+        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
+        qspi_master_wait_video_int();
+        qspi_master_worker(&qspi_packet_type_rx);
+        if (device_status.faceid_embed_subject_names_size) {
+            break;
+        }
+    }
 
-    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
-    qspi_master_wait_video_int();
-    qspi_master_worker(&qspi_packet_type_rx);
-
-    qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
-    qspi_master_wait_video_int();
-    qspi_master_worker(&qspi_packet_type_rx);
+    for (int try = 0; try < 3; try++) {
+        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
+        qspi_master_wait_video_int();
+        qspi_master_worker(&qspi_packet_type_rx);
+        if (device_info.device_version.max78000_video.major && device_info.device_version.max78000_video.minor) {
+            break;
+        }
+    }
+    for (int try = 0; try < 3; try++) {
+        qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
+        qspi_master_wait_audio_int();
+        qspi_master_worker(&qspi_packet_type_rx);
+        if (device_info.device_version.max78000_audio.major && device_info.device_version.max78000_audio.minor) {
+            break;
+        }
+    }
 
     // Main application loop
     while (1) {
