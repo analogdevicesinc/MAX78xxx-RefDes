@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">MAXREFDES178</string>
     <string name="file_operations">File Operations</string>
-    <string name="diagnostics">Diagnostics</string>
+    <string name="diagnostics">Settings</string>
     <string name="face_id">Face ID</string>
     <string name="test">Test</string>
     <string name="keyword_spotting">Keyword Spotting</string>

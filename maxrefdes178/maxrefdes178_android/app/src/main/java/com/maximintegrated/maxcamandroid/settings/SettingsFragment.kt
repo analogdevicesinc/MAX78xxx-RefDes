@@ -83,13 +83,13 @@ class SettingsFragment : Fragment() {
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
 
         binding.max78000VideoCnnItem.setup(
-            "MAX78000 VIDEO CNN",
+            "Video CNN",
             ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD,
             settingsItemListener
         )
         binding.max78000VideoFlashLedItem.setup(
-            "MAX78000 VIDEO Flash Led",
+            "Video Flash LED",
             ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD,
             settingsItemListener
