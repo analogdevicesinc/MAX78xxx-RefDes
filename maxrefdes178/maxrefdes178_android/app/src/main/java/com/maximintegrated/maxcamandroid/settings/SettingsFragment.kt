@@ -101,14 +101,14 @@ class SettingsFragment : Fragment() {
             settingsItemListener
         )
         binding.lcdStats.setup(
-            "LCD Statistics",
+            "LCD Show Statistics",
             ble_command_e.BLE_COMMAND_ENABLE_LCD_STATISCTICS_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_LCD_STATISCTICS_CMD,
             settingsItemListener
         )
 
         binding.lcdProbability.setup(
-            "LCD Probability",
+            "LCD Show Probability",
             ble_command_e.BLE_COMMAND_ENABLE_LCD_PROBABILITY_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_LCD_PROBABILITY_CMD,
             settingsItemListener
