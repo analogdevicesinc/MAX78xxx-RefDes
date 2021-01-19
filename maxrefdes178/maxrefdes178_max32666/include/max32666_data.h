@@ -120,7 +120,7 @@ typedef struct {
 //-----------------------------------------------------------------------------
 extern lcd_data_t lcd_data;
 extern device_status_t device_status;
-extern device_settings_t device_settings;
+extern volatile device_settings_t device_settings;
 extern device_info_t device_info;
 extern timestamps_t timestamps;
 

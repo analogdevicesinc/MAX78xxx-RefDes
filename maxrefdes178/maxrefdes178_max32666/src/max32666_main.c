@@ -400,8 +400,10 @@ static void run_application(void)
         }
         if (device_status.ble_running_status_changed) {
             if (device_settings.enable_ble) {
+                PR_INFO("Enable Core1");
                 Core1_Start();
             } else {
+                PR_INFO("Disable Core1");
                 Core1_Stop();
             }
             device_status.ble_running_status_changed = 0;

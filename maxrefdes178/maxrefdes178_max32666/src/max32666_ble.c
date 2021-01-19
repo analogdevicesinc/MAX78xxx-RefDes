@@ -710,10 +710,6 @@ int ble_worker(void)
     /* Run the WSF OS */
     wsfOsDispatcher();
 
-//    if(!WsfOsActive()) {
-//      /* No WSF tasks are active, optionally sleep */
-//    }
-
     if (ble_queue_deq_tx(&ble_packet_container) == E_SUCCESS) {
         if (ble_send_indication(ble_packet_container.size, (uint8_t *) &(ble_packet_container.packet)) != E_SUCCESS) {
             PR_ERROR("ble_send_indication failed");
@@ -721,26 +717,27 @@ int ble_worker(void)
     }
 
     if (!device_settings.enable_ble) {
-        PR_INFO("Disable BLE");
+        PR_INFO("Disconnect BLE");
 
         // If device is connected, send disconnect
         if (periphCb.connected) {
-//            LlDisconnect(periphCb.connectionHandle, LL_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_POWER_OFF);
             AppConnClose(periphCb.connId);
             while (periphCb.connected) {
                 wsfOsDispatcher();
             }
         }
+
         AppAdvStop();
 //        PalBbDisable();
 
+        PR_INFO("Stop BLE");
         device_status.ble_running_status_changed = 1;
         while(!device_settings.enable_ble);
+        PR_INFO("Run BLE");
 
 //        PalBbEnable();
         AppAdvStart(APP_MODE_AUTO_INIT);
 
-        PR_INFO("Enable BLE");
     }
 
     return E_NO_ERROR;
