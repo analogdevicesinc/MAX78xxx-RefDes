@@ -15,6 +15,7 @@
     <string name="send_file">Send File</string>
     <string name="send">Send</string>
     <string name="shut_down_device">Shut Down Device</string>
+    <string name="restart_device">Restart Device</string>
     <string name="choose_a_file">Choose a file</string>
     <string name="no_file_is_selected">No file is selected</string>
     <string name="content">Content</string>
@@ -84,6 +85,7 @@
     <string name="delete">Delete</string>
     <string name="are_you_sure_to_delete_it">Are you sure you want to delete it?</string>
     <string name="are_you_sure_to_shut_device_down">Are you sure you want to shut down the device?</string>
+    <string name="are_you_sure_to_restart_device">Are you sure you want to restart the device?</string>
     <string name="yes">Yes</string>
     <string name="cancel">Cancel</string>
     <string name="new_person">New Person</string>
@@ -106,7 +108,7 @@
     <string name="db_edit">DB Edit</string>
     <string name="create_signature_text">Click the button below to generate a signature using the selected FaceID database.</string>
     <string name="send_signature_text">Click the button below to send the signature to the device.</string>
-    <string name="signature_not_found">Signature file not found!</string>
+    <string name="signature_not_found">Signature has not been generated yet.</string>
     <string name="script_in_progress">Signature generation is in progress...</string>
     <string name="create_signature">Generate Signature</string>
     <string name="send_signature">Send Signature</string>

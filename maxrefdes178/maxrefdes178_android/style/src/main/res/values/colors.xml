@@ -18,6 +18,7 @@
     <color name="color_background">#ffffff</color>
     <color name="color_surface">#ffffff</color>
     <color name="color_error">#b00020</color>
+    <color name="color_warning">#FF9800</color>
 
     <!--"On" colors define how text, icons and strokes are colored in relation to the surface-->
     <!--on which they appear.-->

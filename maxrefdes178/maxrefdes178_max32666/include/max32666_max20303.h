@@ -132,6 +132,14 @@ int max20303_boost(int on, uint8_t boost_output_level);
 int max20303_power_off(void);
 
 /**
+ * @brief  Hard reset MAX20303.
+ * Before calling this function, PMIC should be initialized via max20303_initialize() function
+ * @retval     #E_NO_ERROR   If successful.
+ * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
+ */
+int max20303_hard_reset(void);
+
+/**
  * @brief  Setup for BuckBoost Converter of MAX20303 PMIC.
  * Before calling this function, PMIC should be initialized via max20303_initialize() function
  * @param  on   Non-zero value enables buck-boost converter

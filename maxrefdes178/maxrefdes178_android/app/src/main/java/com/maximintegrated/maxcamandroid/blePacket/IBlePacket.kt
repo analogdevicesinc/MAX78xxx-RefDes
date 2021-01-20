@@ -359,6 +359,7 @@ enum class ble_command_e {
     // Device Settings
     BLE_COMMAND_DISABLE_BLE_CMD,                      // None
     BLE_COMMAND_SHUT_DOWN_DEVICE_CMD,                 // None
+    BLE_COMMAND_RESTART_DEVICE_CMD,                   // None
     BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD,            // None
     BLE_COMMAND_DISABLE_MAX78000_AUDIO_CMD,           // None
     BLE_COMMAND_ENABLE_MAX78000_VIDEO_CMD,            // None

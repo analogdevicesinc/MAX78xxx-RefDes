@@ -211,6 +211,7 @@ static int8_t prev_decision = -2;
 static int8_t decision = -2;
 static uint32_t time_counter = 0;
 static int8_t enable_cnn = 1;
+static int8_t enable_video = 1;
 static uint8_t *qspi_payload_buffer = NULL;
 
 version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
@@ -465,10 +466,12 @@ static void run_demo(void)
                 break;
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD:
                 PR_INFO("enable video");
+                enable_video = 1;
                 camera_start_capture_image();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD:
                 PR_INFO("disable video");
+                enable_video = 0;
                 MXC_PCIF_Stop();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD:
@@ -500,6 +503,11 @@ static void run_demo(void)
             }
 
             qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+        }
+
+        // TODO low power modes
+        if (!enable_video) {
+            continue;
         }
 
         if (camera_is_image_rcv()) { // Check whether image is ready

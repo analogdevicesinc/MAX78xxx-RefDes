@@ -175,7 +175,16 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
+        PR_INFO("shut down device");
         max20303_power_off();
+        break;
+    case BLE_COMMAND_RESTART_DEVICE_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
+        PR_INFO("restart device");
+        max20303_hard_reset();
         break;
     case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD:
         if (ble_command_buffer.total_payload_size != 0) {

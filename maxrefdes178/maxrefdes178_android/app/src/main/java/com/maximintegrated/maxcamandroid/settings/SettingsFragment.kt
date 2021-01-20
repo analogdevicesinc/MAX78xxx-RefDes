@@ -114,17 +114,17 @@ class SettingsFragment : Fragment() {
             settingsItemListener
         )
 
-        binding.sendStats.setup(
-            "Send Statistics",
-            ble_command_e.BLE_COMMAND_ENABLE_SEND_STATISTICS_CMD,
-            ble_command_e.BLE_COMMAND_DISABLE_SEND_STATISTICS_CMD,
+        binding.max78000VideoEnableItem.setup(
+            "Enable Video",
+            ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_CMD,
+            ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_CMD,
             settingsItemListener
         )
 
-        binding.sendClass.setup(
-            "Send Classification",
-            ble_command_e.BLE_COMMAND_ENABLE_SEND_CLASSIFICATION_CMD,
-            ble_command_e.BLE_COMMAND_DISABLE_SEND_CLASSIFICATION_CMD,
+        binding.max78000AudioEnableItem.setup(
+            "Enable Audio",
+            ble_command_e.BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD,
+            ble_command_e.BLE_COMMAND_DISABLE_MAX78000_AUDIO_CMD,
             settingsItemListener
         )
 
@@ -148,6 +148,23 @@ class SettingsFragment : Fragment() {
                 dialog.dismiss()
                 maxCamViewModel.sendData(
                     ble_command_packet_t.from(ble_command_e.BLE_COMMAND_SHUT_DOWN_DEVICE_CMD)
+                        .toByteArray()
+                )
+                startScannerActivity(it.context)
+            }
+            alert.setNegativeButton(getString(com.maximintegrated.maxcamandroid.R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            alert.show()
+        }
+
+        restartButton.setOnClickListener {
+            val alert = AlertDialog.Builder(requireContext())
+            alert.setMessage(getString(com.maximintegrated.maxcamandroid.R.string.are_you_sure_to_restart_device))
+            alert.setPositiveButton(getString(com.maximintegrated.maxcamandroid.R.string.yes)) { dialog, _ ->
+                dialog.dismiss()
+                maxCamViewModel.sendData(
+                    ble_command_packet_t.from(ble_command_e.BLE_COMMAND_RESTART_DEVICE_CMD)
                         .toByteArray()
                 )
                 startScannerActivity(it.context)

@@ -113,6 +113,7 @@ uint16_t thresholdHigh = THRESHOLD_HIGH;
 uint16_t thresholdLow = THRESHOLD_LOW;
 static int16_t  x0, x1, Coeff;
 static int32_t  y0, y1;
+static int8_t enable_audio = 1;
 
 volatile uint8_t i2s_flag = 0;
 int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
@@ -308,10 +309,12 @@ int main(void)
                 // TODO
                 break;
             case QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD:
-                // TODO
+                PR_INFO("enable audio");
+                enable_audio = 1;
                 break;
             case QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD:
-                // TODO
+                PR_INFO("disable audio");
+                enable_audio = 0;
                 break;
             case QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD:
                 // TODO
@@ -326,6 +329,11 @@ int main(void)
 
             qspi_slave_set_rx_state(QSPI_STATE_IDLE);
 
+        }
+
+        // TODO low power modes
+        if (!enable_audio) {
+            continue;
         }
 
         /* Read from Mic driver to get CHUNK worth of samples, otherwise next sample*/
