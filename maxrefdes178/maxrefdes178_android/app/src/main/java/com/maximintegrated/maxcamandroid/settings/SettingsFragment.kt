@@ -115,14 +115,14 @@ class SettingsFragment : Fragment() {
         )
 
         binding.max78000VideoEnableItem.setup(
-            "Enable Video",
+            "Video",
             ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_CMD,
             settingsItemListener
         )
 
         binding.max78000AudioEnableItem.setup(
-            "Enable Audio",
+            "Audio",
             ble_command_e.BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_MAX78000_AUDIO_CMD,
             settingsItemListener
