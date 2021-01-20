@@ -57,12 +57,12 @@
 #include "max32666_i2c.h"
 #include "max32666_lcd.h"
 #include "max32666_lcd_images.h"
-#include "max32666_led_button.h"
 #include "max32666_max20303.h"
 #include "max32666_max34417.h"
 #include "max32666_qspi_master.h"
 #include "max32666_sdcard.h"
 #include "max32666_spi_dma.h"
+#include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_version.h"
 
@@ -82,7 +82,6 @@
 // Global variables
 //-----------------------------------------------------------------------------
 static volatile int core1_init_done = 0;
-static volatile uint32_t timer_ms_tick = 0;
 
 //static const mxc_gpio_cfg_t core1_swd_pin = MAX32666_CORE1_SWD_PIN;
 
@@ -96,7 +95,6 @@ static void core0_icc(int enable);
 static void core1_icc(int enable);
 static void run_application(void);
 static void refresh_screen(void);
-static int ms_timer_init(void);
 
 
 //-----------------------------------------------------------------------------
@@ -205,9 +203,9 @@ int main(void)
 ////        max20303_led_red(1);
 //    }
 
-    ret = led_button_init();
+    ret = timer_led_button_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("led_button_init failed %d", ret);
+        PR_ERROR("timer_led_button_init failed %d", ret);
         max20303_led_red(1);
     }
 
@@ -220,12 +218,6 @@ int main(void)
     ret = ble_command_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("ble_command_init failed %d", ret);
-        max20303_led_red(1);
-    }
-
-    ret = ms_timer_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("ms_timer_init failed %d", ret);
         max20303_led_red(1);
     }
 
@@ -346,8 +338,6 @@ static void run_application(void)
                     }
                 }
 
-//                refresh_screen();
-
                 if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
                     ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
                         sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
@@ -441,7 +431,7 @@ static void refresh_screen(void)
 {
     static char line_string[20] = {0};
 
-    core0_icc(1);
+    core0_icc(1); // enable icc for lcd operations
 
     if (!device_settings.enable_lcd) {
         return;
@@ -493,7 +483,7 @@ static void refresh_screen(void)
     }
 
     // Draw FaceID frame and result
-    if (device_settings.enable_max78000_video_cnn) {
+    if (device_settings.enable_max78000_video && device_settings.enable_max78000_video_cnn) {
         if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
             strncpy(lcd_data.subtitle, device_status.classification_video.result, sizeof(lcd_data.subtitle) - 1);
             fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
@@ -509,15 +499,20 @@ static void refresh_screen(void)
                 FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
     }
 
-    if ((timestamps.screen_drew - timestamps.audio_result_received) < LCD_CLASSIFICATION_DURATION) {
-        if (device_settings.enable_lcd_probabilty) {
-            snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "%s %0.1f",
-                    device_status.classification_audio.result, (double) device_status.classification_audio.probabily);
-        } else {
-            strncpy(lcd_data.toptitle, device_status.classification_audio.result, sizeof(lcd_data.toptitle) - 1);
-        }
+    if (device_settings.enable_max78000_audio) {
+        if ((timestamps.screen_drew - timestamps.audio_result_received) < LCD_CLASSIFICATION_DURATION) {
+            if (device_settings.enable_lcd_probabilty) {
+                snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "%s %0.1f",
+                        device_status.classification_audio.result, (double) device_status.classification_audio.probabily);
+            } else {
+                strncpy(lcd_data.toptitle, device_status.classification_audio.result, sizeof(lcd_data.toptitle) - 1);
+            }
 
-        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+            fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+        }
+    } else {
+        snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "Audio disabled");
+        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_11x18, RED, lcd_data.buffer);
     }
 
     if ((timestamps.screen_drew - timestamps.notification_received) < LCD_NOTIFICATION_DURATION) {
@@ -531,30 +526,7 @@ static void refresh_screen(void)
     core0_icc(0);
 }
 
-void ms_timer(void)
-{
-    // Clear interrupt
-    MXC_TMR_ClearFlags(MAX32666_TIMER_MS);
 
-    timer_ms_tick += 1;
-}
-
-static int ms_timer_init(void)
-{
-    // Init ms timer
-    mxc_tmr_cfg_t tmr;
-    MXC_TMR_Shutdown(MAX32666_TIMER_MS);
-    tmr.pres = TMR_PRES_1;
-    tmr.mode = TMR_MODE_CONTINUOUS;
-    tmr.cmp_cnt = PeripheralClock / 1000;
-    tmr.pol = 0;
-    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)), ms_timer);
-    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)));
-    MXC_TMR_Init(MAX32666_TIMER_MS, &tmr);
-    MXC_TMR_Start(MAX32666_TIMER_MS);
-
-    return E_NO_ERROR;
-}
 
 // Similar to Core 0, the entry point for Core 1
 // is Core1Main()

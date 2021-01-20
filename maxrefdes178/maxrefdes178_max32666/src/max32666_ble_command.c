@@ -46,6 +46,7 @@
 #include "max32666_lcd.h"
 #include "max32666_max20303.h"
 #include "max32666_qspi_master.h"
+#include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
 
 
@@ -304,6 +305,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         device_settings.enable_lcd_statistics = 1;
+        timestamps.faceid_subject_names_received = timer_ms_tick;
         break;
     case BLE_COMMAND_DISABLE_LCD_STATISCTICS_CMD:
         if (ble_command_buffer.total_payload_size != 0) {

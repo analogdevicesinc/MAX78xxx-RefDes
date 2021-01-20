@@ -43,8 +43,8 @@
 
 #include "max32666_debug.h"
 #include "max32666_data.h"
-#include "max32666_led_button.h"
 #include "max32666_max20303.h"
+#include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
 
 
@@ -54,6 +54,7 @@
 #define S_MODULE_NAME   "led"
 
 #define LED_CONINOUS_TIMER_INTERVAL    1
+
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -65,6 +66,8 @@
 //-----------------------------------------------------------------------------
 static const mxc_gpio_cfg_t button1_int_pin = MAX32666_BUTTON1_INT_PIN;
 static volatile uint8_t led_toogle = 0;
+volatile uint32_t timer_ms_tick = 0;
+
 
 //-----------------------------------------------------------------------------
 // Local function declarations
@@ -114,10 +117,29 @@ void led_continuous_timer(void)
     }
 }
 
-int led_button_init(void)
+void ms_timer(void)
 {
-    // Init led_continuous_timer
+    // Clear interrupt
+    MXC_TMR_ClearFlags(MAX32666_TIMER_MS);
+
+    timer_ms_tick += 1;
+}
+
+int timer_led_button_init(void)
+{
+    // Init ms timer
     mxc_tmr_cfg_t tmr;
+    MXC_TMR_Shutdown(MAX32666_TIMER_MS);
+    tmr.pres = TMR_PRES_1;
+    tmr.mode = TMR_MODE_CONTINUOUS;
+    tmr.cmp_cnt = PeripheralClock / 1000;
+    tmr.pol = 0;
+    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)), ms_timer);
+    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)));
+    MXC_TMR_Init(MAX32666_TIMER_MS, &tmr);
+    MXC_TMR_Start(MAX32666_TIMER_MS);
+
+    // Init led_continuous_timer
     MXC_TMR_Shutdown(MAX32666_TIMER_LED);
     tmr.pres = TMR_PRES_128;
     tmr.mode = TMR_MODE_CONTINUOUS;

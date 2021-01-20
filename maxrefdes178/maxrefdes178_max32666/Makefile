@@ -84,12 +84,12 @@ SRCS += max32666_fault.c
 SRCS += max32666_fonts.c
 SRCS += max32666_i2c.c
 SRCS += max32666_lcd.c
-SRCS += max32666_led_button.c
 SRCS += max32666_max20303.c
 SRCS += max32666_max34417.c
 SRCS += max32666_qspi_master.c
 SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
+SRCS += max32666_timer_led_button.c
 SRCS += maxrefdes178_utility.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
