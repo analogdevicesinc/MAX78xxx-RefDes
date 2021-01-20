@@ -43,6 +43,7 @@
 #include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
+#include "max32666_fonts.h"
 #include "max32666_lcd.h"
 #include "max32666_max20303.h"
 #include "max32666_qspi_master.h"
@@ -362,6 +363,15 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         expander_debug_select((debugger_select_e)ble_command_buffer.total_payload_buffer[0]);
+        if (ble_command_buffer.total_payload_buffer[0] == DEBUGGER_SELECT_MAX32666_CORE1) {
+            snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX32666 Core1 debug selected");
+        } else if (ble_command_buffer.total_payload_buffer[0] == DEBUGGER_SELECT_MAX78000_VIDEO) {
+            snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX78000 Video debug selected");
+        } else if (ble_command_buffer.total_payload_buffer[0] == DEBUGGER_SELECT_MAX78000_AUDIO) {
+            snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX78000 Audio debug selected");
+        }
+        lcd_data.notification_color = MAGENTA;
+        timestamps.notification_received = timer_ms_tick;
         break;
     default:
         PR_ERROR("Unknwon command");
