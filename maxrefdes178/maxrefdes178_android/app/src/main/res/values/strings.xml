@@ -89,6 +89,17 @@
     <string name="yes">Yes</string>
     <string name="cancel">Cancel</string>
     <string name="new_person">New Person</string>
+    <string name="photo_help_title">FaceID Photo Guidelines</string>
+    <string name="photo_help_content">
+        " 1. Make sure the subject's face is well illuminated.\n"
+        "2. Photos should be passport style, with subject's face covering about 60-70% of the area.\n"
+        "3. Use a light color background; make sure it is not underexposed, and there is no shadow in the background or face.\n"
+        "4. Take one photo with each of the following poses, total of 6-8 photos:\n"
+        "  a) Facing directly to the camera (1 photo)\n"
+        "  b) Tilting face slightly (5-10 degree) to right, left, up and down, but still looking at the camera (4 photos)\n"
+        "  c) Zoomed out face directly to the camera covering about 20-30% of the area (1 photo):\n"
+        "5. You may add additional photos with facial expressions (eg. smile) directly facing to the camera, similar to 4-a. (1-2 photos)"
+    </string>
     <string name="enter_a_person_name">Enter a person name</string>
     <string name="person_name_exists">The person name already exists!</string>
     <string name="person_is_renamed">The person has been renamed.</string>
@@ -106,7 +117,7 @@
     <string name="no_available_people">There is no person available.</string>
     <string name="db_selection">DB Selection</string>
     <string name="db_edit">DB Edit</string>
-    <string name="create_signature_text">Click the button below to generate a signature using the selected FaceID database.</string>
+    <string name="create_signature_text">Click the button below to generate a signature using the selected FaceID database. Please click once and wait, signature generation might take a while.</string>
     <string name="send_signature_text">Click the button below to send the signature to the device.</string>
     <string name="signature_not_found">Signature has not been generated yet.</string>
     <string name="script_in_progress">Signature generation is in progress...</string>

@@ -1,6 +1,7 @@
 package com.maximintegrated.maxcamandroid.face
 
 import android.content.Context
+import android.text.InputFilter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -68,7 +69,6 @@ class DbAdapter(private val listener: DbListener) :
             }
         }
 
-
         private fun showEditDatabaseDialog(dbModel: DbModel) {
             val context = parent.context
             val alert = AlertDialog.Builder(context)
@@ -77,6 +77,10 @@ class DbAdapter(private val listener: DbListener) :
             )
             layout.dialogTitleTextView.text = context.getString(R.string.rename_database)
             layout.dialogEditText.hint = context.getString(R.string.enter_a_database_name)
+            val filterArray = arrayOfNulls<InputFilter>(2)
+            filterArray[0] = InputFilter.LengthFilter(15)
+            filterArray[1] = AlphaNumericInputFilter()
+            layout.dialogEditText.filters = filterArray
             layout.dialogEditText.setText(dbModel.dbName)
             alert.setView(layout)
             alert.setPositiveButton(context.getString(R.string.rename)) { dialog, _ ->

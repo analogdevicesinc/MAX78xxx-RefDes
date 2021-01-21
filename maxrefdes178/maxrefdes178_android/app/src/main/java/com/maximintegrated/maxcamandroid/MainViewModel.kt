@@ -1,9 +1,9 @@
 package com.maximintegrated.maxcamandroid
 
 import android.app.Application
-import android.app.TaskStackBuilder
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Handler
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.widget.Toast
@@ -157,6 +157,27 @@ class MainViewModel(
         maxCamNativeLibrary.getDirectoryRequest()
     }
 
+    private var sendTimeoutCallback = Runnable {}
+    private var sendTimeoutHandler = Handler()
+
+    fun setSendTimeout() {
+        sendTimeoutHandler.removeCallbacks(sendTimeoutCallback)
+        sendTimeoutCallback = Runnable {
+            setEmbeddingsSendInProgress(false)
+            val context = app.applicationContext
+            Toast.makeText(
+                context,
+                "Send signature failed!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        sendTimeoutHandler.postDelayed(sendTimeoutCallback,3000);
+    }
+
+    fun abortSendTimeout() {
+        sendTimeoutHandler.removeCallbacks(sendTimeoutCallback)
+    }
+
     @ExperimentalUnsignedTypes
     fun onPayloadReceived(data: ByteArray) {
 
@@ -213,7 +234,7 @@ class MainViewModel(
                         Toast.LENGTH_LONG
                     ).show()
                     setEmbeddingsSendInProgress(false)
-
+                    abortSendTimeout()
 
                 }
 

@@ -1,6 +1,7 @@
 package com.maximintegrated.maxcamandroid.face
 
 import android.os.Bundle
+import android.text.InputFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -72,6 +73,10 @@ class DbSelectionFragment : Fragment(), DbListener {
         val layout = layoutInflater.inflate(R.layout.edit_text_alert_dialog, null)
         layout.dialogTitleTextView.text = requireContext().getString(R.string.new_database)
         layout.dialogEditText.hint = requireContext().getString(R.string.enter_a_database_name)
+        val filterArray = arrayOfNulls<InputFilter>(2)
+        filterArray[0] = InputFilter.LengthFilter(15)
+        filterArray[1] = AlphaNumericInputFilter()
+        layout.dialogEditText.filters = filterArray
         alert.setView(layout)
         alert.setPositiveButton(getString(R.string.create)) { dialog, _ ->
             val name = layout.dialogEditText.text.toString().trim()

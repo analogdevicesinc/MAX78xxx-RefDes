@@ -1,5 +1,7 @@
 package com.maximintegrated.maxcamandroid.face
 
+import android.text.InputFilter
+import android.text.Spanned
 import java.io.File
 
 const val DB_FOLDER_NAME = "/Databases"
@@ -44,5 +46,26 @@ data class DbModel(
     fun findEmbeddingsFile() {
         val list = dbFolder.listFiles()?.toList() ?: emptyList()
         embeddingsFile = list.find { it.extension == "bin" }
+    }
+}
+
+class AlphaNumericInputFilter : InputFilter {
+    override fun filter(
+        source: CharSequence, start: Int, end: Int,
+        dest: Spanned, dstart: Int, dend: Int
+    ): CharSequence? {
+
+        // Only keep characters that are alphanumeric
+        val builder = StringBuilder()
+        for (i in start until end) {
+            val c = source[i]
+            if (Character.isLetterOrDigit(c)) {
+                builder.append(c)
+            }
+        }
+
+        // If all characters are valid, return null, otherwise only return the filtered characters
+        val allCharactersValid = builder.length == end - start
+        return if (allCharactersValid) null else builder.toString()
     }
 }

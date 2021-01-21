@@ -1,5 +1,6 @@
 package com.maximintegrated.maxcamandroid.face
 
+import android.text.InputFilter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -84,6 +85,10 @@ class PersonAdapter(private val listener: PersonListener) :
             )
             layout.dialogTitleTextView.text = context.getString(R.string.rename_person)
             layout.dialogEditText.hint = context.getString(R.string.enter_a_person_name)
+            val filterArray = arrayOfNulls<InputFilter>(2)
+            filterArray[0] = InputFilter.LengthFilter(15)
+            filterArray[1] = AlphaNumericInputFilter()
+            layout.dialogEditText.filters = filterArray
             layout.dialogEditText.setText(person.nameSurname)
             alert.setView(layout)
             alert.setPositiveButton(context.getString(R.string.rename)) { dialog, _ ->

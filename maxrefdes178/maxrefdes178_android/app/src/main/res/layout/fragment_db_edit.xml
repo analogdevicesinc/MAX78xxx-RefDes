@@ -77,4 +77,15 @@
         app:thirdStepDescription="@string/demo"
         app:thirdStepNumber="3" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/newPhotoHelpFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:clickable="true"
+        android:src="@android:drawable/ic_menu_help"
+        app:layout_constraintBottom_toTopOf="@+id/stepperView"
+        app:layout_constraintEnd_toStartOf="@+id/newPersonFab" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

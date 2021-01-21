@@ -1,6 +1,7 @@
 package com.maximintegrated.maxcamandroid.face
 
 import android.os.Bundle
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -150,6 +151,7 @@ class DemoFragment : Fragment() {
                 embeddingsArr.size
             )
 
+            mainViewModel.setSendTimeout()
             maxCamViewModel.sendData(commandPacket.toByteArray())
 
             spentPayloadSize += command_packet_payload_size

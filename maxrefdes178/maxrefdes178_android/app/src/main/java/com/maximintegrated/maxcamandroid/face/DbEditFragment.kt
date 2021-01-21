@@ -3,6 +3,9 @@ package com.maximintegrated.maxcamandroid.face
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputFilter
+import android.text.InputFilter.LengthFilter
+import android.text.Spanned
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +24,7 @@ import kotlinx.android.synthetic.main.edit_text_alert_dialog.view.*
 import kotlinx.android.synthetic.main.fragment_db_edit.*
 import timber.log.Timber
 import java.io.File
+
 
 class DbEditFragment : Fragment(), PersonListener {
 
@@ -78,6 +82,10 @@ class DbEditFragment : Fragment(), PersonListener {
         newPersonFab.setOnClickListener {
             showNewPersonDialog()
         }
+
+        newPhotoHelpFab.setOnClickListener {
+            showNewPhotoHelpDialog()
+        }
     }
 
     private fun updateNewPersonFabVisibility() {
@@ -93,12 +101,24 @@ class DbEditFragment : Fragment(), PersonListener {
         val layout = layoutInflater.inflate(R.layout.edit_text_alert_dialog, null)
         layout.dialogTitleTextView.text = requireContext().getString(R.string.new_person)
         layout.dialogEditText.hint = requireContext().getString(R.string.enter_a_person_name)
+        val filterArray = arrayOfNulls<InputFilter>(2)
+        filterArray[0] = LengthFilter(15)
+        filterArray[1] = AlphaNumericInputFilter()
+        layout.dialogEditText.filters = filterArray
         alert.setView(layout)
         alert.setPositiveButton(getString(R.string.create)) { dialog, _ ->
             val name = layout.dialogEditText.text.toString().trim()
             faceIdViewModel.createPerson(name)
             dialog.dismiss()
         }
+        alert.show()
+    }
+
+    private fun showNewPhotoHelpDialog() {
+        val alert = AlertDialog.Builder(requireContext())
+        alert.setTitle(requireContext().getString(R.string.photo_help_title))
+        alert.setMessage(requireContext().getString(R.string.photo_help_content))
+        alert.setPositiveButton("OK", null)
         alert.show()
     }
 
