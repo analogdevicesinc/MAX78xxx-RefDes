@@ -236,6 +236,62 @@ int main(void)
     fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
 
+    // Get information from MAX78000
+    {
+        qspi_packet_type_e qspi_packet_type_rx = 0;
+        for (int try = 0; try < 3; try++) {
+            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
+            qspi_master_wait_video_int();
+            qspi_master_worker(&qspi_packet_type_rx);
+            if (device_status.faceid_embed_subject_names_size) {
+                break;
+            }
+        }
+
+        for (int try = 0; try < 3; try++) {
+            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
+            qspi_master_wait_video_int();
+            qspi_master_worker(&qspi_packet_type_rx);
+            if (device_info.device_version.max78000_video.major && device_info.device_version.max78000_video.minor) {
+                break;
+            }
+        }
+        for (int try = 0; try < 3; try++) {
+            qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
+            qspi_master_wait_audio_int();
+            qspi_master_worker(&qspi_packet_type_rx);
+            if (device_info.device_version.max78000_audio.major && device_info.device_version.max78000_audio.minor) {
+                break;
+            }
+        }
+    }
+
+    // Check video and audio fw version for release builds
+#ifdef MAXREFDES178_RELEASE
+    if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_video, sizeof(version_t))) {
+        PR_ERROR("max32666 and max78000_video versions are different");
+        snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "video fw err %d.%d.%d",
+                device_info.device_version.max78000_video.major,
+                device_info.device_version.max78000_video.minor,
+                device_info.device_version.max78000_video.build);
+        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_11x18, RED, maxim_logo);
+        lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
+        max20303_led_red(1);
+        while(1);
+    }
+    if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_audio, sizeof(version_t))) {
+        PR_ERROR("max32666 and max78000_audio versions are different");
+        snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "audio fw err %d.%d.%d",
+                device_info.device_version.max78000_audio.major,
+                device_info.device_version.max78000_audio.minor,
+                device_info.device_version.max78000_audio.build);
+        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_11x18, RED, maxim_logo);
+        lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
+        max20303_led_red(1);
+        while(1);
+    }
+#endif
+
     PR_INFO("core 0 init completed");
 
     run_application();
@@ -249,33 +305,6 @@ static void run_application(void)
     lcd_data.notification_color = BLUE;
     lcd_data.frame_color = WHITE;
     device_status.faceid_embed_subject_names_size = 0;
-
-    // Get information from MAX78000
-    for (int try = 0; try < 3; try++) {
-        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
-        qspi_master_wait_video_int();
-        qspi_master_worker(&qspi_packet_type_rx);
-        if (device_status.faceid_embed_subject_names_size) {
-            break;
-        }
-    }
-
-    for (int try = 0; try < 3; try++) {
-        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
-        qspi_master_wait_video_int();
-        qspi_master_worker(&qspi_packet_type_rx);
-        if (device_info.device_version.max78000_video.major && device_info.device_version.max78000_video.minor) {
-            break;
-        }
-    }
-    for (int try = 0; try < 3; try++) {
-        qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
-        qspi_master_wait_audio_int();
-        qspi_master_worker(&qspi_packet_type_rx);
-        if (device_info.device_version.max78000_audio.major && device_info.device_version.max78000_audio.minor) {
-            break;
-        }
-    }
 
     // Main application loop
     while (1) {

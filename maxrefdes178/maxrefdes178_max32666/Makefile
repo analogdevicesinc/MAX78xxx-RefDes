@@ -131,6 +131,7 @@ PROJ_CFLAGS+=-Werror
 # Set MXC_OPTIMIZE to override the default optimization level 
 ifdef RELEASE
 MXC_OPTIMIZE_CFLAGS=-Ofast
+PROJ_CFLAGS+=-DMAXREFDES178_RELEASE
 else
 MXC_OPTIMIZE_CFLAGS=-Og
 endif

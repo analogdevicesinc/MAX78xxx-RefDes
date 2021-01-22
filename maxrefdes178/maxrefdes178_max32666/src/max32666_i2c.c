@@ -124,7 +124,7 @@ int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t
 //    reqMaster.restart = 0;
 //    reqMaster.callback = NULL;
 //    if((err = MXC_I2C_MasterTransaction(&reqMaster)) != E_NO_ERROR) {
-//        PR_ERROR("i2c_reg_read failed %d", err);
+//        PR_ERROR("MXC_I2C_MasterTransaction failed %d", err);
 //        return err;
 //    }
 //    return E_NO_ERROR;
@@ -152,7 +152,7 @@ int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
 
-int i2c_master_reg_write_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t* buf, int len)
+int i2c_master_reg_write_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t* buf, uint8_t len)
 {
     uint32_t cnt = I2C_TIMEOUT_CNT;
 
@@ -225,16 +225,44 @@ int i2c_master_reg_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t 
     return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
 
-int i2c_master_reg_read_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, int len)
+int i2c_master_reg_read_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t len)
 {
-    // TODO
-    return E_NO_ERROR;
-}
+    uint32_t cnt = I2C_TIMEOUT_CNT;
+    uint8_t read = 0;
 
-void I2C0_IRQHandler(void)
-{
-    MXC_I2C_AsyncHandler(MXC_I2C0_BUS0);
-    return;
+    i2c_flush(i2c);
+
+    i2c->fifo = addr;
+    i2c->master_ctrl = MXC_F_I2C_MASTER_CTRL_START;
+    i2c->fifo = reg;
+
+    i2c->rx_ctrl1 = len;
+    i2c->master_ctrl = MXC_F_I2C_MASTER_CTRL_RESTART;
+    while ((i2c->master_ctrl & MXC_F_I2C_MASTER_CTRL_RESTART) && cnt) {
+        cnt--;
+    }
+    i2c->fifo = addr | 0x01;
+
+    while (!(i2c->int_fl0 & (MXC_F_I2C_INT_FL0_RX_THRESH | MXC_F_I2C_INT_FL0_DONE)) && cnt) {
+        cnt--;
+    }
+    while ( (len > read) && (! (i2c->status & MXC_F_I2C_STATUS_RX_EMPTY))) {
+        buf[read++] = i2c->fifo;
+    }
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_RX_THRESH;
+
+    i2c->master_ctrl = MXC_F_I2C_MASTER_CTRL_STOP;
+    while (!(i2c->int_fl0 & MXC_F_I2C_INT_FL0_STOP) && cnt) {
+        cnt--;
+    }
+    i2c->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    if (cnt == 0) {
+        PR_WARN("timeout");
+        return E_TIME_OUT;
+    }
+
+    return (i2c->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
 
 int i2c_master_init(mxc_i2c_regs_t *i2c, unsigned int speed)
