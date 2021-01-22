@@ -171,7 +171,7 @@ class MainViewModel(
                 Toast.LENGTH_LONG
             ).show()
         }
-        sendTimeoutHandler.postDelayed(sendTimeoutCallback,3000);
+        sendTimeoutHandler.postDelayed(sendTimeoutCallback,10000);
     }
 
     fun abortSendTimeout() {
