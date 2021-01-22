@@ -304,7 +304,6 @@ static void run_application(void)
     qspi_packet_type_e qspi_packet_type_rx = 0;
     lcd_data.notification_color = BLUE;
     lcd_data.frame_color = WHITE;
-    device_status.faceid_embed_subject_names_size = 0;
 
     // Main application loop
     while (1) {

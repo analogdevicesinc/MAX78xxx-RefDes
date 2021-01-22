@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <core1.h>
 #include <string.h>
 
 #include "max32666_ble_command.h"
@@ -178,6 +179,9 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         PR_INFO("shut down device");
+        device_settings.enable_ble = 0;
+        for (int i = 0; (i < 10000000) && !device_status.ble_running_status_changed; i++) {}
+        Core1_Stop();
         max20303_power_off();
         break;
     case BLE_COMMAND_RESTART_DEVICE_CMD:
@@ -186,6 +190,9 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         PR_INFO("restart device");
+        device_settings.enable_ble = 0;
+        for (int i = 0; (i < 10000000) && !device_status.ble_running_status_changed; i++) {}
+        Core1_Stop();
         max20303_hard_reset();
         break;
     case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD:
