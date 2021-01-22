@@ -514,16 +514,28 @@ static void run_demo(void)
             capture_completed_time = GET_RTC_MS();
 
             if (enable_cnn) {
-                run_cnn(0, 0);
-                if ((run_count % 2) == 0){
-                    run_count = 0;
+                switch (run_count) {
+                case 0:
+                    run_cnn(0, 0);
+                    run_count = 1;
+                    break;
+                case 1:
                     run_cnn(-10, -10);
+                    run_count = 2;
+                    break;
+                case 2:
                     run_cnn(10, 10);
-                } else {
+                    run_count = 3;
+                    break;
+                case 3:
                     run_cnn(-10, 10);
+                    run_count = 4;
+                    break;
+                case 4:
                     run_cnn(10, -10);
+                    run_count = 0;
+                    break;
                 }
-                run_count++;
             }
 
             cnn_completed_time = GET_RTC_MS();
