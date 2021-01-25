@@ -598,6 +598,7 @@ static void run_cnn(int x_offset, int y_offset)
 {
     uint8_t *data;
     uint8_t *raw;
+    uint8_t ur, ug, ub;
     int8_t r, g, b;
     uint32_t number;
     uint32_t w, h;
@@ -624,14 +625,18 @@ static void run_cnn(int x_offset, int y_offset)
 
         for(int j = x_offset; j < FACEID_WIDTH + x_offset; j++) {
             // RGB565, |RRRRRGGG|GGGBBBBB|
-            b = (int8_t) (data[j * LCD_BYTE_PER_PIXEL + 1] << 3) - 128;
-            g = (int8_t) ((data[j * LCD_BYTE_PER_PIXEL] << 5) | ((data[j * LCD_BYTE_PER_PIXEL + 1] & 0xE0) >> 3)) - 128;
-            r = (int8_t) (data[j * LCD_BYTE_PER_PIXEL] & 0xF8) - 128;
+            ub = (data[j * LCD_BYTE_PER_PIXEL + 1] << 3);
+            ug = ((data[j * LCD_BYTE_PER_PIXEL] << 5) | ((data[j * LCD_BYTE_PER_PIXEL + 1] & 0xE0) >> 3));
+            ur = (data[j * LCD_BYTE_PER_PIXEL] & 0xF8);
+
+            b = ub - 128;
+            g = ug - 128;
+            r = ur - 128;
 
             // Loading data into the CNN fifo
             while (((*((volatile uint32_t *) 0x50000004) & 1)) != 0); // Wait for FIFO 0
 
-            number = 0x00FFFFFF & ((b << 16) | (g << 8) | r);
+            number = 0x00FFFFFF & ((((uint8_t)b) << 16) | (((uint8_t)g) << 8) | ((uint8_t) r));
 
             *((volatile uint32_t *) 0x50000008) = number; // Write FIFO 0
         }
