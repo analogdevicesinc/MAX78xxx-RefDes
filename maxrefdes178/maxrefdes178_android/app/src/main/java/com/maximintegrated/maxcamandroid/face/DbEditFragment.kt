@@ -146,8 +146,8 @@ class DbEditFragment : Fragment(), PersonListener {
         CropImage.activity()
             .setGuidelines(CropImageView.Guidelines.ON)
             .setAspectRatio(3, 4)
-            .setMinCropWindowSize(120, 160)
-            .setRequestedSize(480, 640)
+            .setMinCropWindowSize(600, 800)
+            .setRequestedSize(600, 800)
             .start(requireContext(), this)
     }
 
