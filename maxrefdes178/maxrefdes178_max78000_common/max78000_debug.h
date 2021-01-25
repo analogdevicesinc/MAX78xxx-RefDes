@@ -45,9 +45,9 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define PR_DEBUG(fmt, args...)   if(0) printf("D[%-8s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
-#define PR_INFO(fmt, args...)    if(1) printf("I[%-8s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
-#define PR_WARN(fmt, args...)    if(1) printf("W[%-8s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
-#define PR_ERROR(fmt, args...)   if(1) printf("E[%-8s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
+#define PR_DEBUG(fmt, args...)   if(0) printf("D[%-6s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
+#define PR_INFO(fmt, args...)    if(1) printf("I[%-6s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
+#define PR_WARN(fmt, args...)    if(1) printf("W[%-6s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
+#define PR_ERROR(fmt, args...)   if(1) printf("E[%-6s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
 
 #endif /* _MAX78000_DEBUG_H_ */

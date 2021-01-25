@@ -373,7 +373,7 @@ static void fail(void)
 
 static void run_demo(void)
 {
-    uint8_t run_count = 0;
+//    uint8_t run_count = 0;
     uint32_t capture_started_time = GET_RTC_MS();
     uint32_t cnn_completed_time;
     uint32_t qspi_completed_time;
@@ -514,15 +514,17 @@ static void run_demo(void)
             capture_completed_time = GET_RTC_MS();
 
             if (enable_cnn) {
-                switch (run_count) {
-                case 0:
-                    run_cnn(0, 0);
-                    break;
-                case 1:
-                    run_cnn(10, 10);
-                    break;
-//                case 2:
+                run_cnn(0, 0);
+
+//                switch (run_count) {
+//                case 0:
+//                    run_cnn(0, 0);
+//                    break;
+//                case 1:
 //                    run_cnn(-10, -10);
+//                    break;
+//                case 2:
+//                    run_cnn(10, 10);
 //                    break;
 //                case 3:
 //                    run_cnn(0, 0);
@@ -533,10 +535,9 @@ static void run_demo(void)
 //                case 5:
 //                    run_cnn(10, -10);
 //                    break;
-                }
-                run_count++;
-//                run_count = run_count % 6;
-                run_count = run_count % 2;
+//                }
+//               run_count++;
+//               run_count = run_count % 6;
 
 //                run_cnn(0, 0);
 //                if ((run_count % 2) == 0){
@@ -595,12 +596,14 @@ static void send_img(void)
 
 static void run_cnn(int x_offset, int y_offset)
 {
-    uint8_t   *raw;
-    uint32_t  imgLen;
-    uint32_t  w, h;
+    uint8_t *data;
+    uint8_t *raw;
+    int8_t r, g, b;
+    uint32_t number;
+    uint32_t w, h;
 
     // Get the details of the image from the camera driver.
-    camera_get_image(&raw, &imgLen, &w, &h);
+    camera_get_image(&raw, &number, &w, &h);
 
 #ifdef PRINT_TIME_CNN
     uint32_t pass_time = GET_RTC_MS();
@@ -610,34 +613,25 @@ static void run_cnn(int x_offset, int y_offset)
 
     cnn_start();
 
-    uint8_t * data = raw;
-
 #ifdef PRINT_TIME_CNN
     PR_TIMER("CNN init : %d", GET_RTC_MS() - pass_time);
     pass_time = GET_RTC_MS();
 #endif
 
-    data =  raw + ((LCD_HEIGHT - (FACEID_HEIGHT))/2)*LCD_WIDTH*LCD_BYTE_PER_PIXEL;
-    for (int i = y_offset; i<FACEID_HEIGHT+y_offset; i++) {
-        data =  raw + (((LCD_HEIGHT - FACEID_HEIGHT)/2)+i)*LCD_WIDTH*LCD_BYTE_PER_PIXEL;
-        data += ((LCD_WIDTH - FACEID_WIDTH)/2)*LCD_BYTE_PER_PIXEL;
-        for(int j =x_offset; j< FACEID_WIDTH+x_offset; j++) {
-            uint8_t ur,ug,ub;
-            int8_t r,g,b;
-            uint32_t number;
+    for (int i = y_offset; i < FACEID_HEIGHT + y_offset; i++) {
+        data = raw + (((LCD_HEIGHT - FACEID_HEIGHT) / 2) + i) * LCD_WIDTH * LCD_BYTE_PER_PIXEL;  // down
+        data += ((LCD_WIDTH - FACEID_WIDTH) / 2) * LCD_BYTE_PER_PIXEL;  // right
 
-            ub = (uint8_t)(data[j*LCD_BYTE_PER_PIXEL+1]<<3);
-            ug = (uint8_t)((data[j*LCD_BYTE_PER_PIXEL]<<5) | ((data[j*LCD_BYTE_PER_PIXEL+1]&0xE0)>>3));
-            ur = (uint8_t)(data[j*LCD_BYTE_PER_PIXEL]&0xF8);
-
-            b = ub - 128;
-            g = ug - 128;
-            r = ur - 128;
+        for(int j = x_offset; j < FACEID_WIDTH + x_offset; j++) {
+            // RGB565, |RRRRRGGG|GGGBBBBB|
+            b = (int8_t) (data[j * LCD_BYTE_PER_PIXEL + 1] << 3) - 128;
+            g = (int8_t) ((data[j * LCD_BYTE_PER_PIXEL] << 5) | ((data[j * LCD_BYTE_PER_PIXEL + 1] & 0xE0) >> 3)) - 128;
+            r = (int8_t) (data[j * LCD_BYTE_PER_PIXEL] & 0xF8) - 128;
 
             // Loading data into the CNN fifo
             while (((*((volatile uint32_t *) 0x50000004) & 1)) != 0); // Wait for FIFO 0
 
-            number = 0x00FFFFFF & ((((uint8_t)b)<<16) | (((uint8_t)g)<<8) | ((uint8_t)r));
+            number = 0x00FFFFFF & ((b << 16) | (g << 8) | r);
 
             *((volatile uint32_t *) 0x50000008) = number; // Write FIFO 0
         }
@@ -647,6 +641,7 @@ static void run_cnn(int x_offset, int y_offset)
     PR_TIMER("CNN load : %d", GET_RTC_MS() - pass_time);
     pass_time = GET_RTC_MS();
 #endif
+
     cnn_wait();
 
 #ifdef PRINT_TIME_CNN
@@ -665,6 +660,7 @@ static void run_cnn(int x_offset, int y_offset)
 
 #ifdef PRINT_TIME_CNN
     PR_TIMER("Embedding calc : %d", GET_RTC_MS() - pass_time);
+    pass_time = GET_RTC_MS();
 #endif
 
     if ( pResult == 0 ) {
@@ -701,4 +697,9 @@ static void run_cnn(int x_offset, int y_offset)
             PR_DEBUG("Result : %s\n", classification_result.result);
         }
     }
+
+#ifdef PRINT_TIME_CNN
+    PR_TIMER("Embedding result : %d", GET_RTC_MS() - pass_time);
+    pass_time = GET_RTC_MS();
+#endif
 }

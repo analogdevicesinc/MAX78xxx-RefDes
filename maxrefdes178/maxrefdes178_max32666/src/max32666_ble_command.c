@@ -159,7 +159,8 @@ static int ble_command_execute_rx_command(void)
             sizeof(device_info.device_serial_num), (uint8_t *) &device_info.device_serial_num);
         break;
     case BLE_COMMAND_FACEID_EMBED_UPDATE_CMD:
-        if (ble_command_buffer.total_payload_size == 0) {
+        if ((ble_command_buffer.total_payload_size < FACEID_EMBEDDING_SIZE) ||
+            (ble_command_buffer.total_payload_size > FACEID_MAX_EMBEDDINGS_SIZE)) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
