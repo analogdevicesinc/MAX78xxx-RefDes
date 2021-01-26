@@ -353,8 +353,6 @@ int main(void)
     // Successfully initialize the program
     PR_INFO("Program initialized successfully");
 
-    GPIO_SET(gpio_green);
-
     run_demo();
 
     return 0;
@@ -473,6 +471,8 @@ static void run_demo(void)
                 PR_INFO("disable video");
                 enable_video = 0;
                 MXC_PCIF_Stop();
+                GPIO_CLR(gpio_red);
+                GPIO_CLR(gpio_green);
                 break;
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD:
                 PR_INFO("enable cnn");
@@ -481,6 +481,8 @@ static void run_demo(void)
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD:
                 PR_INFO("disable cnn");
                 enable_cnn = 0;
+                GPIO_CLR(gpio_red);
+                GPIO_CLR(gpio_green);
                 break;
             case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD:
                 // Use camera interface buffer for FaceID embeddings subject names
@@ -674,6 +676,8 @@ static void run_cnn(int x_offset, int y_offset)
         uint8_t counter_len;
         get_min_dist_counter(&counter, &counter_len);
         classification_result.classification = CLASSIFICATION_NOTHING;
+        GPIO_CLR(gpio_red);
+        GPIO_CLR(gpio_green);
 
         prev_decision = decision;
         decision = -3;
@@ -682,16 +686,22 @@ static void run_cnn(int x_offset, int y_offset)
                 strncpy(classification_result.result, get_subject_name(id), sizeof(classification_result.result) - 1);
                 decision = id;
                 classification_result.classification = CLASSIFICATION_DETECTED;
+                GPIO_CLR(gpio_red);
+                GPIO_SET(gpio_green);
                 break;
             } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
                 strncpy(classification_result.result, "Adjust Face", sizeof(classification_result.result) - 1);
                 decision = -2;
                 classification_result.classification = CLASSIFICATION_LOW_CONFIDENCE;
+                GPIO_SET(gpio_red);
+                GPIO_SET(gpio_green);
                 break;
             } else if (counter[id] > 4){
                 strncpy(classification_result.result, "Unknown", sizeof(classification_result.result) - 1);
                 decision = -1;
                 classification_result.classification = CLASSIFICATION_UNKNOWN;
+                GPIO_SET(gpio_red);
+                GPIO_CLR(gpio_green);
                 break;
             }
         }

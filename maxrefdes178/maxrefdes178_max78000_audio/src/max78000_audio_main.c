@@ -252,8 +252,6 @@ int main(void)
 
     PR_INFO("** READY ***");
 
-    GPIO_SET(gpio_green);
-
     /* Read samples */
     while (1) {
 
@@ -444,6 +442,8 @@ int main(void)
                 int16_t out_class = -1;
                 double probability = 0;
 
+                GPIO_SET(gpio_green);
+
                 /* reset counters */
                 ai85Counter = 0;
                 avgSilenceCounter = 0;
@@ -550,6 +550,8 @@ int main(void)
 
                 Max = 0;
                 Min = 0;
+
+                GPIO_CLR(gpio_green);
             }
         }
     }
