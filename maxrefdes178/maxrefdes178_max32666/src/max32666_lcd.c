@@ -41,6 +41,7 @@
 #include <mxc_delay.h>
 
 #include "max32666_debug.h"
+#include "max32666_expander.h"
 #include "max32666_lcd.h"
 #include "max32666_max20303.h"
 #include "max32666_spi_dma.h"
@@ -118,7 +119,7 @@
 // Global variables
 //-----------------------------------------------------------------------------
 static const mxc_gpio_cfg_t lcd_dc_pin    = MAX32666_LCD_DC_PIN;
-static const mxc_gpio_cfg_t lcd_reset_pin = MAX32666_LCD_RESET_PIN;
+static const mxc_gpio_cfg_t lcd_reset_pin = MAX32666_LCD_RESET_PIN;  // TODO revA
 static const mxc_gpio_cfg_t lcd_cs_pin    = MAX32666_LCD_CS_PIN;
 
 
@@ -188,9 +189,11 @@ static void lcd_sendData(uint8_t *data, uint32_t dataLen)
 
 static void lcd_reset(void)
 {
-    GPIO_CLR(lcd_reset_pin);
+//    expander_clear_output(EXPANDER_OUTPUT_RESET_LCD); // TODO revA
+    GPIO_CLR(lcd_reset_pin);  // TODO revA
     MXC_Delay(MXC_DELAY_MSEC(25));
-    GPIO_SET(lcd_reset_pin);
+//    expander_set_output(EXPANDER_OUTPUT_RESET_LCD); // TODO revA
+    GPIO_SET(lcd_reset_pin);  // TODO revA
     MXC_Delay(MXC_DELAY_MSEC(25));
 }
 
@@ -339,8 +342,9 @@ int lcd_init(void)
     GPIO_SET(lcd_dc_pin);
     MXC_GPIO_Config(&lcd_dc_pin);
 
-    GPIO_SET(lcd_reset_pin);
-    MXC_GPIO_Config(&lcd_reset_pin);
+//    expander_set_output(EXPANDER_OUTPUT_RESET_LCD);  // TODO revA
+    GPIO_SET(lcd_reset_pin);  // TODO revA
+    MXC_GPIO_Config(&lcd_reset_pin);  // TODO revA
 
     lcd_reset();
 

@@ -370,7 +370,7 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        expander_debug_select((debugger_select_e)ble_command_buffer.total_payload_buffer[0]);
+//        expander_select_debugger((debugger_select_e)ble_command_buffer.total_payload_buffer[0]);  // TODO revA
         if (ble_command_buffer.total_payload_buffer[0] == DEBUGGER_SELECT_MAX32666_CORE1) {
             snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX32666 Core1 debug selected");
         } else if (ble_command_buffer.total_payload_buffer[0] == DEBUGGER_SELECT_MAX78000_VIDEO) {
