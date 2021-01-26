@@ -355,13 +355,9 @@ static void run_application(void)
                         device_settings.enable_max78000_video_cnn = 0;
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
                     } else if (strcmp(device_status.classification_audio.result, "UP") == 0) {
-                        device_settings.enable_lcd_probabilty = 1;
-                    } else if(strcmp(device_status.classification_audio.result, "DOWN") == 0) {
-                        device_settings.enable_lcd_probabilty = 0;
-                    } else if (strcmp(device_status.classification_audio.result, "YES") == 0) {
                         device_settings.enable_lcd_statistics = 1;
                         timestamps.faceid_subject_names_received = timer_ms_tick;
-                    } else if(strcmp(device_status.classification_audio.result, "NO") == 0) {
+                    } else if(strcmp(device_status.classification_audio.result, "DOWN") == 0) {
                         device_settings.enable_lcd_statistics = 0;
                     }
                 }
@@ -459,11 +455,11 @@ static void refresh_screen(void)
 {
     static char line_string[20] = {0};
 
-    core0_icc(1); // enable icc for lcd operations
-
     if (!device_settings.enable_lcd) {
         return;
     }
+
+    core0_icc(1); // enable icc for lcd operations
 
     if (device_settings.enable_lcd_statistics) {
         int line_pos = 3;
