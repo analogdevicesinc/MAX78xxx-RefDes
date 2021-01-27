@@ -41,15 +41,15 @@
 #include <stdio.h>
 
 #include "max32666_debug.h"
-#include "max32666_data.h"
 #include "max32666_i2c.h"
+#include "max32666_max17048.h"
 #include "max32666_max20303.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_MODULE_NAME   "max20303"
+#define S_MODULE_NAME   "pmic"
 
 //// MAX20303 PMIC Definitions
 // MAX20303 Device ID register value
@@ -138,32 +138,13 @@
 #define MAX20303_APREG_POWEROFF_COMMAND_DELAY            0x84
 
 
-//// MAX17048 Fuel Gauge Definitions
-// MAX17048 Fuel gauge registers
-#define MAX17048_REG_VCELL                               0x02
-#define MAX17048_REG_SOC                                 0x04
-#define MAX17048_REG_MODE                                0x06
-#define MAX17048_REG_VERSION                             0x08
-#define MAX17048_REG_HIBRT                               0x0A
-#define MAX17048_REG_CONFIG                              0x0C
-#define MAX17048_REG_VALRT                               0x14
-#define MAX17048_REG_CRATE                               0x16
-#define MAX17048_REG_VRESET                              0x18
-#define MAX17048_REG_STATUS                              0x1A
-#define MAX17048_REG_TABLE_START                         0x40
-#define MAX17048_REG_TABLE_END                           0x7F
-#define MAX17048_REG_CMD                                 0xFE
-
-#define MAX17048_STATUS_RI_MASK                          0x01  // reset indicator
-#define MAX17048_STATUS_VH_MASK                          0x02  // voltage high
-#define MAX17048_STATUS_VL_MASK                          0x04  // voltage low
-#define MAX17048_STATUS_VR_MASK                          0x05  // voltage reset
-#define MAX17048_STATUS_HD_MASK                          0x10  // SOC low
-#define MAX17048_STATUS_SC_MASK                          0x20  // SOC change
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
 
 
 //-----------------------------------------------------------------------------
-// Global variables
+// Typedefs
 //-----------------------------------------------------------------------------
 
 
@@ -240,34 +221,6 @@ int max20303_init(void)
     // Power On MAX78000 Board
     max20303_enable_video_audio(1);
     MXC_Delay(MXC_DELAY_MSEC(100));
-
-    // Try to read fuel gauge soc
-    if ((err = max20303_soc(&regval)) != E_NO_ERROR) {
-        PR_ERROR("Fuel gauge is not responding");
-        device_status.fuel_gauge_working = 0;
-    } else {
-        device_status.fuel_gauge_working = 1;
-    }
-
-    return E_NO_ERROR;
-}
-
-int max20303_soc(uint8_t *soc)
-{
-    int err;
-    uint8_t raw;
-
-    if ((err = i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX20303_FUEL_GAUGE, MAX17048_REG_SOC, &raw)) != E_NO_ERROR) {
-        PR_ERROR("i2c_master_reg_read failed %d", err);
-        return err;
-    }
-    if (raw > 100) {
-        *soc = 100;
-    } else {
-        *soc = raw;
-    }
-
-    PR_DEBUG("soc %d", *soc);
 
     return E_NO_ERROR;
 }

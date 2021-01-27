@@ -58,7 +58,7 @@
 #define I2C_TIMEOUT_CNT                    1000000  // loop counter
 
 #define I2C_ADDR_MAX20303_PMIC             0x50  // 0x50 for writes, 0x51 for reads
-#define I2C_ADDR_MAX20303_FUEL_GAUGE       0x6C  // 0x6C for writes, 0x6D for reads
+#define I2C_ADDR_MAX17048_FUEL_GAUGE       0x6C  // 0x6C for writes, 0x6D for reads
 #define I2C_ADDR_MAX7325_PORTS             0xD2
 #define I2C_ADDR_MAX7325_OUTPUTS           0xB2
 #define I2C_ADDR_BMI160                    0xD0

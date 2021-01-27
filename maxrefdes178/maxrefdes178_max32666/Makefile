@@ -84,6 +84,7 @@ SRCS += max32666_fault.c
 SRCS += max32666_fonts.c
 SRCS += max32666_i2c.c
 SRCS += max32666_lcd.c
+SRCS += max32666_max17048.c
 SRCS += max32666_max20303.c
 #SRCS += max32666_max34417.c
 SRCS += max32666_qspi_master.c

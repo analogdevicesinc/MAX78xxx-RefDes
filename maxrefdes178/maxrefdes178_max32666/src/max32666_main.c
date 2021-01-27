@@ -57,6 +57,7 @@
 #include "max32666_i2c.h"
 #include "max32666_lcd.h"
 #include "max32666_lcd_images.h"
+#include "max32666_max17048.h"
 #include "max32666_max20303.h"
 #include "max32666_max34417.h"
 #include "max32666_qspi_master.h"
@@ -151,6 +152,13 @@ int main(void)
             MXC_Delay(MXC_DELAY_MSEC(100));
             MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
         }
+    }
+
+    ret = max17048_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("max17048_init failed %d", ret);
+        max20303_led_red(1);
+        while(1);
     }
 
 //    ret = expander_init();  // TODO revA
@@ -446,7 +454,9 @@ static void run_application(void)
         // Check battery SOC
         if (device_status.fuel_gauge_working && ((timer_ms_tick - timestamps.battery_soc_drew) > MAX32666_SOC_INTERVAL)) {
             timestamps.battery_soc_drew = timer_ms_tick;
-            max20303_soc(&device_status.statistics.battery_soc);
+            max17048_soc(&device_status.statistics.battery_soc);
+//            float vcell;
+//            max17048_vcell(&vcell);
             if (device_status.statistics.battery_soc < MAX32666_SOC_WARNING_LEVEL) {
                 snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1,
                         "Battery level %d is low!", device_status.statistics.battery_soc);
