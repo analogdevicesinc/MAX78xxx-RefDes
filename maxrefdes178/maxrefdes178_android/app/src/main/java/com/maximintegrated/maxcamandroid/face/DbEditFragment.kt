@@ -5,21 +5,21 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputFilter.LengthFilter
-import android.text.Spanned
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.observe
 import com.google.android.material.snackbar.Snackbar
+import com.maximintegrated.maxcamandroid.MainActivity
 import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.utils.EventObserver
 import com.theartofdev.edmodo.cropper.CropImage
 import com.theartofdev.edmodo.cropper.CropImageView
+import kotlinx.android.synthetic.main.app_bar_layout.*
 import kotlinx.android.synthetic.main.edit_text_alert_dialog.view.*
 import kotlinx.android.synthetic.main.fragment_db_edit.*
 import timber.log.Timber
@@ -62,12 +62,10 @@ class DbEditFragment : Fragment(), PersonListener {
             enableNextButton()
         }
 
-        stepperView.onBackButtonClicked {
-            requireActivity().onBackPressed()
-        }
-        stepperView.onNextButtonClicked {
+        faceIdDemoButton.setOnClickListener {
             faceIdViewModel.onDemoFragmentRequested()
         }
+
         faceIdViewModel.goToDemoFragment.observe(viewLifecycleOwner, EventObserver {
             requireActivity().addFragment(DemoFragment.newInstance())
         })
@@ -83,8 +81,16 @@ class DbEditFragment : Fragment(), PersonListener {
             showNewPersonDialog()
         }
 
-        newPhotoHelpFab.setOnClickListener {
-            showNewPhotoHelpDialog()
+        (activity as MainActivity).toolbar.apply {
+            menu.clear()
+            inflateMenu(R.menu.info_menu)
+            setOnMenuItemClickListener { item ->
+                if (item.itemId == R.id.infoMenuItem) {
+                    showNewPhotoHelpDialog()
+                    return@setOnMenuItemClickListener true
+                }
+                return@setOnMenuItemClickListener false
+            }
         }
     }
 
@@ -125,7 +131,7 @@ class DbEditFragment : Fragment(), PersonListener {
     private fun enableNextButton() {
         var imageCount = 0
         faceIdViewModel.selectedDatabase?.persons?.forEach { personModel -> imageCount += personModel.imageCount }
-        stepperView.enableNextButton = imageCount > 0
+        faceIdDemoButton.isEnabled = imageCount > 0
     }
 
     override fun onRenameRequested(personModel: PersonModel, name: String) {
@@ -169,6 +175,13 @@ class DbEditFragment : Fragment(), PersonListener {
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 result?.let { Timber.e(it.error) }
             }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        (activity as MainActivity).toolbar.apply {
+            menu.clear()
         }
     }
 }

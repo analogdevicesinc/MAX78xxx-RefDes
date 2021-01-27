@@ -13,7 +13,7 @@
         android:alpha="0.5"
         android:src="@drawable/ic_empty"
         android:tint="@color/color_primary"
-        app:layout_constraintBottom_toTopOf="@id/stepperView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -37,7 +37,7 @@
         android:src="@drawable/ic_add"
         android:tint="@color/color_on_primary"
         app:backgroundTint="@color/color_primary"
-        app:layout_constraintBottom_toTopOf="@id/stepperView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -45,7 +45,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@id/stepperView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -57,25 +57,5 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:constraint_referenced_ids="emptyImageView,emptyTextView" />
-
-    <com.maximintegrated.maxcamandroid.view.HorizontalStepperView
-        android:id="@+id/stepperView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="0dp"
-        app:cardElevation="8dp"
-        app:currentStep="first"
-        app:enableBackButton="false"
-        app:enableNextButton="false"
-        app:firstStepDescription="@string/db_selection"
-        app:firstStepNumber="1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:secondStepDescription="@string/db_edit"
-        app:secondStepNumber="2"
-        app:stepperProgress="33"
-        app:thirdStepDescription="@string/demo"
-        app:thirdStepNumber="3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

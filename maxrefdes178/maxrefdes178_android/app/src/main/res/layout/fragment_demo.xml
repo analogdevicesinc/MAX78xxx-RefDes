@@ -88,25 +88,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/sendButton" />
 
-    <com.maximintegrated.maxcamandroid.view.HorizontalStepperView
-        android:id="@+id/stepperView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="0dp"
-        app:cardElevation="8dp"
-        app:currentStep="third"
-        app:enableBackButton="true"
-        app:enableNextButton="true"
-        app:firstStepDescription="@string/db_selection"
-        app:firstStepNumber="1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:nextButtonText="@string/done"
-        app:secondStepDescription="@string/db_edit"
-        app:secondStepNumber="2"
-        app:stepperProgress="100"
-        app:thirdStepDescription="@string/demo"
-        app:thirdStepNumber="3" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

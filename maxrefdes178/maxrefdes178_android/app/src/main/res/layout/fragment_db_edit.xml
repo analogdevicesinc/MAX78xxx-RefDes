@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".face.DbEditFragment">
+
     <ImageView
         android:id="@+id/emptyImageView"
         android:layout_width="150dp"
@@ -12,7 +13,7 @@
         android:alpha="0.5"
         android:src="@drawable/ic_empty"
         android:tint="@color/color_primary"
-        app:layout_constraintBottom_toTopOf="@id/stepperView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -36,7 +37,7 @@
         android:src="@drawable/ic_add"
         android:tint="@color/color_on_primary"
         app:backgroundTint="@color/color_primary"
-        app:layout_constraintBottom_toTopOf="@id/stepperView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -44,11 +45,11 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@id/stepperView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:itemCount="4"
+        tools:itemCount="10"
         tools:listitem="@layout/person_item" />
 
     <androidx.constraintlayout.widget.Group
@@ -57,36 +58,14 @@
         android:layout_height="wrap_content"
         app:constraint_referenced_ids="emptyImageView,emptyTextView" />
 
-    <com.maximintegrated.maxcamandroid.view.HorizontalStepperView
-        android:id="@+id/stepperView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="0dp"
-        app:cardElevation="8dp"
-        app:currentStep="second"
-        app:enableBackButton="true"
-        app:enableNextButton="false"
-        app:firstStepDescription="@string/db_selection"
-        app:firstStepNumber="1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:secondStepDescription="@string/db_edit"
-        app:secondStepNumber="2"
-        app:stepperProgress="66"
-        app:thirdStepDescription="@string/demo"
-        app:thirdStepNumber="3" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/newPhotoHelpFab"
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/faceIdDemoButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="10dp"
-        android:clickable="true"
-        android:src="@drawable/ic_info"
-        app:maxImageSize="40dp"
-        app:layout_constraintBottom_toTopOf="@+id/stepperView"
-        app:layout_constraintEnd_toStartOf="@+id/newPersonFab" />
+        android:text="@string/face_id_demo"
+        app:layout_constraintBottom_toBottomOf="@id/newPersonFab"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/newPersonFab" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -128,4 +128,6 @@
     <string name="signature_update_success">Signature updated is successful.</string>
     <string name="signature_update_fail">Signature update is failed!</string>
     <string name="signature_create_fail">Signature can not be generated!</string>
+    <string name="face_id_demo">Face Id Demo</string>
+    <string name="info">Info</string>
 </resources>
