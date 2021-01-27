@@ -68,25 +68,27 @@
 
 /* Enable/Disable Features */
 //#define ENABLE_PRINT_ENVELOPE            // enables printing average waveform envelope for samples
-//#define ENABLE_CLASSIFICATION_DISPLAY	 // enables printing classification result
-#define ENABLE_SILENCE_DETECTION		 // Starts collecting only after avg > THRESHOLD_HIGH, otherwise starts from first sample
+//#define ENABLE_CLASSIFICATION_DISPLAY    // enables printing classification result
+#define ENABLE_SILENCE_DETECTION         // Starts collecting only after avg > THRESHOLD_HIGH, otherwise starts from first sample
+#undef EIGHT_BIT_SAMPLES                 // samples from Mic or Test vectors are eight bit, otherwise 16-bit
 
 /*-----------------------------*/
 /* keep following unchanged */
-#define SAMPLE_SIZE 		16384 	// size of input vector for CNN, keep it multiple of 128
-#define CHUNK				128  	// number of data points to read at a time and average for threshold, keep multiple of 128
-#define TRANSPOSE_WIDTH		128 	// width of 2d data model to be used for transpose
-#define NUM_OUTPUTS 		21		// number of classes
-#define I2S_RX_BUFFER_SIZE	64		// I2S buffer size
+#define SAMPLE_SIZE         16384   // size of input vector for CNN, keep it multiple of 128
+#define CHUNK               128     // number of data points to read at a time and average for threshold, keep multiple of 128
+#define TRANSPOSE_WIDTH     128     // width of 2d data model to be used for transpose
+#define NUM_OUTPUTS         21      // number of classes
+#define I2S_RX_BUFFER_SIZE  64      // I2S buffer size
+#define TFT_BUFF_SIZE       50      // TFT buffer size
 /*-----------------------------*/
 
 /* Adjustables */
-#define SAMPLE_SCALE_FACTOR    		4		// multiplies 16-bit samples by this scale factor before converting to 8-bit
-#define THRESHOLD_HIGH				350  	// voice detection threshold to find beginning of a keyword
-#define THRESHOLD_LOW				100  	// voice detection threshold to find end of a keyword
-#define SILENCE_COUNTER_THRESHOLD 	20 		// [>20] number of back to back CHUNK periods with avg < THRESHOLD_LOW to declare the end of a word
-#define PREAMBLE_SIZE				30*CHUNK// how many samples before beginning of a keyword to include
-#define INFERENCE_THRESHOLD   		49 		// min probability (0-100) to accept an inference
+#define SAMPLE_SCALE_FACTOR         4       // multiplies 16-bit samples by this scale factor before converting to 8-bit
+#define THRESHOLD_HIGH              350     // voice detection threshold to find beginning of a keyword
+#define THRESHOLD_LOW               100     // voice detection threshold to find end of a keyword
+#define SILENCE_COUNTER_THRESHOLD   20      // [>20] number of back to back CHUNK periods with avg < THRESHOLD_LOW to declare the end of a word
+#define PREAMBLE_SIZE               30*CHUNK// how many samples before beginning of a keyword to include
+#define INFERENCE_THRESHOLD         49      // min probability (0-100) to accept an inference
 
 
 //-----------------------------------------------------------------------------
@@ -103,7 +105,6 @@ mxc_gpio_cfg_t gpio_red       = MAX78000_AUDIO_LED_RED_PIN;
 mxc_gpio_cfg_t gpio_green     = MAX78000_AUDIO_LED_GREEN_PIN;
 mxc_gpio_cfg_t gpio_blue      = MAX78000_AUDIO_LED_BLUE_PIN;
 
-extern uint32_t cnn_time;
 static int32_t ml_data[NUM_OUTPUTS];
 static q15_t ml_softmax[NUM_OUTPUTS];
 uint8_t pAI85Buffer[SAMPLE_SIZE];
@@ -129,24 +130,26 @@ typedef enum _mic_processing_state {
 } mic_processing_state;
 
 /* Set of detected words */
-char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
-        "GO", "YES", "NO", "ON", "OFF", "ONE", "TWO", "THREE", "FOUR", "FIVE",
-        "SIX", "SEVEN", "EIGHT", "NINE", "ZERO", "Unknown" };
+const char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
+                                         "GO", "YES", "NO", "ON", "OFF", "ONE", "TWO", "THREE", "FOUR", "FIVE",
+                                         "SIX", "SEVEN", "EIGHT", "NINE", "ZERO", "Unknown"
+                                       };
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-int8_t MicReader(int16_t *sample);
-uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg);
-uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
-        uint16_t outSize, uint16_t width);
-uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
-        int16_t *out_class, double *out_prob);
+void fail(void);
+uint8_t cnn_load_data(uint8_t* pIn);
+int8_t MicReader(int16_t* sample);
+uint8_t MicReadChunk(uint8_t* pBuff, uint16_t* avg);
+uint8_t AddTranspose(uint8_t* pIn, uint8_t* pOut, uint16_t inSize,
+                     uint16_t outSize, uint16_t width);
+uint8_t check_inference(q15_t* ml_soft, int32_t* ml_data,
+                        int16_t* out_class, double* out_prob);
 void I2SInit();
 void HPF_init(void);
 int16_t HPF(int16_t input);
-static void fail(void);
 
 
 //-----------------------------------------------------------------------------
@@ -188,17 +191,9 @@ int main(void)
 
     Microphone_Power(POWER_ON);
 
-    /* Reset all domains, restore power to CNN */
-    MXC_GCFR->reg3 = 0xf; // Reset
-    MXC_GCFR->reg1 = 0xf; // Mask
-    MXC_GCFR->reg0 = 0xf; // Power
-    MXC_GCFR->reg2 = 0x0; // Iso
-    MXC_GCFR->reg3 = 0x0; // Reset
-
-    MXC_GCR->pclkdiv &= ~(MXC_F_GCR_PCLKDIV_CNNCLKDIV
-            | MXC_F_GCR_PCLKDIV_CNNCLKSEL);
-    MXC_GCR->pclkdiv |= MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1; // CNN clock: 100 MHz div 2
-    MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN); // Enable CNN clock
+    /* Enable peripheral, enable CNN interrupt, turn on CNN clock */
+    /* CNN clock: 50 MHz div 1 */
+    cnn_enable(MXC_S_GCR_PCLKDIV_CNNCLKSEL_PCLK, MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1);
 
     /* Configure CNN Boost pin */
     GPIO_SET(gpio_cnn_boost);
@@ -238,12 +233,13 @@ int main(void)
         fail();
     }
 
-    /* load kernels */
-    PR_INFO("*** CNN Kernel load ***");
-    if (!cnn_load_kernel()) {
-        PR_ERROR("ERROR: Loading Kernel!");
-        fail();
-    }
+    /* Bring state machine into consistent state */
+    cnn_init();
+    /* Load kernels */
+    cnn_load_weights();
+    /* Configure state machine */
+    cnn_configure();
+
     /* switch to silence state*/
     procState = SILENCE;
 
@@ -329,8 +325,8 @@ int main(void)
 
         }
 
-        // TODO low power modes
         if (!enable_audio) {
+            __WFI();
             continue;
         }
 
@@ -378,19 +374,22 @@ int main(void)
                 if (preambleCounter == 0) {
                     /* copy latest samples afterwards */
                     if (AddTranspose(&pPreambleCircBuffer[0], pAI85Buffer,
-                            PREAMBLE_SIZE, SAMPLE_SIZE, TRANSPOSE_WIDTH))
+                            PREAMBLE_SIZE, SAMPLE_SIZE, TRANSPOSE_WIDTH)) {
                         PR_ERROR("ERROR: Transpose ended early");
+                    }
                 } else {
                     /* copy oldest samples to the beginning*/
                     if (AddTranspose(&pPreambleCircBuffer[preambleCounter],
                             pAI85Buffer, PREAMBLE_SIZE - preambleCounter,
-                            SAMPLE_SIZE, TRANSPOSE_WIDTH))
+                            SAMPLE_SIZE, TRANSPOSE_WIDTH)) {
                         PR_ERROR("ERROR: Transpose ended early");
+                    }
 
                     /* copy latest samples afterwards */
                     if (AddTranspose(&pPreambleCircBuffer[0], pAI85Buffer,
-                            preambleCounter, SAMPLE_SIZE, TRANSPOSE_WIDTH))
+                            preambleCounter, SAMPLE_SIZE, TRANSPOSE_WIDTH)) {
                         PR_ERROR("ERROR: Transpose ended early");
+                    }
 
                 }
 
@@ -417,8 +416,9 @@ int main(void)
             /* if there is silence after at least 1/3 of samples passed, increment number of times back to back silence to find end of keyword */
             if ((avg < thresholdLow) && (ai85Counter >= SAMPLE_SIZE / 3)) {
                 avgSilenceCounter ++;
-            } else
+            } else {
                 avgSilenceCounter = 0;
+            }
 
 
             /* if this is the last sample and there are not enough samples to
@@ -469,9 +469,6 @@ int main(void)
                     fail();
                 }
 
-                /* Start timer */
-                MXC_TMR_SW_Start(MXC_TMR0);
-
                 /* Start CNN */
                 if (!cnn_start()) {
                     PR_ERROR("ERROR: Starting CNN!");
@@ -479,13 +476,15 @@ int main(void)
                 }
 
                 /* Wait for CNN  to complete */
-                cnn_wait();
+                while (cnn_time == 0) {
+                    __WFI();
+                }
 
                 /* read data */
                 cnn_unload((uint32_t *)ml_data);
 
                 /* Get time */
-                MXC_TMR_GetTime(MXC_TMR0, cnn_time, &cnn_time, &units);
+                MXC_TMR_GetTime(MXC_TMR0, cnn_time, (uint32_t*) &cnn_time, &units);
                 PR_DEBUG("%.6d: Completes CNN: %d", sampleCounter, wordCounter);
 
                 switch (units) {
@@ -604,7 +603,7 @@ uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
         int16_t *out_class, double *out_prob) {
     int32_t temp[NUM_OUTPUTS];
     q15_t max = 0;    // soft_max output is 0->32767
-    int32_t max_ml = 1<<31;  // ml before going to soft_max
+    int32_t max_ml = 1 << 31;  // ml before going to soft_max
     int16_t max_index = -1;
 
     memcpy(temp, ml_data, sizeof(int32_t) * NUM_OUTPUTS);
@@ -633,10 +632,43 @@ uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
     PR_DEBUG("Min: %d,   Max: %d", Min, Max);
 
     /* check if probability is low */
-    if (*out_prob > INFERENCE_THRESHOLD)
+    if (*out_prob > INFERENCE_THRESHOLD) {
         return 1;
-    else
+    }
+    else {
         return 0;
+    }
+}
+
+uint8_t cnn_load_data(uint8_t* pIn)
+{
+    uint32_t mem;
+    uint16_t index = 0;
+
+    /* data should already be formated correctly */
+    /* pIn is 16KB, each 1KB belongs to a memory group */
+    for (mem = 0x50400000; mem <= 0x50418000; mem += 0x8000) {
+        memcpy((uint8_t*)mem, &pIn[index], 1024);
+        //printf("%.10X \n",(uint8_t *)mem);
+        index += 1024;
+    }
+
+    for (mem = 0x50800000; mem <= 0x50818000; mem += 0x8000) {
+        memcpy((uint8_t*)mem, &pIn[index], 1024);
+        index += 1024;
+    }
+
+    for (mem = 0x50C00000; mem <= 0x50C18000; mem += 0x8000) {
+        memcpy((uint8_t*)mem, &pIn[index], 1024);
+        index += 1024;
+    }
+
+    for (mem = 0x51000000; mem <= 0x51018000; mem += 0x8000) {
+        memcpy((uint8_t*)mem, &pIn[index], 1024);
+        index += 1024;
+    }
+
+    return CNN_OK;
 }
 
 uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
@@ -701,16 +733,17 @@ uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
 
     if (total >= outSize) {
         /* sanity check */
-        if (row != width)
+        if (row != width) {
             PR_ERROR("ERROR: Rearranging!");
+        }
 
         total = 0;
         row = 0;
         col = 0;
         return 1;
-    } else
+    } else {
         return 0;
-
+    }
 }
 
 uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg)
@@ -750,9 +783,6 @@ uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg)
         if (index++ < 10000)
             continue;
 
-        /* Turn on LED2 (Red) */
-        //		LED_On(LED2);
-
         /* absolute for averaging */
         if (sample >= 0)
             sum += sample;
@@ -767,10 +797,13 @@ uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg)
         chunkCount++;
 
         /* record max and min */
-        if (temp > Max)
+        if (temp > Max) {
             Max = temp;
-        if (temp < Min)
+        }
+
+        if (temp < Min) {
             Min = temp;
+        }
 
     }
 
@@ -803,17 +836,20 @@ int16_t HPF(int16_t input) {
     /* a 1st order IIR high pass filter (100 Hz cutoff frequency)  */
     /* y(n)=x(n)-x(n-1)+A*y(n-1) and A =.995*2^15 */
 
-    x0=input;
+    x0 = input;
 
     tmp = (Coeff * y1);
     Acc = (int16_t)((tmp + (1 << 14)) >> 15);
     y0 = x0 - x1 + Acc;
 
     /* Clipping */
-    if(y0 > 32767)
+    if (y0 > 32767) {
         y0 = 32767;
-    if(y0 < -32768)
+    }
+
+    if (y0 < -32768) {
         y0 = -32768;
+    }
 
     /* Update filter state */
     y1 = y0;
@@ -821,10 +857,10 @@ int16_t HPF(int16_t input) {
 
     output = (int16_t)y0;
 
-    return	(output);
+    return (output);
 }
 
-static void fail(void)
+void fail(void)
 {
     PR_ERROR("fail");
 

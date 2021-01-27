@@ -366,6 +366,12 @@ static void run_application(void)
                     ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
                         sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
                 }
+
+                if (!device_settings.enable_max78000_video) {
+                    memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
+                    timestamps.screen_drew = timer_ms_tick;
+                    refresh_screen();
+                }
                 break;
             case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
                 if (device_status.ble_connected) {
@@ -448,6 +454,8 @@ static void run_application(void)
                 timestamps.notification_received = timer_ms_tick;
             }
         }
+
+        // TODO: low power WFI
     }
 }
 
@@ -476,7 +484,7 @@ static void refresh_screen(void)
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(line_string, sizeof(line_string) - 1, "vCNN:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
+        snprintf(line_string, sizeof(line_string) - 1, "Face:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
@@ -488,7 +496,7 @@ static void refresh_screen(void)
 //        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
 //        line_pos += 12;
 
-        snprintf(line_string, sizeof(line_string) - 1, "aCNN:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
+        snprintf(line_string, sizeof(line_string) - 1, "KWS:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 

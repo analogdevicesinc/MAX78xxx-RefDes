@@ -33,33 +33,31 @@
  *******************************************************************************
  */
 
-// faceid_seq_nobias
-// Created using ./ai8xize.py -e --verbose --top-level cnn -L --test-dir sdk/Examples/MAX78000/CNN --prefix faceid_seq_nobias --checkpoint-file trained/ai85-streaming_seqfaceid_nobias_x6.pth.tar --config-file tests/ai85faceid_nobias.yaml --device 85 --fifo --compact-data --mexpress --display-checkpoint --unload
+// faceid
+// Created using ./ai8xize.py --verbose --log --test-dir sdk/Examples/MAX78000/CNN --prefix faceid --checkpoint-file trained/ai85-faceid-qat8-q.pth.tar --config-file networks/faceid.yaml --fifo --device MAX78000 --compact-data --mexpress --timer 0 --display-checkpoint
+
+// DO NOT EDIT - regenerate this file instead!
 
 // Configuring 9 layers:
-// Layer 0: 3x160x120 (streaming HWC/little data), no pooling, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 16x160x120 output
-// Layer 1: 16x160x120 (streaming HWC/little data), 2x2 max pool with stride 2/2, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 32x80x60 output
-// Layer 2: 32x80x60 (HWC/little data), 2x2 max pool with stride 2/2, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 32x40x30 output
-// Layer 3: 32x40x30 (HWC/little data), 2x2 max pool with stride 2/2, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 64x20x15 output
-// Layer 4: 64x20x15 (HWC/little data), 2x2 max pool with stride 2/2, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 64x10x7 output
-// Layer 5: 64x10x7 (HWC/little data), no pooling, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 64x10x7 output
-// Layer 6: 64x10x7 (HWC/little data), no pooling, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 64x10x7 output
-// Layer 7: 64x10x7 (HWC/little data), 2x2 max pool with stride 2/2, conv2d with kernel size 1x1, stride 1/1, pad 0/0, 512x5x3 output
-// Layer 8: 512x5x3 (HWC/little data), 5x3 avg pool with stride 1/1, no convolution, stride 1/1, pad 0/0, 512x1x1 output
+// Layer 0: 3x160x120 (streaming HWC data), no pooling, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 16x160x120 output
+// Layer 1: 16x160x120 (streaming HWC data), 2x2 max pool with stride 2/2, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 32x80x60 output
+// Layer 2: 32x80x60 (HWC data), 2x2 max pool with stride 2/2, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 32x40x30 output
+// Layer 3: 32x40x30 (HWC data), 2x2 max pool with stride 2/2, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 64x20x15 output
+// Layer 4: 64x20x15 (HWC data), 2x2 max pool with stride 2/2, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 64x10x7 output
+// Layer 5: 64x10x7 (HWC data), no pooling, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 64x10x7 output
+// Layer 6: 64x10x7 (HWC data), no pooling, conv2d with kernel size 3x3, stride 1/1, pad 1/1, 64x10x7 output
+// Layer 7: 64x10x7 (HWC data), 2x2 max pool with stride 2/2, conv2d with kernel size 1x1, stride 1/1, pad 0/0, 512x5x3 output
+// Layer 8: 512x5x3 (HWC data), 5x3 avg pool with stride 1/1, no convolution, 512x1x1 output
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <fcr_regs.h>
 #include <gcfr_regs.h>
-#include <icc.h>
-#include <led.h>
-#include <mxc_sys.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tmr.h>
+#include <mxc.h>
 
 #include "max78000_video_cnn.h"
 #include "max78000_video_weights.h"
@@ -73,7 +71,7 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-uint32_t cnn_time; // Stopwatch
+volatile uint32_t cnn_time; // Stopwatch
 
 
 //-----------------------------------------------------------------------------
@@ -84,10 +82,36 @@ uint32_t cnn_time; // Stopwatch
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void cnn_wait(void)
+void CNN_ISR(void)
 {
-  while ((*((volatile uint32_t *) 0x50100000) & (1<<12)) != 1<<12) ;
-  cnn_time = MXC_TMR_SW_Stop(MXC_TMR0);
+  // Acknowledge interrupt to all groups
+  *((volatile uint32_t *) 0x50100000) &= ~((1<<12) | 1);
+  *((volatile uint32_t *) 0x50500000) &= ~((1<<12) | 1);
+  *((volatile uint32_t *) 0x50900000) &= ~((1<<12) | 1);
+  *((volatile uint32_t *) 0x50d00000) &= ~((1<<12) | 1);
+
+  CNN_COMPLETE; // Signal that processing is complete
+#ifdef CNN_INFERENCE_TIMER
+  cnn_time = MXC_TMR_SW_Stop(CNN_INFERENCE_TIMER);
+#else
+  cnn_time = 1;
+#endif
+}
+
+int cnn_continue(void)
+{
+  cnn_time = 0;
+
+  *((volatile uint32_t *) 0x50100000) |= 1; // Re-enable group 0
+
+  return CNN_OK;
+}
+
+int cnn_stop(void)
+{
+  *((volatile uint32_t *) 0x50100000) &= ~1; // Disable group 0
+
+  return CNN_OK;
 }
 
 void memcpy32(uint32_t *dst, const uint32_t *src, int n)
@@ -163,7 +187,7 @@ static const uint32_t kernels_61[] = KERNELS_61;
 static const uint32_t kernels_62[] = KERNELS_62;
 static const uint32_t kernels_63[] = KERNELS_63;
 
-void load_kernels(void)
+int cnn_load_weights(void)
 {
   *((volatile uint8_t *) 0x50180001) = 0x01; // Set address
   memcpy32((uint32_t *) 0x50180000, kernels_0, 705);
@@ -171,8 +195,8 @@ void load_kernels(void)
   memcpy32((uint32_t *) 0x50184000, kernels_1, 705);
   *((volatile uint8_t *) 0x50188001) = 0x01; // Set address
   memcpy32((uint32_t *) 0x50188000, kernels_2, 705);
-  *((volatile uint8_t *) 0x5018c001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x5018c000, kernels_3, 705);
+  *((volatile uint8_t *) 0x5018c081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x5018c000, kernels_3, 633);
   *((volatile uint8_t *) 0x50190001) = 0x01; // Set address
   memcpy32((uint32_t *) 0x50190000, kernels_4, 705);
   *((volatile uint8_t *) 0x50194001) = 0x01; // Set address
@@ -205,30 +229,30 @@ void load_kernels(void)
   memcpy32((uint32_t *) 0x50588000, kernels_18, 705);
   *((volatile uint8_t *) 0x5058c001) = 0x01; // Set address
   memcpy32((uint32_t *) 0x5058c000, kernels_19, 705);
-  *((volatile uint8_t *) 0x50590001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x50590000, kernels_20, 705);
-  *((volatile uint8_t *) 0x50594001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x50594000, kernels_21, 705);
-  *((volatile uint8_t *) 0x50598001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x50598000, kernels_22, 705);
-  *((volatile uint8_t *) 0x5059c001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x5059c000, kernels_23, 705);
-  *((volatile uint8_t *) 0x505a0001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x505a0000, kernels_24, 705);
-  *((volatile uint8_t *) 0x505a4001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x505a4000, kernels_25, 705);
-  *((volatile uint8_t *) 0x505a8001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x505a8000, kernels_26, 705);
-  *((volatile uint8_t *) 0x505ac001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x505ac000, kernels_27, 705);
-  *((volatile uint8_t *) 0x505b0001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x505b0000, kernels_28, 705);
-  *((volatile uint8_t *) 0x505b4001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x505b4000, kernels_29, 705);
-  *((volatile uint8_t *) 0x505b8001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x505b8000, kernels_30, 705);
-  *((volatile uint8_t *) 0x505bc001) = 0x01; // Set address
-  memcpy32((uint32_t *) 0x505bc000, kernels_31, 705);
+  *((volatile uint8_t *) 0x50590081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x50590000, kernels_20, 633);
+  *((volatile uint8_t *) 0x50594081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x50594000, kernels_21, 633);
+  *((volatile uint8_t *) 0x50598081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x50598000, kernels_22, 633);
+  *((volatile uint8_t *) 0x5059c081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x5059c000, kernels_23, 633);
+  *((volatile uint8_t *) 0x505a0081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x505a0000, kernels_24, 633);
+  *((volatile uint8_t *) 0x505a4081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x505a4000, kernels_25, 633);
+  *((volatile uint8_t *) 0x505a8081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x505a8000, kernels_26, 633);
+  *((volatile uint8_t *) 0x505ac081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x505ac000, kernels_27, 633);
+  *((volatile uint8_t *) 0x505b0081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x505b0000, kernels_28, 633);
+  *((volatile uint8_t *) 0x505b4081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x505b4000, kernels_29, 633);
+  *((volatile uint8_t *) 0x505b8081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x505b8000, kernels_30, 633);
+  *((volatile uint8_t *) 0x505bc081) = 0x01; // Set address
+  memcpy32((uint32_t *) 0x505bc000, kernels_31, 633);
   *((volatile uint8_t *) 0x50980001) = 0x01; // Set address
   memcpy32((uint32_t *) 0x50980000, kernels_32, 705);
   *((volatile uint8_t *) 0x50984001) = 0x01; // Set address
@@ -293,29 +317,37 @@ void load_kernels(void)
   memcpy32((uint32_t *) 0x50db8000, kernels_62, 705);
   *((volatile uint8_t *) 0x50dbc001) = 0x01; // Set address
   memcpy32((uint32_t *) 0x50dbc000, kernels_63, 705);
+
+  return CNN_OK;
 }
 
-int cnn_load(void)
+int cnn_load_bias(void)
+{
+  // Not used in this network
+  return CNN_OK;
+}
+
+int cnn_init(void)
 {
   *((volatile uint32_t *) 0x50001000) = 0x00000000; // AON control
   *((volatile uint32_t *) 0x50100000) = 0x00108008; // Stop SM
   *((volatile uint32_t *) 0x50100004) = 0x0000040e; // SRAM control
   *((volatile uint32_t *) 0x50100008) = 0x00000008; // Layer count
-
   *((volatile uint32_t *) 0x50500000) = 0x00108008; // Stop SM
   *((volatile uint32_t *) 0x50500004) = 0x0000040e; // SRAM control
   *((volatile uint32_t *) 0x50500008) = 0x00000008; // Layer count
-
   *((volatile uint32_t *) 0x50900000) = 0x00108008; // Stop SM
   *((volatile uint32_t *) 0x50900004) = 0x0000040e; // SRAM control
   *((volatile uint32_t *) 0x50900008) = 0x00000008; // Layer count
-
   *((volatile uint32_t *) 0x50d00000) = 0x00108008; // Stop SM
   *((volatile uint32_t *) 0x50d00004) = 0x0000040e; // SRAM control
   *((volatile uint32_t *) 0x50d00008) = 0x00000008; // Layer count
 
-  load_kernels();
+  return CNN_OK;
+}
 
+int cnn_configure(void)
+{
   // Layer 0 group 0
   *((volatile uint32_t *) 0x50100010) = 0x000100a1; // Rows
   *((volatile uint32_t *) 0x50100090) = 0x00010079; // Columns
@@ -326,6 +358,7 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50100a10) = 0x00007800; // Layer control 2
   *((volatile uint32_t *) 0x50100610) = 0x00000078; // Mask offset and count
   *((volatile uint32_t *) 0x50100690) = 0x00000077; // TRAM ptr max
+  *((volatile uint32_t *) 0x50100790) = 0x00022000; // Post processing register
   *((volatile uint32_t *) 0x50100710) = 0x00070007; // Mask and processor enables
   *((volatile uint32_t *) 0x50100810) = 0x00000001; // Stream processing start
   *((volatile uint32_t *) 0x50100910) = 0x00000002; // Rollover
@@ -341,6 +374,7 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50500a10) = 0x00007800; // Layer control 2
   *((volatile uint32_t *) 0x50500610) = 0x00000078; // Mask offset and count
   *((volatile uint32_t *) 0x50500690) = 0x00000077; // TRAM ptr max
+  *((volatile uint32_t *) 0x50500790) = 0x00022000; // Post processing register
   *((volatile uint32_t *) 0x50500810) = 0x00000001; // Stream processing start
   *((volatile uint32_t *) 0x50500910) = 0x00000002; // Rollover
   *((volatile uint32_t *) 0x50500990) = 0x00004b00; // Input frame size
@@ -355,6 +389,7 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50900a10) = 0x00007800; // Layer control 2
   *((volatile uint32_t *) 0x50900610) = 0x00000078; // Mask offset and count
   *((volatile uint32_t *) 0x50900690) = 0x00000077; // TRAM ptr max
+  *((volatile uint32_t *) 0x50900790) = 0x00022000; // Post processing register
   *((volatile uint32_t *) 0x50900810) = 0x00000001; // Stream processing start
   *((volatile uint32_t *) 0x50900910) = 0x00000002; // Rollover
   *((volatile uint32_t *) 0x50900990) = 0x00004b00; // Input frame size
@@ -369,6 +404,7 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50d00a10) = 0x00007800; // Layer control 2
   *((volatile uint32_t *) 0x50d00610) = 0x00000078; // Mask offset and count
   *((volatile uint32_t *) 0x50d00690) = 0x00000077; // TRAM ptr max
+  *((volatile uint32_t *) 0x50d00790) = 0x00022000; // Post processing register
   *((volatile uint32_t *) 0x50d00810) = 0x00000001; // Stream processing start
   *((volatile uint32_t *) 0x50d00910) = 0x00000002; // Rollover
   *((volatile uint32_t *) 0x50d00990) = 0x00004b00; // Input frame size
@@ -461,6 +497,7 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50100a18) = 0x0000f800; // Layer control 2
   *((volatile uint32_t *) 0x50100618) = 0x010001f8; // Mask offset and count
   *((volatile uint32_t *) 0x50100698) = 0x0000001d; // TRAM ptr max
+  *((volatile uint32_t *) 0x50100798) = 0x00022000; // Post processing register
   *((volatile uint32_t *) 0x50100718) = 0xffffffff; // Mask and processor enables
 
   // Layer 2 group 1
@@ -477,6 +514,7 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50500a18) = 0x0000f800; // Layer control 2
   *((volatile uint32_t *) 0x50500618) = 0x010001f8; // Mask offset and count
   *((volatile uint32_t *) 0x50500698) = 0x0000001d; // TRAM ptr max
+  *((volatile uint32_t *) 0x50500798) = 0x00022000; // Post processing register
   *((volatile uint32_t *) 0x50500718) = 0xffffffff; // Mask and processor enables
 
   // Layer 2 group 2
@@ -493,6 +531,7 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50900a18) = 0x0000f800; // Layer control 2
   *((volatile uint32_t *) 0x50900618) = 0x010001f8; // Mask offset and count
   *((volatile uint32_t *) 0x50900698) = 0x0000001d; // TRAM ptr max
+  *((volatile uint32_t *) 0x50900798) = 0x00022000; // Post processing register
 
   // Layer 2 group 3
   *((volatile uint32_t *) 0x50d00018) = 0x00010051; // Rows
@@ -508,6 +547,7 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50d00a18) = 0x0000f800; // Layer control 2
   *((volatile uint32_t *) 0x50d00618) = 0x010001f8; // Mask offset and count
   *((volatile uint32_t *) 0x50d00698) = 0x0000001d; // TRAM ptr max
+  *((volatile uint32_t *) 0x50d00798) = 0x00022000; // Post processing register
 
   // Layer 3 group 0
   *((volatile uint32_t *) 0x5010001c) = 0x00010029; // Rows
@@ -854,189 +894,36 @@ int cnn_load(void)
   *((volatile uint32_t *) 0x50d007b0) = 0x03000000; // Post processing register
   *((volatile uint32_t *) 0x50d00730) = 0x0000ffff; // Mask and processor enables
 
-//  *((volatile uint32_t *) 0x50000000) = 0x00001908; // FIFO control
-//  *((volatile uint32_t *) 0x50100000) = 0x0018c808; // Enable group 0
-//  *((volatile uint32_t *) 0x50500000) = 0x0018c809; // Enable group 1
-//  *((volatile uint32_t *) 0x50900000) = 0x0018c809; // Enable group 2
-//  *((volatile uint32_t *) 0x50d00000) = 0x0018c809; // Enable group 3
-//
-//  // Allow capture of processing time
-//  *((volatile uint32_t *) 0x50100000) = 0x0018c809; // Master enable group 0
 
-  return 1;
+  *((volatile uint32_t *) 0x50000000) = 0x00001908; // FIFO control
+
+  return CNN_OK;
 }
 
-void cnn_start(void)
+int cnn_start(void)
 {
-	  *((volatile uint32_t *) 0x50000000) = 0x00001908;
-	  *((volatile uint32_t *) 0x50100000) = 0x0018c808; // Enable group 0
-	  *((volatile uint32_t *) 0x50500000) = 0x0018c809; // Enable group 1
-	  *((volatile uint32_t *) 0x50900000) = 0x0018c809; // Enable group 2
-	  *((volatile uint32_t *) 0x50d00000) = 0x0018c809; // Enable group 3
+  cnn_time = 0;
 
-	  // Allow capture of processing time
-	  *((volatile uint32_t *) 0x50100000) = 0x0018c809; // Master enable group 0
+  *((volatile uint32_t *) 0x50100000) = 0x0018c808; // Enable group 0
+  *((volatile uint32_t *) 0x50500000) = 0x0018c809; // Enable group 1
+  *((volatile uint32_t *) 0x50900000) = 0x0018c809; // Enable group 2
+  *((volatile uint32_t *) 0x50d00000) = 0x0018c809; // Enable group 3
+
+#ifdef CNN_INFERENCE_TIMER
+  MXC_TMR_SW_Start(CNN_INFERENCE_TIMER);
+#endif
+
+  CNN_START; // Allow capture of processing time
+  *((volatile uint32_t *) 0x50100000) = 0x0018c809; // Master enable group 0
+
+  return CNN_OK;
 }
 
-void load_input(const uint8_t *buffer)
-{
-  uint32_t i;
-  i = 0;
-  uint32_t number;
-  while (i < 19200*3) {
-    while (((*((volatile uint32_t *) 0x50000004) & 1)) != 0); // Wait for FIFO 0
-//    number = ((uint32_t)rxBuffer[i]<<16) | ((uint32_t)rxBuffer[i+1]<<8) | ((uint32_t)rxBuffer[i+2]);
-
-    number = ((uint32_t)buffer[i]<<16) | ((uint32_t)buffer[i+1]<<8) | ((uint32_t)buffer[i+2]);
-
-    *((volatile uint32_t *) 0x50000008) = number; // Write FIFO 0
-
-    i += 3;
-  }
-
-}
-
-// faceid_seq_nobias
-// Expected output of layer 8
-int cnn_check(void)
-{
-  int rv = 1;
-  if ((*((volatile uint32_t *) 0x50400000)) != 0x1e07e7fe) return 0; // 0,0,0-3
-  if ((*((volatile uint32_t *) 0x50408000)) != 0xf808ffdc) return 0; // 0,0,4-7
-  if ((*((volatile uint32_t *) 0x50410000)) != 0xfd0cf2f6) return 0; // 0,0,8-11
-  if ((*((volatile uint32_t *) 0x50418000)) != 0xfa1df5f2) return 0; // 0,0,12-15
-  if ((*((volatile uint32_t *) 0x50800000)) != 0x17f40f15) return 0; // 0,0,16-19
-  if ((*((volatile uint32_t *) 0x50808000)) != 0xf1110aec) return 0; // 0,0,20-23
-  if ((*((volatile uint32_t *) 0x50810000)) != 0x11f0e4f6) return 0; // 0,0,24-27
-  if ((*((volatile uint32_t *) 0x50818000)) != 0x0a122300) return 0; // 0,0,28-31
-  if ((*((volatile uint32_t *) 0x50c00000)) != 0x06d90ae9) return 0; // 0,0,32-35
-  if ((*((volatile uint32_t *) 0x50c08000)) != 0x0a1701ec) return 0; // 0,0,36-39
-  if ((*((volatile uint32_t *) 0x50c10000)) != 0x0324ff24) return 0; // 0,0,40-43
-  if ((*((volatile uint32_t *) 0x50c18000)) != 0xe3060e1a) return 0; // 0,0,44-47
-  if ((*((volatile uint32_t *) 0x51000000)) != 0x252d010a) return 0; // 0,0,48-51
-  if ((*((volatile uint32_t *) 0x51008000)) != 0xdbd81c27) return 0; // 0,0,52-55
-  if ((*((volatile uint32_t *) 0x51010000)) != 0x10eb0c02) return 0; // 0,0,56-59
-  if ((*((volatile uint32_t *) 0x51018000)) != 0x01f4fae5) return 0; // 0,0,60-63
-  if ((*((volatile uint32_t *) 0x50400004)) != 0xfedf1b09) return 0; // 0,0,64-67
-  if ((*((volatile uint32_t *) 0x50408004)) != 0x350100ee) return 0; // 0,0,68-71
-  if ((*((volatile uint32_t *) 0x50410004)) != 0xedfbd900) return 0; // 0,0,72-75
-  if ((*((volatile uint32_t *) 0x50418004)) != 0x07d7e8f1) return 0; // 0,0,76-79
-  if ((*((volatile uint32_t *) 0x50800004)) != 0xdfeae4f1) return 0; // 0,0,80-83
-  if ((*((volatile uint32_t *) 0x50808004)) != 0xf3e00426) return 0; // 0,0,84-87
-  if ((*((volatile uint32_t *) 0x50810004)) != 0xf93030f8) return 0; // 0,0,88-91
-  if ((*((volatile uint32_t *) 0x50818004)) != 0xf00add00) return 0; // 0,0,92-95
-  if ((*((volatile uint32_t *) 0x50c00004)) != 0x05021824) return 0; // 0,0,96-99
-  if ((*((volatile uint32_t *) 0x50c08004)) != 0x0e0e0ffd) return 0; // 0,0,100-103
-  if ((*((volatile uint32_t *) 0x50c10004)) != 0x200a0a23) return 0; // 0,0,104-107
-  if ((*((volatile uint32_t *) 0x50c18004)) != 0x050a2bfe) return 0; // 0,0,108-111
-  if ((*((volatile uint32_t *) 0x51000004)) != 0xf1eced12) return 0; // 0,0,112-115
-  if ((*((volatile uint32_t *) 0x51008004)) != 0x04f5e4cc) return 0; // 0,0,116-119
-  if ((*((volatile uint32_t *) 0x51010004)) != 0xf8f323fe) return 0; // 0,0,120-123
-  if ((*((volatile uint32_t *) 0x51018004)) != 0x090ff614) return 0; // 0,0,124-127
-  if ((*((volatile uint32_t *) 0x50400008)) != 0x0200e102) return 0; // 0,0,128-131
-  if ((*((volatile uint32_t *) 0x50408008)) != 0x12032a08) return 0; // 0,0,132-135
-  if ((*((volatile uint32_t *) 0x50410008)) != 0x15f9f6f0) return 0; // 0,0,136-139
-  if ((*((volatile uint32_t *) 0x50418008)) != 0x29fe04f9) return 0; // 0,0,140-143
-  if ((*((volatile uint32_t *) 0x50800008)) != 0xf90cfff1) return 0; // 0,0,144-147
-  if ((*((volatile uint32_t *) 0x50808008)) != 0x0a090cf8) return 0; // 0,0,148-151
-  if ((*((volatile uint32_t *) 0x50810008)) != 0x191afef6) return 0; // 0,0,152-155
-  if ((*((volatile uint32_t *) 0x50818008)) != 0x1e100801) return 0; // 0,0,156-159
-  if ((*((volatile uint32_t *) 0x50c00008)) != 0x0afbf424) return 0; // 0,0,160-163
-  if ((*((volatile uint32_t *) 0x50c08008)) != 0xdff10bfe) return 0; // 0,0,164-167
-  if ((*((volatile uint32_t *) 0x50c10008)) != 0x12dddf09) return 0; // 0,0,168-171
-  if ((*((volatile uint32_t *) 0x50c18008)) != 0x120e060a) return 0; // 0,0,172-175
-  if ((*((volatile uint32_t *) 0x51000008)) != 0xe606e20c) return 0; // 0,0,176-179
-  if ((*((volatile uint32_t *) 0x51008008)) != 0xf1f5ffdb) return 0; // 0,0,180-183
-  if ((*((volatile uint32_t *) 0x51010008)) != 0x062005ed) return 0; // 0,0,184-187
-  if ((*((volatile uint32_t *) 0x51018008)) != 0xd90f0c00) return 0; // 0,0,188-191
-  if ((*((volatile uint32_t *) 0x5040000c)) != 0xf8fb04fd) return 0; // 0,0,192-195
-  if ((*((volatile uint32_t *) 0x5040800c)) != 0xf0faeff1) return 0; // 0,0,196-199
-  if ((*((volatile uint32_t *) 0x5041000c)) != 0xf0f40c0f) return 0; // 0,0,200-203
-  if ((*((volatile uint32_t *) 0x5041800c)) != 0xf005010a) return 0; // 0,0,204-207
-  if ((*((volatile uint32_t *) 0x5080000c)) != 0x22ec0ef8) return 0; // 0,0,208-211
-  if ((*((volatile uint32_t *) 0x5080800c)) != 0xf7fde21e) return 0; // 0,0,212-215
-  if ((*((volatile uint32_t *) 0x5081000c)) != 0x011cfa17) return 0; // 0,0,216-219
-  if ((*((volatile uint32_t *) 0x5081800c)) != 0xeaefe011) return 0; // 0,0,220-223
-  if ((*((volatile uint32_t *) 0x50c0000c)) != 0x1124ef06) return 0; // 0,0,224-227
-  if ((*((volatile uint32_t *) 0x50c0800c)) != 0xfd1b13fa) return 0; // 0,0,228-231
-  if ((*((volatile uint32_t *) 0x50c1000c)) != 0xf0fa1e0d) return 0; // 0,0,232-235
-  if ((*((volatile uint32_t *) 0x50c1800c)) != 0x08ea0fff) return 0; // 0,0,236-239
-  if ((*((volatile uint32_t *) 0x5100000c)) != 0x08fae9f9) return 0; // 0,0,240-243
-  if ((*((volatile uint32_t *) 0x5100800c)) != 0x22fcff13) return 0; // 0,0,244-247
-  if ((*((volatile uint32_t *) 0x5101000c)) != 0x0606fdef) return 0; // 0,0,248-251
-  if ((*((volatile uint32_t *) 0x5101800c)) != 0x190ee404) return 0; // 0,0,252-255
-  if ((*((volatile uint32_t *) 0x50400010)) != 0x0716c516) return 0; // 0,0,256-259
-  if ((*((volatile uint32_t *) 0x50408010)) != 0x11fdeff9) return 0; // 0,0,260-263
-  if ((*((volatile uint32_t *) 0x50410010)) != 0xf9bb0e23) return 0; // 0,0,264-267
-  if ((*((volatile uint32_t *) 0x50418010)) != 0x13e6ffec) return 0; // 0,0,268-271
-  if ((*((volatile uint32_t *) 0x50800010)) != 0xff121215) return 0; // 0,0,272-275
-  if ((*((volatile uint32_t *) 0x50808010)) != 0xf8edfbee) return 0; // 0,0,276-279
-  if ((*((volatile uint32_t *) 0x50810010)) != 0x002701ee) return 0; // 0,0,280-283
-  if ((*((volatile uint32_t *) 0x50818010)) != 0x16fbe1e1) return 0; // 0,0,284-287
-  if ((*((volatile uint32_t *) 0x50c00010)) != 0x0bfefdf5) return 0; // 0,0,288-291
-  if ((*((volatile uint32_t *) 0x50c08010)) != 0xf405f001) return 0; // 0,0,292-295
-  if ((*((volatile uint32_t *) 0x50c10010)) != 0x00dcf9f7) return 0; // 0,0,296-299
-  if ((*((volatile uint32_t *) 0x50c18010)) != 0xdbfe0307) return 0; // 0,0,300-303
-  if ((*((volatile uint32_t *) 0x51000010)) != 0x13030330) return 0; // 0,0,304-307
-  if ((*((volatile uint32_t *) 0x51008010)) != 0x0f1bfc23) return 0; // 0,0,308-311
-  if ((*((volatile uint32_t *) 0x51010010)) != 0xdf1808e7) return 0; // 0,0,312-315
-  if ((*((volatile uint32_t *) 0x51018010)) != 0x06f9ffed) return 0; // 0,0,316-319
-  if ((*((volatile uint32_t *) 0x50400014)) != 0x220fec03) return 0; // 0,0,320-323
-  if ((*((volatile uint32_t *) 0x50408014)) != 0xfbf1f41a) return 0; // 0,0,324-327
-  if ((*((volatile uint32_t *) 0x50410014)) != 0xfbe90205) return 0; // 0,0,328-331
-  if ((*((volatile uint32_t *) 0x50418014)) != 0x200c090b) return 0; // 0,0,332-335
-  if ((*((volatile uint32_t *) 0x50800014)) != 0xf61b0c03) return 0; // 0,0,336-339
-  if ((*((volatile uint32_t *) 0x50808014)) != 0x1005e7eb) return 0; // 0,0,340-343
-  if ((*((volatile uint32_t *) 0x50810014)) != 0xe535f211) return 0; // 0,0,344-347
-  if ((*((volatile uint32_t *) 0x50818014)) != 0x0905fd08) return 0; // 0,0,348-351
-  if ((*((volatile uint32_t *) 0x50c00014)) != 0x102df307) return 0; // 0,0,352-355
-  if ((*((volatile uint32_t *) 0x50c08014)) != 0x02f813e6) return 0; // 0,0,356-359
-  if ((*((volatile uint32_t *) 0x50c10014)) != 0xfbede80c) return 0; // 0,0,360-363
-  if ((*((volatile uint32_t *) 0x50c18014)) != 0xefe2f114) return 0; // 0,0,364-367
-  if ((*((volatile uint32_t *) 0x51000014)) != 0xdafcecfa) return 0; // 0,0,368-371
-  if ((*((volatile uint32_t *) 0x51008014)) != 0x0c160e01) return 0; // 0,0,372-375
-  if ((*((volatile uint32_t *) 0x51010014)) != 0x0af70509) return 0; // 0,0,376-379
-  if ((*((volatile uint32_t *) 0x51018014)) != 0xf1e8fafd) return 0; // 0,0,380-383
-  if ((*((volatile uint32_t *) 0x50400018)) != 0x1a051de6) return 0; // 0,0,384-387
-  if ((*((volatile uint32_t *) 0x50408018)) != 0x0218fa12) return 0; // 0,0,388-391
-  if ((*((volatile uint32_t *) 0x50410018)) != 0xe4081bf1) return 0; // 0,0,392-395
-  if ((*((volatile uint32_t *) 0x50418018)) != 0x00f204ef) return 0; // 0,0,396-399
-  if ((*((volatile uint32_t *) 0x50800018)) != 0xe613fc1f) return 0; // 0,0,400-403
-  if ((*((volatile uint32_t *) 0x50808018)) != 0x0209d9e0) return 0; // 0,0,404-407
-  if ((*((volatile uint32_t *) 0x50810018)) != 0xfa0adcd6) return 0; // 0,0,408-411
-  if ((*((volatile uint32_t *) 0x50818018)) != 0xe40901f3) return 0; // 0,0,412-415
-  if ((*((volatile uint32_t *) 0x50c00018)) != 0xdb1801de) return 0; // 0,0,416-419
-  if ((*((volatile uint32_t *) 0x50c08018)) != 0x04f70b03) return 0; // 0,0,420-423
-  if ((*((volatile uint32_t *) 0x50c10018)) != 0x0604ec04) return 0; // 0,0,424-427
-  if ((*((volatile uint32_t *) 0x50c18018)) != 0x12e4fa0a) return 0; // 0,0,428-431
-  if ((*((volatile uint32_t *) 0x51000018)) != 0xf409f427) return 0; // 0,0,432-435
-  if ((*((volatile uint32_t *) 0x51008018)) != 0xd3dd0111) return 0; // 0,0,436-439
-  if ((*((volatile uint32_t *) 0x51010018)) != 0xfd230df8) return 0; // 0,0,440-443
-  if ((*((volatile uint32_t *) 0x51018018)) != 0xe42bf0df) return 0; // 0,0,444-447
-  if ((*((volatile uint32_t *) 0x5040001c)) != 0xe9d70d15) return 0; // 0,0,448-451
-  if ((*((volatile uint32_t *) 0x5040801c)) != 0x18ff08fb) return 0; // 0,0,452-455
-  if ((*((volatile uint32_t *) 0x5041001c)) != 0xf6fb0e21) return 0; // 0,0,456-459
-  if ((*((volatile uint32_t *) 0x5041801c)) != 0xf3fee7f4) return 0; // 0,0,460-463
-  if ((*((volatile uint32_t *) 0x5080001c)) != 0xee0519fd) return 0; // 0,0,464-467
-  if ((*((volatile uint32_t *) 0x5080801c)) != 0x00231717) return 0; // 0,0,468-471
-  if ((*((volatile uint32_t *) 0x5081001c)) != 0xf1f7f4f4) return 0; // 0,0,472-475
-  if ((*((volatile uint32_t *) 0x5081801c)) != 0x09180200) return 0; // 0,0,476-479
-  if ((*((volatile uint32_t *) 0x50c0001c)) != 0xfa13f1f3) return 0; // 0,0,480-483
-  if ((*((volatile uint32_t *) 0x50c0801c)) != 0x0c0608fb) return 0; // 0,0,484-487
-  if ((*((volatile uint32_t *) 0x50c1001c)) != 0x09fdf208) return 0; // 0,0,488-491
-  if ((*((volatile uint32_t *) 0x50c1801c)) != 0x2008f7f0) return 0; // 0,0,492-495
-  if ((*((volatile uint32_t *) 0x5100001c)) != 0x2b2ef8f5) return 0; // 0,0,496-499
-  if ((*((volatile uint32_t *) 0x5100801c)) != 0x29fae0e6) return 0; // 0,0,500-503
-  if ((*((volatile uint32_t *) 0x5101001c)) != 0xf32420fb) return 0; // 0,0,504-507
-  if ((*((volatile uint32_t *) 0x5101801c)) != 0xe3f60015) return 0; // 0,0,508-511
-  return rv;
-}
-
-// Custom unload for this network:
-// 8-bit data, shape: (512, 1, 1)
-void cnn_unload(uint8_t *out_buf)
+// Custom unload for this network: 8-bit data, shape: (512, 1, 1)
+int cnn_unload(uint32_t *out_buf32)
 {
   volatile uint32_t *addr;
+  uint8_t *out_buf = (uint8_t *) out_buf32;
   uint32_t val;
 
   addr = (volatile uint32_t *) 0x50400000;
@@ -1807,32 +1694,65 @@ void cnn_unload(uint8_t *out_buf)
   *out_buf++ = (val >> 8) & 0xff;
   *out_buf++ = (val >> 16) & 0xff;
   *out_buf++ = (val >> 24) & 0xff;
+
+  return CNN_OK;
 }
 
-
-int initCNN(void)
+int cnn_enable(uint32_t clock_source, uint32_t clock_divider)
 {
-	MXC_ICC_Enable(MXC_ICC0); // Enable cache
+  // Reset all domains, restore power to CNN
+  MXC_GCFR->reg3 = 0xf; // Reset
+  MXC_GCFR->reg1 = 0xf; // Mask memory
+  MXC_GCFR->reg0 = 0xf; // Power
+  MXC_GCFR->reg2 = 0x0; // Iso
+  MXC_GCFR->reg3 = 0x0; // Reset
 
-	// Switch to 100 MHz clock
-	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_IPO);
-	SystemCoreClockUpdate();
+  MXC_GCR->pclkdiv = (MXC_GCR->pclkdiv & ~(MXC_F_GCR_PCLKDIV_CNNCLKDIV | MXC_F_GCR_PCLKDIV_CNNCLKSEL))
+                     | clock_divider | clock_source;
+  MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN); // Enable CNN clock
 
-	// Reset all domains, restore power to CNN
-	MXC_GCFR->reg3 = 0xf; // Reset
-	MXC_GCFR->reg1 = 0xf; // Mask
-	MXC_GCFR->reg0 = 0xf; // Power
-	MXC_GCFR->reg2 = 0x0; // Iso
-	MXC_GCFR->reg3 = 0x0; // Reset
+  NVIC_SetVector(CNN_IRQn, CNN_ISR); // Set CNN complete vector
 
-	MXC_GCR->pclkdiv &= ~(MXC_F_GCR_PCLKDIV_CNNCLKDIV | MXC_F_GCR_PCLKDIV_CNNCLKSEL);
-	MXC_GCR->pclkdiv |= MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1; // CNN clock: 100 MHz div 2
-	MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN); // Enable CNN clock
-
-	if (!cnn_load()) {
-	  return -1;
-	}
-
-	return 0;
+  return CNN_OK;
 }
 
+int cnn_boost_enable(mxc_gpio_regs_t *port, uint32_t pin)
+{
+  mxc_gpio_cfg_t gpio_out;
+  gpio_out.port = port;
+  gpio_out.mask = pin;
+  gpio_out.pad = MXC_GPIO_PAD_NONE;
+  gpio_out.func = MXC_GPIO_FUNC_OUT;
+  MXC_GPIO_Config(&gpio_out);
+  MXC_GPIO_OutSet(gpio_out.port, gpio_out.mask);
+
+  return CNN_OK;
+}
+
+int cnn_boost_disable(mxc_gpio_regs_t *port, uint32_t pin)
+{
+  mxc_gpio_cfg_t gpio_out;
+  gpio_out.port = port;
+  gpio_out.mask = pin;
+  gpio_out.pad = MXC_GPIO_PAD_NONE;
+  gpio_out.func = MXC_GPIO_FUNC_OUT;
+  MXC_GPIO_Config(&gpio_out);
+  MXC_GPIO_OutSet(gpio_out.port, gpio_out.mask);
+
+  return CNN_OK;
+}
+
+int cnn_disable(void)
+{
+  // Disable CNN clock
+  MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CNN);
+
+  // Disable power to CNN
+  MXC_GCFR->reg3 = 0xf; // Reset
+  MXC_GCFR->reg1 = 0x0; // Mask memory
+  MXC_GCFR->reg0 = 0x0; // Power
+  MXC_GCFR->reg2 = 0xf; // Iso
+  MXC_GCFR->reg3 = 0x0; // Reset
+
+  return CNN_OK;
+}

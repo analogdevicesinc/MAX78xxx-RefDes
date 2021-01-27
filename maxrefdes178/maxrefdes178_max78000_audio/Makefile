@@ -143,9 +143,6 @@ all:
 libclean: 
 	$(MAKE)  -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
 	
-# The rule to clean out all the build products.
-distclean: clean libclean
-
 sla: all
 #	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -O binary $(BUILD_DIR)/$(PROJECT).sbin
 #	$(BUILD_SESSION) $(BUILD_DIR)/$(PROJECT).sbin scp_packets $(TEST_KEY)

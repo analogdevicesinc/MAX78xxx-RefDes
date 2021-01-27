@@ -62,7 +62,6 @@
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME          "main"
 
-#define EMBEDDING_RESULT_LEN   512
 //#define PRINT_TIME_CNN
 #define CAMERA_FREQ     (20 * 1000 * 1000)
 
@@ -81,7 +80,6 @@ mxc_gpio_cfg_t gpio_red    = MAX78000_VIDEO_LED_RED_PIN;
 mxc_gpio_cfg_t gpio_green  = MAX78000_VIDEO_LED_GREEN_PIN;
 mxc_gpio_cfg_t gpio_blue   = MAX78000_VIDEO_LED_BLUE_PIN;
 
-uint8_t embedding_result[EMBEDDING_RESULT_LEN];
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -267,8 +265,13 @@ int main(void)
     PR_INFO("maxrefdes178_max78000_video v%d.%d.%d [%s]",
             version.major, version.minor, version.build, S_BUILD_TIMESTAMP);
 
-    ret = initCNN();
-    if (ret != E_NO_ERROR) {
+    // Enable peripheral, enable CNN interrupt, turn on CNN clock
+    // CNN clock: 50 MHz div 1
+    ret  = cnn_enable(MXC_S_GCR_PCLKDIV_CNNCLKSEL_PCLK, MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1);
+    ret &= cnn_init(); // Bring CNN state machine into consistent state
+    ret &= cnn_load_weights(); // Load CNN kernels
+    ret &= cnn_configure(); // Configure CNN state machine
+    if (ret != CNN_OK) {
         PR_ERROR("Could not initialize the CNN accelerator %d", ret);
         fail();
     }
@@ -507,13 +510,17 @@ static void run_demo(void)
             qspi_slave_set_rx_state(QSPI_STATE_IDLE);
         }
 
-        // TODO low power modes
         if (!enable_video) {
+            __WFI();
             continue;
         }
 
         if (camera_is_image_rcv()) { // Check whether image is ready
             capture_completed_time = GET_RTC_MS();
+
+            send_img();
+
+            qspi_completed_time = GET_RTC_MS();
 
             if (enable_cnn) {
                 run_cnn(0, 0);
@@ -555,15 +562,11 @@ static void run_demo(void)
 
             cnn_completed_time = GET_RTC_MS();
 
-            send_img();
-
-            qspi_completed_time = GET_RTC_MS();
-
             if (time_counter % 10 == 0) {
                 max78000_statistics.capture_duration_us = (capture_completed_time - capture_started_time) * 1000;
-                max78000_statistics.cnn_duration_us = (cnn_completed_time - capture_completed_time) * 1000;
-                max78000_statistics.communication_duration_us = (qspi_completed_time - cnn_completed_time) * 1000;
-                max78000_statistics.total_duration_us = (qspi_completed_time - capture_started_time) * 1000;
+                max78000_statistics.communication_duration_us = (qspi_completed_time - capture_completed_time) * 1000;
+                max78000_statistics.cnn_duration_us = (cnn_completed_time - qspi_completed_time) * 1000;
+                max78000_statistics.total_duration_us = (cnn_completed_time - capture_started_time) * 1000;
 
                 PR_DEBUG("Capture : %lu", max78000_statistics.capture_duration_us);
                 PR_DEBUG("CNN     : %lu", max78000_statistics.cnn_duration_us);
@@ -604,6 +607,7 @@ static void run_cnn(int x_offset, int y_offset)
     int8_t r, g, b;
     uint32_t number;
     uint32_t w, h;
+    static uint32_t noface_count = 0;
 
     // Get the details of the image from the camera driver.
     camera_get_image(&raw, &number, &w, &h);
@@ -612,7 +616,12 @@ static void run_cnn(int x_offset, int y_offset)
     uint32_t pass_time = GET_RTC_MS();
 #endif
 
-    cnn_load();
+    // Enable CNN clock
+    MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_CNN);
+
+    cnn_init(); // Bring state machine into consistent state
+    //cnn_load_weights(); // No need to reload kernels
+    cnn_configure(); // Configure state machine
 
     cnn_start();
 
@@ -649,28 +658,33 @@ static void run_cnn(int x_offset, int y_offset)
     pass_time = GET_RTC_MS();
 #endif
 
-    cnn_wait();
+    while (cnn_time == 0)
+        __WFI(); // Wait for CNN done
 
 #ifdef PRINT_TIME_CNN
     PR_TIMER("CNN wait : %d", GET_RTC_MS() - pass_time);
     pass_time = GET_RTC_MS();
 #endif
 
-    cnn_unload(embedding_result);
+    cnn_unload((uint32_t*)(raw));
+
+    cnn_stop();
+    // Disable CNN clock to save power
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CNN);
 
 #ifdef PRINT_TIME_CNN
     PR_TIMER("CNN unload : %d", GET_RTC_MS() - pass_time);
     pass_time = GET_RTC_MS();
 #endif
 
-    int pResult = calculate_minDistance(embedding_result);
+    int pResult = calculate_minDistance((uint8_t*)(raw));
 
 #ifdef PRINT_TIME_CNN
     PR_TIMER("Embedding calc : %d", GET_RTC_MS() - pass_time);
     pass_time = GET_RTC_MS();
 #endif
 
-    if ( pResult == 0 ) {
+    if (pResult == 0) {
         classification_result_t classification_result = {0};
         uint8_t *counter;
         uint8_t counter_len;
@@ -680,29 +694,50 @@ static void run_cnn(int x_offset, int y_offset)
         GPIO_CLR(gpio_green);
 
         prev_decision = decision;
-        decision = -3;
-        for(uint8_t id=0; id<counter_len; ++id){
-            if (counter[id] >= (closest_sub_buffer_size-4)){
+        decision = -5;
+
+        for(uint8_t id = 0; id < counter_len; ++id){
+            if (counter[id] >= (uint8_t)(closest_sub_buffer_size * 0.8)){   // >80% detection
                 strncpy(classification_result.result, get_subject_name(id), sizeof(classification_result.result) - 1);
                 decision = id;
                 classification_result.classification = CLASSIFICATION_DETECTED;
+                noface_count = 0;
                 GPIO_CLR(gpio_red);
                 GPIO_SET(gpio_green);
                 break;
-            } else if (counter[id] >= (closest_sub_buffer_size/2+1)){
+            } else if (counter[id] >= (uint8_t)(closest_sub_buffer_size * 0.4)){  // >%40 adjust
                 strncpy(classification_result.result, "Adjust Face", sizeof(classification_result.result) - 1);
                 decision = -2;
                 classification_result.classification = CLASSIFICATION_LOW_CONFIDENCE;
+                noface_count = 0;
                 GPIO_SET(gpio_red);
                 GPIO_SET(gpio_green);
                 break;
-            } else if (counter[id] > 4){
+            } else if (counter[id] > closest_sub_buffer_size * 0.2){   // >20% unknown
                 strncpy(classification_result.result, "Unknown", sizeof(classification_result.result) - 1);
                 decision = -1;
                 classification_result.classification = CLASSIFICATION_UNKNOWN;
+                noface_count = 0;
                 GPIO_SET(gpio_red);
                 GPIO_CLR(gpio_green);
                 break;
+            }
+            else if (counter[id] > closest_sub_buffer_size * 0.1){   // >10% transition
+                strncpy(classification_result.result, "Transition", sizeof(classification_result.result) - 1);
+                decision = -3;
+                classification_result.classification = CLASSIFICATION_NOTHING;
+                noface_count = 0;
+            }
+            else
+            {
+                noface_count ++;
+                if (noface_count > 10)
+                {
+                    strncpy(classification_result.result, "No Face", sizeof(classification_result.result) - 1);
+                    decision = -4;
+                    classification_result.classification = CLASSIFICATION_NOTHING;
+                    noface_count --;
+                }
             }
         }
 

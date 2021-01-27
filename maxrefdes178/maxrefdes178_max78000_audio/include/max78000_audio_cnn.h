@@ -46,6 +46,29 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
+/*
+  SUMMARY OF OPS
+  Hardware: 8,402,528 ops (8,345,344 macc; 54,496 comp; 2,688 add; 0 mul; 0 bitwise)
+
+  RESOURCE USAGE
+  Weight memory: 169,472 bytes out of 442,368 bytes total (38%)
+  Bias memory:   0 bytes out of 2,048 bytes total (0%)
+*/
+/* Number of outputs for this network */
+#define CNN_NUM_OUTPUTS 21
+
+/* Use this timer to time the inference */
+#define CNN_INFERENCE_TIMER MXC_TMR0
+
+/* Port pin actions used to signal that processing is active */
+#define CNN_START
+#define CNN_COMPLETE
+#define SYS_START
+#define SYS_COMPLETE
+
+/* Return codes */
+#define CNN_FAIL 0
+#define CNN_OK 1
 
 
 //-----------------------------------------------------------------------------
@@ -56,18 +79,51 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-extern uint32_t cnn_time;
+/* Stopwatch - holds the runtime when accelerator finishes */
+extern volatile uint32_t cnn_time;
 
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-uint8_t cnn_load_kernel(void);
-uint8_t cnn_load_data(uint8_t *pIn);
-void cnn_unload(uint32_t *out_buf);
-uint8_t cnn_start(void);
-void cnn_wait(void);
-void memcpy32(uint32_t *dst, const uint32_t *src, int n);
-void load_kernels(void);
+/* Enable clocks and power to accelerator, enable interrupt */
+int cnn_enable(uint32_t clock_source, uint32_t clock_divider);
+
+/* Disable clocks and power to accelerator */
+int cnn_disable(void);
+
+/* Perform minimum accelerator initialization so it can be configured */
+int cnn_init(void);
+
+/* Configure accelerator for the given network */
+int cnn_configure(void);
+
+/* Load accelerator weights */
+int cnn_load_weights(void);
+
+/* Verify accelerator weights (debug only) */
+int cnn_verify_weights(void);
+
+/* Load accelerator bias values (if needed) */
+int cnn_load_bias(void);
+
+/* Start accelerator processing */
+int cnn_start(void);
+
+/* Force stop accelerator */
+int cnn_stop(void);
+
+/* Continue accelerator after stop */
+int cnn_continue(void);
+
+/* Unload results from accelerator */
+int cnn_unload(uint32_t* out_buf);
+
+/* Turn on the boost circuit */
+int cnn_boost_enable(mxc_gpio_regs_t* port, uint32_t pin);
+
+/* Turn off the boost circuit */
+int cnn_boost_disable(mxc_gpio_regs_t* port, uint32_t pin);
+
 
 #endif  /* _MAX78000_AUDIO_CNN_H_ */

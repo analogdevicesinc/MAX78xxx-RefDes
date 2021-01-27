@@ -75,7 +75,7 @@
 #define LCD_ROTATION                       2  // 0-3
 
 #define LCD_CLASSIFICATION_DURATION        1000  // ms
-#define LCD_NO_VIDEO_DURATION              200   // ms
+#define LCD_NO_VIDEO_DURATION              1000  // ms
 #define LCD_NOTIFICATION_DURATION          7000  // ms
 
 // Common Camera

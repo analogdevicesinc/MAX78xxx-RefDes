@@ -188,9 +188,6 @@ libclean:
 slaclean: 
 	rm -r ${SCP_PACKETS}/
 
-# The rule to clean out all the build products.
-distclean: clean libclean slaclean
-
 all:
 	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin
 
