@@ -8,6 +8,7 @@ import android.text.InputFilter.LengthFilter
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
@@ -96,9 +97,9 @@ class DbEditFragment : Fragment(), PersonListener {
 
     private fun updateNewPersonFabVisibility() {
         if (faceIdViewModel.persons.value!!.size < DbModel.PERSON_LIMIT) {
-            newPersonFab.visibility = View.VISIBLE
+            newPersonFab.isVisible = true
         } else {
-            newPersonFab.visibility = View.GONE
+            newPersonFab.isInvisible = true
         }
     }
 
