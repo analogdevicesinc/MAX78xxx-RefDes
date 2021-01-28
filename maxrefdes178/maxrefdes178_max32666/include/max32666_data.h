@@ -84,6 +84,8 @@ typedef struct {
     uint16_t faceid_embed_subject_names_size;
 
     uint8_t fuel_gauge_working;
+    float vcell;
+    uint8_t usb_chgin;
 
     uint8_t ble_running_status_changed;  // written by both core0 and core1
     uint8_t ble_connected_status_changed;  // written by both core0 and core1
@@ -111,7 +113,7 @@ typedef struct {
     uint32_t faceid_subject_names_received;
     uint32_t screen_drew;
     uint32_t statistics_sent;
-    uint32_t battery_soc_drew;
+    uint32_t pmic_check;
 } timestamps_t;
 
 

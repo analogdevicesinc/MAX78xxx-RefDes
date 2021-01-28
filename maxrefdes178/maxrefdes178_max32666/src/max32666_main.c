@@ -451,17 +451,12 @@ static void run_application(void)
             device_status.ble_running_status_changed = 0;
         }
 
-        // Check battery SOC
-        if (device_status.fuel_gauge_working && ((timer_ms_tick - timestamps.battery_soc_drew) > MAX32666_SOC_INTERVAL)) {
-            timestamps.battery_soc_drew = timer_ms_tick;
-            max17048_soc(&device_status.statistics.battery_soc);
-//            float vcell;
-//            max17048_vcell(&vcell);
-            if (device_status.statistics.battery_soc < MAX32666_SOC_WARNING_LEVEL) {
-                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1,
-                        "Battery level %d is low!", device_status.statistics.battery_soc);
-                lcd_data.notification_color = RED;
-                timestamps.notification_received = timer_ms_tick;
+        // Check PMIC and Fuel Gauge
+        if ((timer_ms_tick - timestamps.pmic_check) > MAX32666_PMIC_INTERVAL) {
+            timestamps.pmic_check = timer_ms_tick;
+            max20303_worker();
+            if (device_status.fuel_gauge_working) {
+                max17048_worker();
             }
         }
 
@@ -479,14 +474,19 @@ static void refresh_screen(void)
 
     core0_icc(1); // enable icc for lcd operations
 
+    snprintf(line_string, sizeof(line_string) - 1, "%3d", device_status.statistics.battery_soc);
+    if (device_status.usb_chgin) {
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, line_string, Font_7x10, ORANGE, 0, 0, lcd_data.buffer);
+    } else if (device_status.statistics.battery_soc <= MAX32666_SOC_WARNING_LEVEL) {
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, line_string, Font_7x10, RED, 0, 0, lcd_data.buffer);
+    } else {
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, line_string, Font_7x10, GREEN, 0, 0, lcd_data.buffer);
+    }
+
     if (device_settings.enable_lcd_statistics) {
         int line_pos = 3;
 
         snprintf(line_string, sizeof(line_string) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
-
-        snprintf(line_string, sizeof(line_string) - 1, "Bat:%d", device_status.statistics.battery_soc);
         fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 

@@ -41,6 +41,7 @@
 #include <stdio.h>
 
 #include "max32666_debug.h"
+#include "max32666_data.h"
 #include "max32666_i2c.h"
 #include "max32666_max17048.h"
 #include "max32666_max20303.h"
@@ -108,8 +109,8 @@
 #define MAX20303_APREG_THERMALSHUTDOWN_CONFIG_READ       0x12
 #define MAX20303_APREG_CHARHER_CONFIG_WRITE              0x14
 #define MAX20303_APREG_CHARHER_CONFIG_READ               0x15
-#define MAX20303_APREG_CHARGERTHERMALLIMITS_CONFIG_WRITE 0x16
-#define MAX20303_APREG_CHARGERTHERMALLIMITS_CONFIG_READ  0x17
+#define MAX20303_APREG_CHARHER_CONTROL_WRITE             0x1A
+#define MAX20303_APREG_CHARHER_CONTROL_READ              0x1B
 
 #define MAX20303_APREG_BST_CONFIG_WRITE                  0x30
 #define MAX20303_APREG_BST_CONFIG_READ                   0x31
@@ -146,11 +147,48 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+enum eMax20303RegStatus0ChgStat
+{
+    MAX20303_STATUS0_CHG_STAT_OFF = 0x0,       /**< Charger off */
+    MAX20303_STATUS0_CHG_STAT_SUSPENDED_TEMP,  /**< Charging suspended due to temperature */
+    MAX20303_STATUS0_CHG_STAT_PRE_CHARGE,      /**< Pre-charge in progress */
+    MAX20303_STATUS0_CHG_STAT_FAST_CHARGE_CC,  /**< Fast-charge constant current mode in progress */
+    MAX20303_STATUS0_CHG_STAT_FAST_CHARGE_CV,  /**< Fast-charge constant voltage mode in progress */
+    MAX20303_STATUS0_CHG_STAT_MAINTAIN,        /**< Maintain charge in progress */
+    MAX20303_STATUS0_CHG_STAT_MAINTAIN_DONE,   /**< Maintain charger timer done */
+    MAX20303_STATUS0_CHG_STAT_FAULT,           /**< Charger fault condition */
+};
+
+typedef union
+{
+    uint8_t raw;
+    struct
+    {
+        uint8_t ChgStat    : 4;   /**< Status of Charger Mode. */
+        uint8_t ThmStat    : 4;   /**< Status of Thermistor Monitoring. */
+    } bits;
+} tuMax20303RegStatus0;
+
+typedef union
+{
+    uint8_t raw;
+    struct
+    {
+        uint8_t ChgTmo     : 1;   /**< Status of Time-Out Condition. */
+        uint8_t ChgThmReg  : 1;   /**< Status of Thermal Regulation. */
+        uint8_t ChgThmSd   : 1;   /**< Status of Thermal Shutdown. */
+        uint8_t UsbOk      : 1;   /**< Status of CHGIN Input. */
+        uint8_t UsbOVP     : 1;   /**< Status of CHGIN OVP. */
+        uint8_t ILim       : 1;   /**< CHGIN Input Current Limit. */
+        uint8_t            : 2;
+    } bits;
+} tuMax20303RegStatus1;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static int max20303_set_charger(void);
 
 
 //-----------------------------------------------------------------------------
@@ -222,11 +260,101 @@ int max20303_init(void)
     max20303_enable_video_audio(1);
     MXC_Delay(MXC_DELAY_MSEC(100));
 
+    max20303_set_charger();
+
     return E_NO_ERROR;
 }
 
-int max20303_led_red(int on) {
+static int max20303_set_charger(void)
+{
+    uint8_t appdata[4];
 
+    // write charger config
+    // MAX20303J default is 0x0C, 0x75, 0xF6, 0x00
+    appdata[0] = 0x0C;  // MtChgTmr=0min, FChgTmr=600min, PChgTmr=30min
+    appdata[1] = 0x75;  // VPChg=3.15V, IPChg=0.1xIFChg, ChgDone=0.1xIFChg
+    appdata[2] = 0xF3;  // ChgAutoStp=Auto-Stop enabled, ChgAutoRe=Auto-Restart enabled, BatReChg=BatReg-220mV, BatReg=4.20V
+    appdata[3] = 0x00;  // SysMinVlt=3.6V
+    i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, appdata, 4);
+    i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONFIG_WRITE);
+    MXC_Delay(MXC_DELAY_MSEC(5));
+    i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_RESPONSE, appdata, 1);
+    if (appdata[0] != MAX20303_APREG_CHARHER_CONFIG_WRITE) {
+        PR_ERROR("incorrect response %x", appdata[0]);
+    }
+
+    // write charger control
+    // MAX20303J default is 0x00
+    appdata[0] = 0x01;  // ThmEn=Thermal monitor disabled, ChgEn=Charger enabled
+    i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, appdata, 1);
+    i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONTROL_WRITE);
+    MXC_Delay(MXC_DELAY_MSEC(5));
+    i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_RESPONSE, appdata, 1);
+    if (appdata[0] != MAX20303_APREG_CHARHER_CONTROL_WRITE) {
+        PR_ERROR("incorrect response %x", appdata[0]);
+    }
+
+//    // read charger config
+//    i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONFIG_READ);
+//    MXC_Delay(MXC_DELAY_MSEC(5));
+//    i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATAIN0, appdata, 4);
+//    PR_DEBUG("charger config %x %x %x %x", appdata[0], appdata[1], appdata[2], appdata[3]);
+//
+//    // read charger control
+//    i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONTROL_READ);
+//    MXC_Delay(MXC_DELAY_MSEC(5));
+//    i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATAIN0, appdata, 1);
+//    PR_DEBUG("charger control %x", appdata[0]);
+
+    return E_NO_ERROR;
+}
+
+int max20303_worker(void)
+{
+//    tuMax20303RegStatus0 lMax20303RegStatus0 = {0};
+//    i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_STATUS0, &lMax20303RegStatus0.raw);
+
+    tuMax20303RegStatus1 lMax20303RegStatus1 = {0};
+    i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_STATUS1, &lMax20303RegStatus1.raw);
+
+//    switch (lMax20303RegStatus0.bits.ChgStat) {
+//    case MAX20303_STATUS0_CHG_STAT_OFF:
+//        PR_DEBUG("Charger off");
+//        break;
+//    case MAX20303_STATUS0_CHG_STAT_SUSPENDED_TEMP:
+//        PR_DEBUG("Charging suspended due to temperature");
+//        break;
+//    case MAX20303_STATUS0_CHG_STAT_PRE_CHARGE:
+//        PR_DEBUG("Pre-charge in progress");
+//        break;
+//    case MAX20303_STATUS0_CHG_STAT_FAST_CHARGE_CC:
+//        PR_DEBUG("Fast-charge constant current mode in progress");
+//        break;
+//    case MAX20303_STATUS0_CHG_STAT_FAST_CHARGE_CV:
+//        PR_DEBUG("Fast-charge constant voltage mode in progress");
+//        break;
+//    case MAX20303_STATUS0_CHG_STAT_MAINTAIN:
+//        PR_DEBUG("Maintain charge in progress");
+//        break;
+//    case MAX20303_STATUS0_CHG_STAT_MAINTAIN_DONE:
+//        PR_DEBUG("Maintain charger timer done");
+//        break;
+//    case MAX20303_STATUS0_CHG_STAT_FAULT:
+//        PR_DEBUG("Charger fault condition");
+//        break;
+//    }
+
+    if (lMax20303RegStatus1.bits.UsbOk) {
+        device_status.usb_chgin = 1;
+    } else {
+        device_status.usb_chgin = 0;
+    }
+
+    return E_NO_ERROR;
+}
+
+int max20303_led_red(int on)
+{
     if (on) {
         i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED1_DIRECT, 0x21);
     } else {
@@ -235,8 +363,8 @@ int max20303_led_red(int on) {
     return E_NO_ERROR;
 }
 
-int max20303_led_green(int on) {
-
+int max20303_led_green(int on)
+{
     if (on) {
         i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED2_DIRECT, 0x21);
     } else {
@@ -245,8 +373,8 @@ int max20303_led_green(int on) {
     return E_NO_ERROR;
 }
 
-int max20303_led_blue(int on) {
-
+int max20303_led_blue(int on)
+{
     if (on) {
         i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED0_DIRECT, 0x21);
     } else {

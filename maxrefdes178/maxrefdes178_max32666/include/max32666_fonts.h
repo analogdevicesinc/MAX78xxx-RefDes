@@ -53,6 +53,7 @@
 #define GREEN 0x07E0
 #define CYAN 0x7FFF
 #define YELLOW 0xFFE0
+#define ORANGE 0xFD60
 #define GRAY 0X8430
 #define BRED 0XF81F
 #define GRED 0XFFE0

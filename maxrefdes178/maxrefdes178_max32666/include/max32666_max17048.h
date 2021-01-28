@@ -51,7 +51,6 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int max17048_init(void);
-int max17048_soc(uint8_t *soc);
-int max17048_vcell(float *vcell);
+int max17048_worker(void);
 
 #endif /* _MAX32666_MAX17048_H_ */

@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <math.h>
 #include <mxc_delay.h>
 #include <mxc_errors.h>
 #include <stdio.h>
@@ -235,6 +236,8 @@ typedef union
 // Local function declarations
 //-----------------------------------------------------------------------------
 static int max17048_update_model(void);
+static int max17048_soc(uint8_t *soc);
+static int max17048_vcell(float *vcell);
 
 
 //-----------------------------------------------------------------------------
@@ -306,6 +309,16 @@ int max17048_init(void)
         return err;
     }
     PR_INFO("soc %d", soc);
+
+    max17048_worker();
+
+    return E_NO_ERROR;
+}
+
+int max17048_worker(void)
+{
+    max17048_soc(&device_status.statistics.battery_soc);
+    max17048_vcell(&device_status.vcell);
 
     return E_NO_ERROR;
 }
@@ -502,10 +515,10 @@ static int max17048_update_model(void)
     return E_NO_ERROR;
 }
 
-int max17048_soc(uint8_t *soc)
+static int max17048_soc(uint8_t *soc)
 {
     int err;
-//    float fSoC = 0;
+    float fSoC = 0;
 
     tuMax17048RegSoc lMax17048RegSoc = { 0 };
     if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_SOC, lMax17048RegSoc.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
@@ -513,18 +526,20 @@ int max17048_soc(uint8_t *soc)
         return err;
     }
 
-//    fSoC = ((lMax17048RegSoc.bits.SocMsb << 8) + lMax17048RegSoc.bits.SocLsb) / 256.0f;
+    fSoC = ((lMax17048RegSoc.bits.SocMsb << 8) + lMax17048RegSoc.bits.SocLsb) / 256.0f;
 
     if (lMax17048RegSoc.bits.SocMsb > 100) {
         *soc = 100;
     } else {
-        *soc = lMax17048RegSoc.bits.SocMsb;
+        *soc = round(fSoC);
     }
+
+    PR_DEBUG("soc %d %f", *soc, (double) fSoC);
 
     return E_NO_ERROR;
 }
 
-int max17048_vcell(float *vcell)
+static int max17048_vcell(float *vcell)
 {
     int err;
 
@@ -536,6 +551,8 @@ int max17048_vcell(float *vcell)
 
     *vcell  = ((lMax17048RegVcell.bits.VCellMsb << 8) + lMax17048RegVcell.bits.VCellLsb) * 0.078125f;
     *vcell /= 1000.0f;
+
+    PR_DEBUG("vcell %f", (double) *vcell);
 
     return E_NO_ERROR;
 }

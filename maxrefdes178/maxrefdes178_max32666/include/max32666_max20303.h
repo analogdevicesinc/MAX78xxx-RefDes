@@ -61,6 +61,14 @@
 int max20303_init(void);
 
 /**
+ * @brief  Worker function for MAX20303 PMIC. Before calling this function, I2C should
+ * be initialized via i2c_init() function.
+ * @retval     #E_NO_ERROR   Intialization successful.
+ * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
+ */
+int max20303_worker(void);
+
+/**
  * @brief  Setup for LDO1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
  * LDO1 is configured as load-switch. Before calling this function, PMIC should be initialized via
  * max20303_initialize() function
