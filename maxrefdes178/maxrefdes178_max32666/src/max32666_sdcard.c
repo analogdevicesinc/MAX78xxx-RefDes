@@ -324,6 +324,9 @@ int sdcard_init(void)
         return 1;
     }
 
+    // wait for card to be inserted
+    for (int i = 0; !MXC_SDHC_Card_Inserted() && (i < 100000); i++);
+
     // Check if card is inserted
     if (!MXC_SDHC_Card_Inserted()) {
         PR_ERROR("Card is not inserted.");
