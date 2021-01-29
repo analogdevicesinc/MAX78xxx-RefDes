@@ -188,7 +188,7 @@ typedef union
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int max20303_set_charger(void);
+static int max20303_enable_charger(void);
 
 
 //-----------------------------------------------------------------------------
@@ -260,12 +260,12 @@ int max20303_init(void)
     max20303_enable_video_audio(1);
     MXC_Delay(MXC_DELAY_MSEC(100));
 
-    max20303_set_charger();
+    max20303_enable_charger();
 
     return E_NO_ERROR;
 }
 
-static int max20303_set_charger(void)
+static int max20303_enable_charger(void)
 {
     uint8_t appdata[4];
 
@@ -277,7 +277,7 @@ static int max20303_set_charger(void)
     appdata[3] = 0x00;  // SysMinVlt=3.6V
     i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, appdata, 4);
     i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONFIG_WRITE);
-    MXC_Delay(MXC_DELAY_MSEC(5));
+    MXC_Delay(MXC_DELAY_MSEC(10));
     i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_RESPONSE, appdata, 1);
     if (appdata[0] != MAX20303_APREG_CHARHER_CONFIG_WRITE) {
         PR_ERROR("incorrect response %x", appdata[0]);
@@ -288,7 +288,7 @@ static int max20303_set_charger(void)
     appdata[0] = 0x01;  // ThmEn=Thermal monitor disabled, ChgEn=Charger enabled
     i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, appdata, 1);
     i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONTROL_WRITE);
-    MXC_Delay(MXC_DELAY_MSEC(5));
+    MXC_Delay(MXC_DELAY_MSEC(10));
     i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_RESPONSE, appdata, 1);
     if (appdata[0] != MAX20303_APREG_CHARHER_CONTROL_WRITE) {
         PR_ERROR("incorrect response %x", appdata[0]);
@@ -345,6 +345,9 @@ int max20303_worker(void)
 //    }
 
     if (lMax20303RegStatus1.bits.UsbOk) {
+//        if (!device_status.usb_chgin) {
+//            max20303_enable_charger();
+//        }
         device_status.usb_chgin = 1;
     } else {
         device_status.usb_chgin = 0;
