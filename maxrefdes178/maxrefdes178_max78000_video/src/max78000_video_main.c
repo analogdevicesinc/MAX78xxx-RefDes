@@ -74,8 +74,9 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-mxc_gpio_cfg_t gpio_flash  = MAX78000_VIDEO_FLASH_PIN;
+mxc_gpio_cfg_t gpio_flash  = MAX78000_VIDEO_FLASH_LED_PIN;
 mxc_gpio_cfg_t gpio_camera = MAX78000_VIDEO_CAMERA_PIN;
+mxc_gpio_cfg_t gpio_button = MAX78000_VIDEO_BUTTON_INT_PIN;
 mxc_gpio_cfg_t gpio_red    = MAX78000_VIDEO_LED_RED_PIN;
 mxc_gpio_cfg_t gpio_green  = MAX78000_VIDEO_LED_GREEN_PIN;
 mxc_gpio_cfg_t gpio_blue   = MAX78000_VIDEO_LED_BLUE_PIN;
@@ -231,6 +232,11 @@ static void run_demo(void);
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
+void button_int(void *cbdata)
+{
+    PR_INFO("button pressed");
+}
+
 int main(void)
 {
     int ret = 0;
@@ -345,6 +351,9 @@ int main(void)
         PR_ERROR("Error returned from setting up camera. Error : %d", ret);
         fail();
     }
+
+    // Init button interrupt
+    PB_RegisterCallback(0, (pb_callback) button_int);
 
     // Use camera interface buffer for QSPI payload buffer
     {
@@ -511,7 +520,13 @@ static void run_demo(void)
         }
 
         if (!enable_video) {
+            // Disable camera
+            GPIO_SET(gpio_camera);
+
             __WFI();
+
+            // Enable camera
+            GPIO_CLR(gpio_camera);
             continue;
         }
 

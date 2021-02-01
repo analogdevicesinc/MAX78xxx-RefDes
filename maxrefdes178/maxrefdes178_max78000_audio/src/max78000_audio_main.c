@@ -101,6 +101,8 @@
 //-----------------------------------------------------------------------------
 mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_AUDIO_CNN_BOOST_PIN;
 mxc_gpio_cfg_t gpio_audio_osc = MAX78000_AUDIO_AUDIO_OSC_PIN;
+mxc_gpio_cfg_t gpio_mic_en    = MAX78000_AUDIO_MIC_EN_PIN;
+mxc_gpio_cfg_t gpio_mic_sel   = MAX78000_AUDIO_MIC_SEL_PIN;
 mxc_gpio_cfg_t gpio_red       = MAX78000_AUDIO_LED_RED_PIN;
 mxc_gpio_cfg_t gpio_green     = MAX78000_AUDIO_LED_GREEN_PIN;
 mxc_gpio_cfg_t gpio_blue      = MAX78000_AUDIO_LED_BLUE_PIN;
@@ -162,6 +164,11 @@ void i2s_isr(void)
     MXC_I2S_ClearFlags(MXC_F_I2S_INTFL_RX_THD_CH0);
 }
 
+void button_int(void *cbdata)
+{
+    PR_INFO("button pressed");
+}
+
 int main(void)
 {
     uint32_t sampleCounter = 0;
@@ -189,8 +196,6 @@ int main(void)
     MXC_SYS_Clock_Select(MXC_SYS_CLOCK_IPO);
     SystemCoreClockUpdate();
 
-    Microphone_Power(POWER_ON);
-
     /* Enable peripheral, enable CNN interrupt, turn on CNN clock */
     /* CNN clock: 50 MHz div 1 */
     cnn_enable(MXC_S_GCR_PCLKDIV_CNNCLKSEL_PCLK, MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1);
@@ -202,6 +207,14 @@ int main(void)
     /* Configure audio OSC pin */
     GPIO_SET(gpio_audio_osc);
     MXC_GPIO_Config(&gpio_audio_osc);
+
+    /* Configure audio microphone power pin */
+    GPIO_SET(gpio_mic_en);
+    MXC_GPIO_Config(&gpio_mic_en);
+
+    /* Configure audio microphone select pin */
+    GPIO_CLR(gpio_mic_sel);
+    MXC_GPIO_Config(&gpio_mic_sel);
 
     // Configure LEDs
     GPIO_CLR(gpio_red);
@@ -245,6 +258,9 @@ int main(void)
 
     /* initialize I2S interface to Mic */
     I2SInit();
+
+    /* Init button interrupt */
+    PB_RegisterCallback(0, (pb_callback) button_int);
 
     PR_INFO("** READY ***");
 

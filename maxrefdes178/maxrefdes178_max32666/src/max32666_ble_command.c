@@ -90,7 +90,7 @@ static ble_command_buffer_t ble_command_buffer;
 // Local function declarations
 //-----------------------------------------------------------------------------
 static int ble_command_handle_rx(void);
-static int ble_command_handle_tx(void);
+//static int ble_command_handle_tx(void);
 
 
 //-----------------------------------------------------------------------------
@@ -494,16 +494,16 @@ static int ble_command_handle_rx(void)
     return E_SUCCESS;
 }
 
-static int ble_command_handle_tx(void)
-{
-    // BLE TX, check new packet to enqueue ble tx queue
-    if (ble_command_buffer.command_state != BLE_COMMAND_STATE_TX_RUNNING) {
-        return E_NO_ERROR;
-    }
-    // TODO
-
-    return E_SUCCESS;
-}
+//static int ble_command_handle_tx(void)
+//{
+//    // BLE TX, check new packet to enqueue ble tx queue
+//    if (ble_command_buffer.command_state != BLE_COMMAND_STATE_TX_RUNNING) {
+//        return E_NO_ERROR;
+//    }
+//    // TODO
+//
+//    return E_SUCCESS;
+//}
 
 int ble_command_reset(void)
 {
@@ -517,7 +517,7 @@ int ble_command_reset(void)
 int ble_command_worker(void)
 {
     ble_command_handle_rx();
-    ble_command_handle_tx();
+//    ble_command_handle_tx();
 
     return E_SUCCESS;
 }
