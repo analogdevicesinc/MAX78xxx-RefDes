@@ -36,6 +36,7 @@ data class PersonModel(
     fun refreshImages() {
         if (personFolder.exists()) {
             images = personFolder.listFiles()?.toMutableList() ?: mutableListOf()
+            images.sortBy { it.lastModified() }
             images.forEach { File(it.toURI().path) }
             if (images.size < PHOTO_LIMIT) {
                 images.add(createTempDir())

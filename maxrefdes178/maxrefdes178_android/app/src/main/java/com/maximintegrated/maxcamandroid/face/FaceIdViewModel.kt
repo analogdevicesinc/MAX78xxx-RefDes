@@ -73,6 +73,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
     fun getPersonList() {
         //if not null
         selectedDatabase?.let {
+            it.initializeModel()
             _persons.value = ArrayList(it.persons)
         }
     }

@@ -32,7 +32,7 @@ data class DbModel(
         initializeModel()
     }
 
-    private fun initializeModel() {
+    fun initializeModel() {
         persons.clear()
         embeddingsFile = null
         if (dbFolder.exists()) {
@@ -40,6 +40,7 @@ data class DbModel(
             embeddingsFile = listOfFoldersForPeople.find { it.extension == "bin" }
             listOfFoldersForPeople = listOfFoldersForPeople.filter { it.isDirectory }
             listOfFoldersForPeople.forEach { persons.add(PersonModel(it)) }
+            persons.sort()
         }
     }
 
