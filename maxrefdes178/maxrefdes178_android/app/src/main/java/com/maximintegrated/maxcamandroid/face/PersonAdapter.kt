@@ -105,8 +105,8 @@ class PersonAdapter(private val listener: PersonListener) :
             listener.onImageClicked(imageFile, person)
         }
 
-        override fun onAddImageClicked(person: PersonModel) {
-            listener.onAddImageClicked(person)
+        override fun onAddImageClicked(tempImageFile: File) {
+            listener.onAddImageClicked(tempImageFile)
         }
 
     }

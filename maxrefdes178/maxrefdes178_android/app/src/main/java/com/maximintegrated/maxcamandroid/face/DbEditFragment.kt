@@ -59,7 +59,10 @@ class DbEditFragment : Fragment(), PersonListener {
         }
 
         faceIdViewModel.personUpdatedEvent.observe(viewLifecycleOwner) {
-            personAdapter.notifyDataSetChanged()
+            faceIdViewModel.persons?.let {
+                personAdapter.submitList(null)
+                personAdapter.submitList(it.value)
+            }
             enableNextButton()
         }
 
@@ -150,8 +153,12 @@ class DbEditFragment : Fragment(), PersonListener {
         faceIdViewModel.selectPersonImage(imageFile, person)
     }
 
-    override fun onAddImageClicked(person: PersonModel) {
-        faceIdViewModel.selectedPerson = person
+    override fun onAddImageClicked(tempImageFile: File) {
+        faceIdViewModel.selectedDatabase?.persons?.forEach {
+            if (it.images.contains(tempImageFile)) {
+                faceIdViewModel.selectedPerson = it
+            }
+        }
 
         CropImage.activity()
             .setGuidelines(CropImageView.Guidelines.ON)

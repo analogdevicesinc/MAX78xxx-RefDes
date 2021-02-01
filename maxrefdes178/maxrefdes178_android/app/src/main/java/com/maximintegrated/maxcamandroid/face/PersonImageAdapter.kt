@@ -55,7 +55,7 @@ class PersonImageAdapter(
                 Glide.with(parent.context).load(R.drawable.ic_add_black).centerCrop()
                     .placeholder(R.drawable.ic_add_black).into(itemView.image_card.imageView)
                 imageCard.setOnClickListener {
-                    listener.onAddImageClicked(personModel)
+                    listener.onAddImageClicked(imageFile)
                 }
             } else {
                 Glide.with(parent.context).load(imageFile).centerCrop()
@@ -73,5 +73,5 @@ class PersonImageAdapter(
 
 interface PersonImageListener {
     fun onImageClicked(imageFile: File, person: PersonModel)
-    fun onAddImageClicked(person: PersonModel)
+    fun onAddImageClicked(tempImageFile: File)
 }
