@@ -85,7 +85,6 @@ extern int _boot_mem_len;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static void core0_irq_init(void);
 static void run_application(void);
 
 //-----------------------------------------------------------------------------
@@ -94,19 +93,11 @@ static void run_application(void);
 int main(void)
 {
     int ret = 0;
-    char version_string[10] = {0};
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel =  0x00;
     MXC_GPIO1->vssel =  0x00;
 
-//    ret = MXC_SEMA_Init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("MXC_SEMA_Init failed %d", ret);
-//        while(1);
-//    }
-
-    snprintf(version_string, sizeof(version_string) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version_string, S_BUILD_TIMESTAMP);
+    PR_INFO("maxrefdes178_max32666 core0 v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
 
     ret = i2c_master_init(MAX32666_I2C, I2C_SPEED);
     if (ret != E_NO_ERROR) {
@@ -124,15 +115,11 @@ int main(void)
     // To debug Core1 set alternate function 3
 //    MXC_GPIO_Config(&core1_swd_pin);
 
-   // BLE should init first since it is mischievous
-   // BLE init somehow damages GPIO settings for P0.0, P0.23
-    core0_irq_init();
-
-    ret = sdcard_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("sdcard_init failed %d", ret);
-        max20303_led_red(1);
-    }
+//    ret = sdcard_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("sdcard_init failed %d", ret);
+//        max20303_led_red(1);
+//    }
     /*
      * TODO: Process files in SDCard to perform firmware upgrade
      */
@@ -148,31 +135,4 @@ void hal_sys_jump_fw(void *fw_entry);
 static void run_application(void)
 {
     hal_sys_jump_fw((void(*)())_app_isr[1]);
-}
-
-
-// Similar to Core 0, the entry point for Core 1
-// is Core1Main()
-static void core0_irq_init(void)
-{
-    // Disable all interrupts used by core1
-    NVIC_DisableIRQ(BTLE_TX_DONE_IRQn);
-    NVIC_DisableIRQ(BTLE_RX_RCVD_IRQn);
-    NVIC_DisableIRQ(BTLE_RX_ENG_DET_IRQn);
-    NVIC_DisableIRQ(BTLE_SFD_DET_IRQn);
-    NVIC_DisableIRQ(BTLE_SFD_TO_IRQn);
-    NVIC_DisableIRQ(BTLE_GP_EVENT_IRQn);
-    NVIC_DisableIRQ(BTLE_CFO_IRQn);
-    NVIC_DisableIRQ(BTLE_SIG_DET_IRQn);
-    NVIC_DisableIRQ(BTLE_AGC_EVENT_IRQn); // Disabled
-    NVIC_DisableIRQ(BTLE_RFFE_SPIM_IRQn);
-    NVIC_DisableIRQ(BTLE_TX_AES_IRQn); // Disabled
-    NVIC_DisableIRQ(BTLE_RX_AES_IRQn); // Disabled
-    NVIC_DisableIRQ(BTLE_INV_APB_ADDR_IRQn); // Disabled
-    NVIC_DisableIRQ(BTLE_IQ_DATA_VALID_IRQn); // Disabled
-
-    NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BLE)));
-    NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BLE_SLEEP)));
-
-    NVIC_DisableIRQ(WUT_IRQn);
 }

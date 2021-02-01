@@ -61,6 +61,7 @@ LIBS_DIR=../../msdk/Libraries
 else
 LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
 endif
+#LIBS_DIR=../../msdk/Libraries
 LIBS_DIR=../../msdk/Libraries
 
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
@@ -129,10 +130,10 @@ PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-secti
 
 # Set MXC_OPTIMIZE to override the default optimization level
 ifdef RELEASE
-MXC_OPTIMIZE_CFLAGS=-Ofast
+MXC_OPTIMIZE_CFLAGS=-O2
 PROJ_CFLAGS+=-DMAXREFDES178_RELEASE
 else
-MXC_OPTIMIZE_CFLAGS=-Os
+MXC_OPTIMIZE_CFLAGS=-Og
 endif
 
 # Point this variable to a linker file to override the default file
@@ -151,11 +152,6 @@ endif
 BOARD_DIR=$(LIBS_DIR)/Boards/$(TARGET_UC)/$(BOARD)
 include $(BOARD_DIR)/board.mk
 
-# Remove MX25 related files from bootloader as it does not utilize the on-board flash at all
-TMP_SRCS := $(SRCS)
-SRCS := $(filter-out mx25.c, $(TMP_SRCS))
-VAR = $(filter-out bla3, $(TMPVAR))
-
 # Include the peripheral driver
 PERIPH_DRIVER_DIR=$(LIBS_DIR)/PeriphDrivers
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
@@ -166,6 +162,9 @@ FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
 include $(FAT32_DRIVER_DIR)/fat32.mk
 include $(SDHC_DRIVER_DIR)/sdhc.mk
 
+# Remove MX25 related files from bootloader as it does not utilize the on-board flash at all
+TMP_SRCS := $(SRCS)
+SRCS := $(filter-out mx25.c, $(TMP_SRCS))
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be
 # included before this one.

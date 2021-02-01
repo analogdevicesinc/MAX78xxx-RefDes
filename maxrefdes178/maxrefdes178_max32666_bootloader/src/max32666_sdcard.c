@@ -134,7 +134,6 @@ static int sdcard_example(void)
         PR_ERROR("Error opening SD Card: %s", FF_ERRORS[err]);
         return err;
     }
-    printf("SD Card Opened!\n");
 
     PR_INFO("Attempting to read back file...");
     if((err = f_open(&file, "HelloMaxim.txt", FA_READ)) != FR_OK){

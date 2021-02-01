@@ -61,7 +61,7 @@ SRAM_LEN = SRAM_SIZE + SRAM_ORIGIN - SRAM_ADDR;
 /* If used, they should be adjusted for the external Flash/RAM size */
 MEMORY {
     SPIX (rx)  : ORIGIN = 0x08000000,                           LENGTH = 128M
-    BOOTLOADER (rx) : ORIGIN = 0x10000000, LENGTH = 0x0020000   /* 49 kb for bootloader */
+    BOOTLOADER (rx) : ORIGIN = 0x10000000, LENGTH = 0x0010000   /* 16 kb for bootloader */
     MAINAPP (rwx) : ORIGIN = 0x10010000, LENGTH = 0x000EFFC0 /* Main application */
     BOOTMEM (rw) : ORIGIN = 0x100FFFC0, LENGTH = 0x00000040 /* 64 bytes of memory for bootloader */
 
