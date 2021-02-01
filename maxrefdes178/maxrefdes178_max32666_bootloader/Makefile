@@ -1,0 +1,194 @@
+################################################################################
+ # Copyright (C) 2016 Maxim Integrated Products, Inc., All Rights Reserved.
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining a
+ # copy of this software and associated documentation files (the "Software"),
+ # to deal in the Software without restriction, including without limitation
+ # the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ # and/or sell copies of the Software, and to permit persons to whom the
+ # Software is furnished to do so, subject to the following conditions:
+ #
+ # The above copyright notice and this permission notice shall be included
+ # in all copies or substantial portions of the Software.
+ #
+ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ # IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+ # OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ # OTHER DEALINGS IN THE SOFTWARE.
+ #
+ # Except as contained in this notice, the name of Maxim Integrated
+ # Products, Inc. shall not be used except as stated in the Maxim Integrated
+ # Products, Inc. Branding Policy.
+ #
+ # The mere transfer of this software does not imply any licenses
+ # of trade secrets, proprietary technology, copyrights, patents,
+ # trademarks, maskwork rights, or any other form of intellectual
+ # property whatsoever. Maxim Integrated Products, Inc. retains all
+ # ownership rights.
+ #
+ #
+ ###############################################################################
+
+# This is the name of the build output file
+ifeq "$(PROJECT)" ""
+PROJECT=maxrefdes178_max32666_bootloader
+endif
+
+# Specify the target processor
+ifeq "$(TARGET)" ""
+TARGET=MAX32665
+endif
+
+# Create Target name variables
+TARGET_UC:=$(shell echo $(TARGET) | tr a-z A-Z)
+TARGET_LC:=$(shell echo $(TARGET) | tr A-Z a-z)
+
+# Select 'GCC' or 'IAR' compiler
+COMPILER=GCC
+
+#BOARD=EvKit_V1
+# Specify the board used
+ifeq "$(BOARD)" ""
+BOARD=MAXREFDES178
+endif
+
+# This is the path to the CMSIS root directory
+ifeq "$(MAXIM_PATH)" ""
+LIBS_DIR=../../msdk/Libraries
+else
+LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
+endif
+LIBS_DIR=../../msdk/Libraries
+
+CMSIS_ROOT=$(LIBS_DIR)/CMSIS
+ifeq ($(MAKECMDGOALS),sla)
+SECURE_BOOT_TOOLS_DIR=$(LIBS_DIR)/../Tools/SBT
+CA_SIGN_BUILD=$(SECURE_BOOT_TOOLS_DIR)/bin/sign_app
+BUILD_SESSION=$(SECURE_BOOT_TOOLS_DIR)/bin/build_scp_session
+TEST_KEY=$(SECURE_BOOT_TOOLS_DIR)/devices/$(TARGET_UC)/keys/maximtestcrk.key
+SCP_PACKETS=scp_packets
+endif
+
+#Use this for other library make files so they are all based off the same as root as the project
+export CMSIS_ROOT
+
+# Source files for this test (add path to VPATH below)
+SRCS  = max32666_main.c
+SRCS += max32666_i2c.c
+SRCS += max32666_max20303.c
+SRCS += max32666_sdcard.c
+SRCS += maxrefdes178_utility.c
+SRCS += board.c
+SRCS += hal_sys.c
+ifeq ($(MAKECMDGOALS),sla)
+SRCS += sla_header.c
+endif
+
+# Where to find source files for this test
+VPATH = src
+VPATH += src/hal/max32665
+VPATH += ../maxrefdes178_common
+ifeq ($(MAKECMDGOALS),sla)
+VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
+endif
+
+# Project specific define statements
+PROJ_CFLAGS+=-DBOOTLOADER
+
+# Where to find header files for this test
+IPATH  = include
+IPATH += ../maxrefdes178_common
+
+# Enable assertion checking for development
+PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE
+
+# Enable all warnings
+PROJ_CFLAGS+=-Wall
+PROJ_CFLAGS+=-Werror
+PROJ_CFLAGS+=-ffunction-sections -fdata-sections -fuse-linker-plugin #-flto
+# For nano.specs see: http://pabigot.github.io/bspacm/newlib.html
+PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-sections
+
+# Specify the target revision to override default
+# "A2" in ASCII
+# TARGET_REV=0x4132
+
+# Use this variables to specify and alternate tool path
+#TOOL_DIR=/opt/gcc-arm-none-eabi-4_8-2013q4/bin
+
+
+# Use these variables to add project specific tool options
+#PROJ_CFLAGS+=--specs=nano.specs
+#PROJ_LDFLAGS+=--specs=nano.specs
+
+# Point this variable to a startup file to override the default file
+#STARTUPFILE=start.S
+
+# Set MXC_OPTIMIZE to override the default optimization level
+ifdef RELEASE
+MXC_OPTIMIZE_CFLAGS=-Ofast
+PROJ_CFLAGS+=-DMAXREFDES178_RELEASE
+else
+MXC_OPTIMIZE_CFLAGS=-Os
+endif
+
+# Point this variable to a linker file to override the default file
+LINKER=$(TARGET_LC).ld
+#LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+LINKERFILE=maxrefdes178_bootloader_max32666.ld
+
+ifeq ($(MAKECMDGOALS),sla)
+LINKER=$(TARGET_LC)_sla.ld
+LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
+endif
+
+# Include external library makefiles here
+
+# Include the BSP
+BOARD_DIR=$(LIBS_DIR)/Boards/$(TARGET_UC)/$(BOARD)
+include $(BOARD_DIR)/board.mk
+
+# Remove MX25 related files from bootloader as it does not utilize the on-board flash at all
+TMP_SRCS := $(SRCS)
+SRCS := $(filter-out mx25.c, $(TMP_SRCS))
+VAR = $(filter-out bla3, $(TMPVAR))
+
+# Include the peripheral driver
+PERIPH_DRIVER_DIR=$(LIBS_DIR)/PeriphDrivers
+include $(PERIPH_DRIVER_DIR)/periphdriver.mk
+export PERIPH_DRIVER_DIR
+
+SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
+FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
+include $(FAT32_DRIVER_DIR)/fat32.mk
+include $(SDHC_DRIVER_DIR)/sdhc.mk
+
+################################################################################
+# Include the rules for building for this target. All other makefiles should be
+# included before this one.
+include $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/$(COMPILER)/$(TARGET_LC).mk
+
+libclean:
+	$(MAKE)  -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
+slaclean:
+	rm -r ${SCP_PACKETS}/
+
+# The rule to clean out all the build products.
+distclean: clean libclean slaclean
+
+all:
+	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin
+	arm-none-eabi-size --format=SysV ${BUILD_DIR}/${PROJECT}.elf
+	arm-none-eabi-size --format=berkeley $(BUILD_DIR)/$(PROJECT).elf
+
+sla: all
+	@echo " "
+	arm-none-eabi-size --format=berkeley $(BUILD_DIR)/$(PROJECT).elf
+	@echo " "
+	$(CA_SIGN_BUILD) -c $(TARGET_UC) key_file=$(TEST_KEY) algo=ecdsa header=no ca=$(BUILD_DIR)/$(PROJECT).bin sca=$(BUILD_DIR)/$(PROJECT).sbin
+	@echo " "
+	arm-none-eabi-objcopy  $(BUILD_DIR)/$(PROJECT).elf --update-section .sig=$(BUILD_DIR)/$(PROJECT).sig
+# $(BUILD_SESSION) -c $(TARGET_UC) key_file=$(TEST_KEY) ${SCP_PACKETS} $(BUILD_DIR)/$(PROJECT).sbin
