@@ -50,7 +50,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:itemCount="10"
-        tools:listitem="@layout/person_item" />
+        tools:listitem="@layout/person_item"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"/>
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/emptyViews"
