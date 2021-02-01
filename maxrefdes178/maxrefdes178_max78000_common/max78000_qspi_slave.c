@@ -472,13 +472,17 @@ int qspi_slave_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
 
     // Send header
     qspi_slave_trigger();
-    if (qspi_slave_wait_tx(QSPI_STATE_CS_DEASSERTED_HEADER) != E_NO_ERROR) {
-        g_qspi_state_tx = QSPI_STATE_IDLE;
-        return E_BAD_STATE;
+
+    if (data_size) {
+        if (qspi_slave_wait_tx(QSPI_STATE_CS_DEASSERTED_HEADER) != E_NO_ERROR) {
+            g_qspi_state_tx = QSPI_STATE_IDLE;
+            return E_BAD_STATE;
+        }
+
+        // Send data
+        qspi_slave_trigger();
     }
 
-    // Send data
-    qspi_slave_trigger();
     if (qspi_slave_wait_tx(QSPI_STATE_COMPLETED) != E_NO_ERROR) {
         g_qspi_state_tx = QSPI_STATE_IDLE;
         return E_BAD_STATE;

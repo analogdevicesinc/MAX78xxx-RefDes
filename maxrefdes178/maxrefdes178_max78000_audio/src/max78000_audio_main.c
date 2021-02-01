@@ -117,6 +117,7 @@ uint16_t thresholdLow = THRESHOLD_LOW;
 static int16_t  x0, x1, Coeff;
 static int32_t  y0, y1;
 static int8_t enable_audio = 1;
+static int8_t button_pressed = 0;
 
 volatile uint8_t i2s_flag = 0;
 int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
@@ -166,7 +167,7 @@ void i2s_isr(void)
 
 void button_int(void *cbdata)
 {
-    PR_INFO("button pressed");
+    button_pressed = 1;
 }
 
 int main(void)
@@ -339,6 +340,13 @@ int main(void)
 
             qspi_slave_set_rx_state(QSPI_STATE_IDLE);
 
+        }
+
+        if (button_pressed) {
+            button_pressed = 0;
+            PR_INFO("button pressed");
+
+            qspi_slave_send_packet(NULL, 0, QSPI_PACKET_TYPE_AUDIO_BUTTON_PRESS_RES);
         }
 
         if (!enable_audio) {

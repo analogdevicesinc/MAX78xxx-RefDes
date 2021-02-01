@@ -196,8 +196,10 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
             goto bail;
         }
 
-        qspi_master_wait_video_int();
-        qspi_video_int_flag = 0;
+        if (qspi_packet_header_rx.info.packet_size) {
+            qspi_master_wait_video_int();
+            qspi_video_int_flag = 0;
+        }
 
         switch(qspi_packet_header_rx.info.packet_type) {
         case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
@@ -304,7 +306,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
             ret = QSPI_STATE_COMPLETED;
             break;
         case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
-            if (qspi_packet_header_rx.info.packet_size > sizeof(device_status.faceid_embed_subject_names) ) {
+            if (qspi_packet_header_rx.info.packet_size > sizeof(device_status.faceid_embed_subject_names)) {
                 PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
                 goto bail;
             }
@@ -320,6 +322,16 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
             PR_INFO("FaceID names %d", device_status.faceid_embed_subject_names_size);
             for (int i = 0; i < device_status.faceid_embed_subject_names_size;
                     i += printf("%s\n", &device_status.faceid_embed_subject_names[i])) {}
+
+            ret = QSPI_STATE_COMPLETED;
+            break;
+        case QSPI_PACKET_TYPE_VIDEO_BUTTON_PRESS_RES:
+            if (qspi_packet_header_rx.info.packet_size != 0) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
+            }
+
+            PR_INFO("Video button pressed");
 
             ret = QSPI_STATE_COMPLETED;
             break;
@@ -358,8 +370,10 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
             goto bail;
         }
 
-        qspi_master_wait_audio_int();
-        qspi_audio_int_flag = 0;
+        if (qspi_packet_header_rx.info.packet_size) {
+            qspi_master_wait_audio_int();
+            qspi_audio_int_flag = 0;
+        }
 
         switch(qspi_packet_header_rx.info.packet_type) {
         case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
@@ -427,6 +441,16 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
                 PR("%02X", device_info.device_serial_num.max78000_audio[i]);
             }
             PR("\n");
+
+            ret = QSPI_STATE_COMPLETED;
+            break;
+        case QSPI_PACKET_TYPE_AUDIO_BUTTON_PRESS_RES:
+            if (qspi_packet_header_rx.info.packet_size != 0) {
+                PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+                goto bail;
+            }
+
+            PR_INFO("Audio button pressed");
 
             ret = QSPI_STATE_COMPLETED;
             break;

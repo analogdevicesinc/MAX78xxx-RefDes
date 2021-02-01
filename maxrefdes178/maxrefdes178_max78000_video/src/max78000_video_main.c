@@ -210,6 +210,7 @@ static int8_t prev_decision = -2;
 static int8_t decision = -2;
 static uint32_t time_counter = 0;
 static int8_t enable_cnn = 1;
+static int8_t button_pressed = 0;
 static int8_t enable_video = 1;
 static uint8_t *qspi_payload_buffer = NULL;
 
@@ -234,7 +235,7 @@ static void run_demo(void);
 //-----------------------------------------------------------------------------
 void button_int(void *cbdata)
 {
-    PR_INFO("button pressed");
+    button_pressed = 1;
 }
 
 int main(void)
@@ -517,6 +518,13 @@ static void run_demo(void)
             }
 
             qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+        }
+
+        if (button_pressed) {
+            button_pressed = 0;
+            PR_INFO("button pressed");
+
+            qspi_slave_send_packet(NULL, 0, QSPI_PACKET_TYPE_VIDEO_BUTTON_PRESS_RES);
         }
 
         if (!enable_video) {
