@@ -345,9 +345,9 @@ int max20303_worker(void)
 //    }
 
     if (lMax20303RegStatus1.bits.UsbOk) {
-//        if (!device_status.usb_chgin) {
-//            max20303_enable_charger();
-//        }
+        if (!device_status.usb_chgin) {
+            max20303_enable_charger();
+        }
         device_status.usb_chgin = 1;
     } else {
         device_status.usb_chgin = 0;
