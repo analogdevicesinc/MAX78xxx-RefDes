@@ -17,17 +17,23 @@ inline fun Context.color(@ColorRes colorResId: Int) = ContextCompat.getColor(thi
 inline fun Context.drawable(@DrawableRes drawableResId: Int) =
     ContextCompat.getDrawable(this, drawableResId)
 
-inline fun FragmentActivity.addFragment(fragment: Fragment, @IdRes containerId: Int = R.id.fragmentContainer, backStackName: String? = null) {
-    supportFragmentManager.beginTransaction()
-        .setCustomAnimations(
-            R.anim.bottom_sheet_slide_in,
-            R.anim.bottom_sheet_slide_out,
-            R.anim.bottom_sheet_slide_in,
-            R.anim.bottom_sheet_slide_out
-        )
-        .replace(containerId, fragment)
+inline fun FragmentActivity.addFragment(fragment: Fragment, @IdRes containerId: Int = R.id.fragmentContainer, backStackName: String? = null, animation: Boolean = true) {
+    supportFragmentManager.beginTransaction().apply {
+        if (animation) {
+            setCustomAnimations(
+                R.anim.bottom_sheet_slide_in,
+                R.anim.bottom_sheet_slide_out,
+                R.anim.bottom_sheet_slide_in,
+                R.anim.bottom_sheet_slide_out
+            )
+        }
+    }
         .addToBackStack(backStackName)
+        .replace(containerId, fragment)
         .commit()
+    if (!animation) {
+        supportFragmentManager.popBackStack()
+    }
 }
 
 inline fun FragmentActivity.replaceFragment(fragment: Fragment, @IdRes containerId: Int = R.id.fragmentContainer, backStackName: String? = null) {

@@ -73,8 +73,11 @@ class DbEditFragment : Fragment(), PersonListener {
         faceIdViewModel.personImageSelectedEvent.observe(viewLifecycleOwner, EventObserver {
             requireActivity().addFragment(ImageViewFragment.newInstance())
         })
+        //THIS WARNING EVENT IS IMPORTANT
+        //it reloads the page with correct data, workaround for now
         faceIdViewModel.warningEvent.observe(viewLifecycleOwner, EventObserver {
             Snackbar.make(view, it, Snackbar.LENGTH_SHORT).show()
+            requireActivity().addFragment(DbEditFragment.newInstance(), animation = false)
         })
         updateNewPersonFabVisibility()
 

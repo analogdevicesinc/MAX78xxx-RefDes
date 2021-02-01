@@ -102,6 +102,7 @@
     </string>
     <string name="enter_a_person_name">Enter a person name</string>
     <string name="person_name_exists">The person name already exists!</string>
+    <string name="person_created_success">Person created successfully!</string>
     <string name="person_is_renamed">The person has been renamed.</string>
     <string name="database_name_exists">The database name already exists!</string>
     <string name="database_is_deleted">The database has been deleted.</string>

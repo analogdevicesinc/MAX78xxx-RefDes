@@ -127,6 +127,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
                 val model = PersonModel(person)
                 it.persons.add(model)
                 getPersonList()
+                _warningEvent.value = Event(R.string.person_created_success)
             } else {
                 _warningEvent.value = Event(R.string.person_name_exists)
             }
