@@ -312,8 +312,8 @@ int sdcard_init(void)
     srand(12347439);
 
     // Enable Power To Card
-    MXC_GPIO_Config(&SDPowerEnablePin);
     GPIO_CLR(SDPowerEnablePin);
+    MXC_GPIO_Config(&SDPowerEnablePin);
 
     // Initialize SDHC peripheral
     cfg.bus_voltage = MAX32666_SD_BUS_VOLTAGE;

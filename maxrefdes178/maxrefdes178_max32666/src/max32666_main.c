@@ -84,7 +84,7 @@
 //-----------------------------------------------------------------------------
 static volatile int core1_init_done = 0;
 
-//static const mxc_gpio_cfg_t core1_swd_pin = MAX32666_CORE1_SWD_PIN;
+static const mxc_gpio_cfg_t core1_swd_pin = MAX32666_CORE1_SWD_PIN;
 
 
 //-----------------------------------------------------------------------------
@@ -139,7 +139,7 @@ int main(void)
     max20303_led_green(1);
 
     // To debug Core1 set alternate function 3
-//    MXC_GPIO_Config(&core1_swd_pin);  // TODO revA
+    MXC_GPIO_Config(&core1_swd_pin);
 
    // BLE should init first since it is mischievous
    // BLE init somehow damages GPIO settings for P0.0, P0.23
@@ -161,20 +161,20 @@ int main(void)
         while(1);
     }
 
-//    ret = expander_init();  // TODO revA
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("expander_init failed %d", ret);
-//        max20303_led_red(1);
-//        while(1);
-//    }
+    ret = expander_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("expander_init failed %d", ret);
+        max20303_led_red(1);
+        while(1);
+    }
 
     /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
-//    ret = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO);  // TODO revA
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("expander_debug_select failed %d", ret);
-//        max20303_led_red(1);
-//        while(1);
-//    }
+    ret = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO);
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("expander_debug_select failed %d", ret);
+        max20303_led_red(1);
+        while(1);
+    }
 
     // Initialize DMA peripheral
     ret = MXC_DMA_Init();
