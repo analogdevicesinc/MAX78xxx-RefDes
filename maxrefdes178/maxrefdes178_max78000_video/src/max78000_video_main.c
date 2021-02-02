@@ -74,13 +74,18 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-mxc_gpio_cfg_t gpio_flash  = MAX78000_VIDEO_FLASH_LED_PIN;
-mxc_gpio_cfg_t gpio_camera = MAX78000_VIDEO_CAMERA_PIN;
-mxc_gpio_cfg_t gpio_button = MAX78000_VIDEO_BUTTON_INT_PIN;
-mxc_gpio_cfg_t gpio_red    = MAX78000_VIDEO_LED_RED_PIN;
-mxc_gpio_cfg_t gpio_green  = MAX78000_VIDEO_LED_GREEN_PIN;
-mxc_gpio_cfg_t gpio_blue   = MAX78000_VIDEO_LED_BLUE_PIN;
-
+mxc_gpio_cfg_t gpio_flash     = MAX78000_VIDEO_FLASH_LED_PIN;
+mxc_gpio_cfg_t gpio_camera    = MAX78000_VIDEO_CAMERA_PIN;
+mxc_gpio_cfg_t gpio_sram_cs   = MAX78000_VIDEO_SRAM_CS_PIN;
+mxc_gpio_cfg_t gpio_i2c       = MAX78000_VIDEO_I2C_PINS;
+mxc_gpio_cfg_t gpio_debug_sel = MAX78000_VIDEO_DEBUG_SEL_PIN;
+mxc_gpio_cfg_t gpio_exp_io    = MAX78000_VIDEO_EXPANDER_IO_PIN;
+mxc_gpio_cfg_t gpio_exp_in    = MAX78000_VIDEO_EXPANDER_IN_PIN;
+mxc_gpio_cfg_t gpio_audio_int = MAX78000_VIDEO_AUDIO_INT_PIN;
+mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_VIDEO_CNN_BOOST_PIN;
+mxc_gpio_cfg_t gpio_red       = MAX78000_VIDEO_LED_RED_PIN;
+mxc_gpio_cfg_t gpio_green     = MAX78000_VIDEO_LED_GREEN_PIN;
+mxc_gpio_cfg_t gpio_blue      = MAX78000_VIDEO_LED_BLUE_PIN;
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -252,6 +257,10 @@ int main(void)
     GPIO_CLR(gpio_flash);
     MXC_GPIO_Config(&gpio_flash);
 
+    // Configure CNN boost
+    GPIO_CLR(gpio_cnn_boost);
+    MXC_GPIO_Config(&gpio_cnn_boost);
+
     // Configure LEDs
     GPIO_CLR(gpio_red);
     MXC_GPIO_Config(&gpio_red);
@@ -261,6 +270,14 @@ int main(void)
 
     GPIO_CLR(gpio_blue);
     MXC_GPIO_Config(&gpio_blue);
+
+    // Configure unused pins as high-z
+    MXC_GPIO_Config(&gpio_sram_cs);
+    MXC_GPIO_Config(&gpio_i2c);
+    MXC_GPIO_Config(&gpio_debug_sel);
+    MXC_GPIO_Config(&gpio_exp_io);
+    MXC_GPIO_Config(&gpio_exp_in);
+    MXC_GPIO_Config(&gpio_audio_int);
 
     /* Enable cache */
     MXC_ICC_Enable(MXC_ICC0);
