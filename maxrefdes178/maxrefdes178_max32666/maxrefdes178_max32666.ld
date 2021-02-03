@@ -55,11 +55,8 @@ SRAM_ADDR = SDMA_CODE_ADDR + SDMA_CODE_LEN;
 SRAM_LEN = SRAM_SIZE - OTP_LEN - SHARED_LEN - SDMA_LEN;
 
 /* Make room for PAL_NVM_DB */
-BOOTLOADER_SIZE = 0x10000;
-FLASH_ORIGIN = 0x10000000 + BOOTLOADER_SIZE; 
 FLASH_MEM_SIZE = 0x100000 - _PAL_NVM_SIZE;
-FLASH_MEM_SIZE = 0x100000 - _PAL_NVM_SIZE - BOOTLOADER_SIZE;
-PAL_NVM_ORIGIN = 0x100000 - _PAL_NVM_SIZE + FLASH_ORIGIN;
+PAL_NVM_ORIGIN = 0x100000 - _PAL_NVM_SIZE + 0x10000000;
 
 CORE0_STACK_SIZE = 0x2000;
 CORE1_STACK_SIZE = 0x2000;
@@ -69,8 +66,7 @@ CORE1_STACK_SIZE = 0x2000;
 MEMORY {
 
     SPIX (rx)  : ORIGIN = 0x08000000,                           LENGTH = 128M
-    BOOTLOADER(rx): ORIGIN = 0x10000000,                        LENGTH = BOOTLOADER_SIZE
-    FLASH (rx) : ORIGIN = FLASH_ORIGIN,                           LENGTH = FLASH_MEM_SIZE
+    FLASH (rx) : ORIGIN = 0x10000000,                           LENGTH = FLASH_MEM_SIZE
     PAL_NVM_DB (r)  : ORIGIN = PAL_NVM_ORIGIN,                  LENGTH = _PAL_NVM_SIZE
 
     OTP (rwx)       : ORIGIN = OTP_ADDR,                        LENGTH = OTP_LEN
@@ -83,19 +79,8 @@ MEMORY {
     SPID (rw)       : ORIGIN = 0x80000000,                      LENGTH = 512M
 }
 
- TARGET(binary) /* specify the file format of binary file */
- INPUT (maxrefdes178_max32666_bootloader.bin) /* bootloader bin file path (relative to the output folder)*/
- OUTPUT_FORMAT(default) /* restore the out file format */
-
 /* Sections Definitions */
 SECTIONS {
-     /* place the bootloader binary into 0x0..0x10000 */
-     .bootloader :
-     {
-        maxrefdes178_max32666_bootloader.bin /* place the binary file here */
-    
-     } > BOOTLOADER
-     
     .text :
     {
         _text = .;
