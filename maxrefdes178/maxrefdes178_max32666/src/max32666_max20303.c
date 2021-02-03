@@ -209,22 +209,6 @@ int max20303_init(void)
         return E_NOT_SUPPORTED;
     }
 
-    // Turn off all PMIC LEDs at startup
-    if ((err = max20303_led_red(0)) != E_NO_ERROR) {
-        PR_ERROR("max20303_led_red failed %d", err);
-        return err;
-    }
-
-    if ((err = max20303_led_blue(0)) != E_NO_ERROR) {
-        PR_ERROR("max20303_led_blue failed %d", err);
-        return err;
-    }
-
-    if ((err = max20303_led_green(0)) != E_NO_ERROR) {
-        PR_ERROR("max20303_led_green failed %d", err);
-        return err;
-    }
-
     // MAX20303J : Default configuration must modified for normal mode of operation
     // At Power-Up :
     // LOD1				is disabled , configured as LDO; Vout = 1.2V
@@ -244,7 +228,10 @@ int max20303_init(void)
     max20303_ldo2(1);
     MXC_Delay(MXC_DELAY_MSEC(10));
 
-    max20303_enable_video_audio(0);
+    // i2c bus lock issue fix
+    i2c_master_init(MAX32666_I2C, I2C_SPEED);
+
+    max20303_buck2(0);
     MXC_Delay(MXC_DELAY_MSEC(100));
 
     max20303_boost(0, 0x10);
@@ -256,9 +243,13 @@ int max20303_init(void)
     max20303_buck1(1);
     MXC_Delay(MXC_DELAY_MSEC(10));
 
-    // Power On MAX78000 Board
-    max20303_enable_video_audio(1);
+    max20303_buck2(1);
     MXC_Delay(MXC_DELAY_MSEC(100));
+
+    // Turn off all PMIC LEDs at startup
+    max20303_led_red(0);
+    max20303_led_blue(0);
+    max20303_led_green(0);
 
     max20303_enable_charger();
 
@@ -428,7 +419,7 @@ int max20303_buck1(int on)
     return E_NO_ERROR;
 }
 
-int max20303_enable_video_audio(int on)
+int max20303_buck2(int on)
 {
     i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x7E);	// Enable active discharge and FET scaling
     i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x28);	// Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)

@@ -281,7 +281,7 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        max20303_enable_video_audio(1);
+        max20303_buck2(1);
         device_settings.enable_max78000_video_and_audio_power = 1;
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_AUDIO_POWER:
@@ -289,7 +289,7 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        max20303_enable_video_audio(0);
+        max20303_buck2(0);
         device_settings.enable_max78000_video_and_audio_power = 0;
         break;
     case BLE_COMMAND_ENABLE_LCD_CMD:

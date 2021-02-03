@@ -90,7 +90,6 @@ int expander_init(void)
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
-    PR_INFO("%x", regval);
 
     /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
     if ((err = expander_select_debugger(DEBUGGER_SELECT_MAX78000_AUDIO)) != E_NO_ERROR) {
