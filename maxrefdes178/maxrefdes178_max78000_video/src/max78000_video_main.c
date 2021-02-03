@@ -80,7 +80,7 @@ mxc_gpio_cfg_t gpio_sram_cs   = MAX78000_VIDEO_SRAM_CS_PIN;
 mxc_gpio_cfg_t gpio_i2c       = MAX78000_VIDEO_I2C_PINS;
 mxc_gpio_cfg_t gpio_debug_sel = MAX78000_VIDEO_DEBUG_SEL_PIN;
 mxc_gpio_cfg_t gpio_exp_io    = MAX78000_VIDEO_EXPANDER_IO_PIN;
-mxc_gpio_cfg_t gpio_exp_in    = MAX78000_VIDEO_EXPANDER_IN_PIN;
+mxc_gpio_cfg_t gpio_exp_out   = MAX78000_VIDEO_EXPANDER_OUT_PIN;
 mxc_gpio_cfg_t gpio_audio_int = MAX78000_VIDEO_AUDIO_INT_PIN;
 mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_VIDEO_CNN_BOOST_PIN;
 mxc_gpio_cfg_t gpio_red       = MAX78000_VIDEO_LED_RED_PIN;
@@ -276,7 +276,7 @@ int main(void)
     MXC_GPIO_Config(&gpio_i2c);
     MXC_GPIO_Config(&gpio_debug_sel);
     MXC_GPIO_Config(&gpio_exp_io);
-    MXC_GPIO_Config(&gpio_exp_in);
+    MXC_GPIO_Config(&gpio_exp_out);
     MXC_GPIO_Config(&gpio_audio_int);
 
     /* Enable cache */

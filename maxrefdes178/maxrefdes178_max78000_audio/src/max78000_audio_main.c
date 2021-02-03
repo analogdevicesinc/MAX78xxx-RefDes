@@ -106,8 +106,8 @@ mxc_gpio_cfg_t gpio_mic_sel   = MAX78000_AUDIO_MIC_SEL_PIN;
 mxc_gpio_cfg_t gpio_sram_cs   = MAX78000_AUDIO_SRAM_CS_PIN;
 mxc_gpio_cfg_t gpio_i2c       = MAX78000_AUDIO_I2C_PINS;
 mxc_gpio_cfg_t gpio_debug_sel = MAX78000_AUDIO_DEBUG_SEL_PIN;
-mxc_gpio_cfg_t gpio_exp_io    = MAX78000_AUDIO_EXPANDER_IO_PIN;
-mxc_gpio_cfg_t gpio_exp_in    = MAX78000_AUDIO_EXPANDER_IN_PIN;
+mxc_gpio_cfg_t gpio_exp_out1  = MAX78000_AUDIO_EXPANDER_OUT1_PIN;
+mxc_gpio_cfg_t gpio_exp_out2  = MAX78000_AUDIO_EXPANDER_OUT2_PIN;
 mxc_gpio_cfg_t gpio_video_int = MAX78000_AUDIO_VIDEO_INT_PIN;
 mxc_gpio_cfg_t gpio_red       = MAX78000_AUDIO_LED_RED_PIN;
 mxc_gpio_cfg_t gpio_green     = MAX78000_AUDIO_LED_GREEN_PIN;
@@ -237,8 +237,8 @@ int main(void)
     MXC_GPIO_Config(&gpio_sram_cs);
     MXC_GPIO_Config(&gpio_i2c);
     MXC_GPIO_Config(&gpio_debug_sel);
-    MXC_GPIO_Config(&gpio_exp_io);
-    MXC_GPIO_Config(&gpio_exp_in);
+    MXC_GPIO_Config(&gpio_exp_out1);
+    MXC_GPIO_Config(&gpio_exp_out2);
     MXC_GPIO_Config(&gpio_video_int);
 
     PR_INFO("maxrefdes178_max78000_audio v%d.%d.%d [%s]",

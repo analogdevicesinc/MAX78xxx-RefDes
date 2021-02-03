@@ -47,23 +47,23 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define EXPANDER_OUTPUT_EXPANSION6_OUT    (0x01 << 0)
-#define EXPANDER_OUTPUT_EXPANSION7_OUT    (0x01 << 1)
-#define EXPANDER_OUTPUT_SLAVE_DEBUG_SEL   (0x01 << 2)
-#define EXPANDER_OUTPUT_EXPANSION8_OUT    (0x01 << 3)
-#define EXPANDER_OUTPUT_HDK1_TARGET_SEL   (0x01 << 4)
-#define EXPANDER_OUTPUT_UART_TARGET_SEL   (0x01 << 5)
-#define EXPANDER_OUTPUT_ENABLE_CODEC_OSC  (0x01 << 6)
-#define EXPANDER_OUTPUT_RESET_LCD         (0x01 << 7)
+#define EXPANDER_OUTPUT_EXPANSION4_OUT    (0x01 << 0)  // O8
+#define EXPANDER_OUTPUT_EXPANSION5_OUT    (0x01 << 1)  // O9
+#define EXPANDER_OUTPUT_SLAVE_DEBUG_SEL   (0x01 << 2)  // O10
+#define EXPANDER_OUTPUT_EXPANSION6_OUT    (0x01 << 3)  // O11
+#define EXPANDER_OUTPUT_HDK1_TARGET_SEL   (0x01 << 4)  // O12
+#define EXPANDER_OUTPUT_UART_TARGET_SEL   (0x01 << 5)  // O13
+#define EXPANDER_OUTPUT_ENABLE_CODEC_OSC  (0x01 << 6)  // O14
+#define EXPANDER_OUTPUT_RESET_LCD         (0x01 << 7)  // O15
 
-#define EXPANDER_INPUT_INT_PMIC           (0x01 << 0)
-#define EXPANDER_INPUT_INT_CODEC          (0x01 << 1)
-#define EXPANDER_INPUT_ALERT_PMIC         (0x01 << 2)
-#define EXPANDER_IO_RESET_TOUCH           (0x01 << 3)
-#define EXPANDER_INPUT_INT_ACC            (0x01 << 4)
-#define EXPANDER_IO_EXPANSION3_IO         (0x01 << 5)
-#define EXPANDER_IO_EXPANSION4_IO         (0x01 << 6)
-#define EXPANDER_INPUT_BUTTON_2           (0x01 << 7)
+#define EXPANDER_INPUT_INT_PMIC           (0x01 << 0)  // P0
+#define EXPANDER_INPUT_INT_CODEC          (0x01 << 1)  // P1
+#define EXPANDER_INPUT_ALERT_PMIC         (0x01 << 2)  // P2
+#define EXPANDER_OUTPUT_RESET_TOUCH       (0x01 << 3)  // P3
+#define EXPANDER_INPUT_INT_ACC            (0x01 << 4)  // P4
+#define EXPANDER_IO_BOOTLOADER_INVOKE     (0x01 << 5)  // P5
+#define EXPANDER_IO_EXPANSION3_IO         (0x01 << 6)  // P6
+#define EXPANDER_INPUT_BUTTON_2           (0x01 << 7)  // P7
 
 
 //-----------------------------------------------------------------------------

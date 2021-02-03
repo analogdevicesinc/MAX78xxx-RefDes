@@ -168,14 +168,6 @@ int main(void)
         while(1);
     }
 
-    /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
-    ret = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO);
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("expander_debug_select failed %d", ret);
-        max20303_led_red(1);
-        while(1);
-    }
-
     // Initialize DMA peripheral
     ret = MXC_DMA_Init();
     if (ret != E_NO_ERROR) {

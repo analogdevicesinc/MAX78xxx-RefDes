@@ -46,7 +46,7 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_MODULE_NAME   "expander"
+#define S_MODULE_NAME   "exp"
 
 
 //-----------------------------------------------------------------------------
@@ -74,6 +74,27 @@ int expander_init(void)
 
     if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+
+    // Set IO ports to open drain
+    // logic-high for an open-drain output is high impedance
+    // Any open-drain port can be used as an input by setting the open-drain output to logic-high
+    regval = 0xff;
+    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_write failed %d", err);
+        return err;
+    }
+
+    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+    PR_INFO("%x", regval);
+
+    /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
+    if ((err = expander_select_debugger(DEBUGGER_SELECT_MAX78000_AUDIO)) != E_NO_ERROR) {
+        PR_ERROR("expander_debug_select failed %d", err);
         return err;
     }
 
