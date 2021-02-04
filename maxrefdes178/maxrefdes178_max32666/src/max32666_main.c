@@ -132,6 +132,13 @@ int main(void)
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
+    ret = expander_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("expander_init failed %d", ret);
+        max20303_led_red(1);
+        while(1);
+    }
+
     ret = max20303_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("max20303_init failed %d", ret);
@@ -159,13 +166,6 @@ int main(void)
     ret = max17048_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("max17048_init failed %d", ret);
-        max20303_led_red(1);
-        while(1);
-    }
-
-    ret = expander_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("expander_init failed %d", ret);
         max20303_led_red(1);
         while(1);
     }

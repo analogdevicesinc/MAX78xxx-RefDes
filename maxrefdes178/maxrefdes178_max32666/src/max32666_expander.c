@@ -92,7 +92,7 @@ int expander_init(void)
     }
 
     /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
-    if ((err = expander_select_debugger(DEBUGGER_SELECT_MAX78000_AUDIO)) != E_NO_ERROR) {
+    if ((err = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO)) != E_NO_ERROR) {
         PR_ERROR("expander_debug_select failed %d", err);
         return err;
     }
