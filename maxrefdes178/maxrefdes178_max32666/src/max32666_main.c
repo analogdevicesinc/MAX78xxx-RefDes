@@ -116,7 +116,8 @@ int main(void)
     ret = MXC_SEMA_Init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_SEMA_Init failed %d", ret);
-        while(1);
+        MXC_Delay(MXC_DELAY_MSEC(100));
+        MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
     device_info.device_version.max32666.major = S_VERSION_MAJOR;
@@ -135,8 +136,8 @@ int main(void)
     ret = expander_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("expander_init failed %d", ret);
-        max20303_led_red(1);
-        while(1);
+        MXC_Delay(MXC_DELAY_MSEC(100));
+        MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
     ret = max20303_init();
@@ -167,7 +168,8 @@ int main(void)
     if (ret != E_NO_ERROR) {
         PR_ERROR("max17048_init failed %d", ret);
         max20303_led_red(1);
-        while(1);
+        MXC_Delay(MXC_DELAY_MSEC(100));
+        MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
     // Initialize DMA peripheral
@@ -175,34 +177,36 @@ int main(void)
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_DMA_Init failed %d", ret);
         max20303_led_red(1);
-        while(1);
+        MXC_Delay(MXC_DELAY_MSEC(100));
+        MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
     ret = lcd_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("lcd_init failed %d", ret);
         max20303_led_red(1);
-        while(1);
+        MXC_Delay(MXC_DELAY_MSEC(100));
+        MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
-
-//    ret = max34417_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("max34417_init failed %d", ret);
-//        max20303_led_red(1);
-//        while(1);
-//    }
 
     ret = qspi_master_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("qspi_naster_init failed %d", ret);
         max20303_led_red(1);
-        while(1);
+        MXC_Delay(MXC_DELAY_MSEC(100));
+        MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
+    }
+
+    ret = max34417_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("max34417_init failed %d", ret);
+        max20303_led_red(1);
     }
 
 //    ret = sdcard_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("sdcard_init failed %d", ret);
-////        max20303_led_red(1);
+//        max20303_led_red(1);
 //    }
 
     ret = timer_led_button_init();

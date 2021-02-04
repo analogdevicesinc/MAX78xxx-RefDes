@@ -145,7 +145,7 @@ int max34417_init(void)
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
-    PR_INFO("MAX34417 rev id %d", dev_rev_id);
+    PR_DEBUG("MAX34417 rev id %d", dev_rev_id);
 
     if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
@@ -206,6 +206,7 @@ int max34417_bulk_voltage(double voltage[4])
     for (uint8_t i = 0; i < 4; i++) {
         adc = convert_14to16(&buf[1 + i*2]);
         voltage[i] = (double)adc * adc2v;
+        PR_DEBUG("%g", voltage[i] );
     }
     return E_NO_ERROR;
 }
@@ -222,7 +223,7 @@ int max34417_bulk_energy(double energy_raw[4])
 
     for (uint8_t i = 0; i < 4; i++) {
         energy_raw[i] = convert_56to64(&buf[1+i*7]);
-        //printf( "%g\n", energy_raw[i] );
+        PR_DEBUG("%g", energy_raw[i] );
     }
     return E_NO_ERROR;
 }
@@ -240,7 +241,7 @@ int max34417_bulk_power(double power_raw[4])
     for (uint8_t i = 0; i < 4; i++)
     {
         power_raw[i] = power_raw[i] / (double)acc_count;
-        //printf( "%g\n", power_raw[i] );
+        PR_DEBUG("%g", power_raw[i] );
     }
     return E_NO_ERROR;
 }

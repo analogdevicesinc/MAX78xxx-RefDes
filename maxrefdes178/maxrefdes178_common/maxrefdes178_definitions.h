@@ -62,7 +62,7 @@
 #define I2C_ADDR_MAX7325_PORTS             0xD2
 #define I2C_ADDR_MAX7325_OUTPUTS           0xB2
 #define I2C_ADDR_BMI160                    0xD0
-#define I2C_ADDR_MAX34417                  0x10
+#define I2C_ADDR_MAX34417                  0x20
 
 // Common LCD
 #define LCD_WIDTH                          240
