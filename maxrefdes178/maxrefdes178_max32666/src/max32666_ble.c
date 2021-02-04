@@ -525,12 +525,12 @@ static bool_t max32666_trace(const uint8_t *pBuf, uint32_t len)
 
     if (wsfCsNesting == 0)
     {
-//        WsfTaskLock();
-//        while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {};
+        WsfTaskLock();
+        while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {};
         fwrite(pBuf, len, 1, stdout);
         fflush(stdout);
-//        MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT);
-//        WsfTaskUnlock();
+        MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT);
+        WsfTaskUnlock();
         return TRUE;
     }
 
