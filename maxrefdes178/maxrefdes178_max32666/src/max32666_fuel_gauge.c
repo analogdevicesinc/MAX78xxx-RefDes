@@ -527,11 +527,10 @@ static int fuel_gauge_soc(uint8_t *soc)
     }
 
     fSoC = ((lMax17048RegSoc.bits.SocMsb << 8) + lMax17048RegSoc.bits.SocLsb) / 256.0f;
+    *soc = round(fSoC);
 
-    if (lMax17048RegSoc.bits.SocMsb > 100) {
+    if (*soc > 100) {
         *soc = 100;
-    } else {
-        *soc = round(fSoC);
     }
 
     PR_DEBUG("soc %d %f", *soc, (double) fSoC);

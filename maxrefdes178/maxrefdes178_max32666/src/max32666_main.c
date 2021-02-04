@@ -473,7 +473,8 @@ static void run_application(void)
             }
         }
 
-        // TODO: low power WFI
+        // TODO: low power
+        __WFI();
     }
 }
 
