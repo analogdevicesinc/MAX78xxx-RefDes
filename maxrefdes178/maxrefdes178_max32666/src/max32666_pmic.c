@@ -43,8 +43,7 @@
 #include "max32666_debug.h"
 #include "max32666_data.h"
 #include "max32666_i2c.h"
-#include "max32666_max17048.h"
-#include "max32666_max20303.h"
+#include "max32666_pmic.h"
 
 
 //-----------------------------------------------------------------------------
@@ -188,13 +187,13 @@ typedef union
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int max20303_enable_charger(void);
+static int pmic_enable_charger(void);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-int max20303_init(void)
+int pmic_init(void)
 {
     int err;
 	uint8_t regval;
@@ -205,7 +204,7 @@ int max20303_init(void)
         return err;
     }
     if (regval != MAX20303_HARDWARE_ID) {
-        PR_ERROR("hw_id is not supported %d", regval);
+        PR_ERROR("hw_id is not supported 0x%x", regval);
         return E_NOT_SUPPORTED;
     }
 
@@ -225,7 +224,7 @@ int max20303_init(void)
     // Boost converter	set to 9.6V and enable when needed
 
     // Configure LDO and Buck outputs
-    if ((err = max20303_ldo2(1)) != E_NO_ERROR) {
+    if ((err = pmic_ldo2(1)) != E_NO_ERROR) {
         PR_ERROR("max20303_ldo2 failed %d", err);
         return err;
     }
@@ -234,51 +233,51 @@ int max20303_init(void)
     // i2c bus lock issue fix
     i2c_master_init(MAX32666_I2C, I2C_SPEED);
 
-    if ((err = max20303_buck2(0)) != E_NO_ERROR) {
+    if ((err = pmic_buck2(0)) != E_NO_ERROR) {
         PR_ERROR("max20303_buck2 failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(100));
 
-    if ((err = max20303_boost(0, 0x10)) != E_NO_ERROR) {
+    if ((err = pmic_boost(0, 0x10)) != E_NO_ERROR) {
         PR_ERROR("max20303_boost failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(10));
 
-    if ((err = max20303_ldo1(1)) != E_NO_ERROR) {
+    if ((err = pmic_ldo1(1)) != E_NO_ERROR) {
         PR_ERROR("max20303_ldo1 failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(10));
 
-    if ((err = max20303_buck1(1)) != E_NO_ERROR) {
+    if ((err = pmic_buck1(1)) != E_NO_ERROR) {
         PR_ERROR("max20303_buck1 failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(10));
 
-    if ((err = max20303_buck2(1)) != E_NO_ERROR) {
+    if ((err = pmic_buck2(1)) != E_NO_ERROR) {
         PR_ERROR("max20303_buck2 failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(100));
 
     // Turn off all PMIC LEDs at startup
-    if ((err = max20303_led_red(0)) != E_NO_ERROR) {
+    if ((err = pmic_led_red(0)) != E_NO_ERROR) {
         PR_ERROR("max20303_led_red failed %d", err);
         return err;
     }
-    if ((err = max20303_led_blue(0)) != E_NO_ERROR) {
+    if ((err = pmic_led_blue(0)) != E_NO_ERROR) {
         PR_ERROR("max20303_led_blue failed %d", err);
         return err;
     }
-    if ((err = max20303_led_green(0)) != E_NO_ERROR) {
+    if ((err = pmic_led_green(0)) != E_NO_ERROR) {
         PR_ERROR("max20303_led_green failed %d", err);
         return err;
     }
 
-    if ((err = max20303_enable_charger()) != E_NO_ERROR) {
+    if ((err = pmic_enable_charger()) != E_NO_ERROR) {
         PR_ERROR("max20303_enable_charger failed %d", err);
         return err;
     }
@@ -286,7 +285,7 @@ int max20303_init(void)
     return E_NO_ERROR;
 }
 
-static int max20303_enable_charger(void)
+static int pmic_enable_charger(void)
 {
     int err;
     uint8_t appdata[4];
@@ -311,7 +310,7 @@ static int max20303_enable_charger(void)
         return err;
     }
     if (appdata[0] != MAX20303_APREG_CHARHER_CONFIG_WRITE) {
-        PR_ERROR("incorrect response %x", appdata[0]);
+        PR_ERROR("incorrect response 0x%x", appdata[0]);
     }
 
     // write charger control
@@ -331,7 +330,7 @@ static int max20303_enable_charger(void)
         return err;
     }
     if (appdata[0] != MAX20303_APREG_CHARHER_CONTROL_WRITE) {
-        PR_ERROR("incorrect response %x", appdata[0]);
+        PR_ERROR("incorrect response 0x%x", appdata[0]);
     }
 
 //    // read charger config
@@ -344,7 +343,7 @@ static int max20303_enable_charger(void)
 //        PR_ERROR("i2c_master_reg_read_buf failed %d", err);
 //        return err;
 //    }
-//    PR_DEBUG("charger config %x %x %x %x", appdata[0], appdata[1], appdata[2], appdata[3]);
+//    PR_DEBUG("charger config 0x%x 0x%x 0x%x 0x%x", appdata[0], appdata[1], appdata[2], appdata[3]);
 //
 //    // read charger control
 //    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONTROL_READ)) != E_NO_ERROR) {
@@ -356,12 +355,12 @@ static int max20303_enable_charger(void)
 //        PR_ERROR("i2c_master_reg_read_buf failed %d", err);
 //        return err;
 //    }
-//    PR_DEBUG("charger control %x", appdata[0]);
+//    PR_DEBUG("charger control 0x%x", appdata[0]);
 
     return E_NO_ERROR;
 }
 
-int max20303_worker(void)
+int pmic_worker(void)
 {
     int err;
 
@@ -406,7 +405,7 @@ int max20303_worker(void)
 
     if (lMax20303RegStatus1.bits.UsbOk) {
         if (!device_status.usb_chgin) {
-            max20303_enable_charger();
+            pmic_enable_charger();
         }
         device_status.usb_chgin = 1;
     } else {
@@ -416,7 +415,7 @@ int max20303_worker(void)
     return E_NO_ERROR;
 }
 
-int max20303_led_red(int on)
+int pmic_led_red(int on)
 {
     int err;
 
@@ -434,7 +433,7 @@ int max20303_led_red(int on)
     return E_NO_ERROR;
 }
 
-int max20303_led_green(int on)
+int pmic_led_green(int on)
 {
     int err;
 
@@ -452,7 +451,7 @@ int max20303_led_green(int on)
     return E_NO_ERROR;
 }
 
-int max20303_led_blue(int on)
+int pmic_led_blue(int on)
 {
     int err;
 
@@ -470,7 +469,7 @@ int max20303_led_blue(int on)
     return E_NO_ERROR;
 }
 
-int max20303_ldo1(int on)
+int pmic_ldo1(int on)
 {
     int err;
 
@@ -497,7 +496,7 @@ int max20303_ldo1(int on)
     return E_NO_ERROR;
 }
 
-int max20303_ldo2(int on)
+int pmic_ldo2(int on)
 {
     int err;
     if (on) {
@@ -523,7 +522,7 @@ int max20303_ldo2(int on)
     return E_NO_ERROR;
 }
 
-int max20303_buck1(int on)
+int pmic_buck1(int on)
 {
     int err;
 
@@ -559,7 +558,7 @@ int max20303_buck1(int on)
     return E_NO_ERROR;
 }
 
-int max20303_buck2(int on)
+int pmic_buck2(int on)
 {
     int err;
 
@@ -596,7 +595,7 @@ int max20303_buck2(int on)
     return E_NO_ERROR;
 }
 
-int max20303_buckboost(int on)
+int pmic_buckboost(int on)
 {
     int err;
 
@@ -632,7 +631,7 @@ int max20303_buckboost(int on)
     return E_NO_ERROR;
 }
 
-int max20303_boost(int on, uint8_t boost_output_level)
+int pmic_boost(int on, uint8_t boost_output_level)
 {
     int err;
 
@@ -669,7 +668,7 @@ int max20303_boost(int on, uint8_t boost_output_level)
     return E_NO_ERROR;
 }
 
-int max20303_power_off(void)
+int pmic_power_off(void)
 {
     int err;
 
@@ -684,7 +683,7 @@ int max20303_power_off(void)
     return E_NO_ERROR;
 }
 
-int max20303_hard_reset(void)
+int pmic_hard_reset(void)
 {
     int err;
 

@@ -46,8 +46,8 @@
 #include "max32666_expander.h"
 #include "max32666_fonts.h"
 #include "max32666_lcd.h"
-#include "max32666_max20303.h"
 #include "max32666_qspi_master.h"
+#include "max32666_pmic.h"
 #include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
 
@@ -183,7 +183,7 @@ static int ble_command_execute_rx_command(void)
         device_settings.enable_ble = 0;
         for (int i = 0; (i < 10000000) && !device_status.ble_running_status_changed; i++) {}
         Core1_Stop();
-        max20303_power_off();
+        pmic_power_off();
         break;
     case BLE_COMMAND_RESTART_DEVICE_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -194,7 +194,7 @@ static int ble_command_execute_rx_command(void)
         device_settings.enable_ble = 0;
         for (int i = 0; (i < 10000000) && !device_status.ble_running_status_changed; i++) {}
         Core1_Stop();
-        max20303_hard_reset();
+        pmic_hard_reset();
         break;
     case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -281,7 +281,7 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        max20303_buck2(1);
+        pmic_buck2(1);
         device_settings.enable_max78000_video_and_audio_power = 1;
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_AUDIO_POWER:
@@ -289,7 +289,7 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        max20303_buck2(0);
+        pmic_buck2(0);
         device_settings.enable_max78000_video_and_audio_power = 0;
         break;
     case BLE_COMMAND_ENABLE_LCD_CMD:

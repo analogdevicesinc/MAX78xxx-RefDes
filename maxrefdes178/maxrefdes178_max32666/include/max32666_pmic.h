@@ -31,12 +31,10 @@
 * property whatsoever. Maxim Integrated Products, Inc. retains all
 * ownership rights.
 *******************************************************************************
-* @file   max20303.h
-* @brief  TODO
 */
 
-#ifndef _MAX32666_MAX20303_H_
-#define _MAX32666_MAX20303_H_
+#ifndef _MAX32666_PMIC_H_
+#define _MAX32666_PMIC_H_
 
 
 //-----------------------------------------------------------------------------
@@ -58,7 +56,7 @@
  * @retval     #E_NO_ERROR   Intialization successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_init(void);
+int pmic_init(void);
 
 /**
  * @brief  Worker function for MAX20303 PMIC. Before calling this function, I2C should
@@ -66,7 +64,7 @@ int max20303_init(void);
  * @retval     #E_NO_ERROR   Intialization successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_worker(void);
+int pmic_worker(void);
 
 /**
  * @brief  Setup for LDO1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
@@ -77,7 +75,7 @@ int max20303_worker(void);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_ldo1(int on);
+int pmic_ldo1(int on);
 
 /**
  * @brief  Setup for LDO2 of MAX20303 PMIC to enable or disable MAX78000 board 3.3V digital supply.
@@ -88,7 +86,7 @@ int max20303_ldo1(int on);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_ldo2(int on);
+int pmic_ldo2(int on);
 
 /**
  * @brief  Setup for Buck1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
@@ -98,7 +96,7 @@ int max20303_ldo2(int on);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_buck1(int on);
+int pmic_buck1(int on);
 
 /**
  * @brief  Setup for Buck2 of MAX20303 PMIC to enable or disable MAX78000 board 2.8V digital supply.
@@ -108,7 +106,7 @@ int max20303_buck1(int on);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_buck2(int on);
+int pmic_buck2(int on);
 
 /**
  * @brief  Setup for Boost Converter of MAX20303 PMIC to enable or disable LCD backlight.
@@ -120,7 +118,7 @@ int max20303_buck2(int on);
  *
  * @returns    This function has no return value
  */
-int max20303_boost(int on, uint8_t boost_output_level);
+int pmic_boost(int on, uint8_t boost_output_level);
 
 /**
  * @brief  Power off MAX20303.
@@ -128,7 +126,7 @@ int max20303_boost(int on, uint8_t boost_output_level);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_power_off(void);
+int pmic_power_off(void);
 
 /**
  * @brief  Hard reset MAX20303.
@@ -136,7 +134,7 @@ int max20303_power_off(void);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_hard_reset(void);
+int pmic_hard_reset(void);
 
 /**
  * @brief  Setup for BuckBoost Converter of MAX20303 PMIC.
@@ -145,7 +143,7 @@ int max20303_hard_reset(void);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_buckboost(int on);
+int pmic_buckboost(int on);
 
 /**
  * @brief   Controls PMIC's RGB LED - Red Color. Before calling this function, PMIC should
@@ -154,7 +152,7 @@ int max20303_buckboost(int on);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_led_red(int on);
+int pmic_led_red(int on);
 
 /**
  * @brief   Controls PMIC's RGB LED - Green Color. Before calling this function, PMIC should
@@ -163,7 +161,7 @@ int max20303_led_red(int on);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_led_green(int on);
+int pmic_led_green(int on);
 
 /**
  * @brief   Controls PMIC's RGB LED - Blue Color. Before calling this function, PMIC should
@@ -172,6 +170,6 @@ int max20303_led_green(int on);
  * @retval     #E_NO_ERROR   If successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int max20303_led_blue(int on);
+int pmic_led_blue(int on);
 
-#endif /* _MAX32666_MAX20303_H_ */
+#endif /* _MAX32666_PMIC_H_ */

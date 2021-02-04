@@ -192,7 +192,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
         }
 
         if (qspi_packet_header_rx.header_crc16 != crc16_sw((uint8_t *) &qspi_packet_header_rx.info, sizeof(qspi_packet_header_rx.info))) {
-            PR_ERROR("Invalid header crc %x", qspi_packet_header_rx.header_crc16);
+            PR_ERROR("Invalid header crc 0x%x", qspi_packet_header_rx.header_crc16);
             goto bail;
         }
 
@@ -366,7 +366,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
         }
 
         if (qspi_packet_header_rx.header_crc16 != crc16_sw((uint8_t *) &qspi_packet_header_rx.info, sizeof(qspi_packet_header_rx.info))) {
-            PR_ERROR("Invalid header crc %x", qspi_packet_header_rx.header_crc16);
+            PR_ERROR("Invalid header crc 0x%x", qspi_packet_header_rx.header_crc16);
             goto bail;
         }
 

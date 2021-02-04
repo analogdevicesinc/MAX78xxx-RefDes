@@ -43,8 +43,8 @@
 
 #include "max32666_debug.h"
 #include "max32666_data.h"
+#include "max32666_fuel_gauge.h"
 #include "max32666_i2c.h"
-#include "max32666_max17048.h"
 
 
 //-----------------------------------------------------------------------------
@@ -235,15 +235,15 @@ typedef union
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int max17048_update_model(void);
-static int max17048_soc(uint8_t *soc);
-static int max17048_vcell(float *vcell);
+static int fuel_gauge_update_model(void);
+static int fuel_gauge_soc(uint8_t *soc);
+static int fuel_gauge_vcell(float *vcell);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-int max17048_init(void)
+int fuel_gauge_init(void)
 {
     int err;
     uint8_t soc;
@@ -257,7 +257,7 @@ int max17048_init(void)
         return E_NO_ERROR;
     } else {
         if (!((lMax17048RegVersion.bits.VersionMsb == MAX17048_VERSION_MSB) && (lMax17048RegVersion.bits.VersionLsb == MAX17048_VERSION_LSB))) {
-            PR_ERROR("Invalid fuel gauge version %x %x", lMax17048RegVersion.bits.VersionMsb, lMax17048RegVersion.bits.VersionLsb);
+            PR_ERROR("Invalid fuel gauge version 0x%x 0x%x", lMax17048RegVersion.bits.VersionMsb, lMax17048RegVersion.bits.VersionLsb);
             return E_NOT_SUPPORTED;
         }
         device_status.fuel_gauge_working = 1;
@@ -282,7 +282,7 @@ int max17048_init(void)
     }
 
     /* Read battery voltage */
-    if ((err = max17048_vcell(&vcell)) != E_NO_ERROR) {
+    if ((err = fuel_gauge_vcell(&vcell)) != E_NO_ERROR) {
         PR_ERROR("max17048_vcell failed %d", err);
         return err;
     }
@@ -290,7 +290,7 @@ int max17048_init(void)
 
 
     /* Update battery model */
-    if ((err = max17048_update_model()) != E_NO_ERROR) {
+    if ((err = fuel_gauge_update_model()) != E_NO_ERROR) {
         PR_ERROR("max17048_write_model failed %d", err);
         return err;
     }
@@ -304,26 +304,26 @@ int max17048_init(void)
     }
 
     /* Read battery state of charge */
-    if ((err = max17048_soc(&soc)) != E_NO_ERROR) {
+    if ((err = fuel_gauge_soc(&soc)) != E_NO_ERROR) {
         PR_ERROR("max17048_soc failed %d", err);
         return err;
     }
     PR_INFO("soc %d", soc);
 
-    max17048_worker();
+    fuel_gauge_worker();
 
     return E_NO_ERROR;
 }
 
-int max17048_worker(void)
+int fuel_gauge_worker(void)
 {
-    max17048_soc(&device_status.statistics.battery_soc);
-    max17048_vcell(&device_status.vcell);
+    fuel_gauge_soc(&device_status.statistics.battery_soc);
+    fuel_gauge_vcell(&device_status.vcell);
 
     return E_NO_ERROR;
 }
 
-static int max17048_update_model(void)
+static int fuel_gauge_update_model(void)
 {
     int err;
 
@@ -515,7 +515,7 @@ static int max17048_update_model(void)
     return E_NO_ERROR;
 }
 
-static int max17048_soc(uint8_t *soc)
+static int fuel_gauge_soc(uint8_t *soc)
 {
     int err;
     float fSoC = 0;
@@ -539,7 +539,7 @@ static int max17048_soc(uint8_t *soc)
     return E_NO_ERROR;
 }
 
-static int max17048_vcell(float *vcell)
+static int fuel_gauge_vcell(float *vcell)
 {
     int err;
 

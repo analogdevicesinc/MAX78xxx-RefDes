@@ -43,7 +43,7 @@
 #include "max32666_debug.h"
 #include "max32666_expander.h"
 #include "max32666_lcd.h"
-#include "max32666_max20303.h"
+#include "max32666_pmic.h"
 #include "max32666_spi_dma.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_utility.h"
@@ -197,9 +197,9 @@ static void lcd_reset(void)
 void lcd_backlight(int on)
 {
     if (on) {
-        max20303_boost(1, 0x10);
+        pmic_boost(1, 0x10);
     } else {
-        max20303_boost(0, 0x10);
+        pmic_boost(0, 0x10);
     }
 }
 

@@ -31,8 +31,8 @@
  *
  ******************************************************************************/
 
-#ifndef _MAX32666_MAX34417_H_
-#define _MAX32666_MAX34417_H_
+#ifndef _MAX32666_EXT_FLASH_H_
+#define _MAX32666_EXT_FLASH_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -47,11 +47,6 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int max34417_init(void);
-int max34417_update(void);
-int max34417_bulk_voltage(double voltage[4]);
-int max34417_bulk_power(double power_raw[4]);
-int max34417_bulk_energy(double energy_raw[4]);
-uint32_t max34417_acc_count(void);
+int ext_flash_init(void);
 
-#endif /* _MAX32666_MAX34417_H_ */
+#endif /* _MAX32666_EXT_FLASH_H_ */

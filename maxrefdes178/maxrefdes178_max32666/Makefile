@@ -75,19 +75,21 @@ export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
 SRCS  = max32666_main.c
+SRCS += max32666_accel.c
 SRCS += max32666_ble.c
 SRCS += max32666_ble_command.c
 SRCS += max32666_ble_queue.c
 SRCS += max32666_data.c
 SRCS += max32666_expander.c
+SRCS += max32666_ext_flash.c
 SRCS += max32666_fault.c
 SRCS += max32666_fonts.c
+SRCS += max32666_fuel_gauge.c
 SRCS += max32666_i2c.c
 SRCS += max32666_lcd.c
-SRCS += max32666_max17048.c
-SRCS += max32666_max20303.c
-SRCS += max32666_max34417.c
 SRCS += max32666_qspi_master.c
+SRCS += max32666_pmic.c
+SRCS += max32666_powmon.c
 #SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
 SRCS += max32666_timer_led_button.c

@@ -47,19 +47,21 @@
 #include <string.h>
 #include <tmr.h>
 
+#include "max32666_accel.h"
 #include "max32666_ble.h"
 #include "max32666_ble_command.h"
 #include "max32666_ble_queue.h"
 #include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
+#include "max32666_ext_flash.h"
 #include "max32666_fonts.h"
+#include "max32666_fuel_gauge.h"
 #include "max32666_i2c.h"
 #include "max32666_lcd.h"
 #include "max32666_lcd_images.h"
-#include "max32666_max17048.h"
-#include "max32666_max20303.h"
-#include "max32666_max34417.h"
+#include "max32666_pmic.h"
+#include "max32666_powmon.h"
 #include "max32666_qspi_master.h"
 #include "max32666_sdcard.h"
 #include "max32666_spi_dma.h"
@@ -115,7 +117,7 @@ int main(void)
 
     ret = MXC_SEMA_Init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("MXC_SEMA_Init failed %d", ret);
+        printf("MXC_SEMA_Init failed %d\n", ret);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
@@ -124,6 +126,7 @@ int main(void)
     device_info.device_version.max32666.minor = S_VERSION_MINOR;
     device_info.device_version.max32666.build = S_VERSION_BUILD;
     snprintf(version_string, sizeof(version_string) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    PR("\n\n\n");
     PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version_string, S_BUILD_TIMESTAMP);
 
     ret = i2c_master_init(MAX32666_I2C, I2C_SPEED);
@@ -140,13 +143,13 @@ int main(void)
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
-    ret = max20303_init();
+    ret = pmic_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("max20303_init failed %d", ret);
+        PR_ERROR("pmic_init failed %d", ret);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
-    max20303_led_green(1);
+    pmic_led_green(1);
 
     // To debug Core1 set alternate function 3
     MXC_GPIO_Config(&core1_swd_pin);
@@ -164,10 +167,10 @@ int main(void)
         }
     }
 
-    ret = max17048_init();
+    ret = fuel_gauge_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("max17048_init failed %d", ret);
-        max20303_led_red(1);
+        PR_ERROR("fuel_gauge_init failed %d", ret);
+        pmic_led_red(1);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
@@ -176,7 +179,7 @@ int main(void)
     ret = MXC_DMA_Init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_DMA_Init failed %d", ret);
-        max20303_led_red(1);
+        pmic_led_red(1);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
@@ -184,7 +187,7 @@ int main(void)
     ret = lcd_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("lcd_init failed %d", ret);
-        max20303_led_red(1);
+        pmic_led_red(1);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
@@ -192,15 +195,27 @@ int main(void)
     ret = qspi_master_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("qspi_naster_init failed %d", ret);
-        max20303_led_red(1);
+        pmic_led_red(1);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
-    ret = max34417_init();
+    ret = powmon_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("max34417_init failed %d", ret);
-        max20303_led_red(1);
+        PR_ERROR("powmon_init failed %d", ret);
+        pmic_led_red(1);
+    }
+
+    ret = accel_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("accel_init failed %d", ret);
+        pmic_led_red(1);
+    }
+
+    ret = ext_flash_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("ext_flash_init failed %d", ret);
+        pmic_led_red(1);
     }
 
 //    ret = sdcard_init();
@@ -212,25 +227,25 @@ int main(void)
     ret = timer_led_button_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("timer_led_button_init failed %d", ret);
-        max20303_led_red(1);
+        pmic_led_red(1);
     }
 
     ret = ble_queue_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("ble_queue_init failed %d", ret);
-        max20303_led_red(1);
+        pmic_led_red(1);
     }
 
     ret = ble_command_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("ble_command_init failed %d", ret);
-        max20303_led_red(1);
+        pmic_led_red(1);
     }
 
     ret = MXC_SYS_GetUSN(device_info.device_serial_num.max32666, sizeof(device_info.device_serial_num.max32666));
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_SYS_GetUSN failed %d", ret);
-        max20303_led_red(1);
+        pmic_led_red(1);
     }
     PR_INFO("MAX32666 Serial number: ");
     for (int i = 0; i < sizeof(device_info.device_serial_num.max32666); i++) {
@@ -282,7 +297,7 @@ int main(void)
                 device_info.device_version.max78000_video.build);
         fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_11x18, RED, maxim_logo);
         lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
-        max20303_led_red(1);
+        pmic_led_red(1);
         while(1);
     }
     if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_audio, sizeof(version_t))) {
@@ -293,7 +308,7 @@ int main(void)
                 device_info.device_version.max78000_audio.build);
         fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_11x18, RED, maxim_logo);
         lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
-        max20303_led_red(1);
+        pmic_led_red(1);
         while(1);
     }
 #endif
@@ -452,9 +467,9 @@ static void run_application(void)
         // Check PMIC and Fuel Gauge
         if ((timer_ms_tick - timestamps.pmic_check) > MAX32666_PMIC_INTERVAL) {
             timestamps.pmic_check = timer_ms_tick;
-            max20303_worker();
+            pmic_worker();
             if (device_status.fuel_gauge_working) {
-                max17048_worker();
+                fuel_gauge_worker();
             }
         }
 

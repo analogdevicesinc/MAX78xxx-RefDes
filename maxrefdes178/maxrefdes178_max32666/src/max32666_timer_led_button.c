@@ -43,7 +43,7 @@
 
 #include "max32666_debug.h"
 #include "max32666_data.h"
-#include "max32666_max20303.h"
+#include "max32666_pmic.h"
 #include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
 
@@ -99,20 +99,20 @@ void led_continuous_timer(void)
     // If BLE is disabled, blink green
 
     if (device_settings.enable_ble) {
-        max20303_led_green(0);
+        pmic_led_green(0);
         if (device_status.ble_connected) {
-            max20303_led_blue(1);
+            pmic_led_blue(1);
         } else if (led_toogle) {
-            max20303_led_blue(1);
+            pmic_led_blue(1);
         } else {
-            max20303_led_blue(0);
+            pmic_led_blue(0);
         }
     } else {
-        max20303_led_blue(0);
+        pmic_led_blue(0);
         if (led_toogle) {
-            max20303_led_green(1);
+            pmic_led_green(1);
         } else {
-            max20303_led_green(0);
+            pmic_led_green(0);
         }
     }
 }

@@ -35,14 +35,13 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include <i2c.h>
 #include <mxc_delay.h>
 #include <mxc_errors.h>
 #include <stdio.h>
 
 #include "max32666_debug.h"
 #include "max32666_i2c.h"
-#include "max32666_max34417.h"
+#include "max32666_powmon.h"
 
 
 //-----------------------------------------------------------------------------
@@ -50,6 +49,7 @@
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "powmon"
 
+#define MAX34417_DEVICE_REV_ID  0x3A
 
 #define MAX34417_UPDATE_CMD     0x00
 #define MAX34417_CONTROL_CMD    0x01
@@ -120,7 +120,7 @@ static uint64_t convert_56to64(const uint8_t * p56)
     return v64;
 }
 
-int max34417_init(void)
+int powmon_init(void)
 {
     int err;
     uint8_t dev_rev_id;
@@ -145,14 +145,17 @@ int max34417_init(void)
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
-    PR_DEBUG("MAX34417 rev id %d", dev_rev_id);
+    if (dev_rev_id != MAX34417_DEVICE_REV_ID) {
+        PR_ERROR("invalid device id 0x%x", dev_rev_id);
+        return E_NOT_SUPPORTED;
+    }
 
     if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
 
-    max34417_update();
+    powmon_update();
     MXC_Delay(MXC_DELAY_MSEC(1));
 
     if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_CAM | MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
@@ -160,13 +163,13 @@ int max34417_init(void)
         return err;
     }
 
-    max34417_update();
+    powmon_update();
     MXC_Delay(MXC_DELAY_MSEC(1));
 
     return E_NO_ERROR;
 }
 
-int max34417_update(void)
+int powmon_update(void)
 {
     int err;
 
@@ -178,7 +181,7 @@ int max34417_update(void)
     return E_NO_ERROR;
 }
 
-uint32_t max34417_acc_count(void)
+uint32_t powmon_acc_count(void)
 {
     int err;
     static uint8_t buf[4];
@@ -191,7 +194,7 @@ uint32_t max34417_acc_count(void)
     return convert_24to32(&buf[1]);
 }
 
-int max34417_bulk_voltage(double voltage[4])
+int powmon_bulk_voltage(double voltage[4])
 {
     int err;
     uint16_t adc;
@@ -211,7 +214,7 @@ int max34417_bulk_voltage(double voltage[4])
     return E_NO_ERROR;
 }
 
-int max34417_bulk_energy(double energy_raw[4])
+int powmon_bulk_energy(double energy_raw[4])
 {
     int err;
     static uint8_t buf[29];
@@ -228,12 +231,12 @@ int max34417_bulk_energy(double energy_raw[4])
     return E_NO_ERROR;
 }
 
-int max34417_bulk_power(double power_raw[4])
+int powmon_bulk_power(double power_raw[4])
 {
     int err;
-    uint32_t acc_count = max34417_acc_count();
+    uint32_t acc_count = powmon_acc_count();
 
-    if ((err = max34417_bulk_energy(power_raw)) != E_NO_ERROR) {
+    if ((err = powmon_bulk_energy(power_raw)) != E_NO_ERROR) {
         PR_ERROR("max34417_bulk_energy failed %d", err);
         return err;
     }
