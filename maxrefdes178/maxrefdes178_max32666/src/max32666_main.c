@@ -128,13 +128,15 @@ int main(void)
     ret = i2c_master_init(MAX32666_I2C, I2C_SPEED);
     if (ret != E_NO_ERROR) {
         PR_ERROR("i2c_init failed %d", ret);
-        while(1);
+        MXC_Delay(MXC_DELAY_MSEC(100));
+        MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
     ret = max20303_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("max20303_init failed %d", ret);
-        while(1);
+        MXC_Delay(MXC_DELAY_MSEC(100));
+        MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
     max20303_led_green(1);
 
