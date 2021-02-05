@@ -199,7 +199,7 @@ int pmic_init(void)
 	uint8_t regval;
 
     // Test connectivity by reading hardware ID
-    if ((err = i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_HARDWARE_ID, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_HARDWARE_ID, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
@@ -231,7 +231,7 @@ int pmic_init(void)
     MXC_Delay(MXC_DELAY_MSEC(10));
 
     // i2c bus lock issue fix
-    i2c_master_init(MAX32666_I2C, I2C_SPEED);
+    i2c_master_init();
 
     if ((err = pmic_buck2(0)) != E_NO_ERROR) {
         PR_ERROR("max20303_buck2 failed %d", err);
@@ -296,16 +296,16 @@ static int pmic_enable_charger(void)
     appdata[1] = 0x75;  // VPChg=3.15V, IPChg=0.1xIFChg, ChgDone=0.1xIFChg
     appdata[2] = 0xF3;  // ChgAutoStp=Auto-Stop enabled, ChgAutoRe=Auto-Restart enabled, BatReChg=BatReg-220mV, BatReg=4.20V
     appdata[3] = 0x00;  // SysMinVlt=3.6V
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, appdata, 4)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, appdata, 4)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write_buf failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONFIG_WRITE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONFIG_WRITE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(10));
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_RESPONSE, appdata, 1)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_RESPONSE, appdata, 1)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }
@@ -316,16 +316,16 @@ static int pmic_enable_charger(void)
     // write charger control
     // MAX20303J default is 0x00
     appdata[0] = 0x01;  // ThmEn=Thermal monitor disabled, ChgEn=Charger enabled
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, appdata, 1)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, appdata, 1)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write_buf failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONTROL_WRITE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONTROL_WRITE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(10));
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_RESPONSE, appdata, 1)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_RESPONSE, appdata, 1)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }
@@ -334,24 +334,24 @@ static int pmic_enable_charger(void)
     }
 
 //    // read charger config
-//    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONFIG_READ)) != E_NO_ERROR) {
+//    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONFIG_READ)) != E_NO_ERROR) {
 //        PR_ERROR("i2c_master_reg_write failed %d", err);
 //        return err;
 //    }
 //    MXC_Delay(MXC_DELAY_MSEC(5));
-//    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATAIN0, appdata, 4)) != E_NO_ERROR) {
+//    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATAIN0, appdata, 4)) != E_NO_ERROR) {
 //        PR_ERROR("i2c_master_reg_read_buf failed %d", err);
 //        return err;
 //    }
 //    PR_DEBUG("charger config 0x%x 0x%x 0x%x 0x%x", appdata[0], appdata[1], appdata[2], appdata[3]);
 //
 //    // read charger control
-//    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONTROL_READ)) != E_NO_ERROR) {
+//    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_CHARHER_CONTROL_READ)) != E_NO_ERROR) {
 //        PR_ERROR("i2c_master_reg_read_buf failed %d", err);
 //        return err;
 //    }
 //    MXC_Delay(MXC_DELAY_MSEC(5));
-//    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATAIN0, appdata, 1)) != E_NO_ERROR) {
+//    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATAIN0, appdata, 1)) != E_NO_ERROR) {
 //        PR_ERROR("i2c_master_reg_read_buf failed %d", err);
 //        return err;
 //    }
@@ -365,13 +365,13 @@ int pmic_worker(void)
     int err;
 
 //    tuMax20303RegStatus0 lMax20303RegStatus0 = {0};
-//    if ((err = i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_STATUS0, &lMax20303RegStatus0.raw)) != E_NO_ERROR) {
+//    if ((err = i2c_master_reg_read(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_STATUS0, &lMax20303RegStatus0.raw)) != E_NO_ERROR) {
 //        PR_ERROR("i2c_reg_read failed %d", err);
 //        return err;
 //    }
 
     tuMax20303RegStatus1 lMax20303RegStatus1 = {0};
-    if ((err = i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_STATUS1, &lMax20303RegStatus1.raw)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_STATUS1, &lMax20303RegStatus1.raw)) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
@@ -420,12 +420,12 @@ int pmic_led_red(int on)
     int err;
 
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED1_DIRECT, 0x21)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED1_DIRECT, 0x21)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED1_DIRECT, 0x01)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED1_DIRECT, 0x01)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
@@ -438,12 +438,12 @@ int pmic_led_green(int on)
     int err;
 
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED2_DIRECT, 0x21)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED2_DIRECT, 0x21)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED2_DIRECT, 0x01)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED2_DIRECT, 0x01)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
@@ -456,12 +456,12 @@ int pmic_led_blue(int on)
     int err;
 
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED0_DIRECT, 0x21)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED0_DIRECT, 0x21)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED0_DIRECT, 0x01)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_LED0_DIRECT, 0x01)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
@@ -474,22 +474,22 @@ int pmic_ldo1(int on)
     int err;
 
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x1D)) != E_NO_ERROR) {  // LDO1Md:1 Load-switch mode.  LDO1En:01   Enabled
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x1D)) != E_NO_ERROR) {  // LDO1Md:1 Load-switch mode.  LDO1En:01   Enabled
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x1C)) != E_NO_ERROR) {  // LDO1Md:1 Load-switch mode.  LDO1En:00   Disabled
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x1C)) != E_NO_ERROR) {  // LDO1Md:1 Load-switch mode.  LDO1En:00   Disabled
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     }
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x34)) != E_NO_ERROR) {  // LDO1Vset : 0x34 = 52.  ( 52 * 25mv) + 0.5V = 1.8V
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x34)) != E_NO_ERROR) {  // LDO1Vset : 0x34 = 52.  ( 52 * 25mv) + 0.5V = 1.8V
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO1_CONFIG_WRITE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO1_CONFIG_WRITE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -500,22 +500,22 @@ int pmic_ldo2(int on)
 {
     int err;
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x19)) != E_NO_ERROR) {  // LDO2Md:0 LDO mode.  LDO2En:01   Enabled
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x19)) != E_NO_ERROR) {  // LDO2Md:0 LDO mode.  LDO2En:01   Enabled
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x18)) != E_NO_ERROR) {  // LDO2Md:0 LDO mode.  LDO2En:00   Disabled
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x18)) != E_NO_ERROR) {  // LDO2Md:0 LDO mode.  LDO2En:00   Disabled
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     }
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x18)) != E_NO_ERROR) {  // LDO2Vset : 0x18 = 24.  ( 24 * 100mv) + 0.9V = 3.3V
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x18)) != E_NO_ERROR) {  // LDO2Vset : 0x18 = 24.  ( 24 * 100mv) + 0.9V = 3.3V
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO2_CONFIG_WRITE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_LDO2_CONFIG_WRITE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -526,32 +526,32 @@ int pmic_buck1(int on)
 {
     int err;
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x7E)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x7E)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x28)) != E_NO_ERROR) {  // Buck1Vset = 0x28=40    ( (40x25mV) + 0.8V = 1.8V)
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x28)) != E_NO_ERROR) {  // Buck1Vset = 0x28=40    ( (40x25mV) + 0.8V = 1.8V)
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT2, 0x1F)) != E_NO_ERROR) {  // Buck1Iset = 0b1111>375mA,  Buck1IZCSet=0b01>20mA   Buck1 ISet and Zero Crossing Threshold
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT2, 0x1F)) != E_NO_ERROR) {  // Buck1Iset = 0b1111>375mA,  Buck1IZCSet=0b01>20mA   Buck1 ISet and Zero Crossing Threshold
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
 
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x01)) != E_NO_ERROR) {  // Buck1En = 1   Buck1 enabled
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x01)) != E_NO_ERROR) {  // Buck1En = 1   Buck1 enabled
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x00)) != E_NO_ERROR) {  // Buck1En = 0   Buck1 disabled
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x00)) != E_NO_ERROR) {  // Buck1En = 0   Buck1 disabled
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     }
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BUCK1_CONFIG_WRITE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BUCK1_CONFIG_WRITE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -562,33 +562,33 @@ int pmic_buck2(int on)
 {
     int err;
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x7E)) != E_NO_ERROR) {  // Enable active discharge and FET scaling
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x7E)) != E_NO_ERROR) {  // Enable active discharge and FET scaling
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x28)) != E_NO_ERROR) {  // Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x28)) != E_NO_ERROR) {  // Buck2Vset = 0x28=40    ( (40x50mV) + 0.8V = 2.8V)
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT2, 0x2F)) != E_NO_ERROR) {  // Buck2Iset = 0b1111>375mA,  Buck2IZCSet=0b10>30mA   Buck2 ISet and Zero Crossing Threshold
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT2, 0x2F)) != E_NO_ERROR) {  // Buck2Iset = 0b1111>375mA,  Buck2IZCSet=0b10>30mA   Buck2 ISet and Zero Crossing Threshold
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
 
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x01)) != E_NO_ERROR) {  // Buck2En = 1   Buck2 enabled
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x01)) != E_NO_ERROR) {  // Buck2En = 1   Buck2 enabled
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x00)) != E_NO_ERROR) {  // Buck2En = 0   Buck2 disabled
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x00)) != E_NO_ERROR) {  // Buck2En = 0   Buck2 disabled
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
 
     }
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BUCK2_CONFIG_WRITE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BUCK2_CONFIG_WRITE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -599,32 +599,32 @@ int pmic_buckboost(int on)
 {
     int err;
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x00)) != E_NO_ERROR) {  //  Reserved. Set to 0x00
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x00)) != E_NO_ERROR) {  //  Reserved. Set to 0x00
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x07)) != E_NO_ERROR) {  //  BBstIset : 350mAa Max
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT1, 0x07)) != E_NO_ERROR) {  //  BBstIset : 350mAa Max
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT2, 0x19)) != E_NO_ERROR) {  //  BBstVset = 0x19=25  ( ( 25 * 100mV) + 2.5V = 5.00V)
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT2, 0x19)) != E_NO_ERROR) {  //  BBstVset = 0x19=25  ( ( 25 * 100mV) + 2.5V = 5.00V)
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
 
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x79)) != E_NO_ERROR) {  //  BuckBoost Enabled - BSTEn = 0x01
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x79)) != E_NO_ERROR) {  //  BuckBoost Enabled - BSTEn = 0x01
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x78)) != E_NO_ERROR) {  //  BuckBoost Disabled - BSTEn = 0x00
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, 0x78)) != E_NO_ERROR) {  //  BuckBoost Disabled - BSTEn = 0x00
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     }
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BBST_CONFIG_WRITE)) != E_NO_ERROR) {  // = Bset_Config_Write
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BBST_CONFIG_WRITE)) != E_NO_ERROR) {  // = Bset_Config_Write
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -640,28 +640,28 @@ int pmic_boost(int on, uint8_t boost_output_level)
         return E_BAD_PARAM;
     }
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, boost_output_level)) != E_NO_ERROR) {  //  BstVset = 0x0F=15  ( ( 15 * 250mV) + 5 = 8.75V)
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT3, boost_output_level)) != E_NO_ERROR) {  //  BstVset = 0x0F=15  ( ( 15 * 250mV) + 5 = 8.75V)
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
 
     if (on) {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x01)) != E_NO_ERROR) {  //  Boost Enabled - BSTEn = 0x01
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x01)) != E_NO_ERROR) {  //  Boost Enabled - BSTEn = 0x01
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     } else {
-        if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x00)) != E_NO_ERROR) {  //  Boost Disabled - BSTEn = 0x00
+        if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0x00)) != E_NO_ERROR) {  //  Boost Disabled - BSTEn = 0x00
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
     }
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT4, 0x03)) != E_NO_ERROR) {  //  BstSet 0x03 - not sure if this is writeable
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT4, 0x03)) != E_NO_ERROR) {  //  BstSet 0x03 - not sure if this is writeable
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BST_CONFIG_WRITE)) != E_NO_ERROR) {  // = Bset_Config_Write
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_BST_CONFIG_WRITE)) != E_NO_ERROR) {  // = Bset_Config_Write
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -672,11 +672,11 @@ int pmic_power_off(void)
 {
     int err;
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0xB2)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0xB2)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_POWEROFF)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_POWEROFF)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -687,11 +687,11 @@ int pmic_hard_reset(void)
 {
     int err;
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0xB4)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_DATOUT0, 0xB4)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_HARDRESET)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_AP_CMDOUT, MAX20303_APREG_HARDRESET)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }

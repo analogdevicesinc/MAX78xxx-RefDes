@@ -72,7 +72,7 @@ int audio_codec_init(void)
     int err;
     uint8_t rev_id;
 
-    if ((err = i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX9867, MAX9867_REVISION_ADDR, &rev_id)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read(I2C_ADDR_MAX9867, MAX9867_REVISION_ADDR, &rev_id)) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }

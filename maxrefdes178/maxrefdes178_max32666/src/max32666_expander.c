@@ -78,12 +78,12 @@ int expander_init(void)
     GPIO_SET(slave_bl_tx_pin);
     MXC_GPIO_Config(&slave_bl_tx_pin);
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
@@ -92,12 +92,12 @@ int expander_init(void)
     // logic-high for an open-drain output is high impedance
     // Any open-drain port can be used as an input by setting the open-drain output to logic-high
     regval = 0xff;
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
@@ -120,7 +120,7 @@ int expander_select_debugger(debugger_select_e debugger_select)
     uint8_t regval;
     // MAX14689, Drive CB low to connect COM_ to NC_. Drive CB high to connect COM_ to NO_.
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
@@ -149,7 +149,7 @@ int expander_select_debugger(debugger_select_e debugger_select)
         break;
     }
 
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
@@ -161,7 +161,7 @@ int expander_read_output(uint8_t *output)
 {
     int err;
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, output)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_OUTPUTS, output)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
@@ -174,14 +174,14 @@ int expander_set_output(uint8_t mask)
     int err;
     uint8_t regval;
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
 
     regval |= mask;
 
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
@@ -194,14 +194,14 @@ int expander_clear_output(uint8_t mask)
     int err;
     uint8_t regval;
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
 
     regval &= ~mask;
 
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
@@ -213,7 +213,7 @@ int expander_read_io(uint8_t *input)
 {
     int err;
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, input)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_PORTS, input)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
@@ -226,14 +226,14 @@ int expander_set_io(uint8_t mask)
     int err;
     uint8_t regval;
 
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
 
     regval |= mask;
 
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
@@ -257,24 +257,24 @@ int expander_invoke_video_bootloader(void)
 
     // set UART_TARGET_SEL high
     // set HDK1_TARGET_SEL and SLAVE_DEBUG_SEL low
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
     regval |= (EXPANDER_OUTPUT_UART_TARGET_SEL);
     regval &= ~(EXPANDER_OUTPUT_HDK1_TARGET_SEL | EXPANDER_OUTPUT_SLAVE_DEBUG_SEL);
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
 
     // set BOOTLOADER_INVOKE low
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
     regval &= ~(EXPANDER_IO_BOOTLOADER_INVOKE);
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
@@ -298,24 +298,24 @@ int expander_invoke_audio_bootloader(void)
 
     // set UART_TARGET_SEL and SLAVE_DEBUG_SEL high
     // set HDK1_TARGET_SEL low
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
     regval |= (EXPANDER_OUTPUT_UART_TARGET_SEL | EXPANDER_OUTPUT_SLAVE_DEBUG_SEL);
     regval &= ~(EXPANDER_OUTPUT_HDK1_TARGET_SEL);
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
 
     // set BOOTLOADER_INVOKE low
-    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
     regval &= ~(EXPANDER_IO_BOOTLOADER_INVOKE);
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }

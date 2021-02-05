@@ -59,7 +59,7 @@
  * @param      value is the value to be written
  * @returns    This function has no return value.
  */
-int i2c_master_byte_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t val);
+int i2c_master_byte_write(uint8_t addr, uint8_t val);
 
 /**
  * @brief   Writes a single I2C register. Before calling this function, I2C should
@@ -69,7 +69,7 @@ int i2c_master_byte_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t val);
  * @param      value is the register value to be written
  * @returns    This function has no return value.
  */
-int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t val);
+int i2c_master_reg_write(uint8_t addr, uint8_t reg, uint8_t val);
 
 /**
  * @brief   Writes len sequential bytes from buf starting at reg. Before calling
@@ -80,7 +80,7 @@ int i2c_master_reg_write(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t
  * @param      len is size of the buffer
  * @returns    This function has no return value.
  */
-int i2c_master_reg_write_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t* buf, uint8_t len);
+int i2c_master_reg_write_buf(uint8_t addr, uint8_t reg, uint8_t* buf, uint8_t len);
 
 /**
  * @brief   Read a single I2C byte. Before calling this function, I2C should
@@ -89,7 +89,7 @@ int i2c_master_reg_write_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uin
  * @param      buf is the register value to be read
  * @returns    This function has no return value.
  */
-int i2c_master_byte_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t *buf);
+int i2c_master_byte_read(uint8_t addr, uint8_t *buf);
 
 /**
  * @brief   Read a single I2C register. Before calling this function, I2C should
@@ -99,7 +99,7 @@ int i2c_master_byte_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t *buf);
  * @param      buf is the register value to be read
  * @returns    This function has no return value.
  */
-int i2c_master_reg_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf);
+int i2c_master_reg_read(uint8_t addr, uint8_t reg, uint8_t *buf);
 
 /**
  * @brief   Read a multiple I2C register. Before calling this function, I2C should
@@ -111,13 +111,13 @@ int i2c_master_reg_read(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t 
  * @param      buf is the register value to be read
  * @returns    This function has no return value.
  */
-int i2c_master_reg_read_buf(mxc_i2c_regs_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t len);
+int i2c_master_reg_read_buf(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t len);
 
 /**
  * @brief  Initialize I2C peripheral
  * @retval     #E_NO_ERROR   Intialization successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
-int i2c_master_init(mxc_i2c_regs_t *i2c, unsigned int speed);
+int i2c_master_init(void);
 
 #endif /* _MAX32666_I2C_H_ */

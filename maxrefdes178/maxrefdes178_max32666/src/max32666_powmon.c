@@ -141,7 +141,7 @@ int powmon_init(void)
 //        return err;
 //    }
 
-    if ((err = i2c_master_reg_read(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_DEV_REV_ID_CMD, &dev_rev_id)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read(I2C_ADDR_MAX34417, MAX34417_DEV_REV_ID_CMD, &dev_rev_id)) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
@@ -150,7 +150,7 @@ int powmon_init(void)
         return E_NOT_SUPPORTED;
     }
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -158,7 +158,7 @@ int powmon_init(void)
     powmon_update();
     MXC_Delay(MXC_DELAY_MSEC(1));
 
-    if ((err = i2c_master_reg_write(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_CAM | MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_CAM | MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -173,7 +173,7 @@ int powmon_update(void)
 {
     int err;
 
-    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_UPDATE_CMD)) != E_NO_ERROR) {
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX34417, MAX34417_UPDATE_CMD)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
@@ -186,7 +186,7 @@ uint32_t powmon_acc_count(void)
     int err;
     static uint8_t buf[4];
 
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_ACC_COUNT_CMD, buf, sizeof(buf))) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX34417, MAX34417_ACC_COUNT_CMD, buf, sizeof(buf))) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
@@ -201,7 +201,7 @@ int powmon_bulk_voltage(double voltage[4])
     static uint8_t buf[9];
     static const double adc2v = 24.0 / (16384.0 - 1.0);
 
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_BULK_VOLT_CMD, buf, sizeof(buf))) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX34417, MAX34417_BULK_VOLT_CMD, buf, sizeof(buf))) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }
@@ -219,7 +219,7 @@ int powmon_bulk_energy(double energy_raw[4])
     int err;
     static uint8_t buf[29];
 
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX34417, MAX34417_BULK_PWR_CMD, buf, sizeof(buf))) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX34417, MAX34417_BULK_PWR_CMD, buf, sizeof(buf))) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }

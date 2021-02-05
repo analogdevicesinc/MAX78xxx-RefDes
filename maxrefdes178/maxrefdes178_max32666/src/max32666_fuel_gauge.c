@@ -251,7 +251,7 @@ int fuel_gauge_init(void)
 
     // Try to read fuel gauge version
     tuMax17048RegVersion lMax17048RegVersion = { 0 };
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_VERSION, lMax17048RegVersion.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_VERSION, lMax17048RegVersion.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("Fuel gauge is not responding");
         device_status.fuel_gauge_working = 0;
         return E_NO_ERROR;
@@ -264,7 +264,7 @@ int fuel_gauge_init(void)
     }
 
     tuMax17048RegStatus lMax17048RegStatus = { 0 };
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_STATUS, lMax17048RegStatus.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_STATUS, lMax17048RegStatus.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }
@@ -275,7 +275,7 @@ int fuel_gauge_init(void)
         PR_INFO("FuelGauge was reset");
         /* Clear reset indicator bit */
         lMax17048RegStatus.bits.RI = 0;
-        if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_STATUS, lMax17048RegStatus.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_STATUS, lMax17048RegStatus.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
@@ -298,7 +298,7 @@ int fuel_gauge_init(void)
     /* Set RCOMP and config */
     tuMax17048RegConfig lMax17048RegConfig = { 0 };
     lMax17048RegConfig.bits.RCOMP = MAX17048_RCOMP0;
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_CONFIG, lMax17048RegConfig.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_CONFIG, lMax17048RegConfig.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -336,7 +336,7 @@ static int fuel_gauge_update_model(void)
     tuMax17048RegUnlock lMax17048RegUnlock = { 0 };
     lMax17048RegUnlock.bits.UnlockMsb = MAX17048_MODEL_UNLOCK_MSB;
     lMax17048RegUnlock.bits.UnlockLsb = MAX17048_MODEL_UNLOCK_LSB;
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_UNLOCK, lMax17048RegUnlock.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_UNLOCK, lMax17048RegUnlock.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -348,7 +348,7 @@ static int fuel_gauge_update_model(void)
      * device after the model has been loaded.
      */
     tuMax17048RegOcv lMax17048RegOcvOrig = { 0 };
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_OCV, lMax17048RegOcvOrig.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_OCV, lMax17048RegOcvOrig.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }
@@ -376,7 +376,7 @@ static int fuel_gauge_update_model(void)
      * 0xFF. Step 9 will confirm the values were written correctly.
      */
     for (uint8_t addr = MAX17048_REG_TABLE_START; addr < MAX17048_REG_TABLE_END; addr += MAX17048_MAX_BURST_LEN) {
-        if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, addr, (uint8_t *) &modelTable[addr - MAX17048_REG_TABLE_START], MAX17048_MAX_BURST_LEN)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, addr, (uint8_t *) &modelTable[addr - MAX17048_REG_TABLE_START], MAX17048_MAX_BURST_LEN)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
@@ -392,7 +392,7 @@ static int fuel_gauge_update_model(void)
      */
     uint8_t RCOMPSeg[MAX17048_REG_SIZE] = {MAX17048_RCOMP_SEG_MSB, MAX17048_RCOMP_SEG_LSB};
     for (uint8_t addr = MAX17048_REG_RCOMP_SEG_START; addr < MAX17048_REG_RCOMP_SEG_END; addr += MAX17048_REG_SIZE) {
-        if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, addr, RCOMPSeg, MAX17048_MAX_BURST_LEN)) != E_NO_ERROR) {
+        if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, addr, RCOMPSeg, MAX17048_MAX_BURST_LEN)) != E_NO_ERROR) {
             PR_ERROR("i2c_master_reg_write failed %d", err);
             return err;
         }
@@ -405,7 +405,7 @@ static int fuel_gauge_update_model(void)
     tuMax17048RegOcv lMax17048RegOcv = { 0 };
     lMax17048RegOcv.bits.OcvMsb = MAX17048_OCV_TEST_MSB;
     lMax17048RegOcv.bits.OcvLsb = MAX17048_OCV_TEST_LSB;
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_OCV, lMax17048RegOcv.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_OCV, lMax17048RegOcv.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -416,7 +416,7 @@ static int fuel_gauge_update_model(void)
      * is not hibernating
      */
     tuMax17048RegHibrt lMax17048RegHibrt = { 0 };
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_HIBRT, lMax17048RegHibrt.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_HIBRT, lMax17048RegHibrt.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -428,7 +428,7 @@ static int fuel_gauge_update_model(void)
      */
     lMax17048RegUnlock.bits.UnlockMsb = 0x00;
     lMax17048RegUnlock.bits.UnlockLsb = 0x00;
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_UNLOCK, lMax17048RegUnlock.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_UNLOCK, lMax17048RegUnlock.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -450,7 +450,7 @@ static int fuel_gauge_update_model(void)
      * fixed LSB of 1/256% for both 18 and 19 bit models.
      */
     tuMax17048RegSoc lMax17048RegSoc = { 0 };
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_SOC, lMax17048RegSoc.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_SOC, lMax17048RegSoc.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }
@@ -467,7 +467,7 @@ static int fuel_gauge_update_model(void)
      */
     lMax17048RegUnlock.bits.UnlockMsb = MAX17048_MODEL_UNLOCK_MSB;
     lMax17048RegUnlock.bits.UnlockLsb = MAX17048_MODEL_UNLOCK_LSB;
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_UNLOCK, lMax17048RegUnlock.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_UNLOCK, lMax17048RegUnlock.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -477,7 +477,7 @@ static int fuel_gauge_update_model(void)
      * It is up to the application how to configure the LSB of the CONFIG
      * register; any byte value is valid
      */
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_OCV, lMax17048RegOcvOrig.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_OCV, lMax17048RegOcvOrig.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -490,7 +490,7 @@ static int fuel_gauge_update_model(void)
      */
     lMax17048RegHibrt.bits.HibThr = MAX17048_HIBRT_HIBTHR;
     lMax17048RegHibrt.bits.ActThr = MAX17048_HIBRT_ACTTHR;
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_HIBRT, lMax17048RegHibrt.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_HIBRT, lMax17048RegHibrt.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -500,7 +500,7 @@ static int fuel_gauge_update_model(void)
      */
     lMax17048RegUnlock.bits.UnlockMsb = 0x00;
     lMax17048RegUnlock.bits.UnlockLsb = 0x00;
-    if ((err = i2c_master_reg_write_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_UNLOCK, lMax17048RegUnlock.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_write_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_UNLOCK, lMax17048RegUnlock.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -521,7 +521,7 @@ static int fuel_gauge_soc(uint8_t *soc)
     float fSoC = 0;
 
     tuMax17048RegSoc lMax17048RegSoc = { 0 };
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_SOC, lMax17048RegSoc.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_SOC, lMax17048RegSoc.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }
@@ -543,7 +543,7 @@ static int fuel_gauge_vcell(float *vcell)
     int err;
 
     tuMax17048RegVcell lMax17048RegVcell = { 0 };
-    if ((err = i2c_master_reg_read_buf(MAX32666_I2C, I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_VCELL, lMax17048RegVcell.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX17048_FUEL_GAUGE, MAX17048_REG_VCELL, lMax17048RegVcell.raw, MAX17048_REG_SIZE)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_read_buf failed %d", err);
         return err;
     }

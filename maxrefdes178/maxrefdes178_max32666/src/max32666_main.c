@@ -111,8 +111,8 @@ int main(void)
     char version_string[10] = {0};
 
     // Set PORT1 and PORT2 rail to VDDIO
-    MXC_GPIO0->vssel =  0x00;
-    MXC_GPIO1->vssel =  0x00;
+    MXC_GPIO0->vssel = 0x00;
+    MXC_GPIO1->vssel = 0x00;
 
     // Disable Core0 ICC0 Instruction cache
     core0_icc(0);
@@ -131,7 +131,7 @@ int main(void)
     PR("\n\n\n");
     PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version_string, S_BUILD_TIMESTAMP);
 
-    ret = i2c_master_init(MAX32666_I2C, I2C_SPEED);
+    ret = i2c_master_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("i2c_init failed %d", ret);
         MXC_Delay(MXC_DELAY_MSEC(100));
