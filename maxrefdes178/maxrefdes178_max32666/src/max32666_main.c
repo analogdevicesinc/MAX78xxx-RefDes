@@ -48,6 +48,7 @@
 #include <tmr.h>
 
 #include "max32666_accel.h"
+#include "max32666_audio_codec.h"
 #include "max32666_ble.h"
 #include "max32666_ble_command.h"
 #include "max32666_ble_queue.h"
@@ -228,6 +229,12 @@ int main(void)
 //    ret = ext_sram_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("ext_sram_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
+//
+//    ret = audio_codec_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("audio_codec_init failed %d", ret);
 //        pmic_led_red(1);
 //    }
 //

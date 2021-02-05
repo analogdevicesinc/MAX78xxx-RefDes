@@ -76,6 +76,7 @@ export CMSIS_ROOT
 # Source files for this test (add path to VPATH below)
 SRCS  = max32666_main.c
 SRCS += max32666_accel.c
+SRCS += max32666_audio_codec.c
 SRCS += max32666_ble.c
 SRCS += max32666_ble_command.c
 SRCS += max32666_ble_queue.c
