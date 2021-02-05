@@ -68,6 +68,7 @@
 #include "max32666_sdcard.h"
 #include "max32666_spi_dma.h"
 #include "max32666_timer_led_button.h"
+#include "max32666_touch.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_version.h"
 
@@ -208,6 +209,12 @@ int main(void)
         pmic_led_red(1);
     }
 
+//    ret = touch_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("touch_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
+//
 //    ret = powmon_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("powmon_init failed %d", ret);

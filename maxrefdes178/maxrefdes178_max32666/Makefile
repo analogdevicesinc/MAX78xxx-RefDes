@@ -95,6 +95,7 @@ SRCS += max32666_powmon.c
 SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
 SRCS += max32666_timer_led_button.c
+SRCS += max32666_touch.c
 SRCS += maxrefdes178_utility.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
