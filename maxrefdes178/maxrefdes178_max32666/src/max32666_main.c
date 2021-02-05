@@ -55,6 +55,7 @@
 #include "max32666_debug.h"
 #include "max32666_expander.h"
 #include "max32666_ext_flash.h"
+#include "max32666_ext_sram.h"
 #include "max32666_fonts.h"
 #include "max32666_fuel_gauge.h"
 #include "max32666_i2c.h"
@@ -200,35 +201,41 @@ int main(void)
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
-    ret = powmon_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("powmon_init failed %d", ret);
-        pmic_led_red(1);
-    }
-
-    ret = accel_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("accel_init failed %d", ret);
-        pmic_led_red(1);
-    }
-
-    ret = ext_flash_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("ext_flash_init failed %d", ret);
-        pmic_led_red(1);
-    }
-
-//    ret = sdcard_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("sdcard_init failed %d", ret);
-//        max20303_led_red(1);
-//    }
-
     ret = timer_led_button_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("timer_led_button_init failed %d", ret);
         pmic_led_red(1);
     }
+
+//    ret = powmon_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("powmon_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
+//
+//    ret = accel_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("accel_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
+//
+//    ret = ext_flash_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("ext_flash_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
+//
+//    ret = ext_sram_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("ext_sram_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
+//
+//    ret = sdcard_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("sdcard_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
 
     ret = ble_queue_init();
     if (ret != E_NO_ERROR) {
