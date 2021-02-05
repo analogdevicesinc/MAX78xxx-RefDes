@@ -89,13 +89,14 @@ SRCS += max32666_fonts.c
 SRCS += max32666_fuel_gauge.c
 SRCS += max32666_i2c.c
 SRCS += max32666_lcd.c
-SRCS += max32666_qspi_master.c
 SRCS += max32666_pmic.c
 SRCS += max32666_powmon.c
+SRCS += max32666_qspi_master.c
 SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
 SRCS += max32666_timer_led_button.c
 SRCS += max32666_touch.c
+SRCS += max32666_usb.c
 SRCS += maxrefdes178_utility.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
@@ -175,6 +176,7 @@ PERIPH_DRIVER_DIR=$(LIBS_DIR)/PeriphDrivers
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
 export PERIPH_DRIVER_DIR
 
+# Include SDHC and FAT32 Library
 SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
 FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
 include $(FAT32_DRIVER_DIR)/fat32.mk
@@ -183,6 +185,10 @@ include $(SDHC_DRIVER_DIR)/sdhc.mk
 # Include the Cordio Library
 CORDIO_DIR=Cordio
 include $(CORDIO_DIR)/platform/targets/maxim/build/cordio.mk
+
+# Inlcude USB Library
+MAXUSB_DIR=$(LIBS_DIR)/MAXUSB
+include $(MAXUSB_DIR)/maxusb.mk
 
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be
