@@ -253,8 +253,11 @@ int main(void)
     MXC_GPIO_Config(&gpio_camera);
 
     // Configure flash pin
-    GPIO_CLR(gpio_flash);
+    GPIO_SET(gpio_flash);
     MXC_GPIO_Config(&gpio_flash);
+    MXC_GPIO0->ds0 |= gpio_flash.mask;
+    MXC_GPIO0->ds1 |= gpio_flash.mask;
+    GPIO_SET(gpio_flash);
 
     // Configure CNN boost
     GPIO_CLR(gpio_cnn_boost);
@@ -378,6 +381,8 @@ int main(void)
         uint32_t  w, h;
         camera_get_image(&qspi_payload_buffer, &imgLen, &w, &h);
     }
+
+
 
     // Successfully initialize the program
     PR_INFO("Program initialized successfully");
@@ -524,11 +529,11 @@ static void run_demo(void)
                 camera_start_capture_image();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD:
-                GPIO_SET(gpio_flash);
+                GPIO_CLR(gpio_flash);
                 PR_INFO("enable flash");
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD:
-                GPIO_CLR(gpio_flash);
+                GPIO_SET(gpio_flash);
                 PR_INFO("disable flash");
                 break;
             }
