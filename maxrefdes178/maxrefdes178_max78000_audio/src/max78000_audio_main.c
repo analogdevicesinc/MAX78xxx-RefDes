@@ -90,6 +90,16 @@
 #define PREAMBLE_SIZE               30*CHUNK// how many samples before beginning of a keyword to include
 #define INFERENCE_THRESHOLD         49      // min probability (0-100) to accept an inference
 
+/* MAX9867 Audio Codec */
+#define MAX9867_I2C        MXC_I2C1
+#define MAX9867_I2C_FREQ   400000
+#define MAX9867_I2C_ADDR   0x18
+#define MAX9867_REV_ID     0x42
+
+/* MAX9867 Register addresses */
+#define MAX9867_STATUS_ADDR      0x00
+#define MAX9867_REV_ID_ADDR      0xFF
+
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -99,36 +109,36 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_AUDIO_CNN_BOOST_PIN;
-mxc_gpio_cfg_t gpio_audio_osc = MAX78000_AUDIO_AUDIO_OSC_PIN;
-mxc_gpio_cfg_t gpio_mic_en    = MAX78000_AUDIO_MIC_EN_PIN;
-mxc_gpio_cfg_t gpio_mic_sel   = MAX78000_AUDIO_MIC_SEL_PIN;
-mxc_gpio_cfg_t gpio_sram_cs   = MAX78000_AUDIO_SRAM_CS_PIN;
-mxc_gpio_cfg_t gpio_i2c       = MAX78000_AUDIO_I2C_PINS;
-mxc_gpio_cfg_t gpio_debug_sel = MAX78000_AUDIO_DEBUG_SEL_PIN;
-mxc_gpio_cfg_t gpio_exp_out1  = MAX78000_AUDIO_EXPANDER_OUT1_PIN;
-mxc_gpio_cfg_t gpio_exp_out2  = MAX78000_AUDIO_EXPANDER_OUT2_PIN;
-mxc_gpio_cfg_t gpio_video_int = MAX78000_AUDIO_VIDEO_INT_PIN;
-mxc_gpio_cfg_t gpio_red       = MAX78000_AUDIO_LED_RED_PIN;
-mxc_gpio_cfg_t gpio_green     = MAX78000_AUDIO_LED_GREEN_PIN;
-mxc_gpio_cfg_t gpio_blue      = MAX78000_AUDIO_LED_BLUE_PIN;
+static const mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_AUDIO_CNN_BOOST_PIN;
+static const mxc_gpio_cfg_t gpio_audio_osc = MAX78000_AUDIO_AUDIO_OSC_PIN;
+static const mxc_gpio_cfg_t gpio_mic_en    = MAX78000_AUDIO_MIC_EN_PIN;
+static const mxc_gpio_cfg_t gpio_mic_sel   = MAX78000_AUDIO_MIC_SEL_PIN;
+static const mxc_gpio_cfg_t gpio_sram_cs   = MAX78000_AUDIO_SRAM_CS_PIN;
+static const mxc_gpio_cfg_t gpio_i2c       = MAX78000_AUDIO_I2C_PINS;
+static const mxc_gpio_cfg_t gpio_debug_sel = MAX78000_AUDIO_DEBUG_SEL_PIN;
+static const mxc_gpio_cfg_t gpio_exp_out1  = MAX78000_AUDIO_EXPANDER_OUT1_PIN;
+static const mxc_gpio_cfg_t gpio_exp_out2  = MAX78000_AUDIO_EXPANDER_OUT2_PIN;
+static const mxc_gpio_cfg_t gpio_video_int = MAX78000_AUDIO_VIDEO_INT_PIN;
+static const mxc_gpio_cfg_t gpio_red       = MAX78000_AUDIO_LED_RED_PIN;
+static const mxc_gpio_cfg_t gpio_green     = MAX78000_AUDIO_LED_GREEN_PIN;
+static const mxc_gpio_cfg_t gpio_blue      = MAX78000_AUDIO_LED_BLUE_PIN;
 
 static int32_t ml_data[NUM_OUTPUTS];
 static q15_t ml_softmax[NUM_OUTPUTS];
-uint8_t pAI85Buffer[SAMPLE_SIZE];
-uint8_t pPreambleCircBuffer[PREAMBLE_SIZE];
-int16_t Max, Min;
-uint16_t thresholdHigh = THRESHOLD_HIGH;
-uint16_t thresholdLow = THRESHOLD_LOW;
+static uint8_t pAI85Buffer[SAMPLE_SIZE];
+static uint8_t pPreambleCircBuffer[PREAMBLE_SIZE];
+static int16_t Max, Min;
+static uint16_t thresholdHigh = THRESHOLD_HIGH;
+static uint16_t thresholdLow = THRESHOLD_LOW;
 static int16_t  x0, x1, Coeff;
 static int32_t  y0, y1;
 static int8_t enable_audio = 1;
-static int8_t button_pressed = 0;
+static volatile int8_t button_pressed = 0;
 
-volatile uint8_t i2s_flag = 0;
-int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
-max78000_statistics_t max78000_statistics = {0};
-version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
+static volatile uint8_t i2s_flag = 0;
+static int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
+static max78000_statistics_t max78000_statistics = {0};
+static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
 static uint8_t qspi_rx_buffer[100];
 
 /* **** Constants **** */
@@ -139,7 +149,7 @@ typedef enum _mic_processing_state {
 } mic_processing_state;
 
 /* Set of detected words */
-const char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
+static const char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
                                          "GO", "YES", "NO", "ON", "OFF", "ONE", "TWO", "THREE", "FOUR", "FIVE",
                                          "SIX", "SEVEN", "EIGHT", "NINE", "ZERO", "Unknown"
                                        };
@@ -148,17 +158,17 @@ const char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-void fail(void);
-uint8_t cnn_load_data(uint8_t* pIn);
-int8_t MicReader(int16_t* sample);
-uint8_t MicReadChunk(uint8_t* pBuff, uint16_t* avg);
-uint8_t AddTranspose(uint8_t* pIn, uint8_t* pOut, uint16_t inSize,
+static void fail(void);
+static uint8_t cnn_load_data(uint8_t* pIn);
+static uint8_t MicReadChunk(uint8_t* pBuff, uint16_t* avg);
+static uint8_t AddTranspose(uint8_t* pIn, uint8_t* pOut, uint16_t inSize,
                      uint16_t outSize, uint16_t width);
-uint8_t check_inference(q15_t* ml_soft, int32_t* ml_data,
+static uint8_t check_inference(q15_t* ml_soft, int32_t* ml_data,
                         int16_t* out_class, double* out_prob);
-void I2SInit();
-void HPF_init(void);
-int16_t HPF(int16_t input);
+static void I2SInit();
+static void HPF_init(void);
+static int16_t HPF(int16_t input);
+static int max9867_init(void);
 
 
 //-----------------------------------------------------------------------------
@@ -273,6 +283,9 @@ int main(void)
 
     /* initialize I2S interface to Mic */
     I2SInit();
+
+    /* initialize audio codec */
+    max9867_init();
 
     /* Init button interrupt */
     PB_RegisterCallback(0, (pb_callback) button_int);
@@ -594,7 +607,7 @@ int main(void)
     }
 }
 
-void I2SInit()
+static void I2SInit()
 {
     mxc_i2s_req_t req;
     int32_t err;
@@ -637,7 +650,7 @@ void I2SInit()
     __enable_irq();
 }
 
-uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
+static uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
         int16_t *out_class, double *out_prob) {
     int32_t temp[NUM_OUTPUTS];
     q15_t max = 0;    // soft_max output is 0->32767
@@ -678,7 +691,7 @@ uint8_t check_inference(q15_t *ml_soft, int32_t *ml_data,
     }
 }
 
-uint8_t cnn_load_data(uint8_t* pIn)
+static uint8_t cnn_load_data(uint8_t* pIn)
 {
     uint32_t mem;
     uint16_t index = 0;
@@ -709,7 +722,7 @@ uint8_t cnn_load_data(uint8_t* pIn)
     return CNN_OK;
 }
 
-uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
+static uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
         uint16_t outSize, uint16_t width) {
     /* Data order in Ai85 memory (transpose is included):
 	input(series of 8 bit samples): (0,0) ...  (0,127)  (1,0) ... (1,127) ...... (127,0)...(127,127)    16384 samples
@@ -784,7 +797,7 @@ uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
     }
 }
 
-uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg)
+static uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg)
 {
     static uint16_t chunkCount = 0;
     static uint16_t sum = 0;
@@ -859,7 +872,7 @@ uint8_t MicReadChunk(uint8_t *pBuff, uint16_t * avg)
     return 1;
 }
 
-void HPF_init(void) {
+static void HPF_init(void) {
     Coeff = 32604; //0.995
     x0 = 0;
     y0 = 0;
@@ -867,7 +880,7 @@ void HPF_init(void) {
     x1 = x0;
 }
 
-int16_t HPF(int16_t input) {
+static int16_t HPF(int16_t input) {
     int16_t Acc, output;
     int32_t tmp;
 
@@ -898,7 +911,7 @@ int16_t HPF(int16_t input) {
     return (output);
 }
 
-void fail(void)
+static void fail(void)
 {
     PR_ERROR("fail");
 
@@ -907,4 +920,43 @@ void fail(void)
     GPIO_CLR(gpio_blue);
 
     while(1);
+}
+
+static int max9867_init(void)
+{
+    int err;
+    uint8_t rev_id;
+    uint8_t buf[1];
+    mxc_i2c_req_t i2c_req;
+
+    err = MXC_I2C_Init(MAX9867_I2C, 1, 0);
+    if (err != E_NO_ERROR) {
+        PR_ERROR("MXC_I2C_Init fail %d", err);
+        return err;
+    }
+
+    MXC_I2C_SetFrequency(MAX9867_I2C, MAX9867_I2C_FREQ);
+
+    buf[0] = MAX9867_REV_ID_ADDR;
+    i2c_req.i2c = MAX9867_I2C;
+    i2c_req.addr = MAX9867_I2C_ADDR;
+    i2c_req.tx_buf = buf;
+    i2c_req.tx_len = 1;
+    i2c_req.rx_buf = (unsigned char *) &rev_id;
+    i2c_req.rx_len = 1;
+    i2c_req.restart = 0;
+    i2c_req.callback = NULL;
+
+    err = MXC_I2C_MasterTransaction(&i2c_req);
+    if (err != E_NO_ERROR) {
+        PR_ERROR("MXC_I2C_Init fail %d", err);
+        return err;
+    }
+
+    if (rev_id != MAX9867_REV_ID) {
+        PR_ERROR("invalid rev id 0x%x", rev_id);
+        return E_NOT_SUPPORTED;
+    }
+
+    return E_NO_ERROR;
 }

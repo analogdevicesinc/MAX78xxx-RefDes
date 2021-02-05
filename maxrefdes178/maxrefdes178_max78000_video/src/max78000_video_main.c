@@ -74,18 +74,18 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-mxc_gpio_cfg_t gpio_flash     = MAX78000_VIDEO_FLASH_LED_PIN;
-mxc_gpio_cfg_t gpio_camera    = MAX78000_VIDEO_CAMERA_PIN;
-mxc_gpio_cfg_t gpio_sram_cs   = MAX78000_VIDEO_SRAM_CS_PIN;
-mxc_gpio_cfg_t gpio_i2c       = MAX78000_VIDEO_I2C_PINS;
-mxc_gpio_cfg_t gpio_debug_sel = MAX78000_VIDEO_DEBUG_SEL_PIN;
-mxc_gpio_cfg_t gpio_exp_io    = MAX78000_VIDEO_EXPANDER_IO_PIN;
-mxc_gpio_cfg_t gpio_exp_out   = MAX78000_VIDEO_EXPANDER_OUT_PIN;
-mxc_gpio_cfg_t gpio_audio_int = MAX78000_VIDEO_AUDIO_INT_PIN;
-mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_VIDEO_CNN_BOOST_PIN;
-mxc_gpio_cfg_t gpio_red       = MAX78000_VIDEO_LED_RED_PIN;
-mxc_gpio_cfg_t gpio_green     = MAX78000_VIDEO_LED_GREEN_PIN;
-mxc_gpio_cfg_t gpio_blue      = MAX78000_VIDEO_LED_BLUE_PIN;
+static const mxc_gpio_cfg_t gpio_flash     = MAX78000_VIDEO_FLASH_LED_PIN;
+static const mxc_gpio_cfg_t gpio_camera    = MAX78000_VIDEO_CAMERA_PIN;
+static const mxc_gpio_cfg_t gpio_sram_cs   = MAX78000_VIDEO_SRAM_CS_PIN;
+static const mxc_gpio_cfg_t gpio_i2c       = MAX78000_VIDEO_I2C_PINS;
+static const mxc_gpio_cfg_t gpio_debug_sel = MAX78000_VIDEO_DEBUG_SEL_PIN;
+static const mxc_gpio_cfg_t gpio_exp_io    = MAX78000_VIDEO_EXPANDER_IO_PIN;
+static const mxc_gpio_cfg_t gpio_exp_out   = MAX78000_VIDEO_EXPANDER_OUT_PIN;
+static const mxc_gpio_cfg_t gpio_audio_int = MAX78000_VIDEO_AUDIO_INT_PIN;
+static const mxc_gpio_cfg_t gpio_cnn_boost = MAX78000_VIDEO_CNN_BOOST_PIN;
+static const mxc_gpio_cfg_t gpio_red       = MAX78000_VIDEO_LED_RED_PIN;
+static const mxc_gpio_cfg_t gpio_green     = MAX78000_VIDEO_LED_GREEN_PIN;
+static const mxc_gpio_cfg_t gpio_blue      = MAX78000_VIDEO_LED_BLUE_PIN;
 
 static const uint8_t camera_settings[][2] = {
     {0x0e, 0x08}, // Sleep mode
@@ -215,11 +215,10 @@ static int8_t prev_decision = -2;
 static int8_t decision = -2;
 static uint32_t time_counter = 0;
 static int8_t enable_cnn = 1;
-static int8_t button_pressed = 0;
+static volatile int8_t button_pressed = 0;
 static int8_t enable_video = 1;
 static uint8_t *qspi_payload_buffer = NULL;
-
-version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
+static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
 
 #ifdef PRINT_TIME_CNN
 #define PR_TIMER(fmt, args...) if((time_counter % 10) == 0) printf("T[%-5s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
