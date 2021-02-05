@@ -52,6 +52,7 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
+static const mxc_gpio_cfg_t core1_swd_pin = MAX32666_CORE1_SWD_PIN;
 
 
 //-----------------------------------------------------------------------------
@@ -66,6 +67,9 @@ int expander_init(void)
 {
     int err;
     uint8_t regval;
+
+    // To debug Core1 set alternate function 3
+    MXC_GPIO_Config(&core1_swd_pin);
 
     if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
@@ -177,6 +181,18 @@ int expander_clear_output(uint8_t mask)
 
     if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
+        return err;
+    }
+
+    return E_NO_ERROR;
+}
+
+int expander_read_input(uint8_t *input)
+{
+    int err;
+
+    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, input)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read failed %d", err);
         return err;
     }
 

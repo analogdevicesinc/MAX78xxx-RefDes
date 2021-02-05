@@ -89,8 +89,6 @@
 //-----------------------------------------------------------------------------
 static volatile int core1_init_done = 0;
 
-static const mxc_gpio_cfg_t core1_swd_pin = MAX32666_CORE1_SWD_PIN;
-
 
 //-----------------------------------------------------------------------------
 // Local function declarations
@@ -153,9 +151,6 @@ int main(void)
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
     pmic_led_green(1);
-
-    // To debug Core1 set alternate function 3
-    MXC_GPIO_Config(&core1_swd_pin);
 
    // BLE should init first since it is mischievous
    // BLE init somehow damages GPIO settings for P0.0, P0.23
