@@ -36,11 +36,13 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <mxc_delay.h>
 #include <mxc_errors.h>
 
 #include "max32666_debug.h"
 #include "max32666_expander.h"
 #include "max32666_i2c.h"
+#include "maxrefdes178_utility.h"
 
 
 //-----------------------------------------------------------------------------
@@ -52,7 +54,8 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static const mxc_gpio_cfg_t core1_swd_pin = MAX32666_CORE1_SWD_PIN;
+static const mxc_gpio_cfg_t core1_swd_pin   = MAX32666_CORE1_SWD_PIN;
+static const mxc_gpio_cfg_t slave_bl_tx_pin = MAX32666_HOST_BL_TX_PIN;
 
 
 //-----------------------------------------------------------------------------
@@ -70,6 +73,10 @@ int expander_init(void)
 
     // To debug Core1 set alternate function 3
     MXC_GPIO_Config(&core1_swd_pin);
+
+    // Slave bootloader invoke pin
+    GPIO_SET(slave_bl_tx_pin);
+    MXC_GPIO_Config(&slave_bl_tx_pin);
 
     if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
@@ -100,6 +107,9 @@ int expander_init(void)
         PR_ERROR("expander_debug_select failed %d", err);
         return err;
     }
+
+//    expander_invoke_audio_bootloader();
+//    expander_invoke_video_bootloader();
 
     return E_NO_ERROR;
 }
@@ -147,6 +157,18 @@ int expander_select_debugger(debugger_select_e debugger_select)
     return E_NO_ERROR;
 }
 
+int expander_read_output(uint8_t *output)
+{
+    int err;
+
+    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, output)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+
+    return E_NO_ERROR;
+}
+
 int expander_set_output(uint8_t mask)
 {
     int err;
@@ -187,12 +209,114 @@ int expander_clear_output(uint8_t mask)
     return E_NO_ERROR;
 }
 
-int expander_read_input(uint8_t *input)
+int expander_read_io(uint8_t *input)
 {
     int err;
 
     if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, input)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+
+    return E_NO_ERROR;
+}
+
+int expander_set_io(uint8_t mask)
+{
+    int err;
+    uint8_t regval;
+
+    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+
+    regval |= mask;
+
+    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_write failed %d", err);
+        return err;
+    }
+
+    return E_NO_ERROR;
+}
+
+int expander_invoke_video_bootloader(void)
+{
+    // set BOOTLOADER_HOST_TX low
+    // set HDK1_TARGET_SEL low
+    // set BOOTLOADER_INVOKE low
+    // set UART_TARGET_SEL high
+    // set SLAVE_DEBUG_SEL low
+
+    int err;
+    uint8_t regval;
+
+    // set BOOTLOADER_HOST_TX low
+    GPIO_CLR(slave_bl_tx_pin);
+
+    // set UART_TARGET_SEL high
+    // set HDK1_TARGET_SEL and SLAVE_DEBUG_SEL low
+    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+    regval |= (EXPANDER_OUTPUT_UART_TARGET_SEL);
+    regval &= ~(EXPANDER_OUTPUT_HDK1_TARGET_SEL | EXPANDER_OUTPUT_SLAVE_DEBUG_SEL);
+    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_write failed %d", err);
+        return err;
+    }
+
+    // set BOOTLOADER_INVOKE low
+    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+    regval &= ~(EXPANDER_IO_BOOTLOADER_INVOKE);
+    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_write failed %d", err);
+        return err;
+    }
+
+    return E_NO_ERROR;
+}
+
+int expander_invoke_audio_bootloader(void)
+{
+    // set BOOTLOADER_HOST_TX low
+    // set HDK1_TARGET_SEL low
+    // set BOOTLOADER_INVOKE low
+    // set UART_TARGET_SEL high
+    // set SLAVE_DEBUG_SEL high
+
+    int err;
+    uint8_t regval;
+
+    // set BOOTLOADER_HOST_TX low
+    GPIO_CLR(slave_bl_tx_pin);
+
+    // set UART_TARGET_SEL and SLAVE_DEBUG_SEL high
+    // set HDK1_TARGET_SEL low
+    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, &regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+    regval |= (EXPANDER_OUTPUT_UART_TARGET_SEL | EXPANDER_OUTPUT_SLAVE_DEBUG_SEL);
+    regval &= ~(EXPANDER_OUTPUT_HDK1_TARGET_SEL);
+    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_write failed %d", err);
+        return err;
+    }
+
+    // set BOOTLOADER_INVOKE low
+    if ((err = i2c_master_byte_read(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read failed %d", err);
+        return err;
+    }
+    regval &= ~(EXPANDER_IO_BOOTLOADER_INVOKE);
+    if ((err = i2c_master_byte_write(MAX32666_I2C, I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
 

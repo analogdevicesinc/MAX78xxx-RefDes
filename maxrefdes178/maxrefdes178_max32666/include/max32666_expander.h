@@ -76,8 +76,12 @@
 //-----------------------------------------------------------------------------
 int expander_init(void);
 int expander_select_debugger(debugger_select_e debugger_select);
+int expander_read_output(uint8_t *output);
 int expander_set_output(uint8_t mask);
 int expander_clear_output(uint8_t mask);
-int expander_read_input(uint8_t *input);
+int expander_read_io(uint8_t *input);
+int expander_set_io(uint8_t mask);
+int expander_invoke_video_bootloader(void);
+int expander_invoke_audio_bootloader(void);
 
 #endif /* _MAX32666_EXPANDER_H_ */
