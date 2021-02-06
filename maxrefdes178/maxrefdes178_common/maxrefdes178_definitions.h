@@ -189,8 +189,7 @@
 // MAX32666 Timers
 #define MAX32666_TIMER_BLE                 MXC_TMR0  // TODO remove
 #define MAX32666_TIMER_BLE_SLEEP           MXC_TMR1  // TODO remove
-#define MAX32666_TIMER_LED                 MXC_TMR2
-#define MAX32666_TIMER_MS                  MXC_TMR3
+#define MAX32666_TIMER_MS                  MXC_TMR2
 
 // MAX32666 BLE Communication buffer
 #define MAX32666_BLE_QUEUE_SIZE            10
@@ -199,6 +198,9 @@
 // MAX32666 PMIC and Fuel Gauge
 #define MAX32666_PMIC_INTERVAL             10000  // ms
 #define MAX32666_SOC_WARNING_LEVEL         10
+
+// MAX32666 LED
+#define MAX32666_LED_INTERVAL              1000  // ms
 
 /*** MAX78000 AUDIO ***/
 // MAX78000 AUDIO PINS

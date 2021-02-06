@@ -114,6 +114,7 @@ typedef struct {
     uint32_t screen_drew;
     uint32_t statistics_sent;
     uint32_t pmic_check;
+    uint32_t led;
 } timestamps_t;
 
 

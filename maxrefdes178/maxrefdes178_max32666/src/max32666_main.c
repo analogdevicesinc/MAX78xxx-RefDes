@@ -496,6 +496,12 @@ static void run_application(void)
             }
         }
 
+        // LED worker
+        if ((timer_ms_tick - timestamps.led) > MAX32666_LED_INTERVAL) {
+            timestamps.led = timer_ms_tick;
+            led_worker();
+        }
+
 //        usb_worker();
 
         // TODO: low power
@@ -674,7 +680,6 @@ static void core1_irq_init(void)
     NVIC_DisableIRQ(GPIO0_IRQn);
     NVIC_DisableIRQ(GPIO1_IRQn);
 
-    NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_LED)));
     NVIC_DisableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)));
 }
 
