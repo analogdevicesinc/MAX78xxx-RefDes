@@ -75,6 +75,7 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int expander_init(void);
+int expander_worker(void);
 int expander_select_debugger(debugger_select_e debugger_select);
 int expander_read_output(uint8_t *output);
 int expander_set_output(uint8_t mask);

@@ -269,6 +269,59 @@ int i2c_master_byte_read(uint8_t addr, uint8_t *buf)
     return (MAX32666_I2C->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
 }
 
+int i2c_master_byte_read_buf(uint8_t addr, uint8_t *buf, uint8_t len)
+{
+//    int err;
+//    mxc_i2c_req_t reqMaster;
+//    reqMaster.i2c = MAX32666_I2C;
+//    reqMaster.addr = addr >> 1;
+//    reqMaster.tx_buf = NULL;
+//    reqMaster.tx_len = 0;
+//    reqMaster.rx_buf = buf;
+//    reqMaster.rx_len = len;
+//    reqMaster.restart = 0;
+//    reqMaster.callback = NULL;
+//    if((err = MXC_I2C_MasterTransaction(&reqMaster)) != E_NO_ERROR) {
+//        PR_ERROR("MXC_I2C_MasterTransaction failed %d", err);
+//        return err;
+//    }
+//    return E_NO_ERROR;
+
+    uint32_t cnt = I2C_TIMEOUT_CNT;
+    uint8_t read = 0;
+
+    i2c_flush();
+
+    MAX32666_I2C->fifo = addr | 0x01;
+    MAX32666_I2C->master_ctrl = MXC_F_I2C_MASTER_CTRL_START;
+    MAX32666_I2C->rx_ctrl1 = len;
+
+    while (!(MAX32666_I2C->int_fl0 & MXC_F_I2C_INT_FL0_RX_THRESH) && cnt) {
+        cnt--;
+    }
+
+    while ((len > read) && cnt) {
+        cnt--;
+        if (!(MAX32666_I2C->status & MXC_F_I2C_STATUS_RX_EMPTY)) {
+            buf[read++] = MAX32666_I2C->fifo;
+        }
+    }
+    MAX32666_I2C->int_fl0 = MXC_F_I2C_INT_FL0_RX_THRESH;
+
+    MAX32666_I2C->master_ctrl = MXC_F_I2C_MASTER_CTRL_STOP;
+    while (!(MAX32666_I2C->int_fl0 & MXC_F_I2C_INT_FL0_STOP) && cnt) {
+        cnt--;
+    }
+    MAX32666_I2C->int_fl0 = MXC_F_I2C_INT_FL0_STOP;
+
+    if (cnt == 0) {
+        PR_WARN("timeout");
+        return E_TIME_OUT;
+    }
+
+    return (MAX32666_I2C->int_fl0 & MXC_I2C_ERROR) ? E_COMM_ERR : E_NO_ERROR;
+}
+
 int i2c_master_reg_read(uint8_t addr, uint8_t reg, uint8_t *buf)
 {
 //    int err;

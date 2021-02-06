@@ -39,9 +39,13 @@
 #include <mxc_delay.h>
 #include <mxc_errors.h>
 
+#include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
+#include "max32666_fonts.h"
+#include "max32666_lcd.h"
 #include "max32666_i2c.h"
+#include "max32666_timer_led_button.h"
 #include "maxrefdes178_utility.h"
 
 
@@ -54,8 +58,11 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static const mxc_gpio_cfg_t core1_swd_pin   = MAX32666_CORE1_SWD_PIN;
-static const mxc_gpio_cfg_t slave_bl_tx_pin = MAX32666_HOST_BL_TX_PIN;
+static const mxc_gpio_cfg_t core1_swd_pin    = MAX32666_CORE1_SWD_PIN;
+static const mxc_gpio_cfg_t slave_bl_tx_pin  = MAX32666_HOST_BL_TX_PIN;
+static const mxc_gpio_cfg_t expander_int_pin = MAX32666_EXPANDER_INT_PIN;
+
+static volatile int expander_int_flag = 0;
 
 
 //-----------------------------------------------------------------------------
@@ -66,10 +73,22 @@ static const mxc_gpio_cfg_t slave_bl_tx_pin = MAX32666_HOST_BL_TX_PIN;
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
+void expander_int(void *cbdata)
+{
+    expander_int_flag = 1;
+}
+
 int expander_init(void)
 {
     int err;
     uint8_t regval;
+
+    // Init IO Expander interrupt
+    MXC_GPIO_Config(&expander_int_pin);
+    MXC_GPIO_RegisterCallback(&expander_int_pin, expander_int, NULL);
+    MXC_GPIO_IntConfig(&expander_int_pin, MAX32666_EXPANDER_INT_MODE);
+    MXC_GPIO_EnableInt(expander_int_pin.port, expander_int_pin.mask);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(expander_int_pin.port)));
 
     // To debug Core1 set alternate function 3
     MXC_GPIO_Config(&core1_swd_pin);
@@ -114,6 +133,64 @@ int expander_init(void)
     return E_NO_ERROR;
 }
 
+int expander_worker(void)
+{
+    int err;
+    uint8_t buff[2];
+
+    if (!expander_int_flag) {
+        return E_NO_ERROR;
+    }
+    expander_int_flag = 0;
+
+    if ((err = i2c_master_byte_read_buf(I2C_ADDR_MAX7325_PORTS, buff, 2)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_read_buf failed %d", err);
+        return err;
+    }
+
+    if (buff[1] & EXPANDER_INPUT_BUTTON_2) {
+        if (buff[0] & EXPANDER_INPUT_BUTTON_2) {
+            PR_DEBUG("SW3 released");
+        } else {
+            PR_DEBUG("SW3 pressed");
+            static debugger_select_e debugger_select = DEBUGGER_SELECT_MAX32666_CORE1;
+            debugger_select++;
+            debugger_select = debugger_select % DEBUGGER_SELECT_LAST;
+            expander_select_debugger(debugger_select);
+        }
+    }
+    if (buff[1] & EXPANDER_INPUT_INT_ACC) {
+        if (buff[0] & EXPANDER_INPUT_INT_ACC) {
+            PR_DEBUG("accel int asserted");
+        } else {
+            PR_DEBUG("accel int deasserted");
+        }
+    }
+    if (buff[1] & EXPANDER_INPUT_ALERT_PMIC) {
+        if (buff[0] & EXPANDER_INPUT_ALERT_PMIC) {
+            PR_DEBUG("pmic alert int asserted");
+        } else {
+            PR_DEBUG("pmic alert int deasserted");
+        }
+    }
+    if (buff[1] & EXPANDER_INPUT_INT_CODEC) {
+        if (buff[0] & EXPANDER_INPUT_INT_CODEC) {
+            PR_INFO("codec int asserted");
+        } else {
+            PR_INFO("codec int deasserted");
+        }
+    }
+    if (buff[1] & EXPANDER_INPUT_INT_PMIC) {
+        if (buff[0] & EXPANDER_INPUT_INT_PMIC) {
+            PR_DEBUG("pmic int asserted");
+        } else {
+            PR_DEBUG("pmic int deasserted");
+        }
+    }
+
+    return E_NO_ERROR;
+}
+
 int expander_select_debugger(debugger_select_e debugger_select)
 {
     int err;
@@ -129,12 +206,14 @@ int expander_select_debugger(debugger_select_e debugger_select)
     case DEBUGGER_SELECT_MAX32666_CORE1:
         // set HDK1_TARGET_SEL to high
         regval |= EXPANDER_OUTPUT_HDK1_TARGET_SEL;
+        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX32666 Core1 debug selected");
         break;
     case DEBUGGER_SELECT_MAX78000_VIDEO:
         // set UART_TARGET_SEL low
         // set HDK1_TARGET_SEL to low
         // set SLAVE_DEBUG_SEL to low
         regval &= ~(EXPANDER_OUTPUT_UART_TARGET_SEL | EXPANDER_OUTPUT_HDK1_TARGET_SEL | EXPANDER_OUTPUT_SLAVE_DEBUG_SEL);
+        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX78000 Video debug selected");
         break;
     case DEBUGGER_SELECT_MAX78000_AUDIO:
         // set UART_TARGET_SEL low
@@ -142,6 +221,7 @@ int expander_select_debugger(debugger_select_e debugger_select)
         // set SLAVE_DEBUG_SEL to high
         regval &= ~(EXPANDER_OUTPUT_UART_TARGET_SEL | EXPANDER_OUTPUT_HDK1_TARGET_SEL);
         regval |= EXPANDER_OUTPUT_SLAVE_DEBUG_SEL;
+        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX78000 Audio debug selected");
         break;
     default:
         PR_ERROR("invalid selection");
@@ -153,6 +233,9 @@ int expander_select_debugger(debugger_select_e debugger_select)
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
+
+    lcd_data.notification_color = MAGENTA;
+    timestamps.notification_received = timer_ms_tick;
 
     return E_NO_ERROR;
 }

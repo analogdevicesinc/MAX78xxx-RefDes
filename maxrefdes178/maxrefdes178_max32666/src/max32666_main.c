@@ -502,6 +502,8 @@ static void run_application(void)
             led_worker();
         }
 
+        expander_worker();
+
 //        usb_worker();
 
         // TODO: low power

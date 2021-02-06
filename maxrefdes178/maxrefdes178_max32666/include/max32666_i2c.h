@@ -92,6 +92,16 @@ int i2c_master_reg_write_buf(uint8_t addr, uint8_t reg, uint8_t* buf, uint8_t le
 int i2c_master_byte_read(uint8_t addr, uint8_t *buf);
 
 /**
+ * @brief   Read a single I2C byte. Before calling this function, I2C should
+ * be initialized via i2c_init() function
+ * @param      addr is the address of the I2C slave
+ * @param      buf is the register value to be read
+ * @param      len is size of the buffer
+ * @returns    This function has no return value.
+ */
+int i2c_master_byte_read_buf(uint8_t addr, uint8_t *buf, uint8_t len);
+
+/**
  * @brief   Read a single I2C register. Before calling this function, I2C should
  * be initialized via i2c_init() function
  * @param      addr is the address of the I2C slave
