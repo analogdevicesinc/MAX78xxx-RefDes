@@ -205,6 +205,12 @@ int main(void)
         pmic_led_red(1);
     }
 
+    ret = accel_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("accel_init failed %d", ret);
+        pmic_led_red(1);
+    }
+
 //    ret = usb_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("usb_init failed %d", ret);
@@ -220,12 +226,6 @@ int main(void)
 //    ret = powmon_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("powmon_init failed %d", ret);
-//        pmic_led_red(1);
-//    }
-//
-//    ret = accel_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("accel_init failed %d", ret);
 //        pmic_led_red(1);
 //    }
 //
@@ -378,6 +378,7 @@ static void run_application(void)
                 break;
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
                 timestamps.audio_result_received = timer_ms_tick;
+                timestamps.activity_detected = timer_ms_tick;
 
                 if (device_status.classification_audio.classification == CLASSIFICATION_UNKNOWN) {
                     lcd_data.toptitle_color = RED;
@@ -388,10 +389,14 @@ static void run_application(void)
 
                     if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
                         device_settings.enable_lcd = 0;
-                        lcd_backlight(0);
+                        lcd_backlight(0, 0);
+                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
                     } else if(strcmp(device_status.classification_audio.result, "ON") == 0) {
                         device_settings.enable_lcd = 1;
-                        lcd_backlight(1);
+                        if (device_settings.enable_max78000_video) {
+                            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
+                        }
+                        lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
                     } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
                         device_settings.enable_max78000_video_cnn = 1;
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
@@ -485,6 +490,36 @@ static void run_application(void)
                 Core1_Stop();
             }
             device_status.ble_running_status_changed = 0;
+        }
+
+        // Check motion inactivity
+        if (device_settings.enable_inactivity) {
+            if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_LONG_DURATION) {
+                if (device_status.inactivity_state != INACTIVITY_STATE_INACTIVE_LONG) {
+                    device_status.inactivity_state = INACTIVITY_STATE_INACTIVE_LONG;
+                    // Inactive long state change
+                    lcd_backlight(0, 0);
+                    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
+                    PR_INFO("Inactive long");
+                }
+            } else if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_SHORT_DURATION) {
+                if (device_status.inactivity_state != INACTIVITY_STATE_INACTIVE_SHORT) {
+                    device_status.inactivity_state = INACTIVITY_STATE_INACTIVE_SHORT;
+                    // Inactive short state change
+                    lcd_backlight(1, MAX32666_LCD_BACKLIGHT_LOW);
+                    PR_INFO("Inactive short");
+                }
+            } else {
+                if (device_status.inactivity_state != INACTIVITY_STATE_ACTIVE) {
+                    device_status.inactivity_state = INACTIVITY_STATE_ACTIVE;
+                    // Active state change
+                    lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
+                    if (device_settings.enable_max78000_video) {
+                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
+                    }
+                    PR_INFO("Active");
+                }
+            }
         }
 
         // Check PMIC and Fuel Gauge

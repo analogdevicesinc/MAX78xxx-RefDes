@@ -83,6 +83,7 @@ void button1_int(void *cbdata)
     } else {
 //        printf("BLE disabled\n");
     }
+    timestamps.activity_detected = timer_ms_tick;
 }
 
 void ms_timer(void)

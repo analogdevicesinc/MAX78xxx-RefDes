@@ -157,14 +157,11 @@ int expander_worker(void)
             debugger_select++;
             debugger_select = debugger_select % DEBUGGER_SELECT_LAST;
             expander_select_debugger(debugger_select);
+            timestamps.activity_detected = timer_ms_tick;
         }
     }
     if (buff[1] & EXPANDER_INPUT_INT_ACC) {
-        if (buff[0] & EXPANDER_INPUT_INT_ACC) {
-            PR_DEBUG("accel int asserted");
-        } else {
-            PR_DEBUG("accel int deasserted");
-        }
+        timestamps.activity_detected = timer_ms_tick;
     }
     if (buff[1] & EXPANDER_INPUT_ALERT_PMIC) {
         if (buff[0] & EXPANDER_INPUT_ALERT_PMIC) {

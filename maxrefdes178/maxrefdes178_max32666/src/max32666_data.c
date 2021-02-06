@@ -76,6 +76,7 @@ volatile device_settings_t device_settings = {
         .enable_lcd_probabilty = 0,
         .enable_ble_send_statistics = 0,
         .enable_ble_send_classification = 0,
+        .enable_inactivity = 1,
 };
 
 //-----------------------------------------------------------------------------

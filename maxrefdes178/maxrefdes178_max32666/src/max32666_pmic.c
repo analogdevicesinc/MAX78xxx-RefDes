@@ -44,6 +44,7 @@
 #include "max32666_data.h"
 #include "max32666_i2c.h"
 #include "max32666_pmic.h"
+#include "max32666_timer_led_button.h"
 
 
 //-----------------------------------------------------------------------------
@@ -406,6 +407,7 @@ int pmic_worker(void)
     if (lMax20303RegStatus1.bits.UsbOk) {
         if (!device_status.usb_chgin) {
             pmic_enable_charger();
+            timestamps.activity_detected = timer_ms_tick;
         }
         device_status.usb_chgin = 1;
     } else {

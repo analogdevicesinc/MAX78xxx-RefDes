@@ -30,11 +30,12 @@
  * ownership rights.
  *
  ******************************************************************************/
-
+// https://github.com/BoschSensortec/BMI160_driver
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <mxc_delay.h>
 #include <mxc_errors.h>
 #include <stdio.h>
 
@@ -42,78 +43,13 @@
 #include "max32666_debug.h"
 #include "max32666_i2c.h"
 
+#undef LITTLE_ENDIAN
+#include "bmi160.h"
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "accel"
-
-// https://github.com/BoschSensortec/BMI160_driver
-/** BMI160 Register map */
-#define BMI160_CHIP_ID_ADDR                  UINT8_C(0x00)
-#define BMI160_ERROR_REG_ADDR                UINT8_C(0x02)
-#define BMI160_PMU_STATUS_ADDR               UINT8_C(0x03)
-#define BMI160_AUX_DATA_ADDR                 UINT8_C(0x04)
-#define BMI160_GYRO_DATA_ADDR                UINT8_C(0x0C)
-#define BMI160_ACCEL_DATA_ADDR               UINT8_C(0x12)
-#define BMI160_STATUS_ADDR                   UINT8_C(0x1B)
-#define BMI160_INT_STATUS_ADDR               UINT8_C(0x1C)
-#define BMI160_FIFO_LENGTH_ADDR              UINT8_C(0x22)
-#define BMI160_FIFO_DATA_ADDR                UINT8_C(0x24)
-#define BMI160_ACCEL_CONFIG_ADDR             UINT8_C(0x40)
-#define BMI160_ACCEL_RANGE_ADDR              UINT8_C(0x41)
-#define BMI160_GYRO_CONFIG_ADDR              UINT8_C(0x42)
-#define BMI160_GYRO_RANGE_ADDR               UINT8_C(0x43)
-#define BMI160_AUX_ODR_ADDR                  UINT8_C(0x44)
-#define BMI160_FIFO_DOWN_ADDR                UINT8_C(0x45)
-#define BMI160_FIFO_CONFIG_0_ADDR            UINT8_C(0x46)
-#define BMI160_FIFO_CONFIG_1_ADDR            UINT8_C(0x47)
-#define BMI160_AUX_IF_0_ADDR                 UINT8_C(0x4B)
-#define BMI160_AUX_IF_1_ADDR                 UINT8_C(0x4C)
-#define BMI160_AUX_IF_2_ADDR                 UINT8_C(0x4D)
-#define BMI160_AUX_IF_3_ADDR                 UINT8_C(0x4E)
-#define BMI160_AUX_IF_4_ADDR                 UINT8_C(0x4F)
-#define BMI160_INT_ENABLE_0_ADDR             UINT8_C(0x50)
-#define BMI160_INT_ENABLE_1_ADDR             UINT8_C(0x51)
-#define BMI160_INT_ENABLE_2_ADDR             UINT8_C(0x52)
-#define BMI160_INT_OUT_CTRL_ADDR             UINT8_C(0x53)
-#define BMI160_INT_LATCH_ADDR                UINT8_C(0x54)
-#define BMI160_INT_MAP_0_ADDR                UINT8_C(0x55)
-#define BMI160_INT_MAP_1_ADDR                UINT8_C(0x56)
-#define BMI160_INT_MAP_2_ADDR                UINT8_C(0x57)
-#define BMI160_INT_DATA_0_ADDR               UINT8_C(0x58)
-#define BMI160_INT_DATA_1_ADDR               UINT8_C(0x59)
-#define BMI160_INT_LOWHIGH_0_ADDR            UINT8_C(0x5A)
-#define BMI160_INT_LOWHIGH_1_ADDR            UINT8_C(0x5B)
-#define BMI160_INT_LOWHIGH_2_ADDR            UINT8_C(0x5C)
-#define BMI160_INT_LOWHIGH_3_ADDR            UINT8_C(0x5D)
-#define BMI160_INT_LOWHIGH_4_ADDR            UINT8_C(0x5E)
-#define BMI160_INT_MOTION_0_ADDR             UINT8_C(0x5F)
-#define BMI160_INT_MOTION_1_ADDR             UINT8_C(0x60)
-#define BMI160_INT_MOTION_2_ADDR             UINT8_C(0x61)
-#define BMI160_INT_MOTION_3_ADDR             UINT8_C(0x62)
-#define BMI160_INT_TAP_0_ADDR                UINT8_C(0x63)
-#define BMI160_INT_TAP_1_ADDR                UINT8_C(0x64)
-#define BMI160_INT_ORIENT_0_ADDR             UINT8_C(0x65)
-#define BMI160_INT_ORIENT_1_ADDR             UINT8_C(0x66)
-#define BMI160_INT_FLAT_0_ADDR               UINT8_C(0x67)
-#define BMI160_INT_FLAT_1_ADDR               UINT8_C(0x68)
-#define BMI160_FOC_CONF_ADDR                 UINT8_C(0x69)
-#define BMI160_CONF_ADDR                     UINT8_C(0x6A)
-
-#define BMI160_IF_CONF_ADDR                  UINT8_C(0x6B)
-#define BMI160_SELF_TEST_ADDR                UINT8_C(0x6D)
-#define BMI160_OFFSET_ADDR                   UINT8_C(0x71)
-#define BMI160_OFFSET_CONF_ADDR              UINT8_C(0x77)
-#define BMI160_INT_STEP_CNT_0_ADDR           UINT8_C(0x78)
-#define BMI160_INT_STEP_CONFIG_0_ADDR        UINT8_C(0x7A)
-#define BMI160_INT_STEP_CONFIG_1_ADDR        UINT8_C(0x7B)
-#define BMI160_COMMAND_REG_ADDR              UINT8_C(0x7E)
-#define BMI160_SPI_COMM_TEST_ADDR            UINT8_C(0x7F)
-#define BMI160_INTL_PULLUP_CONF_ADDR         UINT8_C(0x85)
-
-/** BMI160 unique chip identifier */
-#define BMI160_CHIP_ID                       UINT8_C(0xD1)
 
 
 //-----------------------------------------------------------------------------
@@ -124,6 +60,9 @@
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static void delay_ms(uint32_t msec);
+static int8_t i2c_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
+static int8_t i2c_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
 
 
 //-----------------------------------------------------------------------------
@@ -131,17 +70,97 @@
 //-----------------------------------------------------------------------------
 int accel_init(void)
 {
-    int err;
-    uint8_t chip_id;
+    int8_t rslt;
+    struct bmi160_dev sensor;
+    struct bmi160_int_settg int_config;
 
-    if ((err = i2c_master_reg_read(I2C_ADDR_BMI160, BMI160_CHIP_ID_ADDR, &chip_id)) != E_NO_ERROR) {
-        PR_ERROR("i2c_reg_read failed %d", err);
-        return err;
+    sensor.id = I2C_ADDR_BMI160;
+    sensor.interface = BMI160_I2C_INTF;
+    sensor.read = i2c_read;
+    sensor.write = i2c_write;
+    sensor.delay_ms = delay_ms;
+    if ((rslt = bmi160_init(&sensor)) != BMI160_OK) {
+        PR_ERROR("bmi160_init failed %d", rslt);
+        return E_NO_DEVICE;
     }
-    if (chip_id != BMI160_CHIP_ID) {
-        PR_ERROR("invalid chip id 0x%x", chip_id);
-        return E_NOT_SUPPORTED;
+
+    /* Select the Output data rate, range of accelerometer sensor */
+    sensor.accel_cfg.odr = BMI160_ACCEL_ODR_25HZ;
+    sensor.accel_cfg.range = BMI160_ACCEL_RANGE_2G;
+    sensor.accel_cfg.bw = BMI160_ACCEL_BW_OSR4_AVG1;
+
+    /* Select the power mode of accelerometer sensor */
+    sensor.accel_cfg.power = BMI160_ACCEL_LOWPOWER_MODE;
+
+    /* Select the Output data rate, range of Gyroscope sensor */
+    sensor.gyro_cfg.odr = BMI160_GYRO_ODR_100HZ;
+    sensor.gyro_cfg.range = BMI160_GYRO_RANGE_2000_DPS;
+    sensor.gyro_cfg.bw = BMI160_GYRO_BW_NORMAL_MODE;
+
+    /* Select the power mode of Gyroscope sensor */
+    sensor.gyro_cfg.power = BMI160_GYRO_SUSPEND_MODE;
+
+    /* Set the sensor configuration */
+    if ((rslt = bmi160_set_sens_conf(&sensor)) != BMI160_OK) {
+        PR_ERROR("bmi160_set_sens_conf failed %d", rslt);
+        return E_UNKNOWN;
+    }
+
+    /* Select the Interrupt channel/pin */
+    int_config.int_channel = BMI160_INT_CHANNEL_1;// Interrupt channel/pin 1
+
+    /* Select the Interrupt type */
+    int_config.int_type = BMI160_ACC_ANY_MOTION_INT;// Choosing Any motion interrupt
+    /* Select the interrupt channel/pin settings */
+    int_config.int_pin_settg.output_en = BMI160_ENABLE;// Enabling interrupt pins to act as output pin
+    int_config.int_pin_settg.output_mode = BMI160_DISABLE;// Choosing push-pull mode for interrupt pin
+    int_config.int_pin_settg.output_type = BMI160_DISABLE;// Choosing active low output
+    int_config.int_pin_settg.edge_ctrl = BMI160_ENABLE;// Choosing edge triggered output
+    int_config.int_pin_settg.input_en = BMI160_DISABLE;// Disabling interrupt pin to act as input
+    int_config.int_pin_settg.latch_dur = BMI160_LATCH_DUR_1_25_MILLI_SEC;// non-latched output
+
+    /* Select the Any-motion interrupt parameters */
+    int_config.int_type_cfg.acc_any_motion_int.anymotion_en = BMI160_ENABLE;// 1- Enable the any-motion, 0- disable any-motion
+    int_config.int_type_cfg.acc_any_motion_int.anymotion_x = BMI160_ENABLE;// Enabling x-axis for any motion interrupt
+    int_config.int_type_cfg.acc_any_motion_int.anymotion_y = BMI160_ENABLE;// Enabling y-axis for any motion interrupt
+    int_config.int_type_cfg.acc_any_motion_int.anymotion_z = BMI160_ENABLE;// Enabling z-axis for any motion interrupt
+    int_config.int_type_cfg.acc_any_motion_int.anymotion_dur = 0;// any-motion duration
+    int_config.int_type_cfg.acc_any_motion_int.anymotion_thr = 20;// (2-g range) -> (slope_thr) * 3.91 mg, (4-g range) -> (slope_thr) * 7.81 mg, (8-g range) ->(slope_thr) * 15.63 mg, (16-g range) -> (slope_thr) * 31.25 mg
+
+    /* Set the Any-motion interrupt */
+    if ((rslt = bmi160_set_int_config(&int_config, &sensor)) != BMI160_OK) {
+        PR_ERROR("bmi160_set_int_config failed %d", rslt);
+        return E_UNKNOWN;
     }
 
     return E_NO_ERROR;
+}
+
+static void delay_ms(uint32_t msec)
+{
+    MXC_Delay(MXC_DELAY_MSEC(msec));
+}
+
+static int8_t i2c_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
+{
+    int err;
+
+    if ((err = i2c_master_reg_read_buf(dev_addr, reg_addr, data, len)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_reg_read_buf failed %d", err);
+        return BMI160_E_COM_FAIL;
+    }
+
+    return BMI160_OK;
+}
+
+static int8_t i2c_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
+{
+    int err;
+
+    if ((err = i2c_master_reg_write_buf(dev_addr, reg_addr, data, len)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_reg_read_buf failed %d", err);
+        return BMI160_E_COM_FAIL;
+    }
+
+    return BMI160_OK;
 }

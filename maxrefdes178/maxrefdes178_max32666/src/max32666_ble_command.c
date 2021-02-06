@@ -297,7 +297,7 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        lcd_backlight(1);
+        lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
         device_settings.enable_lcd = 1;
         break;
     case BLE_COMMAND_DISABLE_LCD_CMD:
@@ -305,7 +305,7 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        lcd_backlight(0);
+        lcd_backlight(0, 0);
         device_settings.enable_lcd = 0;
         break;
     case BLE_COMMAND_ENABLE_LCD_STATISCTICS_CMD:
@@ -376,6 +376,8 @@ static int ble_command_execute_rx_command(void)
         PR_ERROR("Unknwon command");
         break;
     }
+
+    timestamps.activity_detected = timer_ms_tick;
 
     return E_SUCCESS;
 }

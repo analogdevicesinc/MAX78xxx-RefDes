@@ -45,6 +45,7 @@
 #include "max32666_lcd.h"
 #include "max32666_qspi_master.h"
 #include "max32666_spi_dma.h"
+#include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_utility.h"
 
@@ -332,6 +333,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
             }
 
             PR_INFO("Video button pressed");
+            timestamps.activity_detected = timer_ms_tick;
 
             ret = QSPI_STATE_COMPLETED;
             break;
@@ -451,6 +453,7 @@ qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type_rx)
             }
 
             PR_INFO("Audio button pressed");
+            timestamps.activity_detected = timer_ms_tick;
 
             ret = QSPI_STATE_COMPLETED;
             break;

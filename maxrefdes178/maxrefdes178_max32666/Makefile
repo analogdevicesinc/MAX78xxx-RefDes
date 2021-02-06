@@ -102,16 +102,21 @@ ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
 endif
 
+# External libray source files
+SRCS += bmi160.c
+
 # Where to find source files for this test
 VPATH = src
 VPATH += ../maxrefdes178_common
 ifeq ($(MAKECMDGOALS),sla)
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 endif
+VPATH += External/BMI160_driver
 
 # Where to find header files for this test
 IPATH  = include
 IPATH += ../maxrefdes178_common
+IPATH += External/BMI160_driver
 
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE 

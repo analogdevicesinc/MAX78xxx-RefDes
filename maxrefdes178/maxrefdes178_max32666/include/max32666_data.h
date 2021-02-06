@@ -54,19 +54,28 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+typedef enum {
+    INACTIVITY_STATE_ACTIVE = 0,
+    INACTIVITY_STATE_INACTIVE_SHORT,
+    INACTIVITY_STATE_INACTIVE_LONG,
+
+    INACTIVITY_STATE_LAST
+} inactivity_state_e;
+
 typedef struct {
     uint8_t enable_ble;
     uint8_t enable_lcd;
-    uint8_t enable_max78000_audio;       // TODO
+    uint8_t enable_max78000_audio;
     uint8_t enable_max78000_audio_cnn;   // TODO
-    uint8_t enable_max78000_video;       // TODO
+    uint8_t enable_max78000_video;
     uint8_t enable_max78000_video_cnn;
-    uint8_t enable_max78000_video_flash_led;        // TODO
+    uint8_t enable_max78000_video_flash_led;
     uint8_t enable_max78000_video_and_audio_power;  // TODO
-    uint8_t enable_lcd_statistics;       // TODO
-    uint8_t enable_lcd_probabilty;       // TODO
+    uint8_t enable_lcd_statistics;
+    uint8_t enable_lcd_probabilty;
     uint8_t enable_ble_send_statistics;      // TODO
     uint8_t enable_ble_send_classification;  // TODO
+    uint8_t enable_inactivity;
 } device_settings_t;
 
 typedef struct {
@@ -86,6 +95,8 @@ typedef struct {
     uint8_t fuel_gauge_working;
     float vcell;
     uint8_t usb_chgin;
+
+    inactivity_state_e inactivity_state;
 
     uint8_t ble_running_status_changed;  // written by both core0 and core1
     uint8_t ble_connected_status_changed;  // written by both core0 and core1
@@ -115,6 +126,7 @@ typedef struct {
     uint32_t statistics_sent;
     uint32_t pmic_check;
     uint32_t led;
+    uint32_t activity_detected;
 } timestamps_t;
 
 

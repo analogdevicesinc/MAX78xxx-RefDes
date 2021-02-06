@@ -194,12 +194,12 @@ static void lcd_reset(void)
     MXC_Delay(MXC_DELAY_MSEC(25));
 }
 
-void lcd_backlight(int on)
+void lcd_backlight(int on, uint8_t level)
 {
     if (on) {
-        pmic_boost(1, 0x10);
+        pmic_boost(1, level);
     } else {
-        pmic_boost(0, 0x10);
+        pmic_boost(0, level);
     }
 }
 
@@ -331,7 +331,7 @@ void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data
 
 int lcd_init(void)
 {
-    lcd_backlight(1);
+    lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
 
     spi_deassert_cs();
     MXC_GPIO_Config(&lcd_cs_pin);

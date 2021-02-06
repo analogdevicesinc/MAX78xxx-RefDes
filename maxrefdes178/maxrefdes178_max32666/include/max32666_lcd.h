@@ -61,6 +61,6 @@
 //-----------------------------------------------------------------------------
 int lcd_init(void);
 void lcd_drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data);
-void lcd_backlight(int on);
+void lcd_backlight(int on, uint8_t level);
 
 #endif /* _MAX32666_LCD_H_ */
