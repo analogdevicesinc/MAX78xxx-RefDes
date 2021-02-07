@@ -88,18 +88,21 @@ class SettingsFragment : Fragment() {
             ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD,
             settingsItemListener
         )
+
         binding.max78000VideoFlashLedItem.setup(
             "Video Flash LED",
             ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD,
             settingsItemListener
         )
+
         binding.lcdSetting.setup(
             "LCD",
             ble_command_e.BLE_COMMAND_ENABLE_LCD_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_LCD_CMD,
             settingsItemListener
         )
+
         binding.lcdStats.setup(
             "LCD Show Statistics",
             ble_command_e.BLE_COMMAND_ENABLE_LCD_STATISCTICS_CMD,
@@ -111,6 +114,13 @@ class SettingsFragment : Fragment() {
             "LCD Show Probability",
             ble_command_e.BLE_COMMAND_ENABLE_LCD_PROBABILITY_CMD,
             ble_command_e.BLE_COMMAND_DISABLE_LCD_PROBABILITY_CMD,
+            settingsItemListener
+        )
+
+        binding.inactivityEnableItem.setup(
+            "Inactivity Timer",
+            ble_command_e.BLE_COMMAND_ENABLE_INACTIVITY_CMD,
+            ble_command_e.BLE_COMMAND_DISABLE_INACTIVITY_CMD,
             settingsItemListener
         )
 

@@ -90,9 +90,6 @@ int expander_init(void)
     MXC_GPIO_EnableInt(expander_int_pin.port, expander_int_pin.mask);
     NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(expander_int_pin.port)));
 
-    // To debug Core1 set alternate function 3
-    MXC_GPIO_Config(&core1_swd_pin);
-
     // Slave bootloader invoke pin
     GPIO_SET(slave_bl_tx_pin);
     MXC_GPIO_Config(&slave_bl_tx_pin);
@@ -203,6 +200,8 @@ int expander_select_debugger(debugger_select_e debugger_select)
     case DEBUGGER_SELECT_MAX32666_CORE1:
         // set HDK1_TARGET_SEL to high
         regval |= EXPANDER_OUTPUT_HDK1_TARGET_SEL;
+        // To debug Core1 set alternate function 3
+        MXC_GPIO_Config(&core1_swd_pin);
         snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX32666 Core1 debug selected");
         break;
     case DEBUGGER_SELECT_MAX78000_VIDEO:

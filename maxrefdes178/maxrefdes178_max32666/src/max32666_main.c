@@ -358,6 +358,7 @@ static void run_application(void)
                 refresh_screen();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES:
+                timestamps.activity_detected = timer_ms_tick;
                 if (device_status.classification_video.classification == CLASSIFICATION_UNKNOWN) {
                     lcd_data.subtitle_color = RED;
                     lcd_data.frame_color = RED;

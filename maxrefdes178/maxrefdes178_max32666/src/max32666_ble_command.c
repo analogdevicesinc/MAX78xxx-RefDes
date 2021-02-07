@@ -365,6 +365,26 @@ static int ble_command_execute_rx_command(void)
         }
         device_settings.enable_ble_send_classification = 0;
         break;
+    case BLE_COMMAND_ENABLE_INACTIVITY_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
+        device_settings.enable_inactivity = 1;
+        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "Inactivity timer enabled");
+        lcd_data.notification_color = MAGENTA;
+        timestamps.notification_received = timer_ms_tick;
+        break;
+    case BLE_COMMAND_DISABLE_INACTIVITY_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
+        device_settings.enable_inactivity = 0;
+        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "Inactivity timer disabled");
+        lcd_data.notification_color = MAGENTA;
+        timestamps.notification_received = timer_ms_tick;
+        break;
     case BLE_COMMAND_SET_DEBUGGER_CMD:
         if (ble_command_buffer.total_payload_size != 1) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);

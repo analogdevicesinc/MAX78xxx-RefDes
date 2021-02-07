@@ -382,6 +382,8 @@ enum class ble_command_e {
     BLE_COMMAND_DISABLE_SEND_STATISTICS_CMD,          // None
     BLE_COMMAND_ENABLE_SEND_CLASSIFICATION_CMD,       // None
     BLE_COMMAND_DISABLE_SEND_CLASSIFICATION_CMD,      // None
+    BLE_COMMAND_ENABLE_INACTIVITY_CMD,                // None
+    BLE_COMMAND_DISABLE_INACTIVITY_CMD,               // None
 
     // Statistics
     BLE_COMMAND_GET_STATISTICS_RES {
