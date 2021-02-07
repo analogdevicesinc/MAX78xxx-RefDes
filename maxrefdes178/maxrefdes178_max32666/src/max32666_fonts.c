@@ -410,18 +410,9 @@ void fonts_putString(uint16_t w, uint16_t h, uint16_t x, uint16_t y, const char 
     }
 }
 
-void fonts_putSubtitle(uint16_t w, uint16_t h, const char *str, FontDef font, uint16_t color, uint8_t *buff)
+void fonts_putStringCentered(uint16_t w, uint16_t h, uint16_t y, const char *str, FontDef font, uint16_t color, uint8_t *buff)
 {
     uint16_t x = (w - (font.width * strlen(str))) / 2;
-    uint16_t y = h - font.height - 3;
-
-    fonts_putString(LCD_WIDTH, LCD_HEIGHT, x, y, str, font, color, 0, 0, buff);
-}
-
-void fonts_putToptitle(uint16_t w, uint16_t h, const char *str, FontDef font, uint16_t color, uint8_t *buff)
-{
-    uint16_t x = (w - (font.width * strlen(str))) / 2;
-    uint16_t y = 3;
 
     fonts_putString(LCD_WIDTH, LCD_HEIGHT, x, y, str, font, color, 0, 0, buff);
 }

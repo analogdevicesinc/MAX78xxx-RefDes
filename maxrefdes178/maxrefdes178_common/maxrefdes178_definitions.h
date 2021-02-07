@@ -51,7 +51,7 @@
 #define QSPI_START_SYMBOL                  0xAABBCCDD
 #define QSPI_CS_ASSERT_WAIT                10         // us
 
-#define SPI_TIMEOUT_CNT                    10000000  // loop counter
+#define SPI_TIMEOUT_CNT                    1000000  // loop counter
 
 // Common I2C
 #define I2C_SPEED                          100000  // hz
@@ -71,9 +71,7 @@
 #define LCD_HEIGHT                         240
 #define LCD_BYTE_PER_PIXEL                 2  // RGB565
 #define LCD_DATA_SIZE                      (LCD_WIDTH * LCD_HEIGHT * LCD_BYTE_PER_PIXEL)
-#define LCD_SUBTITLE_SIZE                  32
-#define LCD_TOPTITLE_SIZE                  32
-#define LCD_NOTIFICATION_SIZE              40
+#define LCD_NOTIFICATION_MAX_SIZE          40
 #define LCD_ROTATION                       2  // 0-3
 
 #define LCD_CLASSIFICATION_DURATION        1000  // ms

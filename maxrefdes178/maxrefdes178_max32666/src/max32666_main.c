@@ -89,6 +89,7 @@
 // Global variables
 //-----------------------------------------------------------------------------
 static volatile int core1_init_done = 0;
+static char lcd_string_buff[LCD_NOTIFICATION_MAX_SIZE] = {0};
 
 
 //-----------------------------------------------------------------------------
@@ -211,6 +212,12 @@ int main(void)
         pmic_led_red(1);
     }
 
+//    ret = powmon_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("powmon_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
+//
 //    ret = usb_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("usb_init failed %d", ret);
@@ -220,12 +227,6 @@ int main(void)
 //    ret = touch_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("touch_init failed %d", ret);
-//        pmic_led_red(1);
-//    }
-//
-//    ret = powmon_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("powmon_init failed %d", ret);
 //        pmic_led_red(1);
 //    }
 //
@@ -277,7 +278,7 @@ int main(void)
     PR("\n");
 
     // Print logo and version
-    fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, version_string, Font_16x26, RED, maxim_logo);
+    fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, LCD_HEIGHT - 29, version_string, Font_16x26, RED, maxim_logo);
     lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
 
     // Get information from MAX78000
@@ -314,25 +315,25 @@ int main(void)
 #ifdef MAXREFDES178_RELEASE
     if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_video, sizeof(version_t))) {
         PR_ERROR("max32666 and max78000_video versions are different");
-        snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "video fw err %d.%d.%d",
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video fw err %d.%d.%d",
                 device_info.device_version.max78000_video.major,
                 device_info.device_version.max78000_video.minor,
                 device_info.device_version.max78000_video.build);
-        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_11x18, RED, maxim_logo);
+        fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 100, lcd_string_buff, Font_11x18, RED, maxim_logo);
         lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
         pmic_led_red(1);
-        while(1);
+        MXC_Delay(MXC_DELAY_SEC(5));
     }
     if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_audio, sizeof(version_t))) {
         PR_ERROR("max32666 and max78000_audio versions are different");
-        snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "audio fw err %d.%d.%d",
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "audio fw err %d.%d.%d",
                 device_info.device_version.max78000_audio.major,
                 device_info.device_version.max78000_audio.minor,
                 device_info.device_version.max78000_audio.build);
-        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_11x18, RED, maxim_logo);
+        fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 130, lcd_string_buff, Font_11x18, RED, maxim_logo);
         lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
         pmic_led_red(1);
-        while(1);
+        MXC_Delay(MXC_DELAY_SEC(5));
     }
 #endif
 
@@ -448,9 +449,14 @@ static void run_application(void)
         }
 
         // If video is disabled, draw logo and refresh periodically
-        if (!device_settings.enable_max78000_video &&
-                ((timer_ms_tick - timestamps.screen_drew) > LCD_NO_VIDEO_DURATION)) {
+        if ((timer_ms_tick - timestamps.screen_drew) > LCD_NO_VIDEO_DURATION) {
             memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
+            if (device_settings.enable_max78000_video) {
+                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "No video!");
+            } else {
+                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Video disabled");
+            }
+            fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 22, lcd_string_buff, Font_11x18, RED, lcd_data.buffer);
             refresh_screen();
         }
 
@@ -549,48 +555,46 @@ static void run_application(void)
 
 static void refresh_screen(void)
 {
-    static char line_string[20] = {0};
-
     if (!device_settings.enable_lcd) {
         return;
     }
 
     core0_icc(1); // enable icc for lcd operations
 
-    snprintf(line_string, sizeof(line_string) - 1, "%3d", device_status.statistics.battery_soc);
+    snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%3d", device_status.statistics.battery_soc);
     if (device_status.usb_chgin) {
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, line_string, Font_7x10, ORANGE, 0, 0, lcd_data.buffer);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, ORANGE, 0, 0, lcd_data.buffer);
     } else if (device_status.statistics.battery_soc <= MAX32666_SOC_WARNING_LEVEL) {
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, line_string, Font_7x10, RED, 0, 0, lcd_data.buffer);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, RED, 0, 0, lcd_data.buffer);
     } else {
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, line_string, Font_7x10, GREEN, 0, 0, lcd_data.buffer);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, GREEN, 0, 0, lcd_data.buffer);
     }
 
     if (device_settings.enable_lcd_statistics) {
         int line_pos = 3;
 
-        snprintf(line_string, sizeof(line_string) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(line_string, sizeof(line_string) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_us / 1000);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(line_string, sizeof(line_string) - 1, "Face:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Face:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-        snprintf(line_string, sizeof(line_string) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_us / 1000);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
 //        snprintf(line_string, sizeof(line_string) - 1, "vPow:%d", device_status.statistics.max78000_video_power_uw / 1000);
 //        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
 //        line_pos += 12;
 
-        snprintf(line_string, sizeof(line_string) - 1, "KWS:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "KWS:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
+        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
 //        snprintf(line_string, sizeof(line_string) - 1, "aPow:%d", device_status.statistics.max78000_audio_power_uw / 1000);
@@ -600,8 +604,8 @@ static void refresh_screen(void)
         if ((timestamps.screen_drew - timestamps.faceid_subject_names_received) < LCD_NOTIFICATION_DURATION) {
             line_pos += 5;
             for (int i = 0; i < device_status.faceid_embed_subject_names_size; i += strlen(&device_status.faceid_embed_subject_names[i]) + 1) {
-                snprintf(line_string, sizeof(line_string) - 1, "%s", &device_status.faceid_embed_subject_names[i]);
-                fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, CYAN, 0, 0, lcd_data.buffer);
+                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%s", &device_status.faceid_embed_subject_names[i]);
+                fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, CYAN, 0, 0, lcd_data.buffer);
                 line_pos += 12;
             }
         }
@@ -610,8 +614,8 @@ static void refresh_screen(void)
     // Draw FaceID frame and result
     if (device_settings.enable_max78000_video && device_settings.enable_max78000_video_cnn) {
         if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
-            strncpy(lcd_data.subtitle, device_status.classification_video.result, sizeof(lcd_data.subtitle) - 1);
-            fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.subtitle, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
+            strncpy(lcd_string_buff, device_status.classification_video.result, sizeof(lcd_string_buff) - 1);
+            fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, LCD_HEIGHT - 29, lcd_string_buff, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
         }
 
         fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
@@ -627,21 +631,21 @@ static void refresh_screen(void)
     if (device_settings.enable_max78000_audio) {
         if ((timestamps.screen_drew - timestamps.audio_result_received) < LCD_CLASSIFICATION_DURATION) {
             if (device_settings.enable_lcd_probabilty) {
-                snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "%s %0.1f",
+                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%s %0.1f",
                         device_status.classification_audio.result, (double) device_status.classification_audio.probabily);
             } else {
-                strncpy(lcd_data.toptitle, device_status.classification_audio.result, sizeof(lcd_data.toptitle) - 1);
+                strncpy(lcd_string_buff, device_status.classification_audio.result, sizeof(lcd_string_buff) - 1);
             }
 
-            fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+            fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 3, lcd_string_buff, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
         }
     } else {
-        snprintf(lcd_data.toptitle, sizeof(lcd_data.toptitle) - 1, "Audio disabled");
-        fonts_putToptitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.toptitle, Font_11x18, RED, lcd_data.buffer);
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Audio disabled");
+        fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 3, lcd_string_buff, Font_11x18, RED, lcd_data.buffer);
     }
 
     if ((timestamps.screen_drew - timestamps.notification_received) < LCD_NOTIFICATION_DURATION) {
-        fonts_putSubtitle(LCD_WIDTH, LCD_HEIGHT, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
+        fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, LCD_HEIGHT - 13, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
     }
 
     device_status.statistics.lcd_fps = (float) 1000.0 / (float)(timer_ms_tick - timestamps.screen_drew);
