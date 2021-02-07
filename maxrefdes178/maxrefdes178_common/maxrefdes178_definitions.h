@@ -203,6 +203,9 @@
 #define MAX32666_PMIC_INTERVAL             10000  // ms
 #define MAX32666_SOC_WARNING_LEVEL         10
 
+// MAX32666 Powee Accumulator
+#define MAX32666_POWMON_INTERVAL           1000  // ms
+
 // MAX32666 LED
 #define MAX32666_LED_INTERVAL              1000  // ms
 

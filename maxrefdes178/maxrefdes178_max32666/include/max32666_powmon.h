@@ -48,10 +48,6 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int powmon_init(void);
-int powmon_update(void);
-int powmon_bulk_voltage(double voltage[4]);
-int powmon_bulk_power(double power_raw[4]);
-int powmon_bulk_energy(double energy_raw[4]);
-uint32_t powmon_acc_count(void);
+int powmon_worker(void);
 
 #endif /* _MAX32666_POWMON_H_ */

@@ -124,6 +124,7 @@ typedef struct {
     uint32_t statistics_sent;
     uint32_t pmic_check;
     uint32_t led;
+    uint32_t powmon;
     uint32_t activity_detected;
 } timestamps_t;
 

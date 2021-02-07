@@ -439,7 +439,7 @@ static void run_application(void)
             }
         }
 
-        // Send periodic statistics
+        // Send BLE periodic statistics
         if (device_settings.enable_ble_send_statistics && device_status.ble_connected) {
             if ((timer_ms_tick - timestamps.statistics_sent) > BLE_STATISTICS_INTERVAL) {
                 timestamps.statistics_sent = timer_ms_tick;
@@ -448,7 +448,7 @@ static void run_application(void)
             }
         }
 
-        // If video is disabled, draw logo and refresh periodically
+        // If video is not available, draw logo and refresh periodically
         if ((timer_ms_tick - timestamps.screen_drew) > LCD_NO_VIDEO_DURATION) {
             memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
             if (device_settings.enable_max78000_video) {
@@ -499,7 +499,7 @@ static void run_application(void)
             device_status.ble_running_status_changed = 0;
         }
 
-        // Check motion inactivity
+        // Check inactivity
         if (device_settings.enable_inactivity) {
             if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_LONG_DURATION) {
                 if (device_status.inactivity_state != INACTIVITY_STATE_INACTIVE_LONG) {
@@ -538,17 +538,25 @@ static void run_application(void)
             }
         }
 
+        // Power accumulator worker
+//        if ((timer_ms_tick - timestamps.powmon) > MAX32666_POWMON_INTERVAL) {
+//            timestamps.powmon = timer_ms_tick;
+//            powmon_worker();
+//        }
+
         // LED worker
         if ((timer_ms_tick - timestamps.led) > MAX32666_LED_INTERVAL) {
             timestamps.led = timer_ms_tick;
             led_worker();
         }
 
+        // IO expander worker
         expander_worker();
 
+        // USB worker
 //        usb_worker();
 
-        // TODO: low power
+        // Sleep until an interrupt
         __WFI();
     }
 }

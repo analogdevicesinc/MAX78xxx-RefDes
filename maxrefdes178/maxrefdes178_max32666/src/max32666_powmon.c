@@ -39,6 +39,7 @@
 #include <mxc_errors.h>
 #include <stdio.h>
 
+#include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_i2c.h"
 #include "max32666_powmon.h"
@@ -58,9 +59,13 @@
 #define MAX34417_PWR_ACC_2_CMD  0x04
 #define MAX34417_PWR_ACC_3_CMD  0x05
 #define MAX34417_PWR_ACC_4_CMD  0x06
+#define MAX34417_V_CH_1_CMD     0x07
+#define MAX34417_V_CH_2_CMD     0x08
+#define MAX34417_V_CH_3_CMD     0x09
+#define MAX34417_V_CH_4_CMD     0x0A
+#define MAX34417_DEV_REV_ID_CMD 0x0F
 #define MAX34417_BULK_PWR_CMD   0x10
 #define MAX34417_BULK_VOLT_CMD  0x11
-#define MAX34417_DEV_REV_ID_CMD 0x0F
 
 #define MAX34417_CNTRL_MODE     0x80
 #define MAX34417_CNTRL_CAM      0x40
@@ -80,77 +85,35 @@
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static uint32_t convert_14to16(const uint8_t * p14);
-static uint32_t convert_24to32(const uint8_t * p24);
-static uint64_t convert_56to64(const uint8_t * p56);
+static uint16_t convert_14to16(const uint8_t *p14);
+static uint32_t convert_24to32(const uint8_t *p24);
+static uint64_t convert_56to64(const uint8_t *p56);
+static int powmon_bulk_voltage(double voltage[4]);
+static int powmon_bulk_power(double power_raw[4]);
+static int powmon_bulk_energy(double energy_raw[4]);
+static int powmon_acc_count(uint32_t *count);
+static int powmon_update(void);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-static uint32_t convert_14to16(const uint8_t * p14)
-{
-    uint32_t v16;
-    uint8_t *p16 = (uint8_t*) &v16;
-    for (uint8_t i = 0; i < 2; i++) {
-        p16[1-i] = p14[i];
-    }
-    return v16 >> 2;
-}
-
-static uint32_t convert_24to32(const uint8_t * p24)
-{
-    uint32_t v32;
-    uint8_t *p32 = (uint8_t*)&v32;
-    for (uint8_t i = 0; i < 3; i++) {
-        p32[2-i] = p24[i];
-    }
-    p32[2] = 0;
-    return v32;
-}
-
-static uint64_t convert_56to64(const uint8_t * p56)
-{
-    uint64_t v64;
-    uint8_t *p64 = (uint8_t*) &v64;
-    for (uint8_t i = 0; i < 7; i++) {
-        p64[6-i] = p56[i];
-    }
-    p64[6] = 0;
-    return v64;
-}
-
 int powmon_init(void)
 {
     int err;
-    uint8_t dev_rev_id;
+    uint8_t regval;
 
-//    uint8_t buf[2];
-//    buf[0] = MAX34417_DEV_REV_ID_CMD;
-//    mxc_i2c_req_t reqMaster;
-//    reqMaster.i2c = MAX32666_I2C;
-//    reqMaster.addr = I2C_ADDR_MAX34417;
-//    reqMaster.tx_buf = &buf[0];
-//    reqMaster.tx_len = 1;
-//    reqMaster.rx_buf = &buf[1];
-//    reqMaster.rx_len = 1;
-//    reqMaster.restart = 0;
-//    reqMaster.callback = NULL;
-//    if((err = MXC_I2C_MasterTransaction(&reqMaster)) != E_NO_ERROR) {
-//        PR_ERROR("i2c_reg_read failed %d", err);
-//        return err;
-//    }
-
-    if ((err = i2c_master_reg_read(I2C_ADDR_MAX34417, MAX34417_DEV_REV_ID_CMD, &dev_rev_id)) != E_NO_ERROR) {
+    if ((err = i2c_master_reg_read(I2C_ADDR_MAX34417, MAX34417_DEV_REV_ID_CMD, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
-    if (dev_rev_id != MAX34417_DEVICE_REV_ID) {
-        PR_ERROR("invalid device id 0x%x", dev_rev_id);
+    if (regval != MAX34417_DEVICE_REV_ID) {
+        PR_ERROR("invalid device id 0x%x", regval);
         return E_NOT_SUPPORTED;
     }
 
-    if ((err = i2c_master_reg_write(I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
+    regval = MAX34417_CNTRL_MODE;
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -158,7 +121,8 @@ int powmon_init(void)
     powmon_update();
     MXC_Delay(MXC_DELAY_MSEC(1));
 
-    if ((err = i2c_master_reg_write(I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, MAX34417_CNTRL_CAM | MAX34417_CNTRL_MODE)) != E_NO_ERROR) {
+    regval = MAX34417_CNTRL_SMM | MAX34417_CNTRL_MODE;
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX34417, MAX34417_CONTROL_CMD, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
         return err;
     }
@@ -169,7 +133,26 @@ int powmon_init(void)
     return E_NO_ERROR;
 }
 
-int powmon_update(void)
+int powmon_worker(void)
+{
+//    double voltage[4];
+    double power[4];
+
+//    powmon_bulk_voltage(voltage);
+    powmon_bulk_power(power);
+
+//    PR_INFO("V %f %f %f %f", voltage[0], voltage[1], voltage[2], voltage[3]);
+//    PR_INFO("P %g %g %g %g", power[0], power[1], power[2], power[3]);
+
+    device_status.statistics.max78000_video_power_uw = power[0] * 1000;
+    device_status.statistics.max78000_video_power_uw = power[2] * 1000;
+
+    powmon_update();
+
+    return E_NO_ERROR;
+}
+
+static int powmon_update(void)
 {
     int err;
 
@@ -181,24 +164,42 @@ int powmon_update(void)
     return E_NO_ERROR;
 }
 
-uint32_t powmon_acc_count(void)
+static uint16_t convert_14to16(const uint8_t *p14)
+{
+    return __builtin_bswap16(*((uint16_t *) p14)) >> 2;
+}
+
+static uint32_t convert_24to32(const uint8_t *p24)
+{
+    return __builtin_bswap32(*((uint32_t *) p24)) >> 8;
+}
+
+static uint64_t convert_56to64(const uint8_t *p56)
+{
+    return __builtin_bswap64(*((uint64_t *) p56)) >> 8;
+}
+
+static int powmon_acc_count(uint32_t *count)
 {
     int err;
-    static uint8_t buf[4];
+    uint8_t buf[4];
 
     if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX34417, MAX34417_ACC_COUNT_CMD, buf, sizeof(buf))) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
 
-    return convert_24to32(&buf[1]);
+    *count = convert_24to32(&buf[1]);
+
+    return E_NO_ERROR;
 }
 
-int powmon_bulk_voltage(double voltage[4])
+__attribute__((unused))
+static int powmon_bulk_voltage(double voltage[4])
 {
     int err;
     uint16_t adc;
-    static uint8_t buf[9];
+    uint8_t buf[9];
     static const double adc2v = 24.0 / (16384.0 - 1.0);
 
     if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX34417, MAX34417_BULK_VOLT_CMD, buf, sizeof(buf))) != E_NO_ERROR) {
@@ -207,14 +208,14 @@ int powmon_bulk_voltage(double voltage[4])
     }
 
     for (uint8_t i = 0; i < 4; i++) {
-        adc = convert_14to16(&buf[1 + i*2]);
+        adc = convert_14to16(&buf[1 + (i * 2)]);
         voltage[i] = (double)adc * adc2v;
-        PR_DEBUG("%g", voltage[i] );
     }
+
     return E_NO_ERROR;
 }
 
-int powmon_bulk_energy(double energy_raw[4])
+static int powmon_bulk_energy(double energy_raw[4])
 {
     int err;
     static uint8_t buf[29];
@@ -225,26 +226,30 @@ int powmon_bulk_energy(double energy_raw[4])
     }
 
     for (uint8_t i = 0; i < 4; i++) {
-        energy_raw[i] = convert_56to64(&buf[1+i*7]);
-        PR_DEBUG("%g", energy_raw[i] );
+        energy_raw[i] = convert_56to64(&buf[1 + (i * 7)]);
     }
+
     return E_NO_ERROR;
 }
 
-int powmon_bulk_power(double power_raw[4])
+static int powmon_bulk_power(double power_raw[4])
 {
     int err;
-    uint32_t acc_count = powmon_acc_count();
+    uint32_t acc_count;
+
+    if ((err = powmon_acc_count(&acc_count)) != E_NO_ERROR) {
+        PR_ERROR("powmon_acc_count failed %d", err);
+        return err;
+    }
 
     if ((err = powmon_bulk_energy(power_raw)) != E_NO_ERROR) {
         PR_ERROR("max34417_bulk_energy failed %d", err);
         return err;
     }
 
-    for (uint8_t i = 0; i < 4; i++)
-    {
+    for (uint8_t i = 0; i < 4; i++) {
         power_raw[i] = power_raw[i] / (double)acc_count;
-        PR_DEBUG("%g", power_raw[i] );
     }
+
     return E_NO_ERROR;
 }
