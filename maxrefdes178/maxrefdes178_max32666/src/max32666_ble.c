@@ -577,7 +577,7 @@ static void mainWsfInit(void)
 #if (WSF_TOKEN_ENABLED == TRUE) || (WSF_TRACE_ENABLED == TRUE)
     //ty  WsfTraceRegisterHandler(WsfBufIoWrite);
     WsfTraceRegisterHandler(max32666_trace);
-//    WsfTraceEnable(TRUE);
+    WsfTraceEnable(TRUE);
 #endif
 
     AppTerminalInit();
