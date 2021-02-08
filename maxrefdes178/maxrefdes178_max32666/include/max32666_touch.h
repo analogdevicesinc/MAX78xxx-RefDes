@@ -48,5 +48,6 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int touch_init(void);
+int touch_worker(void);
 
 #endif /* _MAX32666_TOUCH_H_ */

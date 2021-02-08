@@ -135,17 +135,25 @@ int powmon_init(void)
 
 int powmon_worker(void)
 {
+    int err;
 //    double voltage[4];
     double power[4];
 
-//    powmon_bulk_voltage(voltage);
-    powmon_bulk_power(power);
+//    if ((err = powmon_bulk_voltage(voltage)) != E_NO_ERROR) {
+//        PR_ERROR("powmon_bulk_voltage failed %d", err);
+//        return err;
+//    }
 
-//    PR_INFO("V %f %f %f %f", voltage[0], voltage[1], voltage[2], voltage[3]);
-//    PR_INFO("P %g %g %g %g", power[0], power[1], power[2], power[3]);
+    if ((err = powmon_bulk_power(power)) != E_NO_ERROR) {
+        PR_ERROR("powmon_bulk_power failed %d", err);
+        return err;
+    }
+
+//    PR_DEBUG("V %f %f %f %f", voltage[0], voltage[1], voltage[2], voltage[3]);
+    PR_DEBUG("P %g %g %g %g", power[0], power[1], power[2], power[3]);
 
     device_status.statistics.max78000_video_power_uw = power[0] * 1000;
-    device_status.statistics.max78000_video_power_uw = power[2] * 1000;
+    device_status.statistics.max78000_audio_power_uw = power[2] * 1000;
 
     powmon_update();
 

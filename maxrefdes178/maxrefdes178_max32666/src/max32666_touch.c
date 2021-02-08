@@ -30,7 +30,7 @@
  * ownership rights.
  *
  ******************************************************************************/
-
+// https://github.com/adafruit/Adafruit_FT6206_Library
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -39,8 +39,10 @@
 #include <stdio.h>
 
 #include "max32666_touch.h"
+#include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_i2c.h"
+#include "max32666_timer_led_button.h"
 
 
 //-----------------------------------------------------------------------------
@@ -48,16 +50,39 @@
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "touch"
 
-#define FT6236U_DEV_ID            0x11
+// FT6236U register map
+#define FT6236U_DEV_MODE_ADDR      0x00  //!< Device mode, either WORKING or FACTORY
+#define FT6236U_GEST_ID            0x01  //!< Device mode, either WORKING or FACTORY
+#define FT6236U_TD_STATUS_ADDR     0x02  //!< Number of touch points
+#define FT6236U_FACTORYMODE_ADDR   0x40  //!< Factory mode
+#define FT6236U_TH_GROUP_ADDR      0x80  //!< Threshold for touch detection
+#define FT6236U_PERIODACTIVE_ADDR  0x88  //!< Active mode report rate
+#define FT6236U_PERIODMONITOR_ADDR 0x89  //!< Monitor mode report rate
+#define FT6236U_CHIPER_ADDR        0xA3  //!< Chip selecting
+#define FT6236U_G_MODE_ADDR        0xA4  //!< Interrupt mode
+#define FT6236U_PWR_MODE_ADDR      0xA5  //!< Power mode
+#define FT6236U_FIRMID_ADDR        0xA6  //!< Firmware version
+#define FT6236U_FOCALTECH_ID_ADDR  0xA8  //!< FocalTech's panel ID
 
-#define FT6236U_DEV_MODE_ADDR     0x00
-#define FT6236U_DEV_ID_ADDR       0xA8
+// FT6236U register fields
+#define FT6236U_G_MODE_POLLING     0x00  //!< Interrupt polling mode
+#define FT6236U_G_MODE_TRIGGER     0x01  //!< Interrupt trigger mode
+
+// FT6236U expected fields
+#define FT6236U_FOCALTECH_ID       0x11  //!< FocalTech's panel ID
+#define FT6236U_CHIPER             0x64  //!< Chip selecting
+
+// FT6236U settings
+#define FT6236U_TH_GROUP           128   //!< Default threshold for touch detection
+#define FT6236U_PERIODMONITOR      20    //!< Default mMonitor mode report rate
 
 
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
+static const mxc_gpio_cfg_t touch_int_pin = MAX32666_LCD_TOUCH_INT_PIN;
 
+static volatile int touch_int_flag = 0;
 
 
 //-----------------------------------------------------------------------------
@@ -68,19 +93,70 @@
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
+void touch_int(void *cbdata)
+{
+    touch_int_flag = 1;
+}
+
 int touch_init(void)
 {
     int err;
-    uint8_t dev_id;
+    uint8_t regval;
 
-    if ((err = i2c_master_reg_read(I2C_ADDR_FT6236U, FT6236U_DEV_ID_ADDR, &dev_id)) != E_NO_ERROR) {
+    // Init IO Expander interrupt
+    MXC_GPIO_Config(&touch_int_pin);
+    MXC_GPIO_RegisterCallback(&touch_int_pin, touch_int, NULL);
+    MXC_GPIO_IntConfig(&touch_int_pin, MAX32666_LCD_TOUCH_INT_MODE);
+    MXC_GPIO_EnableInt(touch_int_pin.port, touch_int_pin.mask);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(touch_int_pin.port)));
+
+    if ((err = i2c_master_reg_read(I2C_ADDR_FT6236U, FT6236U_FOCALTECH_ID_ADDR, &regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_reg_read failed %d", err);
         return err;
     }
-    if (dev_id != FT6236U_DEV_ID) {
-        PR_ERROR("invalid device id 0x%x", dev_id);
+    if (regval != FT6236U_FOCALTECH_ID) {
+        PR_ERROR("invalid vendor id 0x%x", regval);
         return E_NOT_SUPPORTED;
     }
+
+    if ((err = i2c_master_reg_read(I2C_ADDR_FT6236U, FT6236U_CHIPER_ADDR, &regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_reg_read failed %d", err);
+        return err;
+    }
+    if (regval != FT6236U_CHIPER) {
+        PR_ERROR("invalid chip id 0x%x", regval);
+        return E_NOT_SUPPORTED;
+    }
+
+    regval = FT6236U_TH_GROUP;
+    if ((err = i2c_master_reg_write(I2C_ADDR_FT6236U, FT6236U_TH_GROUP_ADDR, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_reg_write failed %d", err);
+        return err;
+    }
+
+    regval = FT6236U_PERIODMONITOR;
+    if ((err = i2c_master_reg_write(I2C_ADDR_FT6236U, FT6236U_PERIODMONITOR_ADDR, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_reg_write failed %d", err);
+        return err;
+    }
+
+    regval = FT6236U_G_MODE_POLLING;
+    if ((err = i2c_master_reg_write(I2C_ADDR_FT6236U, FT6236U_G_MODE_ADDR, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_reg_write failed %d", err);
+        return err;
+    }
+
+    return E_NO_ERROR;
+}
+
+int touch_worker(void)
+{
+    if (!touch_int_flag) {
+        return E_NO_ERROR;
+    }
+    touch_int_flag = 0;
+
+    timestamps.activity_detected = timer_ms_tick;
 
     return E_NO_ERROR;
 }

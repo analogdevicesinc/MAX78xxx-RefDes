@@ -212,6 +212,12 @@ int main(void)
         pmic_led_red(1);
     }
 
+    ret = touch_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("touch_init failed %d", ret);
+        pmic_led_red(1);
+    }
+
 //    ret = powmon_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("powmon_init failed %d", ret);
@@ -221,12 +227,6 @@ int main(void)
 //    ret = usb_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("usb_init failed %d", ret);
-//        pmic_led_red(1);
-//    }
-//
-//    ret = touch_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("touch_init failed %d", ret);
 //        pmic_led_red(1);
 //    }
 //
@@ -504,7 +504,7 @@ static void run_application(void)
             if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_LONG_DURATION) {
                 if (device_status.inactivity_state != INACTIVITY_STATE_INACTIVE_LONG) {
                     device_status.inactivity_state = INACTIVITY_STATE_INACTIVE_LONG;
-                    // Inactive long state change
+                    // Switch to inactive long state
                     lcd_backlight(0, 0);
                     qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
                     PR_INFO("Inactive long");
@@ -512,14 +512,14 @@ static void run_application(void)
             } else if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_SHORT_DURATION) {
                 if (device_status.inactivity_state != INACTIVITY_STATE_INACTIVE_SHORT) {
                     device_status.inactivity_state = INACTIVITY_STATE_INACTIVE_SHORT;
-                    // Inactive short state change
+                    // Switch to inactive short state
                     lcd_backlight(1, MAX32666_LCD_BACKLIGHT_LOW);
                     PR_INFO("Inactive short");
                 }
             } else {
                 if (device_status.inactivity_state != INACTIVITY_STATE_ACTIVE) {
                     device_status.inactivity_state = INACTIVITY_STATE_ACTIVE;
-                    // Active state change
+                    // Switch to active state
                     lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
                     if (device_settings.enable_max78000_video) {
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
@@ -552,6 +552,9 @@ static void run_application(void)
 
         // IO expander worker
         expander_worker();
+
+        // Touch screen worker
+        touch_worker();
 
         // USB worker
 //        usb_worker();
