@@ -727,10 +727,19 @@ int ble_worker(void)
             }
         }
 
+        for (int i = 0; i < 1000; i++) {
+            wsfOsDispatcher();
+        }
+
         AppAdvStop();
 //        PalBbDisable();
 
         PR_INFO("Stop BLE");
+
+        for (int i = 0; i < 1000; i++) {
+            wsfOsDispatcher();
+        }
+
         device_status.ble_running_status_changed = 1;
         while(!device_settings.enable_ble);
         PR_INFO("Run BLE");
