@@ -600,7 +600,7 @@ static void mainWsfInit(void)
     bdAddr_t bdAddr;
     PalCfgLoadData(PAL_CFG_ID_BD_ADDR, bdAddr, sizeof(bdAddr_t));
     memcpy(device_info.ble_mac, bdAddr, sizeof(bdAddr_t));
-    PR_INFO("Setting address -- MAC %02X:%02X:%02X:%02X:%02X:%02X",
+    PR_INFO("BLE MAC %02X:%02X:%02X:%02X:%02X:%02X",
             bdAddr[5], bdAddr[4], bdAddr[3], bdAddr[2], bdAddr[1], bdAddr[0]);
     LlSetBdAddr((uint8_t *)&bdAddr);
     LlMathSetSeed((uint32_t *)&bdAddr);

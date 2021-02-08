@@ -74,9 +74,9 @@
 #define LCD_NOTIFICATION_MAX_SIZE          40
 #define LCD_ROTATION                       2  // 0-3
 
-#define LCD_CLASSIFICATION_DURATION        1000  // ms
-#define LCD_NO_VIDEO_DURATION              1000  // ms
-#define LCD_NOTIFICATION_DURATION          7000  // ms
+#define LCD_CLASSIFICATION_DURATION        UINT32_C(1000)  // ms
+#define LCD_NO_VIDEO_DURATION              UINT32_C(1000)  // ms
+#define LCD_NOTIFICATION_DURATION          UINT32_C(7000)  // ms
 
 // Common Camera
 #define CAMERA_WIDTH                       LCD_WIDTH
@@ -108,11 +108,11 @@
 #define BLE_MAX_MTU_REQUEST_SIZE           (BLE_MAX_MTU_SIZE - 4) //252
 #define BLE_MAX_PACKET_SIZE                (BLE_MAX_MTU_REQUEST_SIZE - 3) //249
 
-#define BLE_STATISTICS_INTERVAL            1000  // ms
+#define BLE_STATISTICS_INTERVAL            UINT32_C(1000)  // ms
 
 // Inactivity
-#define INACTIVITY_SHORT_DURATION          60000  // ms
-#define INACTIVITY_LONG_DURATION           300000  // ms
+#define INACTIVITY_SHORT_DURATION          UINT32_C(60000)  // ms
+#define INACTIVITY_LONG_DURATION           UINT32_C(300000)  // ms
 
 /*** MAX32666 ***/
 // MAX32666 PINS
@@ -200,14 +200,14 @@
 #define MAX32666_BLE_COMMAND_BUFFER_SIZE   FACEID_MAX_EMBEDDINGS_SIZE
 
 // MAX32666 PMIC and Fuel Gauge
-#define MAX32666_PMIC_INTERVAL             10000  // ms
+#define MAX32666_PMIC_INTERVAL             UINT32_C(10000)  // ms
 #define MAX32666_SOC_WARNING_LEVEL         10
 
 // MAX32666 Powee Accumulator
-#define MAX32666_POWMON_INTERVAL           1000  // ms
+#define MAX32666_POWMON_INTERVAL           UINT32_C(1000)  // ms
 
 // MAX32666 LED
-#define MAX32666_LED_INTERVAL              1000  // ms
+#define MAX32666_LED_INTERVAL              UINT32_C(1000)  // ms
 
 /*** MAX78000 AUDIO ***/
 // MAX78000 AUDIO PINS
