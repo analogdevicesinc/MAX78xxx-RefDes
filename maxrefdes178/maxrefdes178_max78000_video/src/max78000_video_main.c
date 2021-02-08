@@ -216,6 +216,7 @@ static int8_t decision = -2;
 static uint32_t time_counter = 0;
 static int8_t enable_cnn = 1;
 static volatile int8_t button_pressed = 0;
+static int8_t flash_led = 0;
 static int8_t enable_video = 1;
 static uint8_t *qspi_payload_buffer = NULL;
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
@@ -531,10 +532,12 @@ static void run_demo(void)
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD:
                 GPIO_CLR(gpio_flash);
                 PR_INFO("enable flash");
+                flash_led = 1;
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD:
                 GPIO_SET(gpio_flash);
                 PR_INFO("disable flash");
+                flash_led = 0;
                 break;
             }
 
@@ -544,6 +547,13 @@ static void run_demo(void)
         if (button_pressed) {
             button_pressed = 0;
             PR_INFO("button pressed");
+
+            flash_led ^= 1;
+            if (flash_led) {
+                GPIO_CLR(gpio_flash);
+            } else {
+                GPIO_SET(gpio_flash);
+            }
 
             qspi_slave_send_packet(NULL, 0, QSPI_PACKET_TYPE_VIDEO_BUTTON_PRESS_RES);
         }

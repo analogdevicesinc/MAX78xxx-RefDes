@@ -54,6 +54,18 @@
 #define FT6236U_DEV_MODE_ADDR      0x00  //!< Device mode, either WORKING or FACTORY
 #define FT6236U_GEST_ID            0x01  //!< Device mode, either WORKING or FACTORY
 #define FT6236U_TD_STATUS_ADDR     0x02  //!< Number of touch points
+#define FT6236U_P1_XH_ADDR         0x03  //!< Touch1 X
+#define FT6236U_P1_XL_ADDR         0x04  //!< Touch1 X
+#define FT6236U_P1_YH_ADDR         0x05  //!< Touch1 Y
+#define FT6236U_P1_YL_ADDR         0x06  //!< Touch1 Y
+#define FT6236U_P1_WEIGHT_ADDR     0x07  //!< Touch1 weight
+#define FT6236U_P1_MISC_ADDR       0x08  //!< Touch1 area
+#define FT6236U_P2_XH_ADDR         0x09  //!< Touch2 X
+#define FT6236U_P2_XL_ADDR         0x0A  //!< Touch2 X
+#define FT6236U_P2_YH_ADDR         0x0B  //!< Touch2 Y
+#define FT6236U_P2_YL_ADDR         0x0C  //!< Touch2 Y
+#define FT6236U_P2_WEIGHT_ADDR     0x0D  //!< Touch2 weight
+#define FT6236U_P2_MISC_ADDR       0x0E  //!< Touch2 area
 #define FT6236U_FACTORYMODE_ADDR   0x40  //!< Factory mode
 #define FT6236U_TH_GROUP_ADDR      0x80  //!< Threshold for touch detection
 #define FT6236U_PERIODACTIVE_ADDR  0x88  //!< Active mode report rate
@@ -88,6 +100,7 @@ static volatile int touch_int_flag = 0;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+static int touch_point(uint16_t *x1, uint16_t *y1);
 
 
 //-----------------------------------------------------------------------------
@@ -140,6 +153,7 @@ int touch_init(void)
         return err;
     }
 
+    // Remove this for continuous read
     regval = FT6236U_G_MODE_POLLING;
     if ((err = i2c_master_reg_write(I2C_ADDR_FT6236U, FT6236U_G_MODE_ADDR, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_reg_write failed %d", err);
@@ -151,12 +165,43 @@ int touch_init(void)
 
 int touch_worker(void)
 {
+    int err;
+    uint16_t x1;
+    uint16_t y1;
+
     if (!touch_int_flag) {
         return E_NO_ERROR;
     }
     touch_int_flag = 0;
 
+    if ((err = touch_point(&x1, &y1)) != E_NO_ERROR) {
+        PR_ERROR("touch_point failed %d", err);
+        return err;
+    }
+
+    PR_INFO("touch %d %d", x1, y1);
+
     timestamps.activity_detected = timer_ms_tick;
+
+    return E_NO_ERROR;
+}
+
+static int touch_point(uint16_t *x1, uint16_t *y1)
+{
+    int err;
+    uint8_t buff[4];
+
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_FT6236U, FT6236U_P1_XH_ADDR, buff, sizeof(buff))) != E_NO_ERROR) {
+        PR_ERROR("i2c_reg_read failed %d", err);
+        return err;
+    }
+
+    *x1 = ((buff[0] & 0x0F) << 8) | (buff[1]);
+    *y1 = ((buff[2] & 0x0F) << 8) | (buff[3]);
+
+    // 320 -> 240 map
+    *x1 *= 3 / 4.0;
+    *y1 *= 3 / 4.0;
 
     return E_NO_ERROR;
 }
