@@ -278,8 +278,8 @@ int main(void)
     PR("\n");
 
     // Print logo and version
-    fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, LCD_HEIGHT - 29, version_string, Font_16x26, RED, maxim_logo);
-    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
+    fonts_putStringCentered(LCD_HEIGHT - 29, version_string, Font_16x26, RED, maxim_logo);
+    lcd_drawImage(maxim_logo);
 
     // Get information from MAX78000
     {
@@ -312,17 +312,19 @@ int main(void)
     }
 
     // Check video and audio fw version for release builds
-#ifdef MAXREFDES178_RELEASE
     if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_video, sizeof(version_t))) {
         PR_ERROR("max32666 and max78000_video versions are different");
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video fw err %d.%d.%d",
                 device_info.device_version.max78000_video.major,
                 device_info.device_version.max78000_video.minor,
                 device_info.device_version.max78000_video.build);
-        fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 100, lcd_string_buff, Font_11x18, RED, maxim_logo);
-        lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
+        fonts_putStringCentered(100, lcd_string_buff, Font_11x18, RED, maxim_logo);
+        lcd_drawImage(maxim_logo);
+
+#ifdef MAXREFDES178_RELEASE
         pmic_led_red(1);
         MXC_Delay(MXC_DELAY_SEC(5));
+#endif
     }
     if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_audio, sizeof(version_t))) {
         PR_ERROR("max32666 and max78000_audio versions are different");
@@ -330,12 +332,14 @@ int main(void)
                 device_info.device_version.max78000_audio.major,
                 device_info.device_version.max78000_audio.minor,
                 device_info.device_version.max78000_audio.build);
-        fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 130, lcd_string_buff, Font_11x18, RED, maxim_logo);
-        lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, maxim_logo);
+        fonts_putStringCentered(130, lcd_string_buff, Font_11x18, RED, maxim_logo);
+        lcd_drawImage(maxim_logo);
+
+#ifdef MAXREFDES178_RELEASE
         pmic_led_red(1);
         MXC_Delay(MXC_DELAY_SEC(5));
-    }
 #endif
+    }
 
     PR_INFO("core 0 init completed");
 
@@ -456,7 +460,7 @@ static void run_application(void)
             } else {
                 snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Video disabled");
             }
-            fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 22, lcd_string_buff, Font_11x18, RED, lcd_data.buffer);
+            fonts_putStringCentered(22, lcd_string_buff, Font_11x18, RED, lcd_data.buffer);
             refresh_screen();
         }
 
@@ -575,11 +579,11 @@ static void refresh_screen(void)
     if (device_status.fuel_gauge_working) {
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%3d", device_status.statistics.battery_soc);
         if (device_status.usb_chgin) {
-            fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, ORANGE, 0, 0, lcd_data.buffer);
+            fonts_putString(LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, ORANGE, 0, 0, lcd_data.buffer);
         } else if (device_status.statistics.battery_soc <= MAX32666_SOC_WARNING_LEVEL) {
-            fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, RED, 0, 0, lcd_data.buffer);
+            fonts_putString(LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, RED, 0, 0, lcd_data.buffer);
         } else {
-            fonts_putString(LCD_WIDTH, LCD_HEIGHT, LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, GREEN, 0, 0, lcd_data.buffer);
+            fonts_putString(LCD_WIDTH - 24, 3, lcd_string_buff, Font_7x10, GREEN, 0, 0, lcd_data.buffer);
         }
     }
 
@@ -587,38 +591,38 @@ static void refresh_screen(void)
         int line_pos = 3;
 
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        fonts_putString(3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        fonts_putString(3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Face:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        fonts_putString(3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        fonts_putString(3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
 //        snprintf(line_string, sizeof(line_string) - 1, "vPow:%d", device_status.statistics.max78000_video_power_uw / 1000);
-//        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+//        fonts_putString(3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
 //        line_pos += 12;
 
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "KWS:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
-        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        fonts_putString(3, line_pos, lcd_string_buff, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
 //        snprintf(line_string, sizeof(line_string) - 1, "aPow:%d", device_status.statistics.max78000_audio_power_uw / 1000);
-//        fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+//        fonts_putString(3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
 //        line_pos += 12;
 
         if ((timestamps.screen_drew - timestamps.faceid_subject_names_received) < LCD_NOTIFICATION_DURATION) {
             line_pos += 5;
             for (int i = 0; i < device_status.faceid_embed_subject_names_size; i += strlen(&device_status.faceid_embed_subject_names[i]) + 1) {
                 snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%s", &device_status.faceid_embed_subject_names[i]);
-                fonts_putString(LCD_WIDTH, LCD_HEIGHT, 3, line_pos, lcd_string_buff, Font_7x10, CYAN, 0, 0, lcd_data.buffer);
+                fonts_putString(3, line_pos, lcd_string_buff, Font_7x10, CYAN, 0, 0, lcd_data.buffer);
                 line_pos += 12;
             }
         }
@@ -628,17 +632,13 @@ static void refresh_screen(void)
     if (device_settings.enable_max78000_video && device_settings.enable_max78000_video_cnn) {
         if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
             strncpy(lcd_string_buff, device_status.classification_video.result, sizeof(lcd_string_buff) - 1);
-            fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, LCD_HEIGHT - 29, lcd_string_buff, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
+            fonts_putStringCentered(LCD_HEIGHT - 29, lcd_string_buff, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
         }
 
-        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0,
-                FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, lcd_data.frame_color, lcd_data.buffer);
-        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1,
-                FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, lcd_data.frame_color, lcd_data.buffer);
-        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2,
-                FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
-        fonts_drawRectangle(LCD_WIDTH, LCD_HEIGHT, FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3,
-                FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
+        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0, FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, lcd_data.frame_color, lcd_data.buffer);
+        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1, FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, lcd_data.frame_color, lcd_data.buffer);
+        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2, FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
+        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3, FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
     }
 
     if (device_settings.enable_max78000_audio) {
@@ -650,20 +650,20 @@ static void refresh_screen(void)
                 strncpy(lcd_string_buff, device_status.classification_audio.result, sizeof(lcd_string_buff) - 1);
             }
 
-            fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 3, lcd_string_buff, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+            fonts_putStringCentered(3, lcd_string_buff, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
         }
     } else {
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Audio disabled");
-        fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, 3, lcd_string_buff, Font_11x18, RED, lcd_data.buffer);
+        fonts_putStringCentered(3, lcd_string_buff, Font_11x18, RED, lcd_data.buffer);
     }
 
     if ((timestamps.screen_drew - timestamps.notification_received) < LCD_NOTIFICATION_DURATION) {
-        fonts_putStringCentered(LCD_WIDTH, LCD_HEIGHT, LCD_HEIGHT - 13, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
+        fonts_putStringCentered(LCD_HEIGHT - 13, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
     }
 
     device_status.statistics.lcd_fps = (float) 1000.0 / (float)(timer_ms_tick - timestamps.screen_drew);
     timestamps.screen_drew = timer_ms_tick;
-    lcd_drawImage(0, 0, LCD_WIDTH, LCD_HEIGHT, lcd_data.buffer);
+    lcd_drawImage(lcd_data.buffer);
 
     core0_icc(0);
 }
