@@ -188,6 +188,8 @@ void button_int(void *cbdata)
 
 int main(void)
 {
+    MXC_Delay(MXC_DELAY_MSEC(500)); // Wait supply to be ready
+
     uint32_t sampleCounter = 0;
     mxc_tmr_unit_t units;
 

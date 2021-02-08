@@ -245,6 +245,8 @@ void button_int(void *cbdata)
 
 int main(void)
 {
+    MXC_Delay(MXC_DELAY_MSEC(500)); // Wait supply to be ready
+
     int ret = 0;
     int slaveAddress;
     int id;
@@ -382,8 +384,6 @@ int main(void)
         uint32_t  w, h;
         camera_get_image(&qspi_payload_buffer, &imgLen, &w, &h);
     }
-
-
 
     // Successfully initialize the program
     PR_INFO("Program initialized successfully");
