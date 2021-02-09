@@ -218,11 +218,17 @@ int pmic_init(void)
     // Boost converter	is disabled , set to 20V
 
     // After Power-Up :
-    // LDO1				configure as load-switch
+    // LDO1				configure as load-switch; Vout = 1.8V
     // LDO2				configure as LDO; Vout = 3.3V
     // Buck1 converter	set to 1.8V and enable
     // Buck2 converter	set to 2.8V and enable
     // Boost converter	set to 9.6V and enable when needed
+
+    // LDO1 : in 1V8, out 1V8_AUX - AI 1V8: SRAM, power acc, button, SWD/UART switches, VREGO_A, camera, audio codec, microphone, SWCLK pullup
+    // LDO2 : in SYS, out 3V3_AUX - AI 3V3: power acc, RGB LED, flash LED,
+    // Buck1: out 1V8             - audio codec, LCD controller, ext flash, accel, button, expander, HDK switch, bootloader UART switchm I2C pullup
+    // Buck2: out 2V8_AUX         - touch, LCD controller, AI 2V8: VREGI, VDDIOH, camera
+    // Boost: out VBL             - LCD backlight
 
     // Configure LDO and Buck outputs
     if ((err = pmic_ldo2(1)) != E_NO_ERROR) {
@@ -234,14 +240,8 @@ int pmic_init(void)
     // i2c bus lock issue fix
     i2c_master_init();
 
-    if ((err = pmic_buck2(0)) != E_NO_ERROR) {
-        PR_ERROR("max20303_buck2 failed %d", err);
-        return err;
-    }
-    MXC_Delay(MXC_DELAY_MSEC(100));
-
-    if ((err = pmic_boost(0, 0x10)) != E_NO_ERROR) {
-        PR_ERROR("max20303_boost failed %d", err);
+    if ((err = pmic_buck1(1)) != E_NO_ERROR) {
+        PR_ERROR("max20303_buck1 failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(10));
@@ -252,17 +252,23 @@ int pmic_init(void)
     }
     MXC_Delay(MXC_DELAY_MSEC(10));
 
-    if ((err = pmic_buck1(1)) != E_NO_ERROR) {
-        PR_ERROR("max20303_buck1 failed %d", err);
+    if ((err = pmic_buck2(0)) != E_NO_ERROR) {
+        PR_ERROR("max20303_buck2 failed %d", err);
         return err;
     }
-    MXC_Delay(MXC_DELAY_MSEC(10));
+    MXC_Delay(MXC_DELAY_MSEC(100));
 
     if ((err = pmic_buck2(1)) != E_NO_ERROR) {
         PR_ERROR("max20303_buck2 failed %d", err);
         return err;
     }
     MXC_Delay(MXC_DELAY_MSEC(100));
+
+    if ((err = pmic_boost(0, 0x10)) != E_NO_ERROR) {
+        PR_ERROR("max20303_boost failed %d", err);
+        return err;
+    }
+    MXC_Delay(MXC_DELAY_MSEC(10));
 
     // Turn off all PMIC LEDs at startup
     if ((err = pmic_led_red(0)) != E_NO_ERROR) {
