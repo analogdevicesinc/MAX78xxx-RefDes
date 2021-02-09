@@ -440,6 +440,10 @@ static void run_application(void)
                         sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
                 }
                 qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
+
+                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "FaceID signature updated");
+                lcd_data.notification_color = GREEN;
+                timestamps.notification_received = timer_ms_tick;
                 break;
             case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
                 timestamps.faceid_subject_names_received = timer_ms_tick;
