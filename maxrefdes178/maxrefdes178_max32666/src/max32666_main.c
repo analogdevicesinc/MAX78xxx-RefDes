@@ -277,6 +277,12 @@ int main(void)
     }
     PR("\n");
 
+    /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
+   if ((ret = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO)) != E_NO_ERROR) {
+       PR_ERROR("expander_debug_select failed %d", ret);
+       pmic_led_red(1);
+   }
+
     // Print logo and version
     fonts_putStringCentered(LCD_HEIGHT - 29, version_string, Font_16x26, RED, maxim_logo);
     lcd_drawImage(maxim_logo);

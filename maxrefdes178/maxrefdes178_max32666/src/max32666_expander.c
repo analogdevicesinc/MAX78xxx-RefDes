@@ -107,20 +107,16 @@ int expander_init(void)
     // Set IO ports to open drain
     // logic-high for an open-drain output is high impedance
     // Any open-drain port can be used as an input by setting the open-drain output to logic-high
-    regval = 0xff;
+    regval = (EXPANDER_IO_BOOTLOADER_INVOKE | EXPANDER_IO_EXPANSION3_IO);
     if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_PORTS, regval)) != E_NO_ERROR) {
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
 
-    if ((err = i2c_master_byte_read(I2C_ADDR_MAX7325_PORTS, &regval)) != E_NO_ERROR) {
-        PR_ERROR("i2c_master_byte_read failed %d", err);
-        return err;
-    }
-
-    /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
-    if ((err = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO)) != E_NO_ERROR) {
-        PR_ERROR("expander_debug_select failed %d", err);
+    // Set UART_TARGET_SEL to deassert bootloader invoke pin
+    regval = (EXPANDER_OUTPUT_UART_TARGET_SEL);
+    if ((err = i2c_master_byte_write(I2C_ADDR_MAX7325_OUTPUTS, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
 
