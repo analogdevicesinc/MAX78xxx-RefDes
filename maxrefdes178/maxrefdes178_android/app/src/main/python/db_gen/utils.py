@@ -32,6 +32,7 @@ Utility functions to generate embeddings and I/O operations
 import os
 import csv
 import copy
+from datetime import datetime,timezone
 from collections import defaultdict
 import numpy as np
 import scipy
@@ -166,6 +167,8 @@ def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, ver
     """Creates embeddings for each image in the given folder and appends to the existing embedding
     dictionary
     """
+    proc_img_log = {'timestamp': '', 'subjects': []}
+
     existing_db_dict = db_dict
     db_dict = defaultdict(dict)
     img_list = []
@@ -173,6 +176,7 @@ def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, ver
     subject_list = sorted(os.listdir(folder_path))
     for subject in subject_list:
         print(f'Processing subject: {subject}')
+        proc_img_log['subjects'].append({'name': subject, 'good_photos': [], 'bad_photos': []})
         img_id = 0
         subject_path = os.path.join(folder_path, subject)
         if not os.path.isdir(subject_path):
@@ -197,6 +201,16 @@ def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, ver
                     img_list.append(img)
                     db_dict[subject]['Embedding_%d' % img_id] = {'emb': current_embedding,
                                                                  'img': img}
+                    proc_img_log['subjects'][-1]['good_photos'].append(file)
+                else:
+                    proc_img_log['subjects'][-1]['bad_photos'].append(file)
+            else:
+                proc_img_log['subjects'][-1]['bad_photos'].append(file)
+
+    now_utc = datetime.now(timezone.utc)
+    proc_img_log['timestamp'] = now_utc.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+    print(proc_img_log)
 
     # Summary and determination of max photo per user
     max_photo = 0
@@ -246,7 +260,7 @@ def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, ver
                 integrated_db[subj] = integrated_db[subj]
         db_dict = integrated_db
 
-    return db_dict, preview
+    return db_dict, proc_img_log, preview
 
 
 def get_face_image(img, mtcnn, min_prob=0.8):

@@ -31,6 +31,7 @@ Script to generate Face Id embeddings
 import argparse
 import os
 import os.path as path
+import json
 from ai85.ai85_adapter import AI85SimulatorAdapter
 from mtcnn.mtcnn import MTCNN
 from utils import append_db_file_from_path, save_embedding_db, create_embeddings_include_file
@@ -59,15 +60,15 @@ def create_db(db, db_filename):
 
     ai85_adapter = AI85SimulatorAdapter(MODEL_PATH)
 
-    embedding_db, _ = append_db_file_from_path(db, face_detector, ai85_adapter,
-                                               db_dict=None, verbose=True)
+    embedding_db, proc_img_log, _ = append_db_file_from_path(db, face_detector, ai85_adapter,
+                                                             db_dict=None, verbose=True)
     if not embedding_db:
         print(f'Cannot create a DB file. No face could be detected from the images in folder ',
               f'`{db}`')
         return False
     print(f'(create_db)db: {db}')
-    save_embedding_db(embedding_db, path.join(db, db_filename + '.bin'),
-                      add_prev_imgs=False)
+    save_embedding_db(embedding_db, path.join(db, db_filename + '.bin'), add_prev_imgs=False)
+    json.dump(proc_img_log, path.join(db, db_filename + '_result.json'))
     print(f'(create_db)db: {db}')                  
     create_embeddings_include_file(db, db_filename, path.join(path.dirname(CURRENT_DIR), 'include'))
     return True
@@ -82,7 +83,7 @@ def create_db_from_folder(args):
 
     ai85_adapter = AI85SimulatorAdapter(MODEL_PATH)
 
-    embedding_db, _ = append_db_file_from_path(args.db, face_detector, ai85_adapter,
+    embedding_db, proc_img_log, _ = append_db_file_from_path(args.db, face_detector, ai85_adapter,
                                                db_dict=None, verbose=True)
     if not embedding_db:
         print(f'Cannot create a DB file. No face could be detected from the images in folder ',
@@ -91,6 +92,8 @@ def create_db_from_folder(args):
 
     save_embedding_db(embedding_db, path.join(CURRENT_DIR, args.db_filename + '.bin'),
                       add_prev_imgs=False)
+    with open(path.join(CURRENT_DIR, args.db_filename + '_result.json'), 'w') as json_file:
+        json.dump(proc_img_log, json_file, ensure_ascii=False, indent=4)
     create_embeddings_include_file(CURRENT_DIR, args.db_filename, args.include_path)
 
 
