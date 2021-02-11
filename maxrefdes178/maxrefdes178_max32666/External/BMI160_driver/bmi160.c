@@ -6313,7 +6313,7 @@ static int8_t configure_offset_enable(const struct bmi160_foc_conf *foc_conf, st
 static int8_t trigger_foc(struct bmi160_offsets *offset, struct bmi160_dev const *dev)
 {
     int8_t rslt;
-    uint8_t foc_status;
+    uint8_t foc_status = 0;
     uint8_t cmd = BMI160_START_FOC_CMD;
     uint8_t timeout = 0;
     uint8_t data_array[20];

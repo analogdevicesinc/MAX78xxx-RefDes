@@ -184,6 +184,12 @@ int main(void)
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
+    ret = ext_sram_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("ext_sram_init failed %d", ret);
+        pmic_led_red(1);
+    }
+
     ret = lcd_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("lcd_init failed %d", ret);
@@ -233,12 +239,6 @@ int main(void)
 //    ret = ext_flash_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("ext_flash_init failed %d", ret);
-//        pmic_led_red(1);
-//    }
-//
-//    ret = ext_sram_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("ext_sram_init failed %d", ret);
 //        pmic_led_red(1);
 //    }
 //

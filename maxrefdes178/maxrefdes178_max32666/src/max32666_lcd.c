@@ -126,13 +126,12 @@ static const mxc_gpio_cfg_t lcd_cs_pin = MAX32666_LCD_CS_PIN;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static void lcd_reset(void);
-static void lcd_sendCommand(uint8_t command);
-static void lcd_sendSmallData(uint8_t data);
-static void lcd_sendData(uint8_t *data, uint32_t dataLen);
-static void lcd_configure(void);
-static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-static void spi_init(void);
+static int lcd_reset(void);
+static int lcd_sendCommand(uint8_t command);
+static int lcd_sendSmallData(uint8_t data);
+static int lcd_sendData(uint8_t *data, uint32_t dataLen);
+static int lcd_configure(void);
+static int lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 static void spi_assert_cs(void);
 static void spi_deassert_cs(void);
 
@@ -147,14 +146,6 @@ void MAX32666_LCD_DMA_IRQ_HAND()
     spi_dma_int_handler(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 }
 
-static void spi_init(void)
-{
-    // Initialize SPI peripheral
-    spi_dma_master_init(MAX32666_LCD_SPI, MAX32666_LCD_MAP, MAX32666_LCD_SPI_SPEED, 0);
-
-    NVIC_EnableIRQ(MAX32666_LCD_DMA_IRQ);
-}
-
 static void spi_assert_cs(void)
 {
     GPIO_CLR(lcd_cs_pin);
@@ -165,45 +156,55 @@ static void spi_deassert_cs(void)
     GPIO_SET(lcd_cs_pin);
 }
 
-static void lcd_sendCommand(uint8_t command)
+static int lcd_sendCommand(uint8_t command)
 {
     GPIO_CLR(lcd_dc_pin);
     spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, &command, NULL, 1, MAX32666_LCD_DMA_REQSEL_SPITX, NULL);
     spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
+
+    return E_NO_ERROR;
 }
 
-static void lcd_sendSmallData(uint8_t data)
+static int lcd_sendSmallData(uint8_t data)
 {
     GPIO_SET(lcd_dc_pin);
     spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, &data, NULL, 1, MAX32666_LCD_DMA_REQSEL_SPITX, NULL);
     spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
+
+    return E_NO_ERROR;
 }
 
-static void lcd_sendData(uint8_t *data, uint32_t dataLen)
+static int lcd_sendData(uint8_t *data, uint32_t dataLen)
 {
     GPIO_SET(lcd_dc_pin);
     spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, NULL, dataLen, MAX32666_LCD_DMA_REQSEL_SPITX, NULL);
     spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
+
+    return E_NO_ERROR;
 }
 
-static void lcd_reset(void)
+static int lcd_reset(void)
 {
     expander_clear_output(EXPANDER_OUTPUT_RESET_LCD);
     MXC_Delay(MXC_DELAY_MSEC(25));
     expander_set_output(EXPANDER_OUTPUT_RESET_LCD);
     MXC_Delay(MXC_DELAY_MSEC(25));
+
+    return E_NO_ERROR;
 }
 
-void lcd_backlight(int on, uint8_t level)
+int lcd_backlight(int on, uint8_t level)
 {
     if (on) {
         pmic_boost(1, level);
     } else {
         pmic_boost(0, level);
     }
+
+    return E_NO_ERROR;
 }
 
-static void lcd_configure(void)
+static int lcd_configure(void)
 {
     spi_assert_cs();
 
@@ -274,6 +275,8 @@ static void lcd_configure(void)
     lcd_sendCommand(ST7789_DISPON);    //  Main screen turned on
 
     spi_deassert_cs();
+
+    return E_NO_ERROR;
 }
 
 /**
@@ -281,7 +284,7 @@ static void lcd_configure(void)
  * @param xi&yi -> coordinates of window
  * @return none
  */
-static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+static int lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
     uint16_t x_start = x0 + X_SHIFT, x_end = x1 + X_SHIFT;
     uint16_t y_start = y0 + Y_SHIFT, y_end = y1 + Y_SHIFT;
@@ -301,6 +304,8 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
 
     lcd_sendCommand(ST7789_RAMWR);
     spi_deassert_cs();
+
+    return E_NO_ERROR;
 }
 
 /**
@@ -310,7 +315,7 @@ static void lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
  * @param data -> pointer of the Image array
  * @return none
  */
-void lcd_drawImage(uint8_t *data)
+int lcd_drawImage(uint8_t *data)
 {
     static const uint16_t x = 0;
     static const uint16_t y = 0;
@@ -319,7 +324,7 @@ void lcd_drawImage(uint8_t *data)
 
     if (spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
         PR_WARN("lcd spi busy");
-        return;
+        return E_BUSY;
     }
 
     lcd_setAddrWindow(x, y, x + w - 1, y + h - 1);
@@ -332,10 +337,14 @@ void lcd_drawImage(uint8_t *data)
 //    spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, NULL, (w * h * LCD_BYTE_PER_PIXEL), MAX32666_LCD_DMA_REQSEL_SPITX, NULL);
 //    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 //    spi_deassert_cs();
+
+    return E_NO_ERROR;
 }
 
 int lcd_init(void)
 {
+    int ret;
+
     lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
 
     spi_deassert_cs();
@@ -344,11 +353,20 @@ int lcd_init(void)
     GPIO_SET(lcd_dc_pin);
     MXC_GPIO_Config(&lcd_dc_pin);
 
-    expander_set_output(EXPANDER_OUTPUT_RESET_LCD);
+    if ((ret = expander_set_output(EXPANDER_OUTPUT_RESET_LCD)) != E_NO_ERROR) {
+        PR_ERROR("expander_set_output fail %d", ret);
+        return ret;
+    }
 
     lcd_reset();
 
-    spi_init();
+    // Initialize SPI peripheral
+    if ((ret = spi_dma_master_init(MAX32666_LCD_SPI, MAX32666_LCD_MAP, MAX32666_LCD_SPI_SPEED, 0)) != E_NO_ERROR) {
+        PR_ERROR("spi_dma_master_init fail %d", ret);
+        return ret;
+    }
+
+    NVIC_EnableIRQ(MAX32666_LCD_DMA_IRQ);
 
     lcd_configure();
 

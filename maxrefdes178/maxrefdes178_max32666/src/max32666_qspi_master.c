@@ -137,6 +137,8 @@ int qspi_master_wait_audio_int(void)
 
 int qspi_master_init(void)
 {
+    int ret;
+
     GPIO_SET(video_cs_pin);
     MXC_GPIO_Config(&video_cs_pin);
 
@@ -149,7 +151,10 @@ int qspi_master_init(void)
     GPIO_SET(audio_rw_pin);
     MXC_GPIO_Config(&audio_rw_pin);
 
-    spi_dma_master_init(MAX32666_QSPI, MAX32666_QSPI_MAP, QSPI_SPEED, 1);
+    if ((ret = spi_dma_master_init(MAX32666_QSPI, MAX32666_QSPI_MAP, QSPI_SPEED, 1)) != E_NO_ERROR) {
+        PR_ERROR("spi_dma_master_init fail %d", ret);
+        return ret;
+    }
 
     NVIC_EnableIRQ(MAX32666_QSPI_DMA_IRQ);
 

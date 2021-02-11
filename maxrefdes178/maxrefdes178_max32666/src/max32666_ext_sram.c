@@ -38,8 +38,9 @@
 #include <mxc_errors.h>
 #include <stdio.h>
 
-#include "max32666_ext_sram.h"
 #include "max32666_debug.h"
+#include "max32666_ext_sram.h"
+#include "max32666_spi_dma.h"
 #include "maxrefdes178_utility.h"
 
 
@@ -56,12 +57,14 @@
 #define SRAM_RDMR   0x05    // Read mode register
 #define SRAM_WRMR   0x01    // Write mode register
 
+#define SRAM_MODE   0x41
+
 
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static const mxc_gpio_cfg_t sram_cs_pin  = MAX32666_SRAM_CS_PIN;
-
+static const mxc_gpio_cfg_t sram_cs_pin    = MAX32666_SRAM_CS_PIN;
+static const mxc_gpio_cfg_t sram_hold_pin  = MAX32666_SRAM_HOLD_PIN;
 
 
 //-----------------------------------------------------------------------------
@@ -74,8 +77,101 @@ static const mxc_gpio_cfg_t sram_cs_pin  = MAX32666_SRAM_CS_PIN;
 //-----------------------------------------------------------------------------
 int ext_sram_init(void)
 {
-    GPIO_SET(sram_cs_pin);
+    int ret;
+    uint8_t buff = 0;
+
     MXC_GPIO_Config(&sram_cs_pin);
+    MXC_GPIO_Config(&sram_hold_pin);
+
+    GPIO_SET(sram_cs_pin);  // cs disable
+    GPIO_SET(sram_hold_pin);  // hold pin
+
+    // Initialize SPI mode
+    if ((ret = spi_dma_master_init(MAX32666_QSPI, MAX32666_QSPI_MAP, QSPI_SPEED, 0)) != E_NO_ERROR) {
+        PR_ERROR("spi_dma_master_init fail %d", ret);
+        return ret;
+    }
+    NVIC_EnableIRQ(MAX32666_QSPI_DMA_IRQ);
+
+    // Enable QUAD I/O access
+    GPIO_CLR(sram_cs_pin);  // cs enable
+    buff = SRAM_EQIO;
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, &buff, NULL, 1, MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    GPIO_SET(sram_cs_pin);  // cs disable
+
+    // Initialize QSPI mode
+    if ((ret = spi_dma_master_init(MAX32666_QSPI, MAX32666_QSPI_MAP, QSPI_SPEED, 1)) != E_NO_ERROR) {
+        PR_ERROR("spi_dma_master_init fail %d", ret);
+        return ret;
+    }
+    NVIC_EnableIRQ(MAX32666_QSPI_DMA_IRQ);
+
+    // Write mode register
+    GPIO_CLR(sram_cs_pin);  // cs enable
+    buff = SRAM_WRMR;
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, &buff, NULL, 1, MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    buff = SRAM_MODE;  // Hold function disabled, Burst Mode
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, &buff, NULL, 1, MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    GPIO_SET(sram_cs_pin);  // cs disable
+
+    // Read mode register
+    GPIO_CLR(sram_cs_pin);  // cs enable
+    buff = SRAM_RDMR;
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, &buff, NULL, 1, MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, &buff, 1, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    GPIO_SET(sram_cs_pin);  // cs disable
+
+    if (buff != SRAM_MODE) {
+        PR_ERROR("write mode failed");
+        return E_COMM_ERR;
+    }
+
+//    ext_sram_write(0x1000, write_buf, sizeof(write_buf));
+//    ext_sram_read(0x1000, read_buf, sizeof(read_buf));
+
+    return E_NO_ERROR;
+}
+
+int ext_sram_read(uint32_t address, uint8_t *buf, uint32_t len)
+{
+    uint8_t command[5];
+
+    command[0] = SRAM_READ;
+    command[1] = (address & 0xFF0000) >> 16;
+    command[2] = (address & 0x00FF00) >> 8;
+    command[3] = (address & 0x0000FF);
+    command[4] = 0;
+
+    GPIO_CLR(sram_cs_pin);  // cs enable
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, command, NULL, sizeof(command), MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, buf, len, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    GPIO_SET(sram_cs_pin);  // cs disable
+
+    return E_NO_ERROR;
+}
+
+int ext_sram_write(uint32_t address, uint8_t *buf, uint32_t len)
+{
+    uint8_t command[4];
+
+    command[0] = SRAM_WRITE;
+    command[1] = (address & 0xFF0000)>>16;
+    command[2] = (address & 0x00FF00)>>8;
+    command[3] = (address & 0x0000FF);
+
+    GPIO_CLR(sram_cs_pin);  // cs enable
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, command, NULL, sizeof(command), MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, buf, NULL, len, MAX32666_QSPI_DMA_REQSEL_SPITX, NULL);
+    spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+    GPIO_SET(sram_cs_pin);  // cs disable
 
     return E_NO_ERROR;
 }

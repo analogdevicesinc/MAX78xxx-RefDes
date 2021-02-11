@@ -48,5 +48,7 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int ext_sram_init(void);
+int ext_sram_read(uint32_t address, uint8_t *buf, uint32_t len);
+int ext_sram_write(uint32_t address, uint8_t *buf, uint32_t len);
 
 #endif /* _MAX32666_EXT_SRAM_H_ */

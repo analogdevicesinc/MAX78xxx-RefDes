@@ -226,7 +226,7 @@ int pmic_init(void)
 
     // LDO1 : in 1V8, out 1V8_AUX - AI 1V8: SRAM, power acc, button, SWD/UART switches, VREGO_A, camera, audio codec, microphone, SWCLK pullup
     // LDO2 : in SYS, out 3V3_AUX - AI 3V3: power acc, RGB LED, flash LED,
-    // Buck1: out 1V8             - audio codec, LCD controller, ext flash, accel, button, expander, HDK switch, bootloader UART switchm I2C pullup
+    // Buck1: out 1V8             - audio codec, LCD controller, ext flash, accel, button, expander, HDK switch, bootloader UART switch, I2C pullup
     // Buck2: out 2V8_AUX         - touch, LCD controller, AI 2V8: VREGI, VDDIOH, camera
     // Boost: out VBL             - LCD backlight
 
