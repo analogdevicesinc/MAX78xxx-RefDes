@@ -49,8 +49,6 @@
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "extfls"
 
-#define MX25_ADDR               0
-#define MX25_SPIXFC_WIDTH       MXC_SPIXF_WIDTH_4
 #define MX25_EXP_ID             0x00C2953A
 
 
@@ -89,6 +87,39 @@ int ext_flash_init(void)
         PR_ERROR("invalid chip id 0x%x", id);
         return E_NOT_SUPPORTED;
     }
+
+    // Enable Quad mode
+    if ((err = MX25_Quad(1)) != E_NO_ERROR) {
+        PR_ERROR("MX25_Quad failed %d", err);
+        return err;
+    }
+
+//    uint8_t test_write[50];
+//    uint8_t test_read[100];
+//    for (int i = 0; i < sizeof(test_write); i++) {
+//        test_write[i] = i & 0xff;
+//    }
+//
+//    if ((err = MX25_Erase(0x00000, MX25_Erase_4K)) != E_NO_ERROR) {
+//        PR_ERROR("MX25_Erase failed %d", err);
+//        return err;
+//    }
+//
+//    if ((err = MX25_Program_Page(0x00000, test_write, sizeof(test_write), MXC_SPIXF_WIDTH_4)) != E_NO_ERROR) {
+//        PR_ERROR("MX25_Program_Page failed %d", err);
+//        return err;
+//    }
+//
+//    if ((err = MX25_Read(0x00000, test_read, sizeof(test_read), MXC_SPIXF_WIDTH_4)) != E_NO_ERROR) {
+//        PR_ERROR("MX25_Read failed %d", err);
+//        return err;
+//    }
+//
+//    for (int i = 0; i < sizeof(test_read); i++) {
+//        if (test_read[i] != (i & 0xff)) {
+//           PR_ERROR("%d 0x%x 0x%x", i, test_read[i], (i & 0xff));
+//        }
+//    }
 
     return E_NO_ERROR;
 }

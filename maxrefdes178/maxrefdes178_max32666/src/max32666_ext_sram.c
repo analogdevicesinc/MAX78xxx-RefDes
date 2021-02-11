@@ -131,8 +131,20 @@ int ext_sram_init(void)
         return E_COMM_ERR;
     }
 
-//    ext_sram_write(0x1000, write_buf, sizeof(write_buf));
-//    ext_sram_read(0x1000, read_buf, sizeof(read_buf));
+//    uint8_t test_write[100];
+//    uint8_t test_read[100];
+//    for (int i = 0; i < sizeof(test_write); i++) {
+//        test_write[i] = i & 0xff;
+//    }
+//
+//    ext_sram_write(0x1000, test_write, sizeof(test_write));
+//    ext_sram_read(0x1000, test_read, sizeof(test_read));
+//
+//    for (int i = 0; i < sizeof(test_read); i++) {
+//        if (test_read[i] != (i & 0xff)) {
+//           PR_ERROR("%d 0x%x 0x%x", i, test_read[i], (i & 0xff));
+//        }
+//    }
 
     return E_NO_ERROR;
 }
