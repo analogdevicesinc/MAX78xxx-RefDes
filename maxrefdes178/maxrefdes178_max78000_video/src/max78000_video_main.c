@@ -63,7 +63,8 @@
 #define S_MODULE_NAME          "main"
 
 //#define PRINT_TIME_CNN
-#define CAMERA_FREQ     (20 * 1000 * 1000)
+#define CAMERA_FREQ_LOW     (5 * 1000 * 1000)
+#define CAMERA_FREQ_HIGH    (20 * 1000 * 1000)
 
 
 //-----------------------------------------------------------------------------
@@ -337,7 +338,7 @@ int main(void)
     }
 
     // Initialize the camera driver.
-    ret = camera_init(CAMERA_FREQ);
+    ret = camera_init(CAMERA_FREQ_HIGH);
     if (ret != E_NO_ERROR) {
         PR_ERROR("Camera init failed! %d", ret);
         fail();
@@ -500,12 +501,16 @@ static void run_demo(void)
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD:
                 PR_INFO("enable video");
                 enable_video = 1;
+                // Enable camera
+                GPIO_CLR(gpio_camera);
                 camera_start_capture_image();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD:
                 PR_INFO("disable video");
                 enable_video = 0;
                 MXC_PCIF_Stop();
+                // Disable camera
+                GPIO_SET(gpio_camera);
                 GPIO_CLR(gpio_red);
                 GPIO_CLR(gpio_green);
                 break;
@@ -539,6 +544,16 @@ static void run_demo(void)
                 PR_INFO("disable flash");
                 flash_led = 0;
                 break;
+            case QSPI_PACKET_TYPE_VIDEO_ENABLE_LOW_RATE_CMD:
+                MXC_PT_Stop(MXC_F_PTG_ENABLE_PT0);
+                MXC_PT_SqrWaveConfig(0, CAMERA_FREQ_LOW);
+                MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_DISABLE_LOW_RATE_CMD:
+                MXC_PT_Stop(MXC_F_PTG_ENABLE_PT0);
+                MXC_PT_SqrWaveConfig(0, CAMERA_FREQ_HIGH);
+                MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
+                break;
             }
 
             qspi_slave_set_rx_state(QSPI_STATE_IDLE);
@@ -559,13 +574,7 @@ static void run_demo(void)
         }
 
         if (!enable_video) {
-            // Disable camera
-            GPIO_SET(gpio_camera);
-
             __WFI();
-
-            // Enable camera
-            GPIO_CLR(gpio_camera);
             continue;
         }
 

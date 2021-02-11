@@ -350,10 +350,22 @@ int main(void)
                 break;
             case QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD:
                 PR_INFO("enable audio");
+
+//                GPIO_SET(gpio_cnn_boost);
+//                GPIO_SET(gpio_audio_osc);
+//                GPIO_SET(gpio_mic_en);
+//                cnn_enable(MXC_S_GCR_PCLKDIV_CNNCLKSEL_PCLK, MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1);
+
                 enable_audio = 1;
                 break;
             case QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD:
                 PR_INFO("disable audio");
+
+//                GPIO_CLR(gpio_cnn_boost);
+//                GPIO_CLR(gpio_audio_osc);
+//                GPIO_CLR(gpio_mic_en);
+//                cnn_disable();
+
                 enable_audio = 0;
                 break;
             case QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD:

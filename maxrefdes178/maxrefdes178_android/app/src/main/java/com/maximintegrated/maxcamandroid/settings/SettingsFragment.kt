@@ -89,6 +89,13 @@ class SettingsFragment : Fragment() {
             settingsItemListener
         )
 
+        binding.max78000VideoLowRateItem.setup(
+            "Video Low Rate",
+            ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_LOW_RATE_CMD,
+            ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_LOW_RATE_CMD,
+            settingsItemListener
+        )
+
         binding.max78000VideoFlashLedItem.setup(
             "Video Flash LED",
             ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,

@@ -351,6 +351,8 @@ typedef enum {
 
     QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD,  // None
     QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD, // None
+    QSPI_PACKET_TYPE_VIDEO_ENABLE_LOW_RATE_CMD,   // None
+    QSPI_PACKET_TYPE_VIDEO_DISABLE_LOW_RATE_CMD,  // None
 
     QSPI_PACKET_TYPE_VIDEO_BUTTON_PRESS_RES, // None
     QSPI_PACKET_TYPE_AUDIO_BUTTON_PRESS_RES, // None
@@ -382,6 +384,8 @@ typedef enum {
 // BLE command types
 typedef enum {
 //  Command                             Command Payload Description
+    //// v0.4 commands
+
     // Communication
     BLE_COMMAND_ABORT_CMD = 0,           // None
     BLE_COMMAND_INVALID_RES,             // None
@@ -490,6 +494,11 @@ typedef enum {
 
     // Debugger Selection
     BLE_COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
+
+
+    //// v0.5 commands
+    BLE_COMMAND_ENABLE_MAX78000_VIDEO_LOW_RATE_CMD,   // None
+    BLE_COMMAND_DISABLE_MAX78000_VIDEO_LOW_RATE_CMD,  // None
 
     BLE_COMMAND_LAST
 } ble_command_e;

@@ -418,6 +418,10 @@ enum class ble_command_e {
     // Debugger Selection
     BLE_COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
 
+    //// v0.5 commands
+    BLE_COMMAND_ENABLE_MAX78000_VIDEO_LOW_RATE_CMD,   // None
+    BLE_COMMAND_DISABLE_MAX78000_VIDEO_LOW_RATE_CMD,  // None
+
     BLE_COMMAND_LAST;
 
     open fun parse(arr: ByteArray): IBlePacket {
