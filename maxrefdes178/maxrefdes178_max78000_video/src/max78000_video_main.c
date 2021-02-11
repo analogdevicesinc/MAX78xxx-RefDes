@@ -338,7 +338,7 @@ int main(void)
     }
 
     // Initialize the camera driver.
-    ret = camera_init(CAMERA_FREQ_HIGH);
+    ret = camera_init(CAMERA_FREQ_HIGH, MXC_TMR1);
     if (ret != E_NO_ERROR) {
         PR_ERROR("Camera init failed! %d", ret);
         fail();
