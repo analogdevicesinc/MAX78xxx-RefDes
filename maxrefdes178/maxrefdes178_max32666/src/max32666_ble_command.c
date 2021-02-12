@@ -295,6 +295,7 @@ static int ble_command_execute_rx_command(void)
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
+        pmic_ldo1(1);
         pmic_buck2(1);
         device_settings.enable_max78000_video_and_audio_power = 1;
         break;
@@ -304,12 +305,16 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         pmic_buck2(0);
+        pmic_ldo1(0);
         device_settings.enable_max78000_video_and_audio_power = 0;
         break;
     case BLE_COMMAND_ENABLE_LCD_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
+        }
+        if (device_settings.enable_max78000_video) {
+            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
         }
         lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
         device_settings.enable_lcd = 1;
@@ -320,6 +325,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         lcd_backlight(0, 0);
+        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
         device_settings.enable_lcd = 0;
         break;
     case BLE_COMMAND_ENABLE_LCD_STATISCTICS_CMD:
