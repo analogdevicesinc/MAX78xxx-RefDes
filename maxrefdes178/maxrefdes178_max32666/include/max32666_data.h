@@ -110,10 +110,7 @@ typedef struct {
 typedef struct {
     uint8_t buffer[LCD_DATA_SIZE];
     char notification[LCD_NOTIFICATION_MAX_SIZE];
-    uint16_t subtitle_color;
-    uint16_t toptitle_color;
     uint16_t notification_color;
-    uint16_t frame_color;
 } lcd_data_t;
 
 typedef struct {

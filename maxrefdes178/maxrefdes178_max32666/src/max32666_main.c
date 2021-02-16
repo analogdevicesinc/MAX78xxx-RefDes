@@ -93,6 +93,9 @@ static char lcd_string_buff[LCD_NOTIFICATION_MAX_SIZE] = {0};
 static char version_string[10] = {0};
 static char usn_string[(sizeof(serial_num_t) + 1) * 3] = {0};
 static char mac_string[(sizeof(device_info.ble_mac) + 1) * 3] = {0};
+static uint16_t video_string_color;
+static uint16_t video_frame_color;
+static uint16_t audio_string_color;
 
 
 //-----------------------------------------------------------------------------
@@ -306,6 +309,8 @@ int main(void)
     fonts_putStringCentered(LCD_HEIGHT - 13, usn_string, Font_7x10, BLACK, maxim_logo);
     lcd_drawImage(maxim_logo);
 
+    MXC_Delay(MXC_DELAY_MSEC(600));
+
     // Get information from MAX78000
     {
         qspi_packet_type_e qspi_packet_type_rx = 0;
@@ -384,7 +389,7 @@ static void run_application(void)
 {
     qspi_packet_type_e qspi_packet_type_rx = 0;
     lcd_data.notification_color = BLUE;
-    lcd_data.frame_color = WHITE;
+    video_frame_color = WHITE;
 
     // Main application loop
     while (1) {
@@ -397,16 +402,16 @@ static void run_application(void)
             case QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES:
                 timestamps.activity_detected = timer_ms_tick;
                 if (device_status.classification_video.classification == CLASSIFICATION_UNKNOWN) {
-                    lcd_data.subtitle_color = RED;
-                    lcd_data.frame_color = RED;
+                    video_string_color = RED;
+                    video_frame_color = RED;
                 } else if (device_status.classification_video.classification == CLASSIFICATION_LOW_CONFIDENCE) {
-                    lcd_data.subtitle_color = YELLOW;
-                    lcd_data.frame_color = YELLOW;
+                    video_string_color = YELLOW;
+                    video_frame_color = YELLOW;
                 } else if (device_status.classification_video.classification == CLASSIFICATION_DETECTED) {
-                    lcd_data.subtitle_color = GREEN;
-                    lcd_data.frame_color = GREEN;
+                    video_string_color = GREEN;
+                    video_frame_color = GREEN;
                 } else if (device_status.classification_video.classification == CLASSIFICATION_NOTHING) {
-                    lcd_data.frame_color = WHITE;
+                    video_frame_color = WHITE;
                 }
 
                 if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
@@ -419,11 +424,11 @@ static void run_application(void)
                 timestamps.activity_detected = timer_ms_tick;
 
                 if (device_status.classification_audio.classification == CLASSIFICATION_UNKNOWN) {
-                    lcd_data.toptitle_color = RED;
+                    audio_string_color = RED;
                 } else if (device_status.classification_audio.classification == CLASSIFICATION_LOW_CONFIDENCE) {
-                    lcd_data.toptitle_color = YELLOW;
+                    audio_string_color = YELLOW;
                 } else if (device_status.classification_audio.classification == CLASSIFICATION_DETECTED) {
-                    lcd_data.toptitle_color = GREEN;
+                    audio_string_color = GREEN;
 
                     if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
                         device_settings.enable_lcd = 0;
@@ -668,11 +673,11 @@ static void refresh_screen(void)
     if (device_settings.enable_max78000_video && device_settings.enable_max78000_video_cnn) {
         if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
             strncpy(lcd_string_buff, device_status.classification_video.result, sizeof(lcd_string_buff) - 1);
-            fonts_putStringCentered(LCD_HEIGHT - 29, lcd_string_buff, Font_16x26, lcd_data.subtitle_color, lcd_data.buffer);
+            fonts_putStringCentered(LCD_HEIGHT - 29, lcd_string_buff, Font_16x26, video_string_color, lcd_data.buffer);
         }
 
-        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0, FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, lcd_data.frame_color, lcd_data.buffer);
-        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1, FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, lcd_data.frame_color, lcd_data.buffer);
+        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0, FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, video_frame_color, lcd_data.buffer);
+        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1, FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, video_frame_color, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2, FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3, FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
     }
@@ -686,7 +691,7 @@ static void refresh_screen(void)
                 strncpy(lcd_string_buff, device_status.classification_audio.result, sizeof(lcd_string_buff) - 1);
             }
 
-            fonts_putStringCentered(3, lcd_string_buff, Font_16x26, lcd_data.toptitle_color, lcd_data.buffer);
+            fonts_putStringCentered(3, lcd_string_buff, Font_16x26, audio_string_color, lcd_data.buffer);
         }
     } else {
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Audio disabled");
