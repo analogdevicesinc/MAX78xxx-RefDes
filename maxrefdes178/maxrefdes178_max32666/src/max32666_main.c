@@ -90,6 +90,9 @@
 //-----------------------------------------------------------------------------
 static volatile int core1_init_done = 0;
 static char lcd_string_buff[LCD_NOTIFICATION_MAX_SIZE] = {0};
+static char version_string[10] = {0};
+static char usn_string[(sizeof(serial_num_t) + 1) * 3] = {0};
+static char mac_string[(sizeof(device_info.ble_mac) + 1) * 3] = {0};
 
 
 //-----------------------------------------------------------------------------
@@ -109,7 +112,6 @@ static void refresh_screen(void);
 int main(void)
 {
     int ret = 0;
-    char version_string[10] = {0};
 
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel = 0x00;
@@ -271,20 +273,37 @@ int main(void)
         PR_ERROR("MXC_SYS_GetUSN failed %d", ret);
         pmic_led_red(1);
     }
-    PR_INFO("MAX32666 Serial number: ");
-    for (int i = 0; i < sizeof(device_info.device_serial_num.max32666); i++) {
-        PR("%02X", device_info.device_serial_num.max32666[i]);
-    }
-    PR("\n");
+    snprintf(usn_string, sizeof(usn_string) - 1, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+            device_info.device_serial_num.max32666[0],
+            device_info.device_serial_num.max32666[1],
+            device_info.device_serial_num.max32666[2],
+            device_info.device_serial_num.max32666[3],
+            device_info.device_serial_num.max32666[4],
+            device_info.device_serial_num.max32666[5],
+            device_info.device_serial_num.max32666[6],
+            device_info.device_serial_num.max32666[7],
+            device_info.device_serial_num.max32666[8],
+            device_info.device_serial_num.max32666[9],
+            device_info.device_serial_num.max32666[10],
+            device_info.device_serial_num.max32666[11],
+            device_info.device_serial_num.max32666[12]);
+    PR_INFO("MAX32666 Serial number: %s", usn_string);
+
+    snprintf(mac_string, sizeof(mac_string) - 1, "%02X:%02X:%02X:%02X:%02X:%02X",
+            device_info.ble_mac[5], device_info.ble_mac[4], device_info.ble_mac[3],
+            device_info.ble_mac[2], device_info.ble_mac[1], device_info.ble_mac[0]);
+    PR_INFO("MAX32666 BLE MAC: %s", mac_string);
 
     /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
-   if ((ret = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO)) != E_NO_ERROR) {
+    if ((ret = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO)) != E_NO_ERROR) {
        PR_ERROR("expander_debug_select failed %d", ret);
        pmic_led_red(1);
-   }
+    }
 
     // Print logo and version
-    fonts_putStringCentered(LCD_HEIGHT - 29, version_string, Font_16x26, RED, maxim_logo);
+    fonts_putStringCentered(LCD_HEIGHT - 63, version_string, Font_16x26, BLACK, maxim_logo);
+    fonts_putStringCentered(LCD_HEIGHT - 34, mac_string, Font_11x18, BLUE, maxim_logo);
+    fonts_putStringCentered(LCD_HEIGHT - 13, usn_string, Font_7x10, BLACK, maxim_logo);
     lcd_drawImage(maxim_logo);
 
     // Get information from MAX78000
@@ -303,7 +322,7 @@ int main(void)
             qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
             qspi_master_wait_video_int();
             qspi_master_worker(&qspi_packet_type_rx);
-            if (device_info.device_version.max78000_video.major && device_info.device_version.max78000_video.minor) {
+            if (device_info.device_version.max78000_video.major || device_info.device_version.max78000_video.minor) {
                 break;
             }
         }
@@ -311,40 +330,47 @@ int main(void)
             qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
             qspi_master_wait_audio_int();
             qspi_master_worker(&qspi_packet_type_rx);
-            if (device_info.device_version.max78000_audio.major && device_info.device_version.max78000_audio.minor) {
+            if (device_info.device_version.max78000_audio.major || device_info.device_version.max78000_audio.minor) {
                 break;
             }
         }
-    }
 
-    // Check video and audio fw version for release builds
-    if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_video, sizeof(version_t))) {
-        PR_ERROR("max32666 and max78000_video versions are different");
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video fw err %d.%d.%d",
-                device_info.device_version.max78000_video.major,
-                device_info.device_version.max78000_video.minor,
-                device_info.device_version.max78000_video.build);
-        fonts_putStringCentered(100, lcd_string_buff, Font_11x18, RED, maxim_logo);
-        lcd_drawImage(maxim_logo);
+        ret = E_NO_ERROR;
+        // Check video and audio fw version
+        if (!(device_info.device_version.max78000_video.major || device_info.device_version.max78000_video.minor)) {
+            PR_ERROR("max78000_video communication error");
+            ret = E_COMM_ERR;
+            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video comm error");
+            fonts_putStringCentered(100, lcd_string_buff, Font_11x18, RED, maxim_logo);
+        } else if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_video, sizeof(version_t))) {
+            PR_ERROR("max32666 and max78000_video versions are different");
+            ret = E_INVALID;
+            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video fw err %d.%d.%d",
+                    device_info.device_version.max78000_video.major,
+                    device_info.device_version.max78000_video.minor,
+                    device_info.device_version.max78000_video.build);
+            fonts_putStringCentered(100, lcd_string_buff, Font_11x18, RED, maxim_logo);
+        }
 
-#ifdef MAXREFDES178_RELEASE
-        pmic_led_red(1);
-        MXC_Delay(MXC_DELAY_SEC(5));
-#endif
-    }
-    if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_audio, sizeof(version_t))) {
-        PR_ERROR("max32666 and max78000_audio versions are different");
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "audio fw err %d.%d.%d",
-                device_info.device_version.max78000_audio.major,
-                device_info.device_version.max78000_audio.minor,
-                device_info.device_version.max78000_audio.build);
-        fonts_putStringCentered(130, lcd_string_buff, Font_11x18, RED, maxim_logo);
-        lcd_drawImage(maxim_logo);
+        if (!(device_info.device_version.max78000_audio.major || device_info.device_version.max78000_audio.minor)) {
+            PR_ERROR("max78000_audio communication error");
+            ret = E_COMM_ERR;
+            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "audio comm error");
+            fonts_putStringCentered(130, lcd_string_buff, Font_11x18, RED, maxim_logo);
+        } else if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_audio, sizeof(version_t))) {
+            PR_ERROR("max32666 and max78000_audio versions are different");
+            ret = E_INVALID;
+            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "audio fw err %d.%d.%d",
+                    device_info.device_version.max78000_audio.major,
+                    device_info.device_version.max78000_audio.minor,
+                    device_info.device_version.max78000_audio.build);
+            fonts_putStringCentered(130, lcd_string_buff, Font_11x18, RED, maxim_logo);
+        }
 
-#ifdef MAXREFDES178_RELEASE
-        pmic_led_red(1);
-        MXC_Delay(MXC_DELAY_SEC(5));
-#endif
+        if (ret != E_NO_ERROR) {
+            lcd_drawImage(maxim_logo);
+            MXC_Delay(MXC_DELAY_SEC(5));
+        }
     }
 
     PR_INFO("core 0 init completed");
