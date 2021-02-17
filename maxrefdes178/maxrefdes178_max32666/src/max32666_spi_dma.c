@@ -199,7 +199,7 @@ int spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_in
 
     // Set SPI DMA TX and RX Thresholds
     if (data_out) {
-        spi->dma |= (31 << MXC_F_SPI_DMA_TX_FIFO_LEVEL_POS);
+        spi->dma |= (1 << MXC_F_SPI_DMA_TX_FIFO_LEVEL_POS);
     }
     if (data_in) {
         spi->dma |= (0 << MXC_F_SPI_DMA_TX_FIFO_LEVEL_POS);
