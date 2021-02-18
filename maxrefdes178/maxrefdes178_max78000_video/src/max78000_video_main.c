@@ -554,6 +554,9 @@ static void run_demo(void)
                 MXC_PT_SqrWaveConfig(0, CAMERA_FREQ_HIGH);
                 MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
                 break;
+            default:
+                PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
+                break;
             }
 
             qspi_slave_set_rx_state(QSPI_STATE_IDLE);

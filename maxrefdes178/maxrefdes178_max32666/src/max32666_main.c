@@ -558,14 +558,18 @@ static void run_application(void)
                 if (device_status.inactivity_state != INACTIVITY_STATE_INACTIVE_SHORT) {
                     device_status.inactivity_state = INACTIVITY_STATE_INACTIVE_SHORT;
                     // Switch to inactive short state
-                    lcd_backlight(1, MAX32666_LCD_BACKLIGHT_LOW);
+                    if (device_settings.enable_lcd) {
+                        lcd_backlight(1, MAX32666_LCD_BACKLIGHT_LOW);
+                    }
                     PR_INFO("Inactive short");
                 }
             } else {
                 if (device_status.inactivity_state != INACTIVITY_STATE_ACTIVE) {
                     device_status.inactivity_state = INACTIVITY_STATE_ACTIVE;
                     // Switch to active state
-                    lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
+                    if (device_settings.enable_lcd) {
+                        lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
+                    }
                     if (device_settings.enable_max78000_video) {
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
                     }
