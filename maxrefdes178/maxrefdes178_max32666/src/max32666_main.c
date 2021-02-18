@@ -306,7 +306,7 @@ int main(void)
     // Print logo and version
     fonts_putStringCentered(LCD_HEIGHT - 63, version_string, Font_16x26, BLACK, maxim_logo);
     fonts_putStringCentered(LCD_HEIGHT - 34, mac_string, Font_11x18, BLUE, maxim_logo);
-    fonts_putStringCentered(LCD_HEIGHT - 13, usn_string, Font_7x10, BLACK, maxim_logo);
+    fonts_putStringCentered(3, usn_string, Font_7x10, BLACK, maxim_logo);
     lcd_drawImage(maxim_logo);
 
     MXC_Delay(MXC_DELAY_MSEC(600));
@@ -374,7 +374,20 @@ int main(void)
 
         if (ret != E_NO_ERROR) {
             lcd_drawImage(maxim_logo);
-            MXC_Delay(MXC_DELAY_SEC(5));
+            pmic_led_red(1);
+            while(1) {
+                if (device_settings.enable_ble && device_status.ble_connected) {
+                    ble_command_worker();
+                }
+                expander_worker();
+
+                if ((timer_ms_tick - timestamps.screen_drew) > 250) {
+                    memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
+                    fonts_putStringCentered(LCD_HEIGHT - 13, lcd_data.notification, Font_7x10, lcd_data.notification_color, lcd_data.buffer);
+                    timestamps.screen_drew = timer_ms_tick;
+                    lcd_drawImage(lcd_data.buffer);
+                }
+            }
         }
     }
 
