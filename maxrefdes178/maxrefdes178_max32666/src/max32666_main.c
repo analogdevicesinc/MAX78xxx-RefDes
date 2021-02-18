@@ -570,7 +570,7 @@ static void run_application(void)
                     if (device_settings.enable_lcd) {
                         lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
                     }
-                    if (device_settings.enable_max78000_video) {
+                    if (device_settings.enable_max78000_video && device_settings.enable_lcd) {
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
                     }
                     PR_INFO("Active");
