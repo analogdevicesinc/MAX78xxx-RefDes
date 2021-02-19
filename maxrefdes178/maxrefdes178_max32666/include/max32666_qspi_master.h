@@ -55,9 +55,12 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int qspi_master_init(void);
+int qspi_master_video_tx_worker(void);
+int qspi_master_video_rx_worker(qspi_packet_type_e *qspi_packet_type_rx);
+int qspi_master_audio_tx_worker(void);
+int qspi_master_audio_rx_worker(qspi_packet_type_e *qspi_packet_type_rx);
 int qspi_master_send_video(uint8_t *data, uint32_t data_size, uint8_t data_type);
 int qspi_master_send_audio(uint8_t *data, uint32_t data_size, uint8_t data_type);
-qspi_state_e qspi_master_worker(qspi_packet_type_e *qspi_packet_type);
 int qspi_master_wait_video_int(void);
 int qspi_master_wait_audio_int(void);
 

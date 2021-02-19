@@ -317,7 +317,7 @@ int main(void)
         for (int try = 0; try < 3; try++) {
             qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
             qspi_master_wait_video_int();
-            qspi_master_worker(&qspi_packet_type_rx);
+            qspi_master_video_rx_worker(&qspi_packet_type_rx);
             if (device_status.faceid_embed_subject_names_size) {
                 break;
             }
@@ -326,7 +326,7 @@ int main(void)
         for (int try = 0; try < 3; try++) {
             qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
             qspi_master_wait_video_int();
-            qspi_master_worker(&qspi_packet_type_rx);
+            qspi_master_video_rx_worker(&qspi_packet_type_rx);
             if (device_info.device_version.max78000_video.major || device_info.device_version.max78000_video.minor) {
                 break;
             }
@@ -334,7 +334,7 @@ int main(void)
         for (int try = 0; try < 3; try++) {
             qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_VERSION_CMD);
             qspi_master_wait_audio_int();
-            qspi_master_worker(&qspi_packet_type_rx);
+            qspi_master_audio_rx_worker(&qspi_packet_type_rx);
             if (device_info.device_version.max78000_audio.major || device_info.device_version.max78000_audio.minor) {
                 break;
             }
@@ -404,10 +404,13 @@ static void run_application(void)
     lcd_data.notification_color = BLUE;
     video_frame_color = WHITE;
 
+    core0_icc(1);
+
     // Main application loop
     while (1) {
-        // Handle received QSPI packets
-        if (qspi_master_worker(&qspi_packet_type_rx) == QSPI_STATE_COMPLETED) {
+
+        // Handle Video QSPI RX
+        if (qspi_master_video_rx_worker(&qspi_packet_type_rx) == E_NO_ERROR) {
             switch(qspi_packet_type_rx) {
             case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
                 refresh_screen();
@@ -432,6 +435,28 @@ static void run_application(void)
                         sizeof(device_status.classification_video), (uint8_t *) &device_status.classification_video);
                 }
                 break;
+            case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
+                if (device_status.ble_connected) {
+                    ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
+                        sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
+                }
+                qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
+
+                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "FaceID signature updated");
+                lcd_data.notification_color = GREEN;
+                timestamps.notification_received = timer_ms_tick;
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
+                timestamps.faceid_subject_names_received = timer_ms_tick;
+                break;
+            default:
+                break;
+            }
+        }
+
+        // Handle Audio QSPI RX
+        if (qspi_master_audio_rx_worker(&qspi_packet_type_rx) == E_NO_ERROR) {
+            switch(qspi_packet_type_rx) {
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
                 timestamps.audio_result_received = timer_ms_tick;
                 timestamps.activity_detected = timer_ms_tick;
@@ -478,24 +503,14 @@ static void run_application(void)
                     refresh_screen();
                 }
                 break;
-            case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
-                if (device_status.ble_connected) {
-                    ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
-                        sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
-                }
-                qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
-
-                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "FaceID signature updated");
-                lcd_data.notification_color = GREEN;
-                timestamps.notification_received = timer_ms_tick;
-                break;
-            case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
-                timestamps.faceid_subject_names_received = timer_ms_tick;
-                break;
             default:
                 break;
             }
         }
+
+        // Handle QSPI TX
+        qspi_master_video_tx_worker();
+        qspi_master_audio_tx_worker();
 
         // Send BLE periodic statistics
         if (device_settings.enable_ble_send_statistics && device_status.ble_connected) {
@@ -632,8 +647,6 @@ static void refresh_screen(void)
         return;
     }
 
-    core0_icc(1); // enable icc for lcd operations
-
     if (device_status.fuel_gauge_working) {
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%3d", device_status.statistics.battery_soc);
         if (device_status.usb_chgin) {
@@ -722,8 +735,6 @@ static void refresh_screen(void)
     device_status.statistics.lcd_fps = (float) 1000.0 / (float)(timer_ms_tick - timestamps.screen_drew);
     timestamps.screen_drew = timer_ms_tick;
     lcd_drawImage(lcd_data.buffer);
-
-    core0_icc(0);
 }
 
 // Similar to Core 0, the entry point for Core 1

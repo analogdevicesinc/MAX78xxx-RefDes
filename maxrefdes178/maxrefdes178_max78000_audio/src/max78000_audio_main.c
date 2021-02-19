@@ -603,7 +603,6 @@ int main(void)
                 qspi_slave_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
                         QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES);
 
-                MXC_Delay(MXC_DELAY_MSEC(5));
                 max78000_statistics.cnn_duration_us = cnn_time;
                 qspi_slave_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
                         QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES);

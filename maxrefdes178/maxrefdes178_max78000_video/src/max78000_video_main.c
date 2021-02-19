@@ -407,7 +407,6 @@ static void fail(void)
 
 static void run_demo(void)
 {
-//    uint8_t run_count = 0;
     uint32_t capture_started_time = GET_RTC_MS();
     uint32_t cnn_completed_time;
     uint32_t qspi_completed_time;
@@ -590,40 +589,6 @@ static void run_demo(void)
 
             if (enable_cnn) {
                 run_cnn(0, 0);
-
-//                switch (run_count) {
-//                case 0:
-//                    run_cnn(0, 0);
-//                    break;
-//                case 1:
-//                    run_cnn(-10, -10);
-//                    break;
-//                case 2:
-//                    run_cnn(10, 10);
-//                    break;
-//                case 3:
-//                    run_cnn(0, 0);
-//                    break;
-//                case 4:
-//                    run_cnn(-10, 10);
-//                    break;
-//                case 5:
-//                    run_cnn(10, -10);
-//                    break;
-//                }
-//               run_count++;
-//               run_count = run_count % 6;
-
-//                run_cnn(0, 0);
-//                if ((run_count % 2) == 0){
-//                    run_count = 0;
-//                    run_cnn(-10, -10);
-//                    run_cnn(10, 10);
-//                } else {
-//                    run_cnn(-10, 10);
-//                    run_cnn(10, -10);
-//                }
-//                run_count++;
             }
 
             cnn_completed_time = GET_RTC_MS();

@@ -432,7 +432,7 @@ int qspi_slave_wait_rx(void)
 
 static int qspi_slave_wait_tx(qspi_state_e qspi_state)
 {
-    uint32_t cnt = SPI_TIMEOUT_CNT;
+    uint32_t cnt = SPI_TIMEOUT_CNT * 10;
 
     while((g_qspi_state_tx != qspi_state) && cnt) {
         cnt--;
@@ -476,6 +476,7 @@ int qspi_slave_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
     if (data_size) {
         if (qspi_slave_wait_tx(QSPI_STATE_CS_DEASSERTED_HEADER) != E_NO_ERROR) {
             g_qspi_state_tx = QSPI_STATE_IDLE;
+            PR_ERROR("wait fail %d %d", data_size, data_type);
             return E_BAD_STATE;
         }
 
@@ -485,6 +486,7 @@ int qspi_slave_send_packet(uint8_t *data, uint32_t data_size, uint8_t data_type)
 
     if (qspi_slave_wait_tx(QSPI_STATE_COMPLETED) != E_NO_ERROR) {
         g_qspi_state_tx = QSPI_STATE_IDLE;
+        PR_ERROR("wait fail %d %d", data_size, data_type);
         return E_BAD_STATE;
     }
 
