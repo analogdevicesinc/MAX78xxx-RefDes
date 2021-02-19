@@ -78,11 +78,6 @@ export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
 SRCS  = max32666_main.c
-SRCS += max32666_i2c.c
-SRCS += max32666_max20303.c
-# TODO: Comment out this part once MSDK is fixed in terms of include <mxc_errors.h>
-#SRCS += max32666_sdcard.c
-SRCS += maxrefdes178_utility.c
 SRCS += board.c
 SRCS += hal_sys.c
 ifeq ($(MAKECMDGOALS),sla)
@@ -158,11 +153,7 @@ PERIPH_DRIVER_DIR=$(LIBS_DIR)/PeriphDrivers
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
 export PERIPH_DRIVER_DIR
 
-# TODO: Comment out this part once MSDK is fixed in terms of include <mxc_errors.h>
-#SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
-#FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
-#include $(FAT32_DRIVER_DIR)/fat32.mk
-#include $(SDHC_DRIVER_DIR)/sdhc.mk
+# TODO: Add USB based solution
 
 # Remove MX25 related files from bootloader as it does not utilize the on-board flash at all
 TMP_SRCS := $(SRCS)

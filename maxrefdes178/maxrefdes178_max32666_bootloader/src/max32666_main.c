@@ -92,34 +92,12 @@ static void run_application(void);
 //-----------------------------------------------------------------------------
 int main(void)
 {
-    int ret = 0;
     // Set PORT1 and PORT2 rail to VDDIO
     MXC_GPIO0->vssel =  0x00;
     MXC_GPIO1->vssel =  0x00;
 
     PR_INFO("maxrefdes178_max32666 core0 v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
 
-    ret = i2c_master_init(MAX32666_I2C, I2C_SPEED);
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("i2c_init failed %d", ret);
-        while(1);
-    }
-
-    ret = max20303_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("max20303_init failed %d", ret);
-        while(1);
-    }
-    max20303_led_green(1);
-
-    // To debug Core1 set alternate function 3
-//    MXC_GPIO_Config(&core1_swd_pin);
-
-//    ret = sdcard_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("sdcard_init failed %d", ret);
-//        max20303_led_red(1);
-//    }
     /*
      * TODO: Process files in SDCard to perform firmware upgrade
      */

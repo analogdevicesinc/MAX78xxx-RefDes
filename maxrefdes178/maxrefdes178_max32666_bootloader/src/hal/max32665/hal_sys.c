@@ -89,6 +89,7 @@ uint32_t hal_sys_get_systick_freq(void)
     } else {
         // We should not reach here
         while (1);
+        __builtin_unreachable();
         return 0;
     }
 }
