@@ -289,7 +289,7 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
                     }
                 } catch (e: Exception) {
                     status = false
-
+                    e.printStackTrace()
                 }
 
             }

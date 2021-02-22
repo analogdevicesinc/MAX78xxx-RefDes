@@ -69,7 +69,7 @@ def create_db(db, db_filename):
     print(f'(create_db)db: {db}')
     save_embedding_db(embedding_db, path.join(db, db_filename + '.bin'), add_prev_imgs=False)
 
-    with open(path.join(db, args.db_filename + '_result.json'), 'w') as json_file:
+    with open(path.join(db, db_filename + '_result.json'), 'w') as json_file:
         json.dump(proc_img_log, json_file, ensure_ascii=False, indent=4)
     print(f'(create_db)db: {db}')                  
     create_embeddings_include_file(db, db_filename, path.join(path.dirname(CURRENT_DIR), 'include'))
