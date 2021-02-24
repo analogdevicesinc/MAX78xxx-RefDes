@@ -352,7 +352,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
         device_status.ble_max_packet_size = AttGetMtu(periphCb.connId) - 3;
-        memcpy(device_status.ble_connected_peer_mac, pMsg->connOpen.peerAddr, sizeof(device_status.ble_connected_peer_mac));
+        memcpy((uint8_t *)device_status.ble_connected_peer_mac, pMsg->connOpen.peerAddr, sizeof(device_status.ble_connected_peer_mac));
 
         PR_INFO("connected");
         PR_DEBUG("connId: %d", pMsg->connOpen.hdr.param);
@@ -372,7 +372,7 @@ static void periphProcMsg(dmEvt_t *pMsg)
         device_status.ble_connected_status_changed = 1;
         device_status.ble_expected_rx_seq = 0;
         device_status.ble_next_tx_seq = 0;
-        memset(device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
+        memset((uint8_t *)device_status.ble_connected_peer_mac, 0x00, sizeof(device_status.ble_connected_peer_mac));
 
         PR_INFO("disconnected 0x%02hhX 0x%02hhX", pMsg->connClose.status, pMsg->connClose.reason);
         switch (pMsg->connClose.reason)
@@ -599,7 +599,7 @@ static void mainWsfInit(void)
 
     bdAddr_t bdAddr;
     PalCfgLoadData(PAL_CFG_ID_BD_ADDR, bdAddr, sizeof(bdAddr_t));
-    memcpy(device_info.ble_mac, bdAddr, sizeof(bdAddr_t));
+    memcpy((uint8_t *) device_info.ble_mac, bdAddr, sizeof(bdAddr_t));
     PR_INFO("BLE MAC %02X:%02X:%02X:%02X:%02X:%02X",
             bdAddr[5], bdAddr[4], bdAddr[3], bdAddr[2], bdAddr[1], bdAddr[0]);
     LlSetBdAddr((uint8_t *)&bdAddr);

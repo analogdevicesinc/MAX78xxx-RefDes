@@ -66,15 +66,15 @@ typedef struct {
 //static const mxc_gpio_cfg_t core0_int_pin = MAX32666_CORE0_INT_PIN;
 //static const mxc_gpio_cfg_t core1_int_pin = MAX32666_CORE1_INT_PIN;
 
-static ble_queue_t ble_queue_rx;
-static ble_queue_t ble_queue_tx;
+static volatile ble_queue_t ble_queue_rx;
+static volatile ble_queue_t ble_queue_tx;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int ble_queue_enq(ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container);
-static int ble_queue_deq(ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container);
+static int ble_queue_enq(volatile ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container);
+static int ble_queue_deq(volatile ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container);
 //static int ble_queue_trigger_interrupt(void)
 
 
@@ -86,7 +86,7 @@ static int ble_queue_deq(ble_queue_t *ble_queue, ble_packet_container_t *ble_pac
 //
 //}
 
-static int ble_queue_enq(ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container)
+static int ble_queue_enq(volatile ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container)
 {
     uint32_t next;
 
@@ -99,7 +99,7 @@ static int ble_queue_enq(ble_queue_t *ble_queue, ble_packet_container_t *ble_pac
         return E_OVERFLOW;
     }
 
-    memcpy(&(ble_queue->container_array[ble_queue->head]), ble_packet_container, sizeof(ble_packet_container_t));
+    memcpy((uint8_t *) &(ble_queue->container_array[ble_queue->head]), ble_packet_container, sizeof(ble_packet_container_t));
     ble_queue->head = next;
 
     MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_BLE_QUEUE);
@@ -107,7 +107,7 @@ static int ble_queue_enq(ble_queue_t *ble_queue, ble_packet_container_t *ble_pac
     return E_SUCCESS;
 }
 
-static int ble_queue_deq(ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container)
+static int ble_queue_deq(volatile ble_queue_t *ble_queue, ble_packet_container_t *ble_packet_container)
 {
     uint32_t next;
 
@@ -120,7 +120,7 @@ static int ble_queue_deq(ble_queue_t *ble_queue, ble_packet_container_t *ble_pac
 
     next = (ble_queue->tail + 1) % MAX32666_BLE_QUEUE_SIZE;
 
-    memcpy(ble_packet_container, &(ble_queue->container_array[ble_queue->tail]), sizeof(ble_packet_container_t));
+    memcpy(ble_packet_container, (uint8_t *) &(ble_queue->container_array[ble_queue->tail]), sizeof(ble_packet_container_t));
     ble_queue->tail = next;
 
     MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_BLE_QUEUE);

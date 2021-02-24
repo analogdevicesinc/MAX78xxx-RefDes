@@ -63,7 +63,7 @@ typedef enum {
 } inactivity_state_e;
 
 typedef struct {
-    uint8_t enable_ble;
+    volatile uint8_t enable_ble;  // shared with core1
     uint8_t enable_lcd;
     uint8_t enable_max78000_audio;
     uint8_t enable_max78000_audio_cnn;   // TODO
@@ -81,7 +81,7 @@ typedef struct {
 typedef struct {
     device_serial_num_t device_serial_num;
     device_version_t device_version;
-    uint8_t ble_mac[6];  // written by core1
+    volatile uint8_t ble_mac[6];  // written by core1
 } device_info_t;
 
 typedef struct {
@@ -98,13 +98,13 @@ typedef struct {
 
     inactivity_state_e inactivity_state;
 
-    uint8_t ble_running_status_changed;  // written by both core0 and core1
-    uint8_t ble_connected_status_changed;  // written by both core0 and core1
-    uint8_t ble_connected;  // written by core1
-    uint8_t ble_connected_peer_mac[6];  // written by core1
-    uint16_t ble_max_packet_size; // written by core1
-    uint8_t ble_expected_rx_seq;  // written by core1
-    uint8_t ble_next_tx_seq;  // written by core1
+    volatile uint8_t ble_running_status_changed;  // written by both core0 and core1
+    volatile uint8_t ble_connected_status_changed;  // written by both core0 and core1
+    volatile uint8_t ble_connected;  // written by core1
+    volatile uint8_t ble_connected_peer_mac[6];  // written by core1
+    volatile uint16_t ble_max_packet_size; // written by core1
+    volatile uint8_t ble_expected_rx_seq;  // written by core1
+    volatile uint8_t ble_next_tx_seq;  // written by core1
 } device_status_t;
 
 typedef struct {
