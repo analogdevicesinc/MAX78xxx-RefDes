@@ -67,6 +67,22 @@ int pmic_init(void);
 int pmic_worker(void);
 
 /**
+ * @brief  Alert interrupt handler function for MAX20303 PMIC. Before calling this function,
+ * I2C should be initialized via i2c_init() function.
+ * @param    state  Interrupt pin state.
+ * @retval   None
+ */
+void pmic_alert_int_handler(int state);
+
+/**
+ * @brief  Interrupt handler function for MAX20303 PMIC. Before calling this function, I2C should
+ * be initialized via i2c_init() function.
+ * @param    state  Interrupt pin state.
+ * @retval   None
+ */
+void pmic_int_handler(int state);
+
+/**
  * @brief  Setup for LDO1 of MAX20303 PMIC to enable or disable MAX78000 board 1.8V digital supply.
  * LDO1 is configured as load-switch. Before calling this function, PMIC should be initialized via
  * max20303_initialize() function

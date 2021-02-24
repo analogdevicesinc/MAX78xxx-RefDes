@@ -201,9 +201,12 @@ include $(MAXUSB_DIR)/maxusb.mk
 include $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/$(COMPILER)/$(TARGET_LC).mk
 
 libclean: 
-	$(MAKE)  -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
+	$(MAKE) -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
+
 slaclean: 
 	rm -r ${SCP_PACKETS}/
+
+distclean: clean libclean
 
 all:
 	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin

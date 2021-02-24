@@ -43,6 +43,7 @@
 
 #include "max32666_debug.h"
 #include "max32666_data.h"
+#include "max32666_expander.h"
 #include "max32666_pmic.h"
 #include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
@@ -74,7 +75,7 @@ volatile uint32_t timer_ms_tick = 0;
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void button1_int(void *cbdata)
+void button1_int_handler(void *cbdata)
 {
 //    device_settings.enable_ble ^= 1;
 //    if (device_settings.enable_ble) {
@@ -110,7 +111,7 @@ int timer_led_button_init(void)
 
     // Init button1 interrupt
     MXC_GPIO_Config(&button1_int_pin);
-    MXC_GPIO_RegisterCallback(&button1_int_pin, button1_int, NULL);
+    MXC_GPIO_RegisterCallback(&button1_int_pin, button1_int_handler, NULL);
     MXC_GPIO_IntConfig(&button1_int_pin, MAX32666_BUTTON1_INT_MODE);
     MXC_GPIO_EnableInt(button1_int_pin.port, button1_int_pin.mask);
     NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(button1_int_pin.port)));
@@ -147,4 +148,18 @@ int led_worker(void)
     }
 
     return E_NO_ERROR;
+}
+
+void button2_int_handler(int state)
+{
+    if (state) {
+        PR_DEBUG("SW3 released");
+    } else {
+        PR_DEBUG("SW3 pressed");
+        static debugger_select_e debugger_select = DEBUGGER_SELECT_MAX32666_CORE1;
+        debugger_select++;
+        debugger_select = debugger_select % DEBUGGER_SELECT_LAST;
+        expander_select_debugger(debugger_select);
+        timestamps.activity_detected = timer_ms_tick;
+    }
 }

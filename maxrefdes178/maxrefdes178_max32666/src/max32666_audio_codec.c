@@ -83,3 +83,8 @@ int audio_codec_init(void)
 
     return E_NO_ERROR;
 }
+
+void audio_codec_int_handler(int state)
+{
+
+}

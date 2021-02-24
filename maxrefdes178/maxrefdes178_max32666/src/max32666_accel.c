@@ -40,11 +40,14 @@
 #include <stdio.h>
 
 #include "max32666_accel.h"
+#include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_i2c.h"
+#include "max32666_timer_led_button.h"
 
 #undef LITTLE_ENDIAN
 #include "bmi160.h"
+
 
 //-----------------------------------------------------------------------------
 // Defines
@@ -134,6 +137,11 @@ int accel_init(void)
     }
 
     return E_NO_ERROR;
+}
+
+void accel_int_handler(int state)
+{
+    timestamps.activity_detected = timer_ms_tick;
 }
 
 static void delay_ms(uint32_t msec)

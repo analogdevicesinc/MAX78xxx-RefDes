@@ -48,5 +48,6 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int accel_init(void);
+void accel_int_handler(int state);
 
 #endif /* _MAX32666_ACCEL_H_ */

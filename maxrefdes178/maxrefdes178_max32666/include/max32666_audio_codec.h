@@ -48,5 +48,6 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int audio_codec_init(void);
+void audio_codec_int_handler(int state);
 
 #endif /* _MAX32666_AUDIO_CODEC_H_ */

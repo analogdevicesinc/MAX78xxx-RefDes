@@ -197,7 +197,8 @@ static int pmic_enable_charger(void);
 int pmic_init(void)
 {
     int err;
-	uint8_t regval;
+    uint8_t regval;
+    uint8_t int_flags[3];
 
     // Test connectivity by reading hardware ID
     if ((err = i2c_master_reg_read(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_HARDWARE_ID, &regval)) != E_NO_ERROR) {
@@ -288,6 +289,21 @@ int pmic_init(void)
         PR_ERROR("max20303_enable_charger failed %d", err);
         return err;
     }
+
+    // clear interrupts
+    if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_INT0, int_flags, sizeof(int_flags))) != E_NO_ERROR) {
+        PR_ERROR("i2c_master_reg_read_buf failed %d", err);
+        return err;
+    }
+
+    // enable interrupts
+    regval = 0x48; // ChgStatIntM and UsbOkIntM
+    if ((err = i2c_master_reg_write(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_INT_MASK0, regval)) != E_NO_ERROR) {
+        PR_ERROR("i2c_reg_read failed %d", err);
+        return err;
+    }
+
+    pmic_worker();
 
     return E_NO_ERROR;
 }
@@ -421,6 +437,38 @@ int pmic_worker(void)
     }
 
     return E_NO_ERROR;
+}
+
+void pmic_alert_int_handler(int state)
+{
+    int err;
+    uint8_t int_flags[3];
+
+    if (!state) {
+        if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_INT0, int_flags, sizeof(int_flags))) != E_NO_ERROR) {
+            PR_ERROR("i2c_master_reg_read_buf failed %d", err);
+            return;
+        }
+
+        PR_INFO("pmic alert int 0x%x 0x%x 0x%x", int_flags[0], int_flags[1], int_flags[2]);
+    }
+}
+
+void pmic_int_handler(int state)
+{
+    int err;
+    uint8_t int_flags[3];
+
+    if (!state) {
+        if ((err = i2c_master_reg_read_buf(I2C_ADDR_MAX20303_PMIC, MAX20303_REG_INT0, int_flags, sizeof(int_flags))) != E_NO_ERROR) {
+            PR_ERROR("i2c_master_reg_read_buf failed %d", err);
+            return;
+        }
+
+        PR_DEBUG("pmic int 0x%x 0x%x 0x%x", int_flags[0], int_flags[1], int_flags[2]);
+
+        pmic_worker();
+    }
 }
 
 int pmic_led_red(int on)

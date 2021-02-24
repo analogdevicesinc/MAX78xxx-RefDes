@@ -39,6 +39,8 @@
 #include <mxc_delay.h>
 #include <mxc_errors.h>
 
+#include "max32666_accel.h"
+#include "max32666_audio_codec.h"
 #include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
@@ -46,6 +48,7 @@
 #include "max32666_lcd.h"
 #include "max32666_i2c.h"
 #include "max32666_timer_led_button.h"
+#include "max32666_pmic.h"
 #include "maxrefdes178_utility.h"
 
 
@@ -142,40 +145,19 @@ int expander_worker(void)
     }
 
     if (buff[1] & EXPANDER_INPUT_BUTTON_2) {
-        if (buff[0] & EXPANDER_INPUT_BUTTON_2) {
-            PR_DEBUG("SW3 released");
-        } else {
-            PR_DEBUG("SW3 pressed");
-            static debugger_select_e debugger_select = DEBUGGER_SELECT_MAX32666_CORE1;
-            debugger_select++;
-            debugger_select = debugger_select % DEBUGGER_SELECT_LAST;
-            expander_select_debugger(debugger_select);
-            timestamps.activity_detected = timer_ms_tick;
-        }
+        button2_int_handler(!!(buff[0] & EXPANDER_INPUT_BUTTON_2));
     }
     if (buff[1] & EXPANDER_INPUT_INT_ACC) {
-        timestamps.activity_detected = timer_ms_tick;
+        accel_int_handler(!!(buff[0] & EXPANDER_INPUT_INT_ACC));
     }
     if (buff[1] & EXPANDER_INPUT_ALERT_PMIC) {
-        if (buff[0] & EXPANDER_INPUT_ALERT_PMIC) {
-            PR_DEBUG("pmic alert int asserted");
-        } else {
-            PR_DEBUG("pmic alert int deasserted");
-        }
+        pmic_alert_int_handler(!!(buff[0] & EXPANDER_INPUT_ALERT_PMIC));
     }
     if (buff[1] & EXPANDER_INPUT_INT_CODEC) {
-        if (buff[0] & EXPANDER_INPUT_INT_CODEC) {
-            PR_INFO("codec int asserted");
-        } else {
-            PR_INFO("codec int deasserted");
-        }
+        audio_codec_int_handler(!!(buff[0] & EXPANDER_INPUT_INT_CODEC));
     }
     if (buff[1] & EXPANDER_INPUT_INT_PMIC) {
-        if (buff[0] & EXPANDER_INPUT_INT_PMIC) {
-            PR_DEBUG("pmic int asserted");
-        } else {
-            PR_DEBUG("pmic int deasserted");
-        }
+        pmic_int_handler(!!(buff[0] & EXPANDER_INPUT_INT_PMIC));
     }
 
     return E_NO_ERROR;
