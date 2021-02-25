@@ -90,8 +90,8 @@ extern const FontDef Font_16x26;
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-void fonts_putString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff);
-void fonts_putStringCentered(uint16_t y, const char *str, FontDef font, uint16_t color, uint8_t *buff);
+void fonts_putString(uint16_t x, uint16_t y, const char *str, const FontDef *font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff);
+void fonts_putStringCentered(uint16_t y, const char *str, const FontDef *font, uint16_t color, uint8_t *buff);
 void fonts_drawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t *buff);
 void fonts_drawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, uint8_t *buff);
 

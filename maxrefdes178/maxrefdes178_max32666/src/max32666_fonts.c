@@ -359,22 +359,22 @@ const FontDef Font_16x26 = {16, 26, Font16x26};
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static void fonts_putChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff);
+static void fonts_putChar(uint16_t x, uint16_t y, char ch, const FontDef *font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-static void fonts_putChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff)
+static void fonts_putChar(uint16_t x, uint16_t y, char ch, const FontDef *font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff)
 {
     static const uint16_t w = LCD_WIDTH;
     uint32_t i, b, j, pos;
 
     uint16_t *p = (uint16_t *) buff;
 
-    for (i = 0; i < font.height; i++) {
-        b = font.data[(ch - 32) * font.height + i];
-        for (j = 0; j < font.width; j++) {
+    for (i = 0; i < font->height; i++) {
+        b = font->data[(ch - 32) * font->height + i];
+        for (j = 0; j < font->width; j++) {
             pos = (((i + y) * w) + (j + x));
             if ((b << j) & 0x8000) {
                 p[pos] = __builtin_bswap16 (color);
@@ -390,15 +390,15 @@ static void fonts_putChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_
     }
 }
 
-void fonts_putString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff)
+void fonts_putString(uint16_t x, uint16_t y, const char *str, const FontDef *font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff)
 {
     static const uint16_t w = LCD_WIDTH;
     static const uint16_t h = LCD_HEIGHT;
     while (*str) {
-        if (x + font.width >= w) {
+        if (x + font->width >= w) {
             x = 0;
-            y += font.height;
-            if (y + font.height >= h) {
+            y += font->height;
+            if (y + font->height >= h) {
                 break;
             }
 
@@ -409,15 +409,15 @@ void fonts_putString(uint16_t x, uint16_t y, const char *str, FontDef font, uint
             }
         }
         fonts_putChar(x, y, *str, font, color, bg, bgcolor, buff);
-        x += font.width;
+        x += font->width;
         str++;
     }
 }
 
-void fonts_putStringCentered(uint16_t y, const char *str, FontDef font, uint16_t color, uint8_t *buff)
+void fonts_putStringCentered(uint16_t y, const char *str, const FontDef *font, uint16_t color, uint8_t *buff)
 {
     static const uint16_t w = LCD_WIDTH;
-    uint16_t x = (w - (font.width * strlen(str))) / 2;
+    uint16_t x = (w - (font->width * strlen(str))) / 2;
 
     fonts_putString(x, y, str, font, color, 0, 0, buff);
 }
