@@ -75,7 +75,8 @@
 #define LCD_ROTATION                       2  // 0-3
 
 #define LCD_CLASSIFICATION_DURATION        UINT32_C(1000)  // ms
-#define LCD_NO_VIDEO_DURATION              UINT32_C(1000)  // ms
+#define LCD_NO_VIDEO_REFRESH_DURATION      UINT32_C(1000)  // ms
+#define LCD_VIDEO_DISABLE_REFRESH_DURATION UINT32_C(100)  // ms
 #define LCD_NOTIFICATION_DURATION          UINT32_C(7 * 1000)  // ms
 
 // Common Camera

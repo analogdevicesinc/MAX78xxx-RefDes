@@ -40,6 +40,7 @@
 #include <gpio.h>
 #include <mxc_delay.h>
 
+#include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
 #include "max32666_lcd.h"
@@ -333,6 +334,8 @@ int lcd_drawImage(uint8_t *data)
     spi_assert_cs();
 
     spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, NULL, (w * h * LCD_BYTE_PER_PIXEL), MAX32666_LCD_DMA_REQSEL_SPITX, spi_deassert_cs);
+
+    lcd_data.refresh_screen = 0;
 
 //    spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, NULL, (w * h * LCD_BYTE_PER_PIXEL), MAX32666_LCD_DMA_REQSEL_SPITX, NULL);
 //    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);

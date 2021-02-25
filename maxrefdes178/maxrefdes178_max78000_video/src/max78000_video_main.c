@@ -215,10 +215,10 @@ static const uint8_t camera_settings[][2] = {
 static int8_t prev_decision = -2;
 static int8_t decision = -2;
 static uint32_t time_counter = 0;
-static int8_t enable_cnn = 1;
+static int8_t enable_cnn = 0;
 static volatile int8_t button_pressed = 0;
 static int8_t flash_led = 0;
-static int8_t enable_video = 1;
+static int8_t enable_video = 0;
 static uint8_t *qspi_payload_buffer = NULL;
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
 

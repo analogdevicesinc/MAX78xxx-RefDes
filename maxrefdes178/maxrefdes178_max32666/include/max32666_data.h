@@ -98,6 +98,7 @@ typedef struct {
 
     inactivity_state_e inactivity_state;
 
+
     volatile uint8_t ble_running_status_changed;  // written by both core0 and core1
     volatile uint8_t ble_connected_status_changed;  // written by both core0 and core1
     volatile uint8_t ble_connected;  // written by core1
@@ -111,10 +112,12 @@ typedef struct {
     uint8_t buffer[LCD_DATA_SIZE];
     char notification[LCD_NOTIFICATION_MAX_SIZE];
     uint16_t notification_color;
+    volatile uint8_t refresh_screen;
 } lcd_data_t;
 
 typedef struct {
     uint32_t audio_result_received;
+    uint32_t video_data_received;
     uint32_t notification_received;
     uint32_t faceid_subject_names_received;
     uint32_t screen_drew;

@@ -209,6 +209,7 @@ int expander_select_debugger(debugger_select_e debugger_select)
     }
 
     lcd_data.notification_color = MAGENTA;
+    lcd_data.refresh_screen = 1;
     timestamps.notification_received = timer_ms_tick;
 
     return E_NO_ERROR;

@@ -417,6 +417,7 @@ static int ble_command_execute_rx_command(void)
         break;
     }
 
+    lcd_data.refresh_screen = 1;
     timestamps.activity_detected = timer_ms_tick;
 
     return E_SUCCESS;
