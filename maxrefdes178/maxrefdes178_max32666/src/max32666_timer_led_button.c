@@ -44,6 +44,7 @@
 #include "max32666_debug.h"
 #include "max32666_data.h"
 #include "max32666_expander.h"
+#include "max32666_lcd.h"
 #include "max32666_pmic.h"
 #include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
@@ -64,12 +65,15 @@
 // Global variables
 //-----------------------------------------------------------------------------
 static const mxc_gpio_cfg_t button1_int_pin = MAX32666_BUTTON1_INT_PIN;
+static const mxc_gpio_cfg_t button_pmic_int_pin = MAX32666_PMIC_PFN2_INT_PIN;
 volatile uint32_t timer_ms_tick = 0;
 
 
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
+void ms_timer(void);
+void power_off_timer(void);
 
 
 //-----------------------------------------------------------------------------
@@ -77,14 +81,20 @@ volatile uint32_t timer_ms_tick = 0;
 //-----------------------------------------------------------------------------
 void button1_int_handler(void *cbdata)
 {
-//    device_settings.enable_ble ^= 1;
-//    if (device_settings.enable_ble) {
-//        device_status.ble_running_status_changed = 1;
-//        printf("BLE enabled\n");
-//    } else {
-//        printf("BLE disabled\n");
-//    }
+//    printf("sw3  button pressed\n");
     timestamps.activity_detected = timer_ms_tick;
+}
+
+void button_pmic_int_handler(void *cbdata)
+{
+    if (MXC_GPIO_InGet(button_pmic_int_pin.port, button_pmic_int_pin.mask)) {
+//        printf("pmic button released\n");
+        MXC_TMR_Stop(MAX32666_TIMER_PMIC_BUTTON);
+    } else {
+//        printf("pmic button pressed\n");
+        MXC_TMR_Stop(MAX32666_TIMER_PMIC_BUTTON);
+        MXC_TMR_Start(MAX32666_TIMER_PMIC_BUTTON);
+    }
 }
 
 void ms_timer(void)
@@ -95,10 +105,37 @@ void ms_timer(void)
     timer_ms_tick += 1;
 }
 
+void power_off_timer(void)
+{
+    // Clear interrupt
+    MXC_TMR_ClearFlags(MAX32666_TIMER_PMIC_BUTTON);
+
+    printf("POWER OFF\n\n");
+
+    lcd_backlight(0, 0);
+
+    pmic_led_blue(0);
+    pmic_led_green(0);
+    pmic_led_red(1);
+
+    device_settings.enable_ble = 0;
+    for (int i = 0; (i < 10000000) && !device_status.ble_running_status_changed; i++) {}
+    Core1_Stop();
+
+    MXC_Delay(MXC_DELAY_MSEC(300));
+    pmic_led_red(0);
+
+    // wait until pmic button release
+    while(!MXC_GPIO_InGet(button_pmic_int_pin.port, button_pmic_int_pin.mask));
+
+    pmic_power_off();
+}
+
 int timer_led_button_init(void)
 {
-    // Init ms timer
     mxc_tmr_cfg_t tmr;
+
+    // Init ms timer
     MXC_TMR_Shutdown(MAX32666_TIMER_MS);
     tmr.pres = TMR_PRES_1;
     tmr.mode = TMR_MODE_CONTINUOUS;
@@ -109,12 +146,29 @@ int timer_led_button_init(void)
     MXC_TMR_Init(MAX32666_TIMER_MS, &tmr);
     MXC_TMR_Start(MAX32666_TIMER_MS);
 
+    // Init PMIC button timer
+    MXC_TMR_Shutdown(MAX32666_TIMER_PMIC_BUTTON);
+    tmr.pres = TMR_PRES_128;
+    tmr.mode = TMR_MODE_ONESHOT;
+    tmr.cmp_cnt = MAX32666_PMIC_BUTTON_OFF_INTERVAL * PeripheralClock / 128;
+    tmr.pol = 0;
+    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_PMIC_BUTTON)), power_off_timer);
+    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_PMIC_BUTTON)));
+    MXC_TMR_Init(MAX32666_TIMER_PMIC_BUTTON, &tmr);
+
     // Init button1 interrupt
     MXC_GPIO_Config(&button1_int_pin);
     MXC_GPIO_RegisterCallback(&button1_int_pin, button1_int_handler, NULL);
     MXC_GPIO_IntConfig(&button1_int_pin, MAX32666_BUTTON1_INT_MODE);
     MXC_GPIO_EnableInt(button1_int_pin.port, button1_int_pin.mask);
     NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(button1_int_pin.port)));
+
+    // Init button_pmic interrupt
+    MXC_GPIO_Config(&button_pmic_int_pin);
+    MXC_GPIO_RegisterCallback(&button_pmic_int_pin, button_pmic_int_handler, NULL);
+    MXC_GPIO_IntConfig(&button_pmic_int_pin, MAX32666_PMIC_PFN2_INT_MODE);
+    MXC_GPIO_EnableInt(button_pmic_int_pin.port, button_pmic_int_pin.mask);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(button_pmic_int_pin.port)));
 
     return E_NO_ERROR;
 }
