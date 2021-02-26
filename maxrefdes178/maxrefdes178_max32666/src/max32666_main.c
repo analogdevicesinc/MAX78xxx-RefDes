@@ -83,12 +83,6 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
-typedef enum {
-    SCREEN_INIT = 0,
-    SCREEN_MAIN,
-
-    SCREEN_LAST
-} screen_e;
 
 
 //-----------------------------------------------------------------------------
@@ -102,7 +96,6 @@ static char mac_string[(sizeof(device_info.ble_mac) + 1) * 3] = {0};
 static uint16_t video_string_color;
 static uint16_t video_frame_color;
 static uint16_t audio_string_color;
-static screen_e screen = SCREEN_INIT;
 
 
 //-----------------------------------------------------------------------------
@@ -409,6 +402,7 @@ static void run_application(void)
 {
     qspi_packet_type_e qspi_packet_type_rx = 0;
     video_frame_color = WHITE;
+    device_status.screen = SCREEN_INIT;
 
     core0_icc(1);
 
@@ -486,9 +480,9 @@ static void run_application(void)
                         }
                         lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
                     } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
-                        switch(screen) {
+                        switch(device_status.screen) {
                         case SCREEN_INIT:
-                            screen = SCREEN_MAIN;
+                            device_status.screen = SCREEN_MAIN;
                             device_settings.enable_max78000_video = 1;
                             qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
                             break;
@@ -509,7 +503,9 @@ static void run_application(void)
                     ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
                         sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
                 }
-                lcd_data.refresh_screen = 1;
+                if (!device_settings.enable_max78000_video) {
+                    lcd_data.refresh_screen = 1;
+                }
                 break;
             default:
                 break;

@@ -62,6 +62,13 @@ typedef enum {
     INACTIVITY_STATE_LAST
 } inactivity_state_e;
 
+typedef enum {
+    SCREEN_INIT = 0,
+    SCREEN_MAIN,
+
+    SCREEN_LAST
+} screen_e;
+
 typedef struct {
     volatile uint8_t enable_ble;  // shared with core1
     uint8_t enable_lcd;
@@ -99,6 +106,7 @@ typedef struct {
 
     inactivity_state_e inactivity_state;
 
+    screen_e screen;
 
     volatile uint8_t ble_running_status_changed;  // written by both core0 and core1
     volatile uint8_t ble_connected_status_changed;  // written by both core0 and core1
