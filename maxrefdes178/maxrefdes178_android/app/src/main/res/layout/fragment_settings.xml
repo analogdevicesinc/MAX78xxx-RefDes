@@ -11,7 +11,7 @@
         android:layout_height="wrap_content">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/diagnosticsMaterialCardView"
+            android:id="@+id/videoMaterialCardView"
             style="@style/SectionCardView"
             android:paddingBottom="20dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -24,9 +24,9 @@
                 android:paddingBottom="10dp">
 
                 <TextView
-                    android:id="@+id/diagnosticsTitleTextView"
+                    android:id="@+id/videoTitleTextView"
                     style="@style/CardViewTitleTextView"
-                    android:text="@string/diagnostics"
+                    android:text="@string/settings_video"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -42,20 +42,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
 
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/diagnosticsTitleTextView" />
-
-                <include
-                    android:id="@+id/max78000AudioEnableItem"
-                    layout="@layout/settings_item"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:visibility="visible"
-                    app:layout_constraintEnd_toEndOf="parent"
-
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/max78000VideoEnableItem" />
+                    app:layout_constraintTop_toBottomOf="@id/videoTitleTextView" />
 
                 <include
                     android:id="@+id/max78000VideoCnnItem"
@@ -66,7 +53,7 @@
                     android:layout_marginRight="10dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/max78000AudioEnableItem" />
+                    app:layout_constraintTop_toBottomOf="@id/max78000VideoEnableItem" />
 
                 <include
                     android:id="@+id/max78000VideoLowRateItem"
@@ -91,16 +78,68 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/max78000VideoLowRateItem" />
 
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/audioMaterialCardView"
+            style="@style/SectionCardView"
+            android:paddingBottom="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/videoMaterialCardView">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:id="@+id/audioTitleTextView"
+                    style="@style/CardViewTitleTextView"
+                    android:text="@string/settings_audio"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
                 <include
-                    android:id="@+id/inactivityEnableItem"
+                    android:id="@+id/max78000AudioEnableItem"
                     layout="@layout/settings_item"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
+                    android:visibility="visible"
+                    app:layout_constraintEnd_toEndOf="parent"
+
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/audioTitleTextView" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/lcdMaterialCardView"
+            style="@style/SectionCardView"
+            android:paddingBottom="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/audioMaterialCardView">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:id="@+id/lcdTitleTextView"
+                    style="@style/CardViewTitleTextView"
+                    android:text="@string/settings_lcd"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/max78000VideoFlashLedItem" />
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <include
                     android:id="@+id/lcdSetting"
@@ -111,7 +150,7 @@
                     android:layout_marginRight="10dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/inactivityEnableItem" />
+                    app:layout_constraintTop_toBottomOf="@id/lcdTitleTextView" />
 
                 <include
                     android:id="@+id/lcdStats"
@@ -135,6 +174,17 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/lcdStats" />
 
+                <include
+                    android:id="@+id/inactivityEnableItem"
+                    layout="@layout/settings_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/lcdProbability" />
+
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </com.google.android.material.card.MaterialCardView>
@@ -146,7 +196,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/diagnosticsMaterialCardView">
+            app:layout_constraintTop_toBottomOf="@id/lcdMaterialCardView">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -161,7 +211,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-
                 <TextView
                     android:id="@+id/selectDebuggerTextViewTitle"
                     style="@style/CardViewBoldTextView"
@@ -171,7 +220,6 @@
 
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/otherOperationsTitleTextView" />
-
 
                 <Spinner
                     android:id="@+id/debuggerSelectSpinner"

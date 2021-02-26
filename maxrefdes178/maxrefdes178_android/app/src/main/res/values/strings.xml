@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MAXREFDES178</string>
     <string name="file_operations">File Operations</string>
-    <string name="diagnostics">Settings</string>
+    <string name="diagnostics">Diagnostics</string>
+    <string name="settings_video">Video Settings</string>
+    <string name="settings_audio">Audio Settings</string>
+    <string name="settings_lcd">LCD Settings</string>
     <string name="face_id">FaceID</string>
     <string name="test">Test</string>
     <string name="keyword_spotting">Keyword Spotting</string>
@@ -123,12 +126,12 @@
     <string name="signature_not_found">Signature has not been generated yet.</string>
     <string name="script_in_progress">Signature generation is in progress...</string>
     <string name="create_signature">Generate Signature</string>
-    <string name="send_signature">Send Signature</string>
+    <string name="send_signature">Upload Signature</string>
     <string name="command_operation">Command Operation</string>
     <string name="signature_created_at">Signature was generated at %1$s</string>
     <string name="signature_update_success">Signature updated is successful.</string>
     <string name="signature_update_fail">Signature update is failed!</string>
     <string name="signature_create_fail">Signature can not be generated!</string>
-    <string name="face_id_demo">Face Id Demo</string>
+    <string name="face_id_demo">Generate/Upload Signature</string>
     <string name="info">Info</string>
 </resources>
