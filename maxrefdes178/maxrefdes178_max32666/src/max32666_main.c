@@ -674,13 +674,13 @@ static void run_application(void)
 static int refresh_screen(void)
 {
     if (device_status.fuel_gauge_working) {
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%3d", device_status.statistics.battery_soc);
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%3d%%", device_status.statistics.battery_soc);
         if (device_status.usb_chgin) {
-            fonts_putString(LCD_WIDTH - 24, 3, lcd_string_buff, &Font_7x10, ORANGE, 0, 0, lcd_data.buffer);
+            fonts_putString(LCD_WIDTH - 31, 3, lcd_string_buff, &Font_7x10, ORANGE, 0, 0, lcd_data.buffer);
         } else if (device_status.statistics.battery_soc <= MAX32666_SOC_WARNING_LEVEL) {
-            fonts_putString(LCD_WIDTH - 24, 3, lcd_string_buff, &Font_7x10, RED, 0, 0, lcd_data.buffer);
+            fonts_putString(LCD_WIDTH - 31, 3, lcd_string_buff, &Font_7x10, RED, 0, 0, lcd_data.buffer);
         } else {
-            fonts_putString(LCD_WIDTH - 24, 3, lcd_string_buff, &Font_7x10, GREEN, 0, 0, lcd_data.buffer);
+            fonts_putString(LCD_WIDTH - 31, 3, lcd_string_buff, &Font_7x10, GREEN, 0, 0, lcd_data.buffer);
         }
     }
 
