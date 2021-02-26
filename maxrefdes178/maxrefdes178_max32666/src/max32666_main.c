@@ -384,7 +384,11 @@ int main(void)
 
                 if (lcd_data.refresh_screen && !spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
                     memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
-                    fonts_putStringCentered(LCD_HEIGHT - 13, lcd_data.notification, &Font_7x10, lcd_data.notification_color, lcd_data.buffer);
+                    if (strlen(lcd_data.notification) < (LCD_WIDTH / Font_11x18.width)) {
+                        fonts_putStringCentered(LCD_HEIGHT - Font_11x18.height - 3, lcd_data.notification, &Font_11x18, lcd_data.notification_color, lcd_data.buffer);
+                    } else {
+                        fonts_putStringCentered(LCD_HEIGHT - Font_7x10.height - 3, lcd_data.notification, &Font_7x10, lcd_data.notification_color, lcd_data.buffer);
+                    }
                     lcd_drawImage(lcd_data.buffer);
                 }
             }

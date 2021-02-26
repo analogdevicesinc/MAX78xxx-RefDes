@@ -205,8 +205,6 @@ int led_worker(void)
         }
     }
 
-
-
     return E_NO_ERROR;
 }
 
