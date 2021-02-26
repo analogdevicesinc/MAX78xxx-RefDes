@@ -94,22 +94,6 @@
 #define ST7789_RDID3   0xDC
 #define ST7789_RDID4   0xDD
 
-#define ST7789_ROTATION LCD_ROTATION
-
-#if ST7789_ROTATION == 0
-    #define X_SHIFT 0
-    #define Y_SHIFT 80
-#elif ST7789_ROTATION == 1
-    #define X_SHIFT 80
-    #define Y_SHIFT 0
-#elif ST7789_ROTATION == 2
-    #define X_SHIFT 0
-    #define Y_SHIFT 0
-#elif ST7789_ROTATION == 3
-    #define X_SHIFT 0
-    #define Y_SHIFT 0
-#endif
-
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -121,7 +105,8 @@
 //-----------------------------------------------------------------------------
 static const mxc_gpio_cfg_t lcd_dc_pin = MAX32666_LCD_DC_PIN;
 static const mxc_gpio_cfg_t lcd_cs_pin = MAX32666_LCD_CS_PIN;
-
+static uint8_t lcd_x_shift = 0;
+static uint8_t lcd_y_shift = 0;
 
 
 //-----------------------------------------------------------------------------
@@ -194,17 +179,6 @@ static int lcd_reset(void)
     return E_NO_ERROR;
 }
 
-int lcd_backlight(int on, uint8_t level)
-{
-    if (on) {
-        pmic_boost(1, level);
-    } else {
-        pmic_boost(0, level);
-    }
-
-    return E_NO_ERROR;
-}
-
 static int lcd_configure(void)
 {
     spi_assert_cs();
@@ -218,16 +192,8 @@ static int lcd_configure(void)
         lcd_sendData(data, sizeof(data));
     }
 
-    lcd_sendCommand(ST7789_MADCTL);    //  Display Rotation
-#if ST7789_ROTATION == 0
-    lcd_sendSmallData(ST7789_MADCTL_MX | ST7789_MADCTL_MY | ST7789_MADCTL_RGB);
-#elif ST7789_ROTATION == 1
-    lcd_sendSmallData(ST7789_MADCTL_MY | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
-#elif ST7789_ROTATION == 2
-    lcd_sendSmallData(ST7789_MADCTL_RGB);
-#elif ST7789_ROTATION == 3
-    lcd_sendSmallData(ST7789_MADCTL_MX | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
-#endif
+//    lcd_sendCommand(ST7789_MADCTL);    //  Display Rotation
+//    lcd_sendSmallData(ST7789_MADCTL_RGB);
 
     /* Internal LCD Voltage generator settings */
     lcd_sendCommand(0XB7);             //  Gate Control
@@ -277,6 +243,8 @@ static int lcd_configure(void)
 
     spi_deassert_cs();
 
+    lcd_set_rotation(device_settings.lcd_rotation);
+
     return E_NO_ERROR;
 }
 
@@ -287,8 +255,8 @@ static int lcd_configure(void)
  */
 static int lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-    uint16_t x_start = x0 + X_SHIFT, x_end = x1 + X_SHIFT;
-    uint16_t y_start = y0 + Y_SHIFT, y_end = y1 + Y_SHIFT;
+    uint16_t x_start = x0 + lcd_x_shift, x_end = x1 + lcd_x_shift;
+    uint16_t y_start = y0 + lcd_y_shift, y_end = y1 + lcd_y_shift;
 
     spi_assert_cs();
     lcd_sendCommand(ST7789_CASET);
@@ -305,6 +273,55 @@ static int lcd_setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 
     lcd_sendCommand(ST7789_RAMWR);
     spi_deassert_cs();
+
+    return E_NO_ERROR;
+}
+
+int lcd_set_rotation(lcd_rotation_e lcd_rotation)
+{
+    for (int i = 0; (i < 1000000) && (spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)); i++);
+
+    spi_assert_cs();
+
+    lcd_sendCommand(ST7789_MADCTL);    //  Display Rotation
+
+    switch (lcd_rotation) {
+    case LCD_ROTATION_UP:
+        lcd_x_shift = 0;
+        lcd_y_shift = 0;
+        lcd_sendSmallData(ST7789_MADCTL_RGB);
+        break;
+    case LCD_ROTATION_DOWN:
+        lcd_x_shift = 0;
+        lcd_y_shift = 80;
+        lcd_sendSmallData(ST7789_MADCTL_MX | ST7789_MADCTL_MY | ST7789_MADCTL_RGB);
+        break;
+    case LCD_ROTATION_RIGHT:
+        lcd_x_shift = 0;
+        lcd_y_shift = 0;
+        lcd_sendSmallData(ST7789_MADCTL_MX | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
+        break;
+    case LCD_ROTATION_LEFT:
+        lcd_x_shift = 80;
+        lcd_y_shift = 0;
+        lcd_sendSmallData(ST7789_MADCTL_MY | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
+        break;
+    default:
+        break;
+    }
+
+    spi_deassert_cs();
+
+    return E_NO_ERROR;
+}
+
+int lcd_backlight(int on, uint8_t level)
+{
+    if (on) {
+        pmic_boost(1, level);
+    } else {
+        pmic_boost(0, level);
+    }
 
     return E_NO_ERROR;
 }

@@ -655,6 +655,9 @@ static void run_application(void)
         // Touch screen worker
         touch_worker();
 
+        // Button worker
+        button_worker();
+
         // USB worker
 //        usb_worker();
 

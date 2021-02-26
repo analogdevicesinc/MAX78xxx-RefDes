@@ -72,7 +72,6 @@
 #define LCD_BYTE_PER_PIXEL                 2  // RGB565
 #define LCD_DATA_SIZE                      (LCD_WIDTH * LCD_HEIGHT * LCD_BYTE_PER_PIXEL)
 #define LCD_NOTIFICATION_MAX_SIZE          40
-#define LCD_ROTATION                       2  // 0-3
 
 #define LCD_CLASSIFICATION_DURATION        UINT32_C(1000)  // ms
 #define LCD_NO_VIDEO_REFRESH_DURATION      UINT32_C(1000)  // ms
@@ -579,6 +578,16 @@ typedef enum {
 
     CLASSIFICATION_LAST
 } classification_e;
+
+// LCD rotation
+typedef enum {
+    LCD_ROTATION_UP = 0,
+    LCD_ROTATION_RIGHT,
+    LCD_ROTATION_DOWN,
+    LCD_ROTATION_LEFT,
+
+    LCD_ROTATION_LAST
+} lcd_rotation_e;
 
 // Typedef Structs
 // QSPI packet info

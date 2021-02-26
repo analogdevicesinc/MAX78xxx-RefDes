@@ -76,6 +76,7 @@ typedef struct {
     uint8_t enable_ble_send_statistics;      // TODO
     uint8_t enable_ble_send_classification;  // TODO
     uint8_t enable_inactivity;
+    lcd_rotation_e lcd_rotation;
 } device_settings_t;
 
 typedef struct {
