@@ -502,11 +502,6 @@ static void run_application(void)
                     } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
                         device_settings.enable_max78000_video_cnn = 0;
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
-                    } else if (strcmp(device_status.classification_audio.result, "UP") == 0) {
-                        device_settings.enable_lcd_statistics = 1;
-                        timestamps.faceid_subject_names_received = timer_ms_tick;
-                    } else if(strcmp(device_status.classification_audio.result, "DOWN") == 0) {
-                        device_settings.enable_lcd_statistics = 0;
                     }
                 }
 

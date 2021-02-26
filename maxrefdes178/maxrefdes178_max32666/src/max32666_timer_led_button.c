@@ -82,8 +82,6 @@ void power_off_timer(void);
 void button1_int_handler(void *cbdata)
 {
     button1_int = 1;
-//    printf("sw3  button pressed\n");
-    timestamps.activity_detected = timer_ms_tick;
 }
 
 void button_pmic_int_handler(void *cbdata)
@@ -214,15 +212,12 @@ int button_worker(void)
     }
     button1_int = 0;
 
-    PR_INFO("button1");
+    PR_DEBUG("button1 sw3");
 
-//    if (device_settings.lcd_rotation == LCD_ROTATION_UP) {
-//        device_settings.lcd_rotation = LCD_ROTATION_DOWN;
-//    } else {
-//        device_settings.lcd_rotation = LCD_ROTATION_UP;
-//    }
-//
-//    lcd_set_rotation(device_settings.lcd_rotation);
+    timestamps.activity_detected = timer_ms_tick;
+
+    device_settings.enable_lcd_statistics = !device_settings.enable_lcd_statistics;
+    timestamps.faceid_subject_names_received = timer_ms_tick;
 
     return E_NO_ERROR;
 }
