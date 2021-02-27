@@ -42,6 +42,7 @@
 
 #include "max32666_debug.h"
 #include "max32666_data.h"
+#include "max32666_fonts.h"
 #include "max32666_lcd.h"
 #include "max32666_qspi_master.h"
 #include "max32666_spi_dma.h"
@@ -333,6 +334,13 @@ int qspi_master_video_rx_worker(qspi_packet_type_e *qspi_packet_type_rx)
 
         PR_INFO("Video button pressed");
         timestamps.activity_detected = timer_ms_tick;
+        device_settings.enable_max78000_video_flash_led = !device_settings.enable_max78000_video_flash_led;
+
+        if (device_settings.enable_max78000_video_flash_led) {
+            lcd_notification(MAGENTA, "Video flash LED enabled");
+        } else {
+            lcd_notification(MAGENTA, "Video flash LED disabled");
+        }
 
         break;
     default:

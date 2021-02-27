@@ -173,6 +173,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         device_settings.enable_ble = 0;
+        lcd_notification(BLUE, "BLE disabled");
         break;
     case BLE_COMMAND_SHUT_DOWN_DEVICE_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -203,6 +204,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_ENABLE_CMD);
         device_settings.enable_max78000_audio = 1;
+        lcd_notification(MAGENTA, "Audio enabled");
         break;
     case BLE_COMMAND_DISABLE_MAX78000_AUDIO_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -211,6 +213,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD);
         device_settings.enable_max78000_audio = 0;
+        lcd_notification(MAGENTA, "Audio disabled");
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -219,6 +222,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
         device_settings.enable_max78000_video = 1;
+        lcd_notification(MAGENTA, "Video enabled");
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -227,6 +231,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
         device_settings.enable_max78000_video = 0;
+        lcd_notification(MAGENTA, "Video disabled");
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_CNN_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -235,6 +240,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
         device_settings.enable_max78000_video_cnn = 1;
+        lcd_notification(MAGENTA, "FaceID enabled");
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_CNN_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -243,6 +249,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
         device_settings.enable_max78000_video_cnn = 0;
+        lcd_notification(MAGENTA, "FaceID disabled");
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_LOW_RATE_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -250,6 +257,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_LOW_RATE_CMD);
+        lcd_notification(MAGENTA, "Video low rate enabled");
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_LOW_RATE_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -257,6 +265,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_LOW_RATE_CMD);
+        lcd_notification(MAGENTA, "Video low rate disabled");
         break;
     case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CNN_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -265,6 +274,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_ENABLE_CNN_CMD);
         device_settings.enable_max78000_audio_cnn = 1;
+        lcd_notification(MAGENTA, "Audio CNN enabled");
         break;
     case BLE_COMMAND_DISABLE_MAX78000_AUDIO_CNN_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -273,6 +283,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD);
         device_settings.enable_max78000_audio_cnn = 0;
+        lcd_notification(MAGENTA, "Audio CNN disabled");
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -281,6 +292,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD);
         device_settings.enable_max78000_video_flash_led = 1;
+        lcd_notification(MAGENTA, "Video flash LED enabled");
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_FLASH_LED_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -289,6 +301,7 @@ static int ble_command_execute_rx_command(void)
         }
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD);
         device_settings.enable_max78000_video_flash_led = 0;
+        lcd_notification(MAGENTA, "Video flash LED disabled");
         break;
     case BLE_COMMAND_ENABLE_MAX78000_VIDEO_AUDIO_POWER:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -298,6 +311,7 @@ static int ble_command_execute_rx_command(void)
         pmic_ldo1(1);
         pmic_buck2(1);
         device_settings.enable_max78000_video_and_audio_power = 1;
+        lcd_notification(MAGENTA, "Video Audio power enabled");
         break;
     case BLE_COMMAND_DISABLE_MAX78000_VIDEO_AUDIO_POWER:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -307,6 +321,7 @@ static int ble_command_execute_rx_command(void)
         pmic_buck2(0);
         pmic_ldo1(0);
         device_settings.enable_max78000_video_and_audio_power = 0;
+        lcd_notification(MAGENTA, "Video Audio power disabled");
         break;
     case BLE_COMMAND_ENABLE_LCD_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -335,6 +350,7 @@ static int ble_command_execute_rx_command(void)
         }
         device_settings.enable_lcd_statistics = 1;
         timestamps.faceid_subject_names_received = timer_ms_tick;
+        lcd_notification(MAGENTA, "LCD statistics enabled");
         break;
     case BLE_COMMAND_DISABLE_LCD_STATISCTICS_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -342,6 +358,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         device_settings.enable_lcd_statistics = 0;
+        lcd_notification(MAGENTA, "LCD statistics disabled");
         break;
     case BLE_COMMAND_ENABLE_LCD_PROBABILITY_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -349,6 +366,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         device_settings.enable_lcd_probabilty = 1;
+        lcd_notification(MAGENTA, "LCD probability enabled");
         break;
     case BLE_COMMAND_DISABLE_LCD_PROBABILITY_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -356,6 +374,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         device_settings.enable_lcd_probabilty = 0;
+        lcd_notification(MAGENTA, "LCD probability disabled");
         break;
     case BLE_COMMAND_ENABLE_SEND_STATISTICS_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -391,9 +410,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         device_settings.enable_inactivity = 1;
-        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "Inactivity timer enabled");
-        lcd_data.notification_color = MAGENTA;
-        timestamps.notification_received = timer_ms_tick;
+        lcd_notification(MAGENTA, "Inactivity timer enabled");
         break;
     case BLE_COMMAND_DISABLE_INACTIVITY_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
@@ -401,9 +418,7 @@ static int ble_command_execute_rx_command(void)
             return E_BAD_PARAM;
         }
         device_settings.enable_inactivity = 0;
-        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "Inactivity timer disabled");
-        lcd_data.notification_color = MAGENTA;
-        timestamps.notification_received = timer_ms_tick;
+        lcd_notification(MAGENTA, "Inactivity timer disabled");
         break;
     case BLE_COMMAND_SET_DEBUGGER_CMD:
         if (ble_command_buffer.total_payload_size != 1) {
@@ -417,7 +432,6 @@ static int ble_command_execute_rx_command(void)
         break;
     }
 
-    lcd_data.refresh_screen = 1;
     timestamps.activity_detected = timer_ms_tick;
 
     return E_SUCCESS;

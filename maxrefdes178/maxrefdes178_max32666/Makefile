@@ -141,12 +141,9 @@ PROJ_CFLAGS+=-Werror
 #STARTUPFILE=start.S
 
 # Set MXC_OPTIMIZE to override the default optimization level 
-ifdef RELEASE
 MXC_OPTIMIZE_CFLAGS=-Ofast
-PROJ_CFLAGS+=-DMAXREFDES178_RELEASE
-else
-MXC_OPTIMIZE_CFLAGS=-Og
-endif
+# Use -Og for better debug
+#MXC_OPTIMIZE_CFLAGS=-Og
 
 # Point this variable to a linker file to override the default file
 LINKER=$(TARGET_LC).ld

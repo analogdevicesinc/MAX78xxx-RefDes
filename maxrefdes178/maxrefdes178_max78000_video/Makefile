@@ -113,11 +113,9 @@ PROJ_CFLAGS+=-Werror
 #STARTUPFILE=start.S
 
 # Set MXC_OPTIMIZE to override the default optimization level
-ifdef RELEASE
 MXC_OPTIMIZE_CFLAGS=-Ofast
-else
-MXC_OPTIMIZE_CFLAGS=-Og
-endif
+# Use -Og for better debug
+#MXC_OPTIMIZE_CFLAGS=-Og
 
 ################################################################################
 # Include external library makefiles here

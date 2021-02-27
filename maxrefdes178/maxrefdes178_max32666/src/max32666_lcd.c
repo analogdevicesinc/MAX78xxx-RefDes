@@ -46,6 +46,7 @@
 #include "max32666_lcd.h"
 #include "max32666_pmic.h"
 #include "max32666_spi_dma.h"
+#include "max32666_timer_led_button.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_utility.h"
 
@@ -357,6 +358,19 @@ int lcd_drawImage(uint8_t *data)
 //    spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, NULL, (w * h * LCD_BYTE_PER_PIXEL), MAX32666_LCD_DMA_REQSEL_SPITX, NULL);
 //    spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
 //    spi_deassert_cs();
+
+    return E_NO_ERROR;
+}
+
+int lcd_notification(uint16_t color, const char *notification)
+{
+    snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, notification);
+    lcd_data.notification_color = color;
+    timestamps.notification_received = timer_ms_tick;
+
+    if (!device_settings.enable_max78000_video) {
+        lcd_data.refresh_screen = 1;
+    }
 
     return E_NO_ERROR;
 }

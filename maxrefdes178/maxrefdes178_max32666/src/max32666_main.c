@@ -446,10 +446,7 @@ static void run_application(void)
                         sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
                 }
                 qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
-
-                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "FaceID signature updated");
-                lcd_data.notification_color = GREEN;
-                timestamps.notification_received = timer_ms_tick;
+                lcd_notification(GREEN, "FaceID signature updated");
                 break;
             case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
                 timestamps.faceid_subject_names_received = timer_ms_tick;
@@ -530,7 +527,7 @@ static void run_application(void)
         }
 
         if (device_settings.enable_max78000_video) {
-            // If video is not available, draw logo and refresh periodically
+            // If video is not available for a long time, draw logo and refresh periodically
             if ((timer_ms_tick - timestamps.video_data_received) > LCD_NO_VIDEO_REFRESH_DURATION) {
                 timestamps.video_data_received = timer_ms_tick;
                 memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
@@ -563,19 +560,15 @@ static void run_application(void)
             device_settings.enable_ble_send_statistics = 0;
 
             if (device_status.ble_connected) {
-                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1,
+                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1,
                         "BLE %02X:%02X:%02X:%02X:%02X:%02X connected!",
                         device_status.ble_connected_peer_mac[5], device_status.ble_connected_peer_mac[4],
                         device_status.ble_connected_peer_mac[3], device_status.ble_connected_peer_mac[2],
                         device_status.ble_connected_peer_mac[1], device_status.ble_connected_peer_mac[0]);
-                lcd_data.notification_color = BLUE;
-                timestamps.notification_received = timer_ms_tick;
+                lcd_notification(BLUE, lcd_string_buff);
             } else {
-                snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "BLE disconnected!");
-                lcd_data.notification_color = BLUE;
-                timestamps.notification_received = timer_ms_tick;
+                lcd_notification(BLUE, "BLE disconnected!");
             }
-            lcd_data.refresh_screen = 1;
         }
 
         if (device_status.ble_running_status_changed) {

@@ -44,6 +44,7 @@
 #include "max32666_debug.h"
 #include "max32666_data.h"
 #include "max32666_expander.h"
+#include "max32666_fonts.h"
 #include "max32666_lcd.h"
 #include "max32666_pmic.h"
 #include "max32666_qspi_master.h"
@@ -98,6 +99,8 @@ void button_pmic_int_handler(void *cbdata)
         device_status.screen = SCREEN_INIT;
         device_settings.enable_max78000_video = 0;
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
+
+        lcd_notification(MAGENTA, "Video disabled");
     }
 }
 
@@ -220,6 +223,13 @@ int button_worker(void)
     timestamps.activity_detected = timer_ms_tick;
 
     device_settings.enable_lcd_statistics = !device_settings.enable_lcd_statistics;
+
+    if (device_settings.enable_lcd_statistics) {
+        lcd_notification(MAGENTA, "LCD statistics enabled");
+    } else {
+        lcd_notification(MAGENTA, "LCD statistics disabled");
+    }
+
     timestamps.faceid_subject_names_received = timer_ms_tick;
 
     return E_NO_ERROR;

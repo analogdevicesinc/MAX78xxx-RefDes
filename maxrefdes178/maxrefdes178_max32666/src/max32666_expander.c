@@ -180,14 +180,14 @@ int expander_select_debugger(debugger_select_e debugger_select)
         regval |= EXPANDER_OUTPUT_HDK1_TARGET_SEL;
         // To debug Core1 set alternate function 3
         MXC_GPIO_Config(&core1_swd_pin);
-        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX32666 Core1 debug");
+        lcd_notification(MAGENTA, "MAX32666 Core1 debug");
         break;
     case DEBUGGER_SELECT_MAX78000_VIDEO:
         // set UART_TARGET_SEL low
         // set HDK1_TARGET_SEL to low
         // set SLAVE_DEBUG_SEL to low
         regval &= ~(EXPANDER_OUTPUT_UART_TARGET_SEL | EXPANDER_OUTPUT_HDK1_TARGET_SEL | EXPANDER_OUTPUT_SLAVE_DEBUG_SEL);
-        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX78000 Video debug");
+        lcd_notification(MAGENTA, "MAX78000 Video debug");
         break;
     case DEBUGGER_SELECT_MAX78000_AUDIO:
         // set UART_TARGET_SEL low
@@ -195,7 +195,7 @@ int expander_select_debugger(debugger_select_e debugger_select)
         // set SLAVE_DEBUG_SEL to high
         regval &= ~(EXPANDER_OUTPUT_UART_TARGET_SEL | EXPANDER_OUTPUT_HDK1_TARGET_SEL);
         regval |= EXPANDER_OUTPUT_SLAVE_DEBUG_SEL;
-        snprintf(lcd_data.notification, sizeof(lcd_data.notification) - 1, "MAX78000 Audio debug");
+        lcd_notification(MAGENTA, "MAX78000 Audio debug");
         break;
     default:
         PR_ERROR("invalid selection");
@@ -207,10 +207,6 @@ int expander_select_debugger(debugger_select_e debugger_select)
         PR_ERROR("i2c_master_byte_write failed %d", err);
         return err;
     }
-
-    lcd_data.notification_color = MAGENTA;
-    lcd_data.refresh_screen = 1;
-    timestamps.notification_received = timer_ms_tick;
 
     return E_NO_ERROR;
 }
