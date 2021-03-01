@@ -3,7 +3,7 @@
 buildscript {
 
     final majorVersion = 0
-    final minorVersion = 6
+    final minorVersion = 7
     final patchVersion = 0
 
     final minSdk = 21
