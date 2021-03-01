@@ -367,7 +367,6 @@ static void fonts_putChar(uint16_t x, uint16_t y, char ch, const FontDef *font, 
 //-----------------------------------------------------------------------------
 static void fonts_putChar(uint16_t x, uint16_t y, char ch, const FontDef *font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff)
 {
-    static const uint16_t w = LCD_WIDTH;
     uint32_t i, b, j, pos;
 
     uint16_t *p = (uint16_t *) buff;
@@ -375,7 +374,7 @@ static void fonts_putChar(uint16_t x, uint16_t y, char ch, const FontDef *font, 
     for (i = 0; i < font->height; i++) {
         b = font->data[(ch - 32) * font->height + i];
         for (j = 0; j < font->width; j++) {
-            pos = (((i + y) * w) + (j + x));
+            pos = (((i + y) * LCD_WIDTH) + (j + x));
             if ((b << j) & 0x8000) {
                 p[pos] = __builtin_bswap16 (color);
 //                buff[pos] = color >> 8;
@@ -392,13 +391,11 @@ static void fonts_putChar(uint16_t x, uint16_t y, char ch, const FontDef *font, 
 
 void fonts_putString(uint16_t x, uint16_t y, const char *str, const FontDef *font, uint16_t color, uint8_t bg, uint16_t bgcolor, uint8_t *buff)
 {
-    static const uint16_t w = LCD_WIDTH;
-    static const uint16_t h = LCD_HEIGHT;
     while (*str) {
-        if (x + font->width >= w) {
+        if (x + font->width >= LCD_WIDTH) {
             x = 0;
             y += font->height;
-            if (y + font->height >= h) {
+            if (y + font->height >= LCD_HEIGHT) {
                 break;
             }
 
@@ -416,8 +413,7 @@ void fonts_putString(uint16_t x, uint16_t y, const char *str, const FontDef *fon
 
 void fonts_putStringCentered(uint16_t y, const char *str, const FontDef *font, uint16_t color, uint8_t *buff)
 {
-    static const uint16_t w = LCD_WIDTH;
-    uint16_t x = (w - (font->width * strlen(str))) / 2;
+    uint16_t x = (LCD_WIDTH - (font->width * strlen(str))) / 2;
 
     fonts_putString(x, y, str, font, color, 0, 0, buff);
 }
@@ -431,7 +427,6 @@ void fonts_putStringCentered(uint16_t y, const char *str, const FontDef *font, u
  */
 void fonts_drawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, uint8_t *buff)
 {
-    static const uint16_t w = LCD_WIDTH;
     uint16_t swap;
     uint16_t steep = abs(y1 - y0) > abs(x1 - x0);
     uint32_t pos;
@@ -476,10 +471,10 @@ void fonts_drawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t
 
     for (; x0<=x1; x0++) {
         if (steep) {
-            pos = ((x0 * w) + y0);
+            pos = ((x0 * LCD_WIDTH) + y0);
             p[pos] = __builtin_bswap16 (color);
         } else {
-            pos = ((y0 * w) + x0);
+            pos = ((y0 * LCD_WIDTH) + x0);
             p[pos] = __builtin_bswap16 (color);
         }
         err -= dy;
@@ -502,4 +497,18 @@ void fonts_drawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uin
     fonts_drawLine(x1, y1, x1, y2, color, buff);
     fonts_drawLine(x1, y2, x2, y2, color, buff);
     fonts_drawLine(x2, y1, x2, y2, color, buff);
+}
+
+/**
+ * @brief Draw a filled Rectangle with single color
+ * @param  x&y -> coordinates of the starting point
+ * @param w&h -> width & height of the Rectangle
+ * @param color -> color of the Rectangle
+ * @return  none
+ */
+void fonts_drawFilledRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color, uint8_t *buff)
+{
+    for (uint32_t i = 0; i <= h; i++) {
+        fonts_drawLine(x, y + i, x + w, y + i, color, buff);
+    }
 }

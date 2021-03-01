@@ -96,7 +96,6 @@ void button_pmic_int_handler(void *cbdata)
         MXC_TMR_Stop(MAX32666_TIMER_PMIC_BUTTON);
         MXC_TMR_Start(MAX32666_TIMER_PMIC_BUTTON);
 
-        device_status.screen = SCREEN_INIT;
         device_settings.enable_max78000_video = 0;
         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
 

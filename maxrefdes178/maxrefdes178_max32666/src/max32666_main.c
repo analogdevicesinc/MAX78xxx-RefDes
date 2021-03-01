@@ -406,7 +406,7 @@ static void run_application(void)
 {
     qspi_packet_type_e qspi_packet_type_rx = 0;
     video_frame_color = WHITE;
-    device_status.screen = SCREEN_INIT;
+    uint16_t touch_x1, touch_y1;
 
     core0_icc(1);
 
@@ -481,19 +481,8 @@ static void run_application(void)
                         }
                         lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
                     } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
-                        switch(device_status.screen) {
-                        case SCREEN_INIT:
-                            device_status.screen = SCREEN_MAIN;
-                            device_settings.enable_max78000_video = 1;
-                            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
-                            break;
-                        case SCREEN_MAIN:
-                            device_settings.enable_max78000_video_cnn = 1;
-                            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
-                            break;
-                        default:
-                            break;
-                        }
+                        device_settings.enable_max78000_video_cnn = 1;
+                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
                     } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
                         device_settings.enable_max78000_video_cnn = 0;
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
@@ -641,7 +630,21 @@ static void run_application(void)
         expander_worker();
 
         // Touch screen worker
-        touch_worker();
+        if (touch_worker(&touch_x1, &touch_y1) == E_NO_ERROR) {
+
+            // Check if init page start button is clicked
+            if (device_settings.enable_max78000_video == 0) {
+                if ((LCD_START_BUTTON_X1 <= touch_x1) && (touch_x1 <= LCD_START_BUTTON_X2) &&
+                    (LCD_START_BUTTON_Y1 <= touch_y1) && (touch_y1 <= LCD_START_BUTTON_Y2)) {
+                    device_settings.enable_max78000_video = 1;
+                    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
+                    PR_INFO("start button clicked");
+                }
+            }
+
+            PR_INFO("touch %d %d", touch_x1, touch_y1);
+            timestamps.activity_detected = timer_ms_tick;
+        }
 
         // Button worker
         button_worker();
@@ -724,6 +727,17 @@ static int refresh_screen(void)
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1, FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, video_frame_color, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2, FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3, FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
+    }
+
+    // Draw button in init screen
+    if (device_settings.enable_max78000_video == 0) {
+        fonts_drawFilledRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2 - LCD_START_BUTTON_X1,
+                                  LCD_START_BUTTON_Y2 - LCD_START_BUTTON_Y1, LGRAY, lcd_data.buffer);
+        fonts_drawRectangle(LCD_START_BUTTON_X1 - 0, LCD_START_BUTTON_Y1 - 0, LCD_START_BUTTON_X2 + 0, LCD_START_BUTTON_Y2 + 0, BLACK, lcd_data.buffer);
+        fonts_drawRectangle(LCD_START_BUTTON_X1 - 1, LCD_START_BUTTON_Y1 - 1, LCD_START_BUTTON_X2 + 1, LCD_START_BUTTON_Y2 + 1, BLACK, lcd_data.buffer);
+        fonts_drawRectangle(LCD_START_BUTTON_X1 - 2, LCD_START_BUTTON_Y1 - 2, LCD_START_BUTTON_X2 + 2, LCD_START_BUTTON_Y2 + 2, BLACK, lcd_data.buffer);
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Start Video");
+        fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, GREEN, lcd_data.buffer);
     }
 
     if (device_settings.enable_max78000_audio) {

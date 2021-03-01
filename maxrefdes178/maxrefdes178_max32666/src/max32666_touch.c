@@ -163,25 +163,19 @@ int touch_init(void)
     return E_NO_ERROR;
 }
 
-int touch_worker(void)
+int touch_worker(uint16_t *x1, uint16_t *y1)
 {
     int err;
-    uint16_t x1;
-    uint16_t y1;
 
     if (!touch_int_flag) {
-        return E_NO_ERROR;
+        return E_NONE_AVAIL;
     }
     touch_int_flag = 0;
 
-    if ((err = touch_point(&x1, &y1)) != E_NO_ERROR) {
+    if ((err = touch_point(x1, y1)) != E_NO_ERROR) {
         PR_ERROR("touch_point failed %d", err);
         return err;
     }
-
-    PR_INFO("touch %d %d", x1, y1);
-
-    timestamps.activity_detected = timer_ms_tick;
 
     return E_NO_ERROR;
 }
