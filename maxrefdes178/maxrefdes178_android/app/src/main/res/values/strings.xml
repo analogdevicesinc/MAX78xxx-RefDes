@@ -33,6 +33,7 @@
     <string name="send_image_from_mobile">Send Image From Mobile</string>
     <string name="other_operations">Other Operations</string>
     <string name="select_debugger">Second Debug Channel</string>
+    <string name="select_camera_clock">Camera Clock</string>
     <string name="read_manufacturer_name">Read Manufacturer Name</string>
     <string name="read_serial_number">Read Serial Number</string>
     <string name="load_image">Load Image</string>

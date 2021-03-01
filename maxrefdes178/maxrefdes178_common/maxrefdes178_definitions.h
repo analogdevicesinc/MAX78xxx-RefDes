@@ -355,8 +355,10 @@ typedef enum {
 
     QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD,  // None
     QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD, // None
-    QSPI_PACKET_TYPE_VIDEO_ENABLE_LOW_RATE_CMD,   // None
-    QSPI_PACKET_TYPE_VIDEO_DISABLE_LOW_RATE_CMD,  // None
+
+    QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_5_MHZ_CMD, // None
+    QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_10_MHZ_CMD, // None
+    QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_15_MHZ_CMD, // None
 
     QSPI_PACKET_TYPE_VIDEO_BUTTON_PRESS_RES, // None
     QSPI_PACKET_TYPE_AUDIO_BUTTON_PRESS_RES, // None
@@ -500,9 +502,8 @@ typedef enum {
     BLE_COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
 
 
-    //// v0.5 commands
-    BLE_COMMAND_ENABLE_MAX78000_VIDEO_LOW_RATE_CMD,   // None
-    BLE_COMMAND_DISABLE_MAX78000_VIDEO_LOW_RATE_CMD,  // None
+    //// v0.7 commands
+    BLE_COMMAND_MAX78000_VIDEO_CAMERA_CLOCK_CMD,   // camera_clock_e
 
     BLE_COMMAND_LAST
 } ble_command_e;
@@ -568,6 +569,15 @@ typedef enum {
 
     DEBUGGER_SELECT_LAST
 } debugger_select_e;
+
+// Camera clock types
+typedef enum {
+    CAMERA_CLOCK_5_MHZ = 0,
+    CAMERA_CLOCK_10_MHZ,
+    CAMERA_CLOCK_15_MHZ,
+
+    CAMERA_CLOCK_LAST
+} camera_clock_e;
 
 // Classification command response classification codes
 typedef enum {

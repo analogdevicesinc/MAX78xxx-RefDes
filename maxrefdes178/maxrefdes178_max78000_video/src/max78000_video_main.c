@@ -63,8 +63,6 @@
 #define S_MODULE_NAME          "main"
 
 //#define PRINT_TIME_CNN
-#define CAMERA_FREQ_LOW     (5 * 1000 * 1000)
-#define CAMERA_FREQ_HIGH    (20 * 1000 * 1000)
 
 
 //-----------------------------------------------------------------------------
@@ -221,6 +219,7 @@ static int8_t flash_led = 0;
 static int8_t enable_video = 0;
 static uint8_t *qspi_payload_buffer = NULL;
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
+static uint32_t camera_clock = 15 * 1000 * 1000;
 
 #ifdef PRINT_TIME_CNN
 #define PR_TIMER(fmt, args...) if((time_counter % 10) == 0) printf("T[%-5s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
@@ -338,7 +337,7 @@ int main(void)
     }
 
     // Initialize the camera driver.
-    ret = camera_init(CAMERA_FREQ_HIGH, MXC_TMR1);
+    ret = camera_init(camera_clock, MXC_TMR1);
     if (ret != E_NO_ERROR) {
         PR_ERROR("Camera init failed! %d", ret);
         fail();
@@ -543,14 +542,22 @@ static void run_demo(void)
                 PR_INFO("disable flash");
                 flash_led = 0;
                 break;
-            case QSPI_PACKET_TYPE_VIDEO_ENABLE_LOW_RATE_CMD:
+            case QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_5_MHZ_CMD:
+                camera_clock = 5 * 1000 * 1000;
                 MXC_PT_Stop(MXC_F_PTG_ENABLE_PT0);
-                MXC_PT_SqrWaveConfig(0, CAMERA_FREQ_LOW);
+                MXC_PT_SqrWaveConfig(0, camera_clock);
                 MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
                 break;
-            case QSPI_PACKET_TYPE_VIDEO_DISABLE_LOW_RATE_CMD:
+            case QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_10_MHZ_CMD:
+                camera_clock = 10 * 1000 * 1000;
                 MXC_PT_Stop(MXC_F_PTG_ENABLE_PT0);
-                MXC_PT_SqrWaveConfig(0, CAMERA_FREQ_HIGH);
+                MXC_PT_SqrWaveConfig(0, camera_clock);
+                MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_15_MHZ_CMD:
+                camera_clock = 15 * 1000 * 1000;
+                MXC_PT_Stop(MXC_F_PTG_ENABLE_PT0);
+                MXC_PT_SqrWaveConfig(0, camera_clock);
                 MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
                 break;
             default:

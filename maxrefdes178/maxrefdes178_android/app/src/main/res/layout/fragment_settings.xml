@@ -56,17 +56,6 @@
                     app:layout_constraintTop_toBottomOf="@id/max78000VideoEnableItem" />
 
                 <include
-                    android:id="@+id/max78000VideoLowRateItem"
-                    layout="@layout/settings_item"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/max78000VideoCnnItem" />
-
-                <include
                     android:id="@+id/max78000VideoFlashLedItem"
                     layout="@layout/settings_item"
                     android:layout_width="match_parent"
@@ -76,7 +65,47 @@
 
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/max78000VideoLowRateItem" />
+                    app:layout_constraintTop_toBottomOf="@id/max78000VideoCnnItem" />
+
+                <TextView
+                    android:id="@+id/selectCameraClockTextViewTitle"
+                    style="@style/CardViewBoldTextView"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/select_camera_clock"
+
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/max78000VideoFlashLedItem" />
+
+                <Spinner
+                    android:id="@+id/cameraClockSelectSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginHorizontal="10dp"
+                    android:background="@android:drawable/editbox_background_normal"
+                    app:layout_constraintBottom_toBottomOf="@id/sendCameraClockButton"
+                    app:layout_constraintEnd_toStartOf="@id/sendCameraClockButton"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/sendCameraClockButton" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_arrow_down"
+                    app:layout_constraintBottom_toBottomOf="@id/cameraClockSelectSpinner"
+                    app:layout_constraintEnd_toEndOf="@id/cameraClockSelectSpinner"
+                    app:layout_constraintTop_toTopOf="@id/cameraClockSelectSpinner" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/sendCameraClockButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:text="@string/select"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/selectCameraClockTextViewTitle" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -252,18 +281,6 @@
                     app:layout_constraintTop_toBottomOf="@id/selectDebuggerTextViewTitle" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/shutdownButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="10dp"
-                    android:layout_marginTop="10dp"
-                    android:backgroundTint="@color/color_error"
-                    android:text="@string/shut_down_device"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/restartButton" />
-
-                <com.google.android.material.button.MaterialButton
                     android:id="@+id/restartButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -275,6 +292,17 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/sendDebuggerButton" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/shutdownButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="10dp"
+                    android:layout_marginTop="10dp"
+                    android:backgroundTint="@color/color_error"
+                    android:text="@string/shut_down_device"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/restartButton" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

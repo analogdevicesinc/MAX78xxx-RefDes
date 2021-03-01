@@ -93,7 +93,7 @@ typedef struct {
 } device_info_t;
 
 typedef struct {
-    device_statistics_t statistics;      // TODO
+    device_statistics_t statistics;
     classification_result_t classification_video;
     classification_result_t classification_audio;
     uint8_t faceid_embed_update_status;

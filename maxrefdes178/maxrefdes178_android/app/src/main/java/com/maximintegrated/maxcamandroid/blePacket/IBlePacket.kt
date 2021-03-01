@@ -247,6 +247,25 @@ enum class debugger_select_e(val value: String = "") : IBlePacket {
     }
 }
 
+enum class camera_clock_e(val value: String = "") : IBlePacket {
+    CAMERA_CLOCK_5_MHZ("5 MHz"),
+    CAMERA_CLOCK_10_MHZ("10 MHz"),
+    CAMERA_CLOCK_15_MHZ("15 MHz"),
+    CAMERA_CLOCK_LAST;
+
+    override fun toString(): String {
+        return if (value.isNotEmpty()) value else name
+    }
+
+    override fun toByteArray(): ByteArray {
+        return byteArrayOf(ordinal.toByte())
+    }
+
+    override fun size(): Int {
+        return 1
+    }
+}
+
 enum class ble_command_e {
     //  Command                             Command Payload Description
     // Communication
@@ -418,9 +437,9 @@ enum class ble_command_e {
     // Debugger Selection
     BLE_COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
 
+
     //// v0.5 commands
-    BLE_COMMAND_ENABLE_MAX78000_VIDEO_LOW_RATE_CMD,   // None
-    BLE_COMMAND_DISABLE_MAX78000_VIDEO_LOW_RATE_CMD,  // None
+    BLE_COMMAND_MAX78000_VIDEO_CAMERA_CLOCK_CMD,   // camera_clock_e
 
     BLE_COMMAND_LAST;
 

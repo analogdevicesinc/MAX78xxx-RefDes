@@ -251,21 +251,27 @@ static int ble_command_execute_rx_command(void)
         device_settings.enable_max78000_video_cnn = 0;
         lcd_notification(MAGENTA, "FaceID disabled");
         break;
-    case BLE_COMMAND_ENABLE_MAX78000_VIDEO_LOW_RATE_CMD:
-        if (ble_command_buffer.total_payload_size != 0) {
+    case BLE_COMMAND_MAX78000_VIDEO_CAMERA_CLOCK_CMD:
+        if (ble_command_buffer.total_payload_size != 1) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
             return E_BAD_PARAM;
         }
-        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_LOW_RATE_CMD);
-        lcd_notification(MAGENTA, "Video low rate enabled");
-        break;
-    case BLE_COMMAND_DISABLE_MAX78000_VIDEO_LOW_RATE_CMD:
-        if (ble_command_buffer.total_payload_size != 0) {
-            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
-            return E_BAD_PARAM;
+
+        switch(ble_command_buffer.total_payload_buffer[0]) {
+        case CAMERA_CLOCK_5_MHZ:
+            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_5_MHZ_CMD);
+            lcd_notification(MAGENTA, "Camera clock 5 MHz");
+            break;
+        case CAMERA_CLOCK_10_MHZ:
+            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_10_MHZ_CMD);
+            lcd_notification(MAGENTA, "Camera clock 10 MHz");
+            break;
+        case CAMERA_CLOCK_15_MHZ:
+            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_15_MHZ_CMD);
+            lcd_notification(MAGENTA, "Camera clock 15 MHz");
+            break;
         }
-        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_LOW_RATE_CMD);
-        lcd_notification(MAGENTA, "Video low rate disabled");
+
         break;
     case BLE_COMMAND_ENABLE_MAX78000_AUDIO_CNN_CMD:
         if (ble_command_buffer.total_payload_size != 0) {

@@ -21,6 +21,7 @@ import com.maximintegrated.maxcamandroid.MaxCamApplication
 import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
 import com.maximintegrated.maxcamandroid.blePacket.ble_command_packet_t
 import com.maximintegrated.maxcamandroid.blePacket.debugger_select_e
+import com.maximintegrated.maxcamandroid.blePacket.camera_clock_e
 import com.maximintegrated.maxcamandroid.databinding.FragmentSettingsBinding
 import com.maximintegrated.maxcamandroid.utils.SettingsItemListener
 import com.maximintegrated.maxcamandroid.utils.setup
@@ -89,13 +90,6 @@ class SettingsFragment : Fragment() {
             settingsItemListener
         )
 
-        binding.max78000VideoLowRateItem.setup(
-            "Low Rate",
-            ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_LOW_RATE_CMD,
-            ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_LOW_RATE_CMD,
-            settingsItemListener
-        )
-
         binding.max78000VideoFlashLedItem.setup(
             "Flash LED",
             ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,
@@ -145,7 +139,20 @@ class SettingsFragment : Fragment() {
             settingsItemListener
         )
 
-        setupAdapter(
+        setupCameraClockAdapter(
+            cameraClockSelectSpinner,
+            camera_clock_e.values().toList().slice(0 until camera_clock_e.values().size - 1)
+        )
+        sendCameraClockButton.setOnClickListener {
+            maxCamViewModel.sendData(
+                ble_command_packet_t.from(
+                    ble_command_e.BLE_COMMAND_MAX78000_VIDEO_CAMERA_CLOCK_CMD,
+                    (cameraClockSelectSpinner.selectedItem as camera_clock_e).toByteArray()
+                ).toByteArray()
+            )
+        }
+
+        setupDebuggerSelectAdapter(
             debuggerSelectSpinner,
             debugger_select_e.values().toList().slice(0 until debugger_select_e.values().size - 1)
         )
@@ -193,7 +200,18 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun setupAdapter(spinner: Spinner, list: List<debugger_select_e>?) {
+    private fun setupDebuggerSelectAdapter(spinner: Spinner, list: List<debugger_select_e>?) {
+        ArrayAdapter(
+            requireContext(),
+            R.layout.simple_spinner_item,
+            list ?: emptyList()
+        ).also { adapter ->
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinner.adapter = adapter
+        }
+    }
+
+    private fun setupCameraClockAdapter(spinner: Spinner, list: List<camera_clock_e>?) {
         ArrayAdapter(
             requireContext(),
             R.layout.simple_spinner_item,
