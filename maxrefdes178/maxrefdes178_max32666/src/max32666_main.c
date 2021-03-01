@@ -736,6 +736,7 @@ static int refresh_screen(void)
         fonts_drawRectangle(LCD_START_BUTTON_X1 - 0, LCD_START_BUTTON_Y1 - 0, LCD_START_BUTTON_X2 + 0, LCD_START_BUTTON_Y2 + 0, BLACK, lcd_data.buffer);
         fonts_drawRectangle(LCD_START_BUTTON_X1 - 1, LCD_START_BUTTON_Y1 - 1, LCD_START_BUTTON_X2 + 1, LCD_START_BUTTON_Y2 + 1, BLACK, lcd_data.buffer);
         fonts_drawRectangle(LCD_START_BUTTON_X1 - 2, LCD_START_BUTTON_Y1 - 2, LCD_START_BUTTON_X2 + 2, LCD_START_BUTTON_Y2 + 2, BLACK, lcd_data.buffer);
+        fonts_drawRectangle(LCD_START_BUTTON_X1 - 3, LCD_START_BUTTON_Y1 - 3, LCD_START_BUTTON_X2 + 3, LCD_START_BUTTON_Y2 + 3, BLACK, lcd_data.buffer);
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Start Video");
         fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, GREEN, lcd_data.buffer);
     }

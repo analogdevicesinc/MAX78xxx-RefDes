@@ -78,10 +78,10 @@
 #define LCD_VIDEO_DISABLE_REFRESH_DURATION UINT32_C(100)  // ms
 #define LCD_NOTIFICATION_DURATION          UINT32_C(7 * 1000)  // ms
 
-#define LCD_START_BUTTON_X1                30
-#define LCD_START_BUTTON_X2                210
-#define LCD_START_BUTTON_Y1                80
-#define LCD_START_BUTTON_Y2                124
+#define LCD_START_BUTTON_X1                20
+#define LCD_START_BUTTON_X2                220
+#define LCD_START_BUTTON_Y1                100
+#define LCD_START_BUTTON_Y2                144
 
 // Common Camera
 #define CAMERA_WIDTH                       LCD_WIDTH
