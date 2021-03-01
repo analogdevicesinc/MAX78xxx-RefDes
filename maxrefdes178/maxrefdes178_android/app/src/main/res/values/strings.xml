@@ -5,7 +5,7 @@
     <string name="settings_video">Video Settings</string>
     <string name="settings_audio">Audio Settings</string>
     <string name="settings_lcd">LCD Settings</string>
-    <string name="face_id">FaceID</string>
+    <string name="face_id">Add Images to FaceID</string>
     <string name="test">Test</string>
     <string name="keyword_spotting">Keyword Spotting</string>
     <string name="settings">Settings</string>
