@@ -71,6 +71,7 @@ volatile device_settings_t device_settings = {
         .enable_max78000_video = 0,
         .enable_max78000_video_cnn = 0,
         .enable_max78000_video_flash_led = 0,
+        .enable_max78000_video_vflip = 1,
         .enable_max78000_video_and_audio_power = 1,
         .enable_lcd_statistics = 0,
         .enable_lcd_probabilty = 0,

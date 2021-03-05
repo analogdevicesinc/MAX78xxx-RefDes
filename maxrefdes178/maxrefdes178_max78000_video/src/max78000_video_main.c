@@ -216,6 +216,7 @@ static uint32_t time_counter = 0;
 static int8_t enable_cnn = 0;
 static volatile int8_t button_pressed = 0;
 static int8_t flash_led = 0;
+static int8_t camera_vflip = 1;
 static int8_t enable_video = 0;
 static uint8_t *qspi_payload_buffer = NULL;
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
@@ -533,32 +534,45 @@ static void run_demo(void)
                 camera_start_capture_image();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_ENABLE_FLASH_LED_CMD:
-                GPIO_CLR(gpio_flash);
                 PR_INFO("enable flash");
+                GPIO_CLR(gpio_flash);
                 flash_led = 1;
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_FLASH_LED_CMD:
-                GPIO_SET(gpio_flash);
                 PR_INFO("disable flash");
+                GPIO_SET(gpio_flash);
                 flash_led = 0;
                 break;
             case QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_5_MHZ_CMD:
+                PR_INFO("camera clock 5mhz");
                 camera_clock = 5 * 1000 * 1000;
                 MXC_PT_Stop(MXC_F_PTG_ENABLE_PT0);
                 MXC_PT_SqrWaveConfig(0, camera_clock);
                 MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
                 break;
             case QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_10_MHZ_CMD:
+                PR_INFO("camera clock 10mhz");
                 camera_clock = 10 * 1000 * 1000;
                 MXC_PT_Stop(MXC_F_PTG_ENABLE_PT0);
                 MXC_PT_SqrWaveConfig(0, camera_clock);
                 MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
                 break;
             case QSPI_PACKET_TYPE_VIDEO_CAMERA_CLOCK_15_MHZ_CMD:
+                PR_INFO("camera clock 15mhz");
                 camera_clock = 15 * 1000 * 1000;
                 MXC_PT_Stop(MXC_F_PTG_ENABLE_PT0);
                 MXC_PT_SqrWaveConfig(0, camera_clock);
                 MXC_PT_Start(MXC_F_PTG_ENABLE_PT0);
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_ENABLE_VFLIP_CMD:
+                PR_INFO("flip enable");
+                camera_vflip = 1;
+                camera_set_vflip(camera_vflip);
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_DISABLE_VFLIP_CMD:
+                PR_INFO("flip disable");
+                camera_vflip = 0;
+                camera_set_vflip(camera_vflip);
                 break;
             default:
                 PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);

@@ -90,6 +90,13 @@ class SettingsFragment : Fragment() {
             settingsItemListener
         )
 
+        binding.max78000VideoVflipItem.setup(
+            "Vertical Flip",
+            ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_VFLIP_CMD,
+            ble_command_e.BLE_COMMAND_DISABLE_MAX78000_VIDEO_VFLIP_CMD,
+            settingsItemListener
+        )
+
         binding.max78000VideoFlashLedItem.setup(
             "Flash LED",
             ble_command_e.BLE_COMMAND_ENABLE_MAX78000_VIDEO_FLASH_LED_CMD,

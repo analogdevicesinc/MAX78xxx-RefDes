@@ -70,6 +70,7 @@ typedef struct {
     uint8_t enable_max78000_video;
     uint8_t enable_max78000_video_cnn;
     uint8_t enable_max78000_video_flash_led;
+    uint8_t enable_max78000_video_vflip;
     uint8_t enable_max78000_video_and_audio_power;  // TODO
     uint8_t enable_lcd_statistics;
     uint8_t enable_lcd_probabilty;

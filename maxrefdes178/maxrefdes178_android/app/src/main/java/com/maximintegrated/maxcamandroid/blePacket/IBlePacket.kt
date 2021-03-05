@@ -438,8 +438,13 @@ enum class ble_command_e {
     BLE_COMMAND_SET_DEBUGGER_CMD,        // debugger_select_e
 
 
-    //// v0.5 commands
+    //// v0.7 commands
     BLE_COMMAND_MAX78000_VIDEO_CAMERA_CLOCK_CMD,   // camera_clock_e
+
+
+    //// v0.8 commands
+    BLE_COMMAND_ENABLE_MAX78000_VIDEO_VFLIP_CMD,    // None
+    BLE_COMMAND_DISABLE_MAX78000_VIDEO_VFLIP_CMD,   // None
 
     BLE_COMMAND_LAST;
 

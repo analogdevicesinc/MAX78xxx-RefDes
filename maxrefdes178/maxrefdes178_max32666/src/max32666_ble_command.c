@@ -426,6 +426,24 @@ static int ble_command_execute_rx_command(void)
         device_settings.enable_inactivity = 0;
         lcd_notification(MAGENTA, "Inactivity timer disabled");
         break;
+    case BLE_COMMAND_ENABLE_MAX78000_VIDEO_VFLIP_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
+        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_VFLIP_CMD);
+        device_settings.enable_max78000_video_vflip = 1;
+        lcd_notification(MAGENTA, "Vertical flip enabled");
+        break;
+    case BLE_COMMAND_DISABLE_MAX78000_VIDEO_VFLIP_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
+        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_VFLIP_CMD);
+        device_settings.enable_max78000_video_vflip = 0;
+        lcd_notification(MAGENTA, "Vertical flip disabled");
+        break;
     case BLE_COMMAND_SET_DEBUGGER_CMD:
         if (ble_command_buffer.total_payload_size != 1) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);

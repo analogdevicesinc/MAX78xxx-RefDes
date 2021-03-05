@@ -722,7 +722,6 @@ static int refresh_screen(void)
             strncpy(lcd_string_buff, device_status.classification_video.result, sizeof(lcd_string_buff) - 1);
             fonts_putStringCentered(LCD_HEIGHT - 29, lcd_string_buff, &Font_16x26, video_string_color, lcd_data.buffer);
         }
-
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0, FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, video_frame_color, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1, FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, video_frame_color, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2, FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
@@ -731,12 +730,10 @@ static int refresh_screen(void)
 
     // Draw button in init screen
     if (device_settings.enable_max78000_video == 0) {
+        // Start button
         fonts_drawFilledRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2 - LCD_START_BUTTON_X1,
                                   LCD_START_BUTTON_Y2 - LCD_START_BUTTON_Y1, LGRAY, lcd_data.buffer);
-        fonts_drawRectangle(LCD_START_BUTTON_X1 - 0, LCD_START_BUTTON_Y1 - 0, LCD_START_BUTTON_X2 + 0, LCD_START_BUTTON_Y2 + 0, BLACK, lcd_data.buffer);
-        fonts_drawRectangle(LCD_START_BUTTON_X1 - 1, LCD_START_BUTTON_Y1 - 1, LCD_START_BUTTON_X2 + 1, LCD_START_BUTTON_Y2 + 1, BLACK, lcd_data.buffer);
-        fonts_drawRectangle(LCD_START_BUTTON_X1 - 2, LCD_START_BUTTON_Y1 - 2, LCD_START_BUTTON_X2 + 2, LCD_START_BUTTON_Y2 + 2, BLACK, lcd_data.buffer);
-        fonts_drawRectangle(LCD_START_BUTTON_X1 - 3, LCD_START_BUTTON_Y1 - 3, LCD_START_BUTTON_X2 + 3, LCD_START_BUTTON_Y2 + 3, BLACK, lcd_data.buffer);
+        fonts_drawThickRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2, LCD_START_BUTTON_Y2, BLACK, 4, lcd_data.buffer);
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Start Video");
         fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, GREEN, lcd_data.buffer);
     }

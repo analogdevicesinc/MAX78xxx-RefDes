@@ -500,6 +500,20 @@ void fonts_drawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uin
 }
 
 /**
+ * @brief Draw a thick rectangle with single color
+ * @param xi&yi -> 2 coordinates of 2 top points.
+ * @param thickness -> thickness in pixel.
+ * @param color -> color of the Rectangle line
+ * @return none
+ */
+void fonts_drawThickRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t thickness, uint8_t *buff)
+{
+    for (uint8_t i = 0; i < thickness; i++) {
+        fonts_drawRectangle(x1 - i, y1 - i, x2 + i, y2 + i, color, buff);
+    }
+}
+
+/**
  * @brief Draw a filled Rectangle with single color
  * @param  x&y -> coordinates of the starting point
  * @param w&h -> width & height of the Rectangle
