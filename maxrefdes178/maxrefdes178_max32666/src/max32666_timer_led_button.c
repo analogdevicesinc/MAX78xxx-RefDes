@@ -66,10 +66,12 @@
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-static const mxc_gpio_cfg_t button1_int_pin = MAX32666_BUTTON1_INT_PIN;
-static const mxc_gpio_cfg_t button_pmic_int_pin = MAX32666_PMIC_PFN2_INT_PIN;
+static const mxc_gpio_cfg_t button_x_int_pin = MAX32666_BUTTON_X_INT_PIN;
+static const mxc_gpio_cfg_t button_power_int_pin = MAX32666_BUTTON_POWER_INT_PIN;
 volatile uint32_t timer_ms_tick = 0;
-volatile int button1_int = 0;
+volatile int button_x_int = 0;
+volatile int button_power_int = 0;
+
 
 //-----------------------------------------------------------------------------
 // Local function declarations
@@ -81,25 +83,22 @@ void power_off_timer(void);
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-void button1_int_handler(void *cbdata)
+void button_x_int_handler(void *cbdata)
 {
-    button1_int = 1;
+    button_x_int = 1;
 }
 
-void button_pmic_int_handler(void *cbdata)
+void button_power_int_handler(void *cbdata)
 {
-    if (MXC_GPIO_InGet(button_pmic_int_pin.port, button_pmic_int_pin.mask)) {
-//        printf("pmic button released\n");
-        MXC_TMR_Stop(MAX32666_TIMER_PMIC_BUTTON);
+    if (MXC_GPIO_InGet(button_power_int_pin.port, button_power_int_pin.mask)) {
+//        printf("button power released\n");
+        MXC_TMR_Stop(MAX32666_TIMER_BUTTON_POWER);
     } else {
-//        printf("pmic button pressed\n");
-        MXC_TMR_Stop(MAX32666_TIMER_PMIC_BUTTON);
-        MXC_TMR_Start(MAX32666_TIMER_PMIC_BUTTON);
+//        printf("button power pressed\n");
+        MXC_TMR_Stop(MAX32666_TIMER_BUTTON_POWER);
+        MXC_TMR_Start(MAX32666_TIMER_BUTTON_POWER);
 
-        device_settings.enable_max78000_video = 0;
-        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
-
-        lcd_notification(MAGENTA, "Video disabled");
+        button_power_int = 1;
     }
 }
 
@@ -114,9 +113,14 @@ void ms_timer(void)
 void power_off_timer(void)
 {
     // Clear interrupt
-    MXC_TMR_ClearFlags(MAX32666_TIMER_PMIC_BUTTON);
+    MXC_TMR_ClearFlags(MAX32666_TIMER_BUTTON_POWER);
+
+    if (MXC_GPIO_InGet(button_power_int_pin.port, button_power_int_pin.mask)) {
+        return;
+    }
 
     printf("POWER OFF\n\n");
+    fflush(stdout);
 
     lcd_backlight(0, 0);
 
@@ -128,11 +132,10 @@ void power_off_timer(void)
     for (int i = 0; (i < 10000000) && !device_status.ble_running_status_changed; i++) {}
     Core1_Stop();
 
-    MXC_Delay(MXC_DELAY_MSEC(300));
-    pmic_led_red(0);
+    MXC_Delay(MXC_DELAY_MSEC(10));
 
-    // wait until pmic button release
-    while(!MXC_GPIO_InGet(button_pmic_int_pin.port, button_pmic_int_pin.mask));
+    // wait until power button release
+    while(!MXC_GPIO_InGet(button_power_int_pin.port, button_power_int_pin.mask));
 
     pmic_power_off();
 }
@@ -152,29 +155,29 @@ int timer_led_button_init(void)
     MXC_TMR_Init(MAX32666_TIMER_MS, &tmr);
     MXC_TMR_Start(MAX32666_TIMER_MS);
 
-    // Init PMIC button timer
-    MXC_TMR_Shutdown(MAX32666_TIMER_PMIC_BUTTON);
+    // Init power button timer
+    MXC_TMR_Shutdown(MAX32666_TIMER_BUTTON_POWER);
     tmr.pres = TMR_PRES_128;
     tmr.mode = TMR_MODE_ONESHOT;
-    tmr.cmp_cnt = MAX32666_PMIC_BUTTON_OFF_INTERVAL * PeripheralClock / 128;
+    tmr.cmp_cnt = MAX32666_BUTTON_POWER_OFF_INTERVAL * PeripheralClock / 128;
     tmr.pol = 0;
-    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_PMIC_BUTTON)), power_off_timer);
-    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_PMIC_BUTTON)));
-    MXC_TMR_Init(MAX32666_TIMER_PMIC_BUTTON, &tmr);
+    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BUTTON_POWER)), power_off_timer);
+    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BUTTON_POWER)));
+    MXC_TMR_Init(MAX32666_TIMER_BUTTON_POWER, &tmr);
 
-    // Init button1 interrupt
-    MXC_GPIO_Config(&button1_int_pin);
-    MXC_GPIO_RegisterCallback(&button1_int_pin, button1_int_handler, NULL);
-    MXC_GPIO_IntConfig(&button1_int_pin, MAX32666_BUTTON1_INT_MODE);
-    MXC_GPIO_EnableInt(button1_int_pin.port, button1_int_pin.mask);
-    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(button1_int_pin.port)));
+    // Init button X interrupt
+    MXC_GPIO_Config(&button_x_int_pin);
+    MXC_GPIO_RegisterCallback(&button_x_int_pin, button_x_int_handler, NULL);
+    MXC_GPIO_IntConfig(&button_x_int_pin, MAX32666_BUTTON_X_INT_MODE);
+    MXC_GPIO_EnableInt(button_x_int_pin.port, button_x_int_pin.mask);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(button_x_int_pin.port)));
 
-    // Init button_pmic interrupt
-    MXC_GPIO_Config(&button_pmic_int_pin);
-    MXC_GPIO_RegisterCallback(&button_pmic_int_pin, button_pmic_int_handler, NULL);
-    MXC_GPIO_IntConfig(&button_pmic_int_pin, MAX32666_PMIC_PFN2_INT_MODE);
-    MXC_GPIO_EnableInt(button_pmic_int_pin.port, button_pmic_int_pin.mask);
-    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(button_pmic_int_pin.port)));
+    // Init button_power interrupt
+    MXC_GPIO_Config(&button_power_int_pin);
+    MXC_GPIO_RegisterCallback(&button_power_int_pin, button_power_int_handler, NULL);
+    MXC_GPIO_IntConfig(&button_power_int_pin, MAX32666_BUTTON_POWER_INT_MODE);
+    MXC_GPIO_EnableInt(button_power_int_pin.port, button_power_int_pin.mask);
+    NVIC_EnableIRQ(MXC_GPIO_GET_IRQ(MXC_GPIO_GET_IDX(button_power_int_pin.port)));
 
     return E_NO_ERROR;
 }
@@ -212,34 +215,44 @@ int led_worker(void)
 
 int button_worker(void)
 {
-    if (!button1_int) {
-        return E_NO_ERROR;
+    if (button_x_int) {
+        button_x_int = 0;
+
+        PR_INFO("button X pressed");
+
+        timestamps.activity_detected = timer_ms_tick;
+
+        device_settings.enable_lcd_statistics = !device_settings.enable_lcd_statistics;
+
+        if (device_settings.enable_lcd_statistics) {
+            lcd_notification(MAGENTA, "LCD statistics enabled");
+        } else {
+            lcd_notification(MAGENTA, "LCD statistics disabled");
+        }
+
+        timestamps.faceid_subject_names_received = timer_ms_tick;
     }
-    button1_int = 0;
 
-    PR_DEBUG("button1 sw3");
+    if (button_power_int) {
+        button_power_int = 0;
 
-    timestamps.activity_detected = timer_ms_tick;
+        PR_INFO("button power pressed");
 
-    device_settings.enable_lcd_statistics = !device_settings.enable_lcd_statistics;
+        device_settings.enable_max78000_video = 0;
+        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
 
-    if (device_settings.enable_lcd_statistics) {
-        lcd_notification(MAGENTA, "LCD statistics enabled");
-    } else {
-        lcd_notification(MAGENTA, "LCD statistics disabled");
+        lcd_notification(MAGENTA, "Video disabled");
     }
-
-    timestamps.faceid_subject_names_received = timer_ms_tick;
 
     return E_NO_ERROR;
 }
 
-void button2_int_handler(int state)
+void button_y_int_handler(int state)
 {
     if (state) {
-        PR_DEBUG("SW3 released");
+        PR_DEBUG("button Y released");
     } else {
-        PR_DEBUG("SW3 pressed");
+        PR_INFO("button Y pressed");
         static debugger_select_e debugger_select = DEBUGGER_SELECT_MAX32666_CORE1;
         debugger_select++;
         debugger_select = debugger_select % DEBUGGER_SELECT_LAST;

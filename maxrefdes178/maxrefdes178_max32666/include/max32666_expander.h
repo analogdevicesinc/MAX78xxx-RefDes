@@ -63,7 +63,7 @@
 #define EXPANDER_INPUT_INT_ACC            (0x01 << 4)  // P4
 #define EXPANDER_IO_BOOTLOADER_INVOKE     (0x01 << 5)  // P5
 #define EXPANDER_IO_EXPANSION3_IO         (0x01 << 6)  // P6
-#define EXPANDER_INPUT_BUTTON_2           (0x01 << 7)  // P7
+#define EXPANDER_INPUT_BUTTON_Y           (0x01 << 7)  // P7
 
 
 //-----------------------------------------------------------------------------

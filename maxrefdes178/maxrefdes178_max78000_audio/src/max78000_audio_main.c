@@ -385,7 +385,7 @@ int main(void)
 
         if (button_pressed) {
             button_pressed = 0;
-            PR_INFO("button pressed");
+            PR_INFO("button B pressed");
 
             qspi_slave_send_packet(NULL, 0, QSPI_PACKET_TYPE_AUDIO_BUTTON_PRESS_RES);
         }

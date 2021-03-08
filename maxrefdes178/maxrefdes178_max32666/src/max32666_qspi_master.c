@@ -332,7 +332,7 @@ int qspi_master_video_rx_worker(qspi_packet_type_e *qspi_packet_type_rx)
             return E_INVALID;
         }
 
-        PR_INFO("Video button pressed");
+        PR_INFO("Video button A pressed");
         timestamps.activity_detected = timer_ms_tick;
         device_settings.enable_max78000_video_flash_led = !device_settings.enable_max78000_video_flash_led;
 
@@ -468,7 +468,7 @@ int qspi_master_audio_rx_worker(qspi_packet_type_e *qspi_packet_type_rx)
             return E_INVALID;
         }
 
-        PR_INFO("Audio button pressed");
+        PR_INFO("Audio button B pressed");
         timestamps.activity_detected = timer_ms_tick;
 
         break;

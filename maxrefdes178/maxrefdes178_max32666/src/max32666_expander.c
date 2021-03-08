@@ -144,8 +144,8 @@ int expander_worker(void)
         return err;
     }
 
-    if (buff[1] & EXPANDER_INPUT_BUTTON_2) {
-        button2_int_handler(!!(buff[0] & EXPANDER_INPUT_BUTTON_2));
+    if (buff[1] & EXPANDER_INPUT_BUTTON_Y) {
+        button_y_int_handler(!!(buff[0] & EXPANDER_INPUT_BUTTON_Y));
     }
     if (buff[1] & EXPANDER_INPUT_INT_ACC) {
         accel_int_handler(!!(buff[0] & EXPANDER_INPUT_INT_ACC));

@@ -584,7 +584,7 @@ static void run_demo(void)
 
         if (button_pressed) {
             button_pressed = 0;
-            PR_INFO("button pressed");
+            PR_INFO("button A pressed");
 
             flash_led ^= 1;
             if (flash_led) {

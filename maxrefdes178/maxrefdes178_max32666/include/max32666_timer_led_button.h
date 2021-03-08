@@ -64,6 +64,6 @@ extern volatile uint32_t timer_ms_tick;
 int timer_led_button_init(void);
 int led_worker(void);
 int button_worker(void);
-void button2_int_handler(int state);
+void button_y_int_handler(int state);
 
 #endif /* _MAX32666_TIMER_LED_BUTTON_H_ */
