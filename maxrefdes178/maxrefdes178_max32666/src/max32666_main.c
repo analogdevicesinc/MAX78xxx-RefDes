@@ -675,47 +675,6 @@ static int refresh_screen(void)
         }
     }
 
-    if (device_settings.enable_lcd_statistics) {
-        int line_pos = 3;
-
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
-
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "vCap:%d", device_status.statistics.max78000_video.capture_duration_us / 1000);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
-
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Face:%d", device_status.statistics.max78000_video.cnn_duration_us / 1000);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
-
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "vCom:%d", device_status.statistics.max78000_video.communication_duration_us / 1000);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
-
-//        snprintf(line_string, sizeof(line_string) - 1, "vPow:%d", device_status.statistics.max78000_video_power_uw / 1000);
-//        fonts_putString(3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-//        line_pos += 12;
-
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "KWS:%d", device_status.statistics.max78000_audio.cnn_duration_us / 1000);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
-
-//        snprintf(line_string, sizeof(line_string) - 1, "aPow:%d", device_status.statistics.max78000_audio_power_uw / 1000);
-//        fonts_putString(3, line_pos, line_string, Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-//        line_pos += 12;
-
-        if ((timestamps.screen_drew - timestamps.faceid_subject_names_received) < LCD_NOTIFICATION_DURATION) {
-            line_pos += 5;
-            for (int i = 0; i < device_status.faceid_embed_subject_names_size; i += strlen(&device_status.faceid_embed_subject_names[i]) + 1) {
-                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%s", &device_status.faceid_embed_subject_names[i]);
-                fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, CYAN, 0, 0, lcd_data.buffer);
-                line_pos += 12;
-            }
-        }
-    }
-
     // Draw FaceID frame and result
     if (device_settings.enable_max78000_video && device_settings.enable_max78000_video_cnn) {
         if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
@@ -726,6 +685,54 @@ static int refresh_screen(void)
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1, FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, video_frame_color, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2, FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3, FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
+    }
+
+    if (device_settings.enable_lcd_statistics) {
+        int line_pos = 3;
+
+        // LCD frame per seconds
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
+        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        // FaceID duration (MAX78000 Video CNN + embeddings calculation)
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "FaceID:%d ms", device_status.statistics.max78000_video.cnn_duration_us / 1000);
+        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        // KWS duration (MAX78000 Audio CNN)
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "KWS:%d us", device_status.statistics.max78000_audio.cnn_duration_us);
+        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        // Video camera capture duration (frame capture)
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "VidCap:%d ms", device_status.statistics.max78000_video.capture_duration_us / 1000);
+        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        // Video communication duration (frame transfer from MAX78000 to MAX32666 over QSPI)
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "VidComm:%d ms", device_status.statistics.max78000_video.communication_duration_us / 1000);
+        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+//        // MAX78000 Video power
+//        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Vid:%d mW", device_status.statistics.max78000_video_cnn_power_mw);
+//        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+//        line_pos += 12;
+//
+//        // MAX78000 Audio power
+//        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Aud:%d mW", device_status.statistics.max78000_audio_cnn_power_mw);
+//        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+//        line_pos += 12;
+
+        if ((timestamps.screen_drew - timestamps.faceid_subject_names_received) < LCD_NOTIFICATION_DURATION) {
+            line_pos += 5;
+            for (int i = 0; i < device_status.faceid_embed_subject_names_size; i += strlen(&device_status.faceid_embed_subject_names[i]) + 1) {
+                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%s", &device_status.faceid_embed_subject_names[i]);
+                fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, CYAN, 0, 0, lcd_data.buffer);
+                line_pos += 12;
+            }
+        }
     }
 
     // Draw button in init screen

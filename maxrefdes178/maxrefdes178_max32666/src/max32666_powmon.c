@@ -89,7 +89,7 @@ static uint16_t convert_14to16(const uint8_t *p14);
 static uint32_t convert_24to32(const uint8_t *p24);
 static uint64_t convert_56to64(const uint8_t *p56);
 static int powmon_bulk_voltage(double voltage[4]);
-static int powmon_bulk_power(double power_raw[4]);
+static int powmon_bulk_power(double power_mw[4]);
 static int powmon_bulk_energy(double energy_raw[4]);
 static int powmon_acc_count(uint32_t *count);
 static int powmon_update(void);
@@ -152,8 +152,8 @@ int powmon_worker(void)
 //    PR_DEBUG("V %f %f %f %f", voltage[0], voltage[1], voltage[2], voltage[3]);
     PR_DEBUG("P %g %g %g %g", power[0], power[1], power[2], power[3]);
 
-    device_status.statistics.max78000_video_power_uw = power[0] * 1000;
-    device_status.statistics.max78000_audio_power_uw = power[2] * 1000;
+    device_status.statistics.max78000_video_cnn_power_mw = power[0] + power[1];
+    device_status.statistics.max78000_audio_cnn_power_mw = power[2] + power[3];
 
     powmon_update();
 
@@ -240,23 +240,30 @@ static int powmon_bulk_energy(double energy_raw[4])
     return E_NO_ERROR;
 }
 
-static int powmon_bulk_power(double power_raw[4])
+static int powmon_bulk_power(double power_mw[4])
 {
     int err;
     uint32_t acc_count;
+    static const double scale_and_comp = 4.470348358154296875e-5; // (2 * 24 * 1000) / (2 ^ 30)
 
     if ((err = powmon_acc_count(&acc_count)) != E_NO_ERROR) {
         PR_ERROR("powmon_acc_count failed %d", err);
         return err;
     }
 
-    if ((err = powmon_bulk_energy(power_raw)) != E_NO_ERROR) {
+    if ((err = powmon_bulk_energy(power_mw)) != E_NO_ERROR) {
         PR_ERROR("max34417_bulk_energy failed %d", err);
         return err;
     }
 
+    // raw energy to raw power
     for (uint8_t i = 0; i < 4; i++) {
-        power_raw[i] = power_raw[i] / (double)acc_count;
+        power_mw[i] = power_mw[i] / (double)acc_count;
+    }
+
+    // compensate raw power to mW
+    for (uint8_t i = 0; i < 4; i++) {
+        power_mw[i] = power_mw[i] * scale_and_comp;
     }
 
     return E_NO_ERROR;
