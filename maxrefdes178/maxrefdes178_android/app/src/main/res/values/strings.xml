@@ -55,6 +55,7 @@
     <string name="configure_the_input_parameters">Configure the input parameters</string>
     <string name="image_source">Image Source</string>
     <string name="image_size">Image Size</string>
+    <string name="i_agree">I Agree</string>
 
     <string-array name="image_sources">
         <item>Onboard Camera</item>

@@ -16,6 +16,8 @@ import java.util.concurrent.Executors
 
 const val ROOT_FRAGMENT = "ROOT_FRAGMENT"
 
+fun Context.getAppName(): String = applicationInfo.loadLabel(packageManager).toString()
+
 fun ByteArray.concatenate(other: ByteArray): ByteArray {
     val result = this.copyOf(size + other.size)
     System.arraycopy(other, 0, result, size, other.size)
