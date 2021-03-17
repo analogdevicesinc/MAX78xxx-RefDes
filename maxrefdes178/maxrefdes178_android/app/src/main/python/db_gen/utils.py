@@ -35,10 +35,7 @@ import copy
 from datetime import datetime,timezone
 from collections import defaultdict
 import numpy as np
-import scipy
-import scipy.ndimage
-from matplotlib.image import imread
-import matplotlib.pyplot as plt
+import cv2
 from PIL import Image, ExifTags
 
 
@@ -187,7 +184,8 @@ def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, ver
             print(f'\tFile: {file}')
             img_path = os.path.join(subject_path, file)
             img_rot = get_image_rotation(img_path)
-            img = imread(img_path)
+            img = cv2.imread(img_path)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             img = rotate_image(img, img_rot)
             if img.dtype == np.float32:
                 img = (255 * img).astype(np.uint8)
@@ -241,10 +239,6 @@ def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, ver
                 preview[start_y:start_y+160, start_x:start_x+120, :] = db_dict[subj][img_ind]['img']
                 start_x += 120
         preview = preview.astype(np.uint8)
-        if verbose:
-            plt.figure(figsize=(1.5*max_photo, 2*len(db_dict.keys())))
-            plt.imshow(preview)
-            plt.show()
 
     # Merge the new db and existing one if append mode is called
     if existing_db_dict:
@@ -294,7 +288,7 @@ def generate_image(img, box, count):
     while True:
         if height < 160 or width < 120:
             factor += 1
-            new_img = scipy.ndimage.zoom(img, [factor, factor, 1], order=1)
+            new_img = cv2.resize(img, None, fx=factor, fy=factor, interpolation = cv2.INTER_CUBIC)
             new_box = box * factor
             height = new_img.shape[0]
             width = new_img.shape[1]
@@ -308,7 +302,7 @@ def generate_image(img, box, count):
     ind = 0
     while (new_box_height > 160) or (new_box_width > 120):
         if ind < scale_list.size:
-            new_img = scipy.ndimage.zoom(img, [scale_list[ind], scale_list[ind], 1], order=1)
+            new_img = cv2.resize(img, None, fx=scale_list[ind], fy=scale_list[ind], interpolation = cv2.INTER_CUBIC)
             new_box = box * scale_list[ind]
             new_box = np.round(new_box).astype(np.int)
             new_box_height = new_box[3] - new_box[1]
@@ -336,6 +330,7 @@ def generate_image(img, box, count):
         box_arr.append(temp_box)
     new_img = img_arr
     new_box = box_arr
+
     return new_img, new_box, img, box
 
 
