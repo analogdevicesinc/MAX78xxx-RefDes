@@ -3,11 +3,11 @@
 buildscript {
 
     final majorVersion = 0
-    final minorVersion = 9
+    final minorVersion = 10
     final patchVersion = 0
 
     final minSdk = 21
-    final latestSdk = 28
+    final latestSdk = 29
     final buildToolsVersion = "29.0.2"
     final jacocoVersion = "0.8.5"
 
