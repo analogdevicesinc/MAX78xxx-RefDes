@@ -244,6 +244,7 @@ int qspi_slave_init(void)
     qspi_pins.ss0 = TRUE;
     qspi_pins.ss1 = FALSE;
     qspi_pins.ss2 = FALSE;
+    qspi_pins.vddioh = FALSE;
 
     ret = MXC_SPI_Init(qspi, 0, 1, 0, 0, 0, qspi_pins);
     if (ret != E_NO_ERROR) {

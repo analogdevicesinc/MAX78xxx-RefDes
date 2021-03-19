@@ -94,10 +94,7 @@ android {
         python {
             pip {
                 install "numpy"
-                install "scipy"
                 install "opencv-python"
-                install "pyserial"
-                install "matplotlib"
                 install "torch"
                 install "torchvision"
             }
