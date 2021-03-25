@@ -125,7 +125,7 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener,
 
         maxCamViewModel.receivedData.observeForever(dataReceivedObserver)
 
-        toolbar.pageTitle = "MAXREFDES178"
+        toolbar.pageTitle = "MAXREFDES178#"
 
         mainFab.setOnClickListener {
             if (getCurrentFragment() as? LandingPage == null) {
