@@ -48,6 +48,7 @@
 #include <mxc_device.h>
 #include <mxc_sys.h>
 #include <nvic_table.h>
+#include <rtc.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -208,6 +209,8 @@ int main(void)
 
     mic_processing_state procState = STOP;
 
+    uint32_t debug_cmd_received_time = 0;
+
     /* Enable cache */
     MXC_ICC_Enable(MXC_ICC0);
 
@@ -270,6 +273,16 @@ int main(void)
 
     if (qspi_slave_init() != E_NO_ERROR) {
         PR_ERROR("qspi_slave_init fail");
+        fail();
+    }
+
+    if (MXC_RTC_Init(0, 0) != E_NO_ERROR) {
+        PR_ERROR("Could not initialize rtc");
+        fail();
+    }
+
+    if (MXC_RTC_Start() != E_NO_ERROR) {
+        PR_ERROR("Could not start rtc");
         fail();
     }
 
@@ -374,6 +387,10 @@ int main(void)
             case QSPI_PACKET_TYPE_AUDIO_DISABLE_CNN_CMD:
                 // TODO
                 break;
+            case QSPI_PACKET_TYPE_AUDIO_DEBUG_CMD:
+                PR_INFO("dont sleep for %dms to let debugger connection", DEBUG_RESPITE_DURATION);
+                debug_cmd_received_time = GET_RTC_MS();
+                break;
             default:
                 PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
                 break;
@@ -391,7 +408,9 @@ int main(void)
         }
 
         if (!enable_audio) {
-            __WFI();
+            if (GET_RTC_MS() - debug_cmd_received_time > DEBUG_RESPITE_DURATION) {
+                __WFI();
+            }
             continue;
         }
 

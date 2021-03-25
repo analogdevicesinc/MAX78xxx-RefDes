@@ -408,10 +408,11 @@ static void fail(void)
 static void run_demo(void)
 {
     uint32_t capture_started_time = GET_RTC_MS();
-    uint32_t cnn_completed_time;
-    uint32_t qspi_completed_time;
-    uint32_t capture_completed_time;
-    max78000_statistics_t max78000_statistics;
+    uint32_t cnn_completed_time = 0;
+    uint32_t qspi_completed_time = 0;
+    uint32_t capture_completed_time = 0;
+    uint32_t debug_cmd_received_time = 0;
+    max78000_statistics_t max78000_statistics = {0};
     qspi_packet_header_t qspi_rx_header;
     qspi_state_e qspi_rx_state;
 
@@ -574,6 +575,10 @@ static void run_demo(void)
                 camera_vflip = 0;
                 camera_set_vflip(camera_vflip);
                 break;
+            case QSPI_PACKET_TYPE_VIDEO_DEBUG_CMD:
+                PR_INFO("dont sleep for %dms to let debugger connection", DEBUG_RESPITE_DURATION);
+                debug_cmd_received_time = GET_RTC_MS();
+                break;
             default:
                 PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
                 break;
@@ -597,7 +602,9 @@ static void run_demo(void)
         }
 
         if (!enable_video) {
-            __WFI();
+            if (GET_RTC_MS() - debug_cmd_received_time > DEBUG_RESPITE_DURATION) {
+                __WFI();
+            }
             continue;
         }
 

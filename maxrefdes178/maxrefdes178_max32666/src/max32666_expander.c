@@ -46,6 +46,7 @@
 #include "max32666_expander.h"
 #include "max32666_fonts.h"
 #include "max32666_lcd.h"
+#include "max32666_qspi_master.h"
 #include "max32666_i2c.h"
 #include "max32666_timer_led_button.h"
 #include "max32666_pmic.h"
@@ -188,6 +189,9 @@ int expander_select_debugger(debugger_select_e debugger_select)
         // set SLAVE_DEBUG_SEL to low
         regval &= ~(EXPANDER_OUTPUT_UART_TARGET_SEL | EXPANDER_OUTPUT_HDK1_TARGET_SEL | EXPANDER_OUTPUT_SLAVE_DEBUG_SEL);
         lcd_notification(MAGENTA, "MAX78000 Video debug");
+        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DEBUG_CMD);
+        qspi_master_wait_video_int();
+        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DEBUG_CMD);
         break;
     case DEBUGGER_SELECT_MAX78000_AUDIO:
         // set UART_TARGET_SEL low
@@ -196,6 +200,9 @@ int expander_select_debugger(debugger_select_e debugger_select)
         regval &= ~(EXPANDER_OUTPUT_UART_TARGET_SEL | EXPANDER_OUTPUT_HDK1_TARGET_SEL);
         regval |= EXPANDER_OUTPUT_SLAVE_DEBUG_SEL;
         lcd_notification(MAGENTA, "MAX78000 Audio debug");
+        qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_DEBUG_CMD);
+        qspi_master_wait_audio_int();
+        qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_DEBUG_CMD);
         break;
     default:
         PR_ERROR("invalid selection");
