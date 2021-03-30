@@ -218,6 +218,7 @@ static volatile int8_t button_pressed = 0;
 static int8_t flash_led = 0;
 static int8_t camera_vflip = 1;
 static int8_t enable_video = 0;
+static int8_t enable_sleep = 0;
 static uint8_t *qspi_payload_buffer = NULL;
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
 static uint32_t camera_clock = 15 * 1000 * 1000;
@@ -242,6 +243,14 @@ static void run_demo(void);
 void button_int(void *cbdata)
 {
     button_pressed = 1;
+}
+
+void sleep_defer_int(void)
+{
+    // Clear interrupt
+    MXC_TMR_ClearFlags(MAX78000_VIDEO_SLEEP_DEFER_TMR);
+
+    enable_sleep = 1;
 }
 
 int main(void)
@@ -379,6 +388,21 @@ int main(void)
     // Init button interrupt
     PB_RegisterCallback(0, (pb_callback) button_int);
 
+    // Init sleep defer timer interrupt
+    mxc_tmr_cfg_t tmr;
+    MXC_TMR_Shutdown(MAX78000_VIDEO_SLEEP_DEFER_TMR);
+    tmr.pres = TMR_PRES_128;
+    tmr.mode = TMR_MODE_ONESHOT;
+    tmr.bitMode = TMR_BIT_MODE_32;
+    tmr.clock = MXC_TMR_APB_CLK;
+    tmr.cmp_cnt = MAX78000_SLEEP_DEFER_DURATION * PeripheralClock / 128;
+    tmr.pol = 0;
+    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX78000_VIDEO_SLEEP_DEFER_TMR)), sleep_defer_int);
+    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX78000_VIDEO_SLEEP_DEFER_TMR)));
+    MXC_TMR_Init(MAX78000_VIDEO_SLEEP_DEFER_TMR, &tmr, false);
+    MXC_TMR_EnableInt(MAX78000_VIDEO_SLEEP_DEFER_TMR);
+    MXC_TMR_Start(MAX78000_VIDEO_SLEEP_DEFER_TMR);
+
     // Use camera interface buffer for QSPI payload buffer
     {
         uint32_t  imgLen;
@@ -411,7 +435,6 @@ static void run_demo(void)
     uint32_t cnn_completed_time = 0;
     uint32_t qspi_completed_time = 0;
     uint32_t capture_completed_time = 0;
-    uint32_t debug_cmd_received_time = 0;
     max78000_statistics_t max78000_statistics = {0};
     qspi_packet_header_t qspi_rx_header;
     qspi_state_e qspi_rx_state;
@@ -576,8 +599,9 @@ static void run_demo(void)
                 camera_set_vflip(camera_vflip);
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DEBUG_CMD:
-                PR_INFO("dont sleep for %dms to let debugger connection", DEBUG_RESPITE_DURATION);
-                debug_cmd_received_time = GET_RTC_MS();
+                PR_INFO("dont sleep for %ds to let debugger connection", MAX78000_SLEEP_DEFER_DURATION);
+                enable_sleep = 0;
+                MXC_TMR_Start(MAX78000_VIDEO_SLEEP_DEFER_TMR);
                 break;
             default:
                 PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
@@ -602,7 +626,8 @@ static void run_demo(void)
         }
 
         if (!enable_video) {
-            if (GET_RTC_MS() - debug_cmd_received_time > DEBUG_RESPITE_DURATION) {
+            if (enable_sleep) {
+//                MXC_LP_EnterSleepMode();
                 __WFI();
             }
             continue;

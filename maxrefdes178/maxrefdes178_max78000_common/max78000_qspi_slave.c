@@ -281,6 +281,8 @@ int qspi_slave_init(void)
     NVIC_EnableIRQ(MAX78000_VIDEO_QSPI_DMA_IRQ);
 #endif
 
+//    MXC_LP_EnableGPIOWakeup((mxc_gpio_cfg_t *)&qspi_cs_pin);
+
     return E_NO_ERROR;
 }
 

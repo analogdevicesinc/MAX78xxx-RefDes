@@ -119,8 +119,8 @@
 #define INACTIVITY_SHORT_DURATION          UINT32_C(60 * 1000)  // ms
 #define INACTIVITY_LONG_DURATION           UINT32_C(2 * 60 * 1000)  // ms
 
-// SWD Debug respite
-#define DEBUG_RESPITE_DURATION             UINT32_C(30 * 1000)  // ms
+// Common MAX78000s
+#define MAX78000_SLEEP_DEFER_DURATION      30  // s
 
 /*** MAX32666 ***/
 // MAX32666 PINS
@@ -255,7 +255,6 @@
 
 #define MAX78000_AUDIO_I2C_PINS            {MXC_GPIO0, (MXC_GPIO_PIN_10 | MXC_GPIO_PIN_11), MXC_GPIO_FUNC_IN, MXC_GPIO_PAD_NONE, MXC_GPIO_VSSEL_VDDIO}  // TODO mxc_pins
 
-
 // MAX78000 AUDIO QSPI
 #define MAX78000_AUDIO_QSPI                MXC_SPI0
 #define MAX78000_AUDIO_QSPI_DMA_CHANNEL    1
@@ -267,6 +266,9 @@
 
 // MAX78000 AUDIO UART
 #define MAX78000_AUDIO_HOST_UART           MXC_UART3  // TODO
+
+// MAX78000 AUDIO SLEEP DEFER TIMER
+#define MAX78000_AUDIO_SLEEP_DEFER_TMR     MXC_TMR2
 
 /*** MAX78000 VIDEO ***/
 // MAX78000 VIDEO PINS
@@ -314,6 +316,9 @@
 
 // MAX78000 VIDEO UART
 #define MAX78000_VIDEO_HOST_UART           MXC_UART3  // TODO
+
+// MAX78000 VIDEO SLEEP DEFER TIMER
+#define MAX78000_VIDEO_SLEEP_DEFER_TMR     MXC_TMR2
 
 //-----------------------------------------------------------------------------
 // Typedefs

@@ -48,7 +48,6 @@
 #include <mxc_device.h>
 #include <mxc_sys.h>
 #include <nvic_table.h>
-#include <rtc.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -134,6 +133,7 @@ static uint16_t thresholdLow = THRESHOLD_LOW;
 static int16_t  x0, x1, Coeff;
 static int32_t  y0, y1;
 static int8_t enable_audio = 1;
+static int8_t enable_sleep = 0;
 static volatile int8_t button_pressed = 0;
 
 static volatile uint8_t i2s_flag = 0;
@@ -187,6 +187,14 @@ void button_int(void *cbdata)
     button_pressed = 1;
 }
 
+void sleep_defer_int()
+{
+    // Clear interrupt
+    MXC_TMR_ClearFlags(MAX78000_AUDIO_SLEEP_DEFER_TMR);
+
+    enable_sleep = 1;
+}
+
 int main(void)
 {
     MXC_Delay(MXC_DELAY_MSEC(500)); // Wait supply to be ready
@@ -208,8 +216,6 @@ int main(void)
     qspi_packet_header_t qspi_rx_header;
 
     mic_processing_state procState = STOP;
-
-    uint32_t debug_cmd_received_time = 0;
 
     /* Enable cache */
     MXC_ICC_Enable(MXC_ICC0);
@@ -276,16 +282,6 @@ int main(void)
         fail();
     }
 
-    if (MXC_RTC_Init(0, 0) != E_NO_ERROR) {
-        PR_ERROR("Could not initialize rtc");
-        fail();
-    }
-
-    if (MXC_RTC_Start() != E_NO_ERROR) {
-        PR_ERROR("Could not start rtc");
-        fail();
-    }
-
     /* Bring state machine into consistent state */
     cnn_init();
     /* Load kernels */
@@ -304,6 +300,21 @@ int main(void)
 
     /* Init button interrupt */
     PB_RegisterCallback(0, (pb_callback) button_int);
+
+    /* Init sleep defer timer interrupt */
+    mxc_tmr_cfg_t tmr;
+    MXC_TMR_Shutdown(MAX78000_AUDIO_SLEEP_DEFER_TMR);
+    tmr.pres = TMR_PRES_128;
+    tmr.mode = TMR_MODE_ONESHOT;
+    tmr.bitMode = TMR_BIT_MODE_32;
+    tmr.clock = MXC_TMR_APB_CLK;
+    tmr.cmp_cnt = MAX78000_SLEEP_DEFER_DURATION * PeripheralClock / 128;
+    tmr.pol = 0;
+    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX78000_AUDIO_SLEEP_DEFER_TMR)), sleep_defer_int);
+    NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX78000_AUDIO_SLEEP_DEFER_TMR)));
+    MXC_TMR_Init(MAX78000_AUDIO_SLEEP_DEFER_TMR, &tmr, false);
+    MXC_TMR_EnableInt(MAX78000_AUDIO_SLEEP_DEFER_TMR);
+    MXC_TMR_Start(MAX78000_AUDIO_SLEEP_DEFER_TMR);
 
     PR_INFO("** READY ***");
 
@@ -388,8 +399,9 @@ int main(void)
                 // TODO
                 break;
             case QSPI_PACKET_TYPE_AUDIO_DEBUG_CMD:
-                PR_INFO("dont sleep for %dms to let debugger connection", DEBUG_RESPITE_DURATION);
-                debug_cmd_received_time = GET_RTC_MS();
+                PR_INFO("dont sleep for %ds to let debugger connection", MAX78000_SLEEP_DEFER_DURATION);
+                enable_sleep = 0;
+                MXC_TMR_Start(MAX78000_VIDEO_SLEEP_DEFER_TMR);
                 break;
             default:
                 PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
@@ -408,7 +420,8 @@ int main(void)
         }
 
         if (!enable_audio) {
-            if (GET_RTC_MS() - debug_cmd_received_time > DEBUG_RESPITE_DURATION) {
+            if (enable_sleep) {
+//                MXC_LP_EnterSleepMode();
                 __WFI();
             }
             continue;
