@@ -56,7 +56,7 @@ endif
 
 # This is the path to the CMSIS root directory
 ifeq "$(MAXIM_PATH)" ""
-LIBS_DIR=../../msdk/Libraries
+LIBS_DIR=../../../Libraries
 else
 LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
 endif
@@ -122,11 +122,9 @@ PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-secti
 #STARTUPFILE=start.S
 
 # Set MXC_OPTIMIZE to override the default optimization level
-ifdef RELEASE
-MXC_OPTIMIZE_CFLAGS=-O2
-else
-MXC_OPTIMIZE_CFLAGS=-Og
-endif
+MXC_OPTIMIZE_CFLAGS=-Ofast
+# Use -Og for better debug
+#MXC_OPTIMIZE_CFLAGS=-Og
 
 # Point this variable to a linker file to override the default file
 LINKER=$(TARGET_LC).ld

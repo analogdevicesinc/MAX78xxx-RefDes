@@ -56,7 +56,7 @@ endif
 
 # This is the path to the CMSIS root directory
 ifeq "$(MAXIM_PATH)" ""
-LIBS_DIR=../../msdk/Libraries
+LIBS_DIR=../../../Libraries
 else
 LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
 endif
@@ -82,21 +82,21 @@ SRCS += max32666_ble_command.c
 SRCS += max32666_ble_queue.c
 SRCS += max32666_data.c
 SRCS += max32666_expander.c
-SRCS += max32666_ext_flash.c
-SRCS += max32666_ext_sram.c
+#SRCS += max32666_ext_flash.c
+#SRCS += max32666_ext_sram.c
 SRCS += max32666_fault.c
 SRCS += max32666_fonts.c
 SRCS += max32666_fuel_gauge.c
 SRCS += max32666_i2c.c
 SRCS += max32666_lcd.c
 SRCS += max32666_pmic.c
-SRCS += max32666_powmon.c
+#SRCS += max32666_powmon.c
 SRCS += max32666_qspi_master.c
-SRCS += max32666_sdcard.c
+#SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
 SRCS += max32666_timer_led_button.c
 SRCS += max32666_touch.c
-SRCS += max32666_usb.c
+#SRCS += max32666_usb.c
 SRCS += maxrefdes178_utility.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
@@ -179,18 +179,18 @@ include $(PERIPH_DRIVER_DIR)/periphdriver.mk
 export PERIPH_DRIVER_DIR
 
 # Include SDHC and FAT32 Library
-SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
-FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
-include $(FAT32_DRIVER_DIR)/fat32.mk
-include $(SDHC_DRIVER_DIR)/sdhc.mk
+#SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
+#FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
+#include $(FAT32_DRIVER_DIR)/fat32.mk
+#include $(SDHC_DRIVER_DIR)/sdhc.mk
 
 # Include the Cordio Library
 CORDIO_DIR=Cordio
 include $(CORDIO_DIR)/platform/targets/maxim/build/cordio.mk
 
 # Inlcude USB Library
-MAXUSB_DIR=$(LIBS_DIR)/MAXUSB
-include $(MAXUSB_DIR)/maxusb.mk
+#MAXUSB_DIR=$(LIBS_DIR)/MAXUSB
+#include $(MAXUSB_DIR)/maxusb.mk
 
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be
