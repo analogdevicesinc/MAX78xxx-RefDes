@@ -49,7 +49,6 @@ TARGET_LC:=$(shell echo $(TARGET) | tr A-Z a-z)
 # Select 'GCC' or 'IAR' compiler
 COMPILER=GCC
 
-#BOARD=EvKit_V1
 # Specify the board used
 ifeq "$(BOARD)" ""
 BOARD=MAXREFDES178
@@ -61,8 +60,6 @@ LIBS_DIR=../../msdk/Libraries
 else
 LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
 endif
-#LIBS_DIR=../../msdk/Libraries
-LIBS_DIR=../../msdk/Libraries
 
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 ifeq ($(MAKECMDGOALS),sla)
@@ -127,7 +124,6 @@ PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-secti
 # Set MXC_OPTIMIZE to override the default optimization level
 ifdef RELEASE
 MXC_OPTIMIZE_CFLAGS=-O2
-PROJ_CFLAGS+=-DMAXREFDES178_RELEASE
 else
 MXC_OPTIMIZE_CFLAGS=-Og
 endif
