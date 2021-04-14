@@ -1,34 +1,25 @@
 package com.maximintegrated.maxcamandroid.settings
 
-import android.R
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.MainViewModel
-import com.maximintegrated.maxcamandroid.MainViewModelFactory
-import com.maximintegrated.maxcamandroid.MaxCamApplication
 import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
 import com.maximintegrated.maxcamandroid.blePacket.ble_command_packet_t
-import com.maximintegrated.maxcamandroid.blePacket.debugger_select_e
 import com.maximintegrated.maxcamandroid.blePacket.camera_clock_e
+import com.maximintegrated.maxcamandroid.blePacket.debugger_select_e
 import com.maximintegrated.maxcamandroid.databinding.FragmentSettingsBinding
 import com.maximintegrated.maxcamandroid.utils.SettingsItemListener
 import com.maximintegrated.maxcamandroid.utils.setup
 import com.maximintegrated.maxcamandroid.utils.startScannerActivity
-import com.theartofdev.edmodo.cropper.CropImage
-import com.unnamed.b.atv.model.TreeNode
-import kotlinx.android.synthetic.main.fragment_settings.*
 
 class SettingsFragment : Fragment() {
 
@@ -38,11 +29,6 @@ class SettingsFragment : Fragment() {
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var maxCamViewModel: MaxCamViewModel
-
-    lateinit var rootNode: TreeNode
-        private set
-
-    private var previousTreeNode: TreeNode? = null
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -75,10 +61,7 @@ class SettingsFragment : Fragment() {
         mainViewModel =
             ViewModelProvider(
                 requireActivity(),
-                MainViewModelFactory(
-                    requireActivity().application,
-                    (requireActivity().application as MaxCamApplication).maxCamNativeLibrary
-                )
+                ViewModelProvider.AndroidViewModelFactory(requireActivity().application)
             ).get(MainViewModel::class.java)
 
         maxCamViewModel = ViewModelProviders.of(requireActivity()).get(MaxCamViewModel::class.java)
@@ -147,32 +130,32 @@ class SettingsFragment : Fragment() {
         )
 
         setupCameraClockAdapter(
-            cameraClockSelectSpinner,
+            binding.cameraClockSelectSpinner,
             camera_clock_e.values().toList().slice(0 until camera_clock_e.values().size - 1)
         )
-        sendCameraClockButton.setOnClickListener {
+        binding.sendCameraClockButton.setOnClickListener {
             maxCamViewModel.sendData(
                 ble_command_packet_t.from(
                     ble_command_e.BLE_COMMAND_MAX78000_VIDEO_CAMERA_CLOCK_CMD,
-                    (cameraClockSelectSpinner.selectedItem as camera_clock_e).toByteArray()
+                    (binding.cameraClockSelectSpinner.selectedItem as camera_clock_e).toByteArray()
                 ).toByteArray()
             )
         }
 
         setupDebuggerSelectAdapter(
-            debuggerSelectSpinner,
+            binding.debuggerSelectSpinner,
             debugger_select_e.values().toList().slice(0 until debugger_select_e.values().size - 1)
         )
-        sendDebuggerButton.setOnClickListener {
+        binding.sendDebuggerButton.setOnClickListener {
             maxCamViewModel.sendData(
                 ble_command_packet_t.from(
                     ble_command_e.BLE_COMMAND_SET_DEBUGGER_CMD,
-                    (debuggerSelectSpinner.selectedItem as debugger_select_e).toByteArray()
+                    (binding.debuggerSelectSpinner.selectedItem as debugger_select_e).toByteArray()
                 ).toByteArray()
             )
         }
 
-        shutdownButton.setOnClickListener {
+        binding.shutdownButton.setOnClickListener {
             val alert = AlertDialog.Builder(requireContext())
             alert.setMessage(getString(com.maximintegrated.maxcamandroid.R.string.are_you_sure_to_shut_device_down))
             alert.setPositiveButton(getString(com.maximintegrated.maxcamandroid.R.string.yes)) { dialog, _ ->
@@ -189,7 +172,7 @@ class SettingsFragment : Fragment() {
             alert.show()
         }
 
-        restartButton.setOnClickListener {
+        binding.restartButton.setOnClickListener {
             val alert = AlertDialog.Builder(requireContext())
             alert.setMessage(getString(com.maximintegrated.maxcamandroid.R.string.are_you_sure_to_restart_device))
             alert.setPositiveButton(getString(com.maximintegrated.maxcamandroid.R.string.yes)) { dialog, _ ->
@@ -210,7 +193,7 @@ class SettingsFragment : Fragment() {
     private fun setupDebuggerSelectAdapter(spinner: Spinner, list: List<debugger_select_e>?) {
         ArrayAdapter(
             requireContext(),
-            R.layout.simple_spinner_item,
+            android.R.layout.simple_spinner_item,
             list ?: emptyList()
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -221,69 +204,11 @@ class SettingsFragment : Fragment() {
     private fun setupCameraClockAdapter(spinner: Spinner, list: List<camera_clock_e>?) {
         ArrayAdapter(
             requireContext(),
-            R.layout.simple_spinner_item,
+            android.R.layout.simple_spinner_item,
             list ?: emptyList()
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinner.adapter = adapter
         }
     }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                val result = CropImage.getActivityResult(data)
-                mainViewModel.onImageSelected(result!!.uri)
-                Toast.makeText(
-                    requireContext(),
-                    "Cropping successful!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
-/*
-    private fun updateTreeView(list: ArrayList<CustomTreeItem>) {
-        diagnosticsTreeViewLinearLayout.removeAllViews()
-        previousTreeNode = null
-        rootNode = TreeNode.root()
-        var sdCardTitle = "ME14 - SD STORAGE"
-        if (list.isEmpty()) {
-            sdCardTitle += "(Not ready!)"
-        }
-        val sdCard =
-            TreeNode(CustomTreeItem(TreeNodeType.SD_STORAGE, sdCardTitle, 0)).setViewHolder(
-                TreeViewHolder(requireContext())
-            )
-
-        for (item in list) {
-            val node = TreeNode(item).setViewHolder(TreeViewHolder(requireContext()))
-            sdCard.addChild(node)
-        }
-
-        rootNode.addChild(sdCard)
-        val treeView = AndroidTreeView(requireContext(), rootNode)
-        treeView.setDefaultAnimation(true)
-        treeView.setDefaultContainerStyle(R.style.TreeNodeStyleCustom)
-        treeView.setDefaultViewHolder(TreeViewHolder::class.java)
-        treeView.setDefaultNodeClickListener { node, value ->
-            if (node.isLeaf) {
-                (previousTreeNode?.viewHolder as? TreeViewHolder)?.changeBackground(false)
-                val item = value as CustomTreeItem
-                previousTreeNode = if (node == previousTreeNode) {
-                    mainViewModel.onTreeItemDeselected()
-                    null
-                } else {
-                    (node.viewHolder as TreeViewHolder).changeBackground(true)
-                    mainViewModel.onTreeItemSelected(item)
-                    node
-                }
-            }
-
-        }
-        diagnosticsTreeViewLinearLayout.addView(treeView.view)
-        treeView.expandAll()
-    }
-*/
 }

@@ -1,6 +1,5 @@
 package com.maximintegrated.maxcamandroid.utils
 
-import com.maximintegrated.maxcamandroid.utils.fromHexStringToMeaningfulAscii
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.junit.Test

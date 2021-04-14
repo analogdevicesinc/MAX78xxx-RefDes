@@ -1,13 +1,12 @@
 package com.maximintegrated.maxcamandroid
 
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Html
 import android.text.method.LinkMovementMethod
+import androidx.appcompat.app.AppCompatActivity
 import com.maximintegrated.maxcamandroid.utils.getAppName
 import kotlinx.android.synthetic.main.activity_license.*
 
@@ -17,10 +16,10 @@ class LicenseActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_license)
 
-        var sharedPrefs: SharedPreferences = getSharedPreferences(packageName, MODE_PRIVATE)
-        var editor: SharedPreferences.Editor = sharedPrefs.edit()
+        val sharedPrefs: SharedPreferences = getSharedPreferences(packageName, MODE_PRIVATE)
+        val editor: SharedPreferences.Editor = sharedPrefs.edit()
 
-        if(sharedPrefs.getBoolean(agreedKey, false)){
+        if (sharedPrefs.getBoolean(agreedKey, false)) {
             startScannerActivity()
         }
 
@@ -43,7 +42,8 @@ class LicenseActivity : AppCompatActivity() {
         }
 
     }
-    private fun startScannerActivity(){
+
+    private fun startScannerActivity() {
         startActivity(Intent(applicationContext, ScannerActivity::class.java))
         finish()
     }

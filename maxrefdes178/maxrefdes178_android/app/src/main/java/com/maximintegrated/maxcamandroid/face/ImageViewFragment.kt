@@ -11,7 +11,6 @@ import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.utils.DeleteListener
 import com.maximintegrated.maxcamandroid.utils.askUserForDeleteOperation
 import kotlinx.android.synthetic.main.fragment_image_view.*
-import java.io.File
 
 class ImageViewFragment : Fragment(), DeleteListener {
 

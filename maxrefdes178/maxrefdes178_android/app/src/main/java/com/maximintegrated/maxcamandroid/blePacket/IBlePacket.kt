@@ -22,8 +22,8 @@ data class ble_packet_info_t(
     companion object {
         fun parse(data: Byte): ble_packet_info_t {
             //todo
-            var type = ble_packet_type_e.values()[(data.toInt() and 0x01)]
-            var seq = (data.toInt() and 0x7f).toByte()
+            val type = ble_packet_type_e.values()[(data.toInt() and 0x01)]
+            val seq = (data.toInt() and 0x7f).toByte()
             return ble_packet_info_t(type, seq)
         }
 
@@ -46,11 +46,11 @@ data class ble_command_packet_header_t(
 ) : IBlePacket {
     companion object {
         fun parse(arr: ByteArray): ble_command_packet_header_t {
-            var info = ble_packet_info_t.parse(arr[0])
-            var command = ble_command_e.values()[arr[1].toInt()]
+            val info = ble_packet_info_t.parse(arr[0])
+            val command = ble_command_e.values()[arr[1].toInt()]
             val buffer = ByteBuffer.wrap(arr.sliceArray(2 until arr.size))
                 .apply { order(ByteOrder.LITTLE_ENDIAN) }
-            var size = buffer.int
+            val size = buffer.int
 
             return ble_command_packet_header_t(info, command, size)
 
@@ -76,8 +76,8 @@ data class ble_command_packet_t(
 ) : IBlePacket {
     companion object {
         fun parse(arr: ByteArray): ble_command_packet_t {
-            var header = ble_command_packet_header_t.parse(arr.sliceArray(0 until 6))
-            var payload = arr.sliceArray(6 until arr.size)
+            val header = ble_command_packet_header_t.parse(arr.sliceArray(0 until 6))
+            val payload = arr.sliceArray(6 until arr.size)
             return ble_command_packet_t(header, payload)
         }
 
@@ -101,7 +101,7 @@ data class ble_command_packet_t(
             sequenceNumber: Int = 0
         ): ble_command_packet_t {
 
-            var header = ble_command_packet_header_t(
+            val header = ble_command_packet_header_t(
                 ble_packet_info_t(
                     ble_packet_type_e.BLE_PACKET_TYPE_COMMAND,
                     sequenceNumber.toByte()
@@ -151,7 +151,7 @@ data class ble_payload_packet_t(
             sequenceNumber: Int = 0
         ): ble_payload_packet_t {
 
-            var header = ble_payload_packet_header_t(
+            val header = ble_payload_packet_header_t(
                 ble_packet_info_t(
                     ble_packet_type_e.BLE_PACKET_TYPE_PAYLOAD,
                     sequenceNumber.toByte()
@@ -222,7 +222,7 @@ data class device_statistics_t(
     var max78000_audio_power_uw: Int
 ) : IBlePacket
 
-data class ble_mtu_response(var mtu : Int):IBlePacket{
+data class ble_mtu_response(var mtu: Int) : IBlePacket {
     override fun size(): Int {
         return Int.SIZE_BYTES
     }
@@ -272,9 +272,11 @@ enum class ble_command_e {
     BLE_COMMAND_ABORT_CMD,           // None
     BLE_COMMAND_INVALID_RES,             // None
     BLE_COMMAND_NOP_CMD,                 // None
-    BLE_COMMAND_MTU_CHANGE_RES{
+    BLE_COMMAND_MTU_CHANGE_RES {
         override fun parse(arr: ByteArray): ble_mtu_response {
-            return ble_mtu_response(ByteBuffer.wrap(arr).order(ByteOrder.LITTLE_ENDIAN).short.toInt())
+            return ble_mtu_response(
+                ByteBuffer.wrap(arr).order(ByteOrder.LITTLE_ENDIAN).short.toInt()
+            )
         }
     },
 
@@ -414,10 +416,10 @@ enum class ble_command_e {
         override fun parse(arr: ByteArray): device_statistics_t {
 
             var tempArr: ByteArray = arr
-            var video = parseStatistics(arr.sliceArray(0 until 16))
-            var audio = parseStatistics(arr.sliceArray(16 until 32))
+            val video = parseStatistics(arr.sliceArray(0 until 16))
+            val audio = parseStatistics(arr.sliceArray(16 until 32))
             tempArr = arr.sliceArray(32 until arr.size)
-            var buffer = ByteBuffer.wrap(tempArr).apply { ByteOrder.LITTLE_ENDIAN }
+            val buffer = ByteBuffer.wrap(tempArr).apply { ByteOrder.LITTLE_ENDIAN }
 
             return device_statistics_t(
                 video,
@@ -461,6 +463,8 @@ enum class ble_command_e {
 
 class BleDefinitions {
     companion object {
-        const val BLE_COMMAND_PACKET_MAX_PAYLOAD_SIZE = 243
+        const val BLE_MAX_MTU_SIZE = 256
+        const val BLE_MAX_MTU_REQUEST_SIZE = BLE_MAX_MTU_SIZE - 4
+        const val BLE_MAX_PACKET_SIZE = BLE_MAX_MTU_REQUEST_SIZE - 3
     }
 }
