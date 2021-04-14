@@ -25,9 +25,19 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Libraries</name>
+			<name>PeriphDrivers</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/msdk/Libraries</locationURI>
+			<locationURI>PARENT-3-ECLIPSE_HOME/Libraries/PeriphDrivers/Source</locationURI>
+		</link>
+		<link>
+			<name>PeriphDrivers-Includes</name>
+			<type>2</type>
+			<locationURI>PARENT-3-ECLIPSE_HOME/Libraries/PeriphDrivers/Include/MAX78000</locationURI>
+		</link>
+		<link>
+			<name>PeriphDrivers-Registers</name>
+			<type>2</type>
+			<locationURI>PARENT-3-ECLIPSE_HOME/Libraries/CMSIS/Device/Maxim/MAX78000/Include</locationURI>
 		</link>
 		<link>
 			<name>maxrefdes178_common</name>
