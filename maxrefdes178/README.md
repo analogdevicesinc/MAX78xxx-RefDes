@@ -136,7 +136,7 @@ The MAXREFDES178# comes with a preloaded demo application.
 
 Remaining steps requires an Android device. Currently, ARM 64 Bits (arm64-v8a) devices and Android version between 7 to 10 are supported.
 
-- Install MAXREFDES178# Android application from: TODO
+- Install MAXREFDES178# Android application from Google Play: https://play.google.com/store/apps/details?id=com.maximintegrated.maxcamandroid
 
 - Enable BLE on Android device.
 
@@ -227,12 +227,12 @@ On Windows, the MSYS shell (included in the SDK) can be used to build examples. 
 Download MAXREFDES178# from GitHub repo:
 
 ```
- git clone TODO link here
+ git clone git@github.com:MaximIntegratedAI/refdes.git
 ```
 
 ![](maxrefdes178_doc/codebase.png)
 
-**WARNING:** Put MAXREFDES178# directory close to the main drive. (i.e. C:\Workspace\\) Long Windows paths may cause build to fail.
+**WARNING:** Put MAXREFDES178# directory close to the main drive. Long Windows paths may cause failed build.
 
 Repo folder structure:
 
@@ -272,6 +272,13 @@ Repo folder structure:
   ![](maxrefdes178_doc/make_max32666.png)
 
 - maxrefdes178_max32666\build\maxrefdes178_max32666.bin firmware binary should be generated.
+
+**WARNING:** If you get below error during build, put MAXREFDES178# directory close to the main drive. Long Windows paths cause failed build.
+
+```
+collect2.exe: fatal error: CreateProcess: No such file or directory
+```
+
 
 #### Build MAX78000 Audio Firmware
 
@@ -486,8 +493,4 @@ Follow the same steps provided in the *Loading and Running Applications on the E
 | info reg                       |                   | Print the values of the ARM registers.                       |
 | help                           |                   | Print descriptions for available commands                    |
 | help \<cmd\>                   |                   | Print description for given command.                         |
-
-## Build and Debug Demo Firmware using Eclipse on Windows
-
-TODO
 
