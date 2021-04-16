@@ -90,7 +90,7 @@
 //-----------------------------------------------------------------------------
 static volatile int core1_init_done = 0;
 static char lcd_string_buff[LCD_NOTIFICATION_MAX_SIZE] = {0};
-static char version_string[10] = {0};
+static char version_string[14] = {0};
 static char usn_string[(sizeof(serial_num_t) + 1) * 3] = {0};
 static char mac_string[(sizeof(device_info.ble_mac) + 1) * 3] = {0};
 static uint16_t video_string_color;
