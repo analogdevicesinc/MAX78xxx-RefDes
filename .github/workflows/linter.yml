@@ -28,4 +28,4 @@ jobs:
           VALIDATE_MARKDOWN: false
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_JSCPD: false
-          FILTER_REGEX_EXCLUDE: attic/.*
+          FILTER_REGEX_EXCLUDE: (attic/.*|.*maxrefdes178_android/.*)
