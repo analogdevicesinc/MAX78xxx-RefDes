@@ -78,7 +78,7 @@ int accel_init(void)
     struct bmi160_int_settg int_config;
 
     sensor.id = I2C_ADDR_BMI160;
-    sensor.interface = BMI160_I2C_INTF;
+    sensor.intf = BMI160_I2C_INTF;
     sensor.read = i2c_read;
     sensor.write = i2c_write;
     sensor.delay_ms = delay_ms;

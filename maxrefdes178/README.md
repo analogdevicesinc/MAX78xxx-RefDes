@@ -37,6 +37,8 @@ The schematic and BOM can be found in the MAXREFDES178# Datasheet.  See https://
 
 The MAXREFDES178# comes with a preloaded demo application.
 
+[![MAXREFDES178](https://github.com/MaximIntegratedAI/refdes/actions/workflows/maxrefdes178.yml/badge.svg?branch=main)](https://github.com/MaximIntegratedAI/refdes/actions/workflows/maxrefdes178.yml)
+
 ### MAXREFDES178# Demo Firmware
 
 - Plug a USB-C cable to charge the device.
