@@ -229,7 +229,7 @@ On Windows, the MSYS shell (included in the SDK) can be used to build examples. 
 Download MAXREFDES178# from GitHub repo:
 
 ```
- git clone git@github.com:MaximIntegratedAI/refdes.git
+ git clone --recurse-submodules git@github.com:MaximIntegratedAI/refdes.git
 ```
 
 ![](maxrefdes178_doc/codebase.png)
