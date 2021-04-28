@@ -75,7 +75,9 @@ class BtAvailableDevicesLiveData(context: Context) : BroadcastLiveData<List<Exte
                     } else {
                         null
                     }
-                    addDevice(bluetoothDevice, rssi)
+                    bluetoothDevice?.let {
+                        addDevice(bluetoothDevice, rssi)
+                    }
                 }
             }
         }

@@ -36,12 +36,20 @@ package com.maximintegrated.maxcamandroid.face
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.os.Parcelable
+import android.provider.MediaStore
 import android.text.InputFilter
 import android.text.InputFilter.LengthFilter
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -59,16 +67,20 @@ import kotlinx.android.synthetic.main.edit_text_alert_dialog.view.*
 import kotlinx.android.synthetic.main.fragment_db_edit.*
 import timber.log.Timber
 import java.io.File
+import java.io.IOException
+import kotlin.jvm.Throws
 
 
 class DbEditFragment : Fragment(), PersonListener {
 
     companion object {
         fun newInstance() = DbEditFragment()
+        private val GET_IMAGE_REQUEST_CODE = 20
     }
 
     private lateinit var faceIdViewModel: FaceIdViewModel
     private lateinit var personAdapter: PersonAdapter
+    private var currentPhotoPath = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -194,12 +206,25 @@ class DbEditFragment : Fragment(), PersonListener {
             }
         }
 
-        CropImage.activity()
-            .setGuidelines(CropImageView.Guidelines.ON)
-            .setAspectRatio(3, 4)
-            .setMinCropWindowSize(480, 640)
-            .setRequestedSize(480, 640)
-            .start(requireContext(), this)
+        val intents = arrayListOf<Intent>()
+        val pickIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        intents.add(pickIntent)
+        val captureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        try {
+            val file = createImageFile()
+            val uri = FileProvider.getUriForFile(
+                requireContext(),
+                "com.maximintegrated.maxcamandroid.fileprovider",
+                file
+            )
+            captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
+        } catch (ex: IOException) {
+            Timber.d(ex)
+        }
+        intents.add(captureIntent)
+        val chooser = Intent.createChooser(intents.removeAt(0), null)
+        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toArray(arrayOf<Parcelable>()))
+        startActivityForResult(chooser, GET_IMAGE_REQUEST_CODE)
     }
 
     override fun onDeleteButtonClicked(vararg model: Any) {
@@ -208,7 +233,22 @@ class DbEditFragment : Fragment(), PersonListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+        if (requestCode == GET_IMAGE_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (data?.data != null) {
+                    cropImage(data.data!!)
+                } else {
+                    //val uri = File(requireContext().cacheDir, "pickImageResult.png").toUri()
+                    //val path = getRealPathFromURI(uri)
+                    cropImage(File(currentPhotoPath).toUri())
+//                    val bitmap = data.extras?.get("data") as? Bitmap
+//                    bitmap?.let {
+//                        val filename = saveBitmap(it)
+//
+//                    }
+                }
+            }
+        } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             val result = CropImage.getActivityResult(data)
             if (resultCode == Activity.RESULT_OK && data != null) {
                 faceIdViewModel.onImageAdded(result!!.uri)
@@ -221,6 +261,25 @@ class DbEditFragment : Fragment(), PersonListener {
                 result?.let { Timber.e(it.error) }
             }
         }
+    }
+
+    private fun cropImage(uri: Uri?) {
+        CropImage.activity(uri)
+            .setGuidelines(CropImageView.Guidelines.ON)
+            .setAspectRatio(3, 4)
+            .setMinCropWindowSize(480, 640)
+            .setRequestedSize(480, 640)
+            .setOutputUri(File(requireContext().cacheDir, "cachedImage.jpeg").toUri())
+            .start(requireContext(), this)
+    }
+
+    @Throws(IOException::class)
+    private fun createImageFile(): File {
+        val storageDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile("maxrefdes178_${System.currentTimeMillis()}_", ".jpg", storageDir)
+            .apply {
+                currentPhotoPath = absolutePath
+            }
     }
 
     override fun onDestroyView() {
