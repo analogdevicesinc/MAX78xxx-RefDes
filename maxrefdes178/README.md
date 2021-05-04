@@ -226,10 +226,10 @@ On Windows, the MSYS shell (included in the SDK) can be used to build examples. 
 
 ### Download MAXREFDES178# Demo Repo
 
-Download MAXREFDES178# from GitHub repo:
+Download MAXREFDES178# from GitHub with submodules:
 
 ```
- git clone git@github.com:MaximIntegratedAI/refdes.git
+ git clone --recurse-submodules git@github.com:MaximIntegratedAI/refdes.git
 ```
 
 ![](maxrefdes178_doc/codebase.png)
@@ -268,7 +268,7 @@ Repo folder structure:
 
 - Run make.
   ```
-  make -r -j 4
+  make -r -j
   ```
   
   ![](maxrefdes178_doc/make_max32666.png)
@@ -288,7 +288,7 @@ collect2.exe: fatal error: CreateProcess: No such file or directory
 - cd into maxrefdes178_max78000_audio directory.
 - Run make.
   ```
-  make -r -j 4
+  make -r -j
   ```
   
   ![](maxrefdes178_doc/make_audio.png)
@@ -301,7 +301,7 @@ collect2.exe: fatal error: CreateProcess: No such file or directory
 - cd into maxrefdes178_max78000_video directory.
 - Run make.
   ```
-  make -r -j 4
+  make -r -j
   ```
   
   ![](maxrefdes178_doc/make_video.png)
