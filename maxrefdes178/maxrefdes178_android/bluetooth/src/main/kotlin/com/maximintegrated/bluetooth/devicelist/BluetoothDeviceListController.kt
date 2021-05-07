@@ -44,7 +44,7 @@ import com.maximintegrated.bluetooth.view.ErrorModel
 class BluetoothDeviceListController : EpoxyController() {
     @AutoModel lateinit var pairedDevicesHeader: PairedDeviceListHeaderModel_
     @AutoModel lateinit var availableDevicesHeader: AvailableDeviceListHeaderModel_
-    @AutoModel lateinit var noAvailableDevicesMessage: NoAvailableDevicesMessageModel_
+    @AutoModel lateinit var noAvailableDevicesMessage: NoAvailableDevicesModel_
     @AutoModel lateinit var bluetoothError: BluetoothErrorModel_
 
     var pairedDevices: List<BluetoothDevice>? = null
@@ -84,6 +84,8 @@ class BluetoothDeviceListController : EpoxyController() {
         }
 
     override fun buildModels() {
+        noAvailableDevicesMessage.deviceClickListener(deviceClickListener)
+
         errorModel?.let {
             bluetoothError
                     .errorModel(it)
@@ -121,12 +123,12 @@ class BluetoothDeviceListController : EpoxyController() {
                         }
                 )
             } else {
-                val device = ExtendedBluetoothDevice(null, 0, "DEMO", "00:11:22:33:AA:BB")
-                add(BluetoothDeviceModel_()
-                    .id(device.address)
-                    .device(device)
-                    .deviceClickListener(deviceClickListener))
-                //add(noAvailableDevicesMessage)
+//                val device = ExtendedBluetoothDevice(null, 0, "DEMO", "00:11:22:33:AA:BB")
+//                add(BluetoothDeviceModel_()
+//                    .id(device.address)
+//                    .device(device)
+//                    .deviceClickListener(deviceClickListener))
+                add(noAvailableDevicesMessage)
             }
         }
 
