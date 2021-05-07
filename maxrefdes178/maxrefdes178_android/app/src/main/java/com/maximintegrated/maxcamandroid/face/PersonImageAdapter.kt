@@ -34,7 +34,9 @@
 
 package com.maximintegrated.maxcamandroid.face
 
+import android.opengl.Visibility
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
@@ -102,12 +104,17 @@ class PersonImageAdapter(
                     listener.onImageClicked(imageFile, personModel)
                 }
                 if (personModel.goodPhotos.contains(imageFile.name)) {
+                    imageCard.good.visibility = View.VISIBLE
+                    /*
                     imageCard.strokeWidth = convertDpToPx(parent.context, 3f).toInt()
                     imageCard.strokeColor = ContextCompat.getColor(parent.context, R.color.color_success)
-                }
-                else if (personModel.badPhotos.contains(imageFile.name)) {
+                     */
+                } else if (personModel.badPhotos.contains(imageFile.name)) {
+                    /*
                     imageCard.strokeWidth = convertDpToPx(parent.context, 3f).toInt()
                     imageCard.strokeColor = ContextCompat.getColor(parent.context, R.color.color_error)
+                     */
+                    imageCard.bad.visibility = View.VISIBLE
                 }
             }
 
