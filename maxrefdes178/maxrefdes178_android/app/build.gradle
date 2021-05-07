@@ -146,6 +146,14 @@ android {
             }
         }
     }
+    task copyDefaultEmbeddings(type: Copy)
+    copyDefaultEmbeddings {
+        description = 'Copies default embeddings file from maxrefdes178_max78000_video\\embeddings.bin to app\\src\\main\\assets\\embeddings_default.bin'
+        from '../../maxrefdes178_max78000_video/embeddings.bin'
+        into 'src/main/assets'
+        rename ('embeddings.bin','embeddings_default.bin')
+    }
+    preBuild.dependsOn copyDefaultEmbeddings
 }
 
 dependencies {
