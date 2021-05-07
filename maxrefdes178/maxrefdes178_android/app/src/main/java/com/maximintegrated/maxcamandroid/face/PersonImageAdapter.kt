@@ -38,11 +38,15 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.material.card.MaterialCardView
 import com.maximintegrated.maxcamandroid.R
+import com.maximintegrated.maxcamandroid.utils.convertDpToPx
 import kotlinx.android.synthetic.main.edit_text_alert_dialog.view.*
 import kotlinx.android.synthetic.main.person_image_item.view.*
 import java.io.File
@@ -80,7 +84,7 @@ class PersonImageAdapter(
         RecyclerView.ViewHolder(
             LayoutInflater.from(parent.context).inflate(R.layout.person_image_item, parent, false)
         ) {
-        private val imageCard: CardView by lazy { itemView.image_card }
+        private val imageCard: MaterialCardView by lazy { itemView.image_card }
 
 
         fun bind(imageFile: File) {
@@ -96,6 +100,14 @@ class PersonImageAdapter(
                     .placeholder(R.drawable.ic_add_black).into(itemView.image_card.imageView)
                 imageCard.setOnClickListener {
                     listener.onImageClicked(imageFile, personModel)
+                }
+                if (personModel.goodPhotos.contains(imageFile.name)) {
+                    imageCard.strokeWidth = convertDpToPx(parent.context, 3f).toInt()
+                    imageCard.strokeColor = ContextCompat.getColor(parent.context, R.color.color_success)
+                }
+                else if (personModel.badPhotos.contains(imageFile.name)) {
+                    imageCard.strokeWidth = convertDpToPx(parent.context, 3f).toInt()
+                    imageCard.strokeColor = ContextCompat.getColor(parent.context, R.color.color_error)
                 }
             }
 
