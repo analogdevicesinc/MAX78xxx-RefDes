@@ -39,9 +39,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.observe
 import com.google.android.material.snackbar.Snackbar
@@ -51,7 +51,9 @@ import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.blePacket.*
 import com.maximintegrated.maxcamandroid.utils.EventObserver
 import kotlinx.android.synthetic.main.fragment_demo.*
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.min
@@ -142,6 +144,20 @@ class DemoFragment : Fragment() {
                 sendEmbeddings(it)
             }
         }
+        sendDefaultButton.setOnClickListener {
+            val alert = AlertDialog.Builder(it.context)
+            alert.setMessage(it.context.getString(R.string.are_you_sure_to_send_default))
+            alert.setPositiveButton(it.context.getString(R.string.upload_signature)) { dialog, _ ->
+                dialog.dismiss()
+                sendDefaultEmbeddings()
+            }
+            alert.setNegativeButton(it.context.getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            alert.show()
+
+        }
+
         mainViewModel.embeddingsSendInProgress.observe(viewLifecycleOwner) {
             sendButton.isEnabled = false
             progressBar.isVisible = true
@@ -161,10 +177,30 @@ class DemoFragment : Fragment() {
 
     }
 
+    private fun sendDefaultEmbeddings() {
+        try {
+            val inputStream: InputStream = context?.assets?.open("embeddings_default.bin")!!
+
+            val buffer = ByteArray(8192)
+            var bytesRead: Int
+            val output = ByteArrayOutputStream()
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                output.write(buffer, 0, bytesRead)
+            }
+            val byteArr: ByteArray = output.toByteArray()
+            sendEmbeddings(byteArr)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     private fun sendEmbeddings(embeddingsFile: File) {
+        sendEmbeddings(embeddingsFile.readBytes())
+    }
+
+    private fun sendEmbeddings(embeddingsArr: ByteArray) {
         if (maxCamViewModel.mtuSize.value != null) {
             mainViewModel.setEmbeddingsSendInProgress(true)
-            val embeddingsArr: ByteArray = embeddingsFile.readBytes()
 
             val command_packet_payload_size: Int =
                 maxCamViewModel.packetSize - ble_command_packet_header_t.size()

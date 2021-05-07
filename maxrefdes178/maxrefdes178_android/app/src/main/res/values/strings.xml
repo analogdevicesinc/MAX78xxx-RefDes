@@ -94,6 +94,7 @@
     <string name="yes">Yes</string>
     <string name="cancel">Cancel</string>
     <string name="new_person">New Person</string>
+    <string name="are_you_sure_to_send_default">Are you sure you want to upload default signature? \nThis operation will overwrite current configuration on device.</string>
     <string name="photo_help_title">FaceID Photo Guidelines</string>
     <string name="photo_help_content">
         " 1. Make sure the subject's face is well illuminated.\n"
@@ -128,7 +129,8 @@
     <string name="signature_not_found">Signature has not been generated yet.</string>
     <string name="script_in_progress">Signature generation is in progress...</string>
     <string name="create_signature">Generate Signature</string>
-    <string name="send_signature">Upload Signature</string>
+    <string name="upload_signature">Upload Signature</string>
+    <string name="upload_default_signature">Upload Default Signature</string>
     <string name="command_operation">Command Operation</string>
     <string name="signature_created_at">Signature was generated at %1$s</string>
     <string name="signature_update_success">Signature updated is successful.</string>
