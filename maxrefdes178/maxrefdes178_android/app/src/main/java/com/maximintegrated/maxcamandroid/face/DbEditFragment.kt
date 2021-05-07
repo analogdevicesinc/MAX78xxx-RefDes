@@ -93,6 +93,9 @@ class DbEditFragment : Fragment(), PersonListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         faceIdViewModel = ViewModelProviders.of(requireActivity()).get(FaceIdViewModel::class.java)
+
+        faceIdViewModel.getEmbeddingsFile()
+
         personAdapter = PersonAdapter(this)
         recyclerView.adapter = personAdapter
         faceIdViewModel.getPersonList()

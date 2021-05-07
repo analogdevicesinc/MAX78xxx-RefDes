@@ -36,7 +36,11 @@ package com.maximintegrated.maxcamandroid.face
 
 import android.text.InputFilter
 import android.text.Spanned
+import com.google.gson.Gson
+import com.google.gson.stream.JsonReader
 import java.io.File
+import java.io.FileReader
+import java.lang.Exception
 
 const val DB_FOLDER_NAME = "/Databases"
 
@@ -51,6 +55,7 @@ data class DbModel(
     val persons: ArrayList<PersonModel> = arrayListOf()
     val dbName: String get() = dbFolder.nameWithoutExtension
     var embeddingsFile: File? = null
+    var embeddingsResult: EmbeddingsResult? = null
 
     init {
         initializeModel()
@@ -71,16 +76,28 @@ data class DbModel(
         embeddingsFile = null
         if (dbFolder.exists()) {
             var listOfFoldersForPeople = dbFolder.listFiles()?.toList() ?: emptyList()
-            embeddingsFile = listOfFoldersForPeople.find { it.extension == "bin" }
             listOfFoldersForPeople = listOfFoldersForPeople.filter { it.isDirectory }
             listOfFoldersForPeople.forEach { persons.add(PersonModel(it)) }
             persons.sort()
+            findEmbeddingsFile()
         }
     }
 
     fun findEmbeddingsFile() {
         val list = dbFolder.listFiles()?.toList() ?: emptyList()
         embeddingsFile = list.find { it.extension == "bin" }
+        list.find { it.extension == "json" && it.name.contains("_result") }?.let {
+            try {
+                val reader = JsonReader(FileReader(it))
+                embeddingsResult = Gson().fromJson<EmbeddingsResult>(reader, EmbeddingsResult::class.java)
+                persons.forEach{ p ->
+                    val subject = embeddingsResult?.subjects?.find { s -> p.nameSurname == s.name }
+                    p.updatePhotoResults(subject)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }
 

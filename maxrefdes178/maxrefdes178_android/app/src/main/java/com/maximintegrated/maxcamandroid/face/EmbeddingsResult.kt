@@ -34,59 +34,17 @@
 
 package com.maximintegrated.maxcamandroid.face
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import java.io.File
+import com.google.gson.annotations.SerializedName
 
-data class PersonModel(
-    var personFolder: File
-) : Comparable<PersonModel> {
-    companion object {
-        const val PHOTO_LIMIT = 8
-    }
+class EmbeddingsResult {
+    var timestamp: String? = null
+    var subjects: List<EmbeddingsSubject>? = null
+}
 
-    override fun compareTo(other: PersonModel): Int {
-        return this.nameSurname.compareTo(other.nameSurname)
-    }
-
-    val nameSurname: String get() = personFolder.nameWithoutExtension
-    var images: MutableList<File> = mutableListOf()
-    val imageCount: Int get() = images.count { !it.isDirectory }
-    val goodPhotos : MutableList<String> = mutableListOf()
-    val badPhotos : MutableList<String> = mutableListOf()
-
-    init {
-        initializeModel()
-    }
-
-    fun delete() {
-        personFolder.deleteRecursively()
-    }
-
-    fun rename(file: File) {
-        personFolder.renameTo(file)
-        personFolder = file
-        initializeModel()
-    }
-
-    fun refreshImages() {
-        if (personFolder.exists()) {
-            images = personFolder.listFiles()?.toMutableList() ?: mutableListOf()
-            images.sortBy { it.lastModified() }
-            images.forEach { File(it.toURI().path) }
-            if (images.size < PHOTO_LIMIT) {
-                images.add(createTempDir())
-            }
-        }
-    }
-    fun updatePhotoResults(subject : EmbeddingsSubject?){
-        goodPhotos.clear()
-        badPhotos.clear()
-        subject?.goodPhotos?.let { goodPhotos.addAll(it) }
-        subject?.badPhotos?.let { badPhotos.addAll(it) }
-    }
-
-    private fun initializeModel() {
-        refreshImages()
-    }
+class EmbeddingsSubject {
+    var name: String? = null
+    @SerializedName("good_photos")
+    var goodPhotos: List<String>? = null
+    @SerializedName("bad_photos")
+    var badPhotos: List<String>? = null
 }
