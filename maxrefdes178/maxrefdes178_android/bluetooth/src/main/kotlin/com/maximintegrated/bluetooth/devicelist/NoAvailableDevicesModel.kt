@@ -34,14 +34,37 @@
 
 package com.maximintegrated.bluetooth.devicelist
 
+import android.view.View
 import android.widget.TextView
-import com.airbnb.epoxy.EpoxyModel
+import com.airbnb.epoxy.EpoxyAttribute
+import com.airbnb.epoxy.EpoxyHolder
 import com.airbnb.epoxy.EpoxyModelClass
+import com.airbnb.epoxy.EpoxyModelWithHolder
+import com.google.android.material.button.MaterialButton
 import com.maximintegrated.bluetooth.R
+import com.maximintegrated.bluetooth.devicelist.NoAvailableDevicesModel.NoAvailableDevicesHolder
 
 @EpoxyModelClass
-abstract class NoAvailableDevicesMessageModel : EpoxyModel<TextView>() {
+abstract class NoAvailableDevicesModel : EpoxyModelWithHolder<NoAvailableDevicesHolder>() {
 
     override fun getDefaultLayout() = R.layout.model_no_available_devices_message
 
+    @EpoxyAttribute(hash = false)
+    var deviceClickListener: OnBluetoothDeviceClickListener? = null
+
+    override fun bind(holder: NoAvailableDevicesHolder) {
+        holder.demoButton.setOnClickListener {
+            deviceClickListener?.onBluetoothDeviceClicked(null)
+        }
+    }
+
+    class NoAvailableDevicesHolder : EpoxyHolder() {
+        lateinit var textView: TextView
+        lateinit var demoButton: MaterialButton
+
+        override fun bindView(itemView: View) {
+            textView = itemView.findViewById(R.id.message_text)
+            demoButton = itemView.findViewById(R.id.demo_button)
+        }
+    }
 }
