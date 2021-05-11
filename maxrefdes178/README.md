@@ -380,6 +380,10 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
   
   ![](maxrefdes178_doc/openocd_write_max78000_video.png)
 
+
+
+NOTE: *If the firmware update failed or openOCD crashed repeatedly and you were unable to program the video or audio firmware, please Erase the video or audio firmware using MAX32625PICO Debugger as instruction in "**Erasing Video/Audio FW using MAX32625PICO Debugger**" section*.
+
 ### Load MAX78000 Audio Firmware
 
 - MAX32666 firmware should be loaded before this step.
@@ -398,6 +402,10 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
 - Successful MAX78000 Audio firmware update output:
   
   ![](maxrefdes178_doc/openocd_write_max78000_audio.png)
+  
+  
+  
+  NOTE: *If the firmware update failed or openOCD crashed repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using MAX32625PICO Debugger as instruction in "**Erasing Video/Audio FW using MAX32625PICO Debugger**" section*.
 
 ## Debug Demo Firmware using MINGW on Windows
 
@@ -495,4 +503,60 @@ Follow the same steps provided in the *Loading and Running Applications on the E
 | info reg                       |                   | Print the values of the ARM registers.                       |
 | help                           |                   | Print descriptions for available commands                    |
 | help \<cmd\>                   |                   | Print description for given command.                         |
+
+
+
+## Erasing Video or Audio Firmware Using MAX32625PICO 
+
+If the programming of Audio or Video Firmware fails repeatedly (could be due to incomplete firmware update, application entering low power or shutdown mode too soon, etc.), you can use the following instructions to erase the existing audio or video firmware and recover. To proceed, a MAX32625PICO loaded with the latest DAPLINK Firmware and enabled automation is required. 
+
+
+
+### A) Update MAX32625PICO DAPLINK Firmware:
+
+1- Press and hold the SW on MAX32625PICO and then connect it to the USB port to enter the maintenance mode. A MAINTENENCE drive should appear.
+
+2- Drag and drop the latest bin firmware to the MAINTENENCE drive. The latest DAPLINK binary can be found here:
+
+https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/tree/main/bin
+
+3-  Following the Drag-n-Drop, the debug adapter should reboot and reconnect as a drive named DAPLINK.
+
+
+
+### B) Enable Automation in MAX32625PICO:
+
+1- Open the DETAILS.TXT file on the DAPLINK drive and make sure the 'Automation Allowed' field is set to 1. If not, proceed to the next step.
+
+2- To set 'Automation allowed" field to 1, create an empty text file called "auto_on.cfg".  Connect MAX32625PICO to USB, wait for DAPLINK drive to appear. Press and hold the SWD and drag the drop the "auto_on.cfg" to DAPLINK drive. Then release the SW button when the drive unmounts. 
+
+3- After it remounts, confirm "Automation Allowed" in details.txt is set to 1.
+
+
+
+### C) Erase Vido/Audio Firmware of Cube Camera
+
+1- Turn off the cube camera and disconnect MAXDAP-TYPE-C Pico if connected
+
+2- Carefully open the camera from the top side (Maxim logo) while making sure that the flex cable connecting two boards is not damaged or disconnected.
+
+<img src="maxrefdes178_doc/camera-open1.jpg" style="zoom:33%;" />
+
+
+
+3- Remove battery, connect MAX32625PICO DAPLINK ribbon cable to J2 (for video firmware) or J3(for audio firmware).  Connect the MAX32625PICO to USB port. A DAPLINK drive should appear.
+
+<img src="maxrefdes178_doc/camera-open-2.jpg" style="zoom: 25%;" />
+
+4- Create an empty file called "erase.act".  
+
+5- Have a USB-C cable to Power up the Cube Camera using a power band to USB power handy. But do NOT power up yet.
+
+6- Drag and drop the empty "erase.act" file to the DAPLINK drive. A copying box opens and the progress stays at 0%.
+
+7- Power up the Cube Camera using the USB-C cable. The copying progress quickly goes to 100% and DAPLINK drive remounts. The flash of the target device is erased.
+
+8- Disconnect the DAPLINK ribbon cable from J2 or J3, reconnect the battery and close the camera case.
+
+
 
