@@ -550,7 +550,7 @@ https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/tree/main/
 
 4- Create an empty file called "erase.act".  
 
-5- Have a USB-C cable to Power up the Cube Camera using a power band to USB power handy. But do NOT power up yet.
+5- Have a USB-C cable to Power up the Cube Camera using a power bank to USB power handy. But do NOT power up yet.
 
 6- Drag and drop the empty "erase.act" file to the DAPLINK drive. A copying box opens and the progress stays at 0%.
 
