@@ -229,12 +229,12 @@ int main(void)
         pmic_led_red(1);
     }
 
-//    ret = powmon_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("powmon_init failed %d", ret);
-//        pmic_led_red(1);
-//    }
-//
+    ret = powmon_init();
+    if (ret != E_NO_ERROR) {
+        PR_ERROR("powmon_init failed %d", ret);
+        pmic_led_red(1);
+    }
+
 //    ret = usb_init();
 //    if (ret != E_NO_ERROR) {
 //        PR_ERROR("usb_init failed %d", ret);
@@ -615,10 +615,10 @@ static void run_application(void)
         }
 
         // Power accumulator worker
-//        if ((timer_ms_tick - timestamps.powmon) > MAX32666_POWMON_INTERVAL) {
-//            timestamps.powmon = timer_ms_tick;
-//            powmon_worker();
-//        }
+        if ((timer_ms_tick - timestamps.powmon) > MAX32666_POWMON_INTERVAL) {
+            timestamps.powmon = timer_ms_tick;
+            powmon_worker();
+        }
 
         // LED worker
         if ((timer_ms_tick - timestamps.led) > MAX32666_LED_INTERVAL) {
@@ -715,15 +715,15 @@ static int refresh_screen(void)
         fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
-//        // MAX78000 Video power
-//        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Vid:%d mW", device_status.statistics.max78000_video_cnn_power_mw);
-//        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-//        line_pos += 12;
-//
-//        // MAX78000 Audio power
-//        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Aud:%d mW", device_status.statistics.max78000_audio_cnn_power_mw);
-//        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-//        line_pos += 12;
+        // MAX78000 Video power
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Vid:%d mW", device_status.statistics.max78000_video_cnn_power_mw);
+        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
+
+        // MAX78000 Audio power
+        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Aud:%d mW", device_status.statistics.max78000_audio_cnn_power_mw);
+        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        line_pos += 12;
 
         if ((timestamps.screen_drew - timestamps.faceid_subject_names_received) < LCD_NOTIFICATION_DURATION) {
             line_pos += 5;
