@@ -562,19 +562,19 @@ https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/tree/main/
 
 ## Porting Applications to the Cube Camera
 
-Demo examples running on the Cube Camera includes 3 main components:
+Demo examples running on the Cube Camera include three main components:
 
-1. First MAX78000 for video AI application: It is executed on the first MAX78000 which is connected to the image sensor. This application initializes the image sensor, captures its image data, and streams it to the MAX32666 using the QSPI to be displayed on the TFT. Besides, it initializes the CNN and feeds the image sensor data to the CNN to run the inferences. The result of inferences is unloaded and sent to the MAX32666 to be displayed. The preprocessing of image data and optional post-processing of the inference results are performed in this application.
+1. First MAX78000 for video AI application: The application is executed on the first MAX78000 which is connected to the image sensor. This application initializes the image sensor, captures its image data, and streams it to the MAX32666 using the QSPI for display on the TFT. Additionally, it initializes the CNN and feeds the image sensor data to the CNN to run inferences. Inference results are unloaded and sent to the MAX32666 to be displayed. Preprocessing of image data and optional post-processing of the inference results are performed in this application.
 
-2. Second MAX78000 for audio AI application: It is developed on the second MAX78000 which is connected to the digital microphone. This application initializes the CNN and I2S digital microphone (or CODEC), collects audio samples, loads to the CNN, runs inferences, unloads the results, and sends them to the MAX32666 to be displayed and/or further processed. The preprocessing of audio data and optional post-processing of the inference results are performed in this application.
+2. Second MAX78000 for audio AI application: This application is developed on the second MAX78000 which is connected to the digital microphone. This application initializes the CNN and I2S digital microphone (or CODEC), collects audio samples, loads the CNN, runs inferences, unloads the results, and sends them to the MAX32666 to be displayed and/or further processed. Preprocessing of audio data and optional post-processing of the inference results are performed in this application.
 
-3. MAX32666 for main control, connectivity, interface, and management. This application includes all initialization and control of Power Management, TFT, Accelerometer, BLE, and other peripherals. 
+3. MAX32666 for main control, connectivity, interface, and management. This application includes all initialization and control of Power Management, TFT, accelerometer, BLE, and other peripherals. 
 
    <img src="maxrefdes178_doc/maxrefdes178.jpg" style="zoom:80%;" />
 
-To have an application running on the Cube Camera, generally all 3 components are needed. The provided examples include a framework with required control code, commands, and state machines for each of the 3 micros. 
+To have an application running on the Cube Camera, generally all three components are needed. The provided examples include a framework with required control code, commands, and state machines for each of the three microcontrollers. 
 
-For the fastest implementation, one can modify one of the provide demo examples to suit the desired application as highlighted below.
+For the fastest route to a working implementation, modify one of the provided demo examples as described below.
 
 
 
@@ -584,7 +584,7 @@ The simplified top-level diagram of the application is shown below:
 
 <img src="maxrefdes178_doc/porting-max32666.png" style="zoom:120%;" />
 
-Following modifications may be needed your new example:
+The following modifications may be needed for a new example application:
 
 #### `max32666_main.c`
 
@@ -593,7 +593,7 @@ Following modifications may be needed your new example:
 2. In `main()` function of `max32666_main.c`:
 
    - If needed, disable any unnecessary initialization (e.g. BLE, powmon).
-   - If only video (or audio) application exists, remove qspi communication to the non-existent components. A typical qspi communication with audio/video core is:
+   - If only a video (or only an audio) application exists, remove QSPI communication to the non-existent components. A typical QSPI communication with the audio/video core is:
 
    ```c++
    for (int try = 0; try < 3; try++) {
@@ -605,34 +605,34 @@ Following modifications may be needed your new example:
        }
    ```
 
-3. In `run_application()`function of `max32666_main.c`:
+3. In the `run_application()` function of `max32666_main.c`:
 
-   - If needed, remove qspi TX and RX to/from non-existent audio or video components, BLE, activity sensor, power accumulator, etc.
+   - If needed, remove QSPI TX and RX to/from non-existent audio or video components, BLE, activity sensor, power accumulator, etc.
    - Update the state machine to process the classification result, e.g. `device_status.classification_video.classification` or `device_status.classification_audio.classification`
    - Modify button and TFT touch functionality, LED and display information on TFT as needed.
 
 #### `maxrefdes178_definitions.h`
 
-1. Add/modify `qspi_packet_type_e`commands as required. The qspi commands define the communication between MAX32666 and audio/video MAX78000.
-2. Update LCD and Camera width/height and format if the image capture and display format are different.
+1. Add/modify `qspi_packet_type_e` commands as required. The QSPI commands define the communication between MAX32666 and audio/video MAX78000.
+2. Update LCD and camera width/height and format, if the image capture and display format are different.
 
 
 
 ### MAX78000 Audio/Video Applications (maxrefdes178_max78000_audio, maxrefdes178_max78000_video): 
 
-The top-level diagram of audio/video application is shown below:
+The top-level diagram of the audio/video application is shown below:
 
 <img src="maxrefdes178_doc/porting-video-audio-app.png" style="zoom:120%;" />
 
-Following steps summarize the modifications needed to port a new example: 
+The following steps summarize the modifications needed to port a new example: 
 
-1. Update cnn.c, cnn.h and weights.h in src and include folders for your examples. These auto-generated files are created by the synthesis tool once you trained, quantized and synthesized your network.
+1. Update `cnn.c`, `cnn.h` and `weights.h` in the `src` and `include` folders. These auto-generated files are created by the synthesis tool once the network is trained, quantized and synthesized.
 
-2. Add your application in `max78000_audio_main.c` and `max78000_video_main.c`. Include necessary initialization, preprocessing of peripherals, microphone or image sensor.
+2. Add your application to `max78000_audio_main.c` and `max78000_video_main.c`. Include necessary initialization, preprocessing of peripherals, microphone or image sensor.
 
-3. Update the qspi command processing state-machine in the main loop as necessary to communicate with MAX32666.
+3. Update the QSPI command processing state-machine in the main loop as necessary to communicate with MAX32666.
 
-4. Update the CNN code block to load weights, bias, configuration, data, start inference, and unload the result, similar to the synthesized auto-generated code of your application.   
+4. Update the CNN code block to load weights, bias, configuration, data, start inference, and unload the result in the synthesized auto-generated code of your application.   
 
    The following code snippet demonstrates the CNN block:
 
@@ -670,11 +670,11 @@ Following steps summarize the modifications needed to port a new example:
    softmax_q17p14_q15((const q31_t*) ml_data, NUM_OUTPUTS, ml_softmax);
    ```
 
-   - **Note:  If FIFO option is used to synthesize your example (--fifo, or --fast-fifo in ai8xize.py),** **cnn_start() should be called first, followed by loading the data to the FIFOs as they become available.  The CNN will start automatically when enough data is available**.
+   - **Note: If the FIFO option is used to synthesize your example (`--fifo`, or `--fast-fifo` in ai8xize.py),** **`cnn_start()` should be called first, followed by loading the data to the FIFOs as they become available. The CNN will start automatically when enough data is available.**
 
      
 
-5. Populate the result of classification in `classification_result_t`  structure to be reported to MAX32666:
+5. Populate the classification result in the `classification_result_t`  structure to be reported to MAX32666:
 
    ```c++
    typedef enum {
@@ -696,7 +696,7 @@ Following steps summarize the modifications needed to port a new example:
 
    
 
-6. Populate the statistics in  `max78000_statistics_t` structure to be reported to MAX32666:
+6. Populate the statistics in the `max78000_statistics_t` structure to be reported to MAX32666:
 
    ```c
    // MAX78000 statistics field
@@ -708,7 +708,7 @@ Following steps summarize the modifications needed to port a new example:
    } max78000_statistics_t;
    ```
 
-7. Report the result of classification and statistics back to MAX32666 using the appropriate qspi commands. For example, for audio results:
+7. Report the classification result and statistics back to MAX32666 using the appropriate QSPI commands. For example, for audio results:
 
    ```c
    // report classification result
