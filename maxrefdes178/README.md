@@ -564,7 +564,7 @@ https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/tree/main/
 
 Demo examples running on the Cube Camera includes 3 main components:
 
-1. First MAX78000 for video AI application: It is executed on the first MAX78000 which is connected to the image sensor. This application initializes the image sensor, captures its image data, and streams it to the MAX32666 using the QSPI to be displayed on the TFT. Besides, it initializes the CNN and feeds the image sensor data to the CNN to run the inferences. The result of inferences is unloaded and sent to the MAX78000 to be displayed. The preprocessing of image data and optional post-processing of the inference results are performed in this application.
+1. First MAX78000 for video AI application: It is executed on the first MAX78000 which is connected to the image sensor. This application initializes the image sensor, captures its image data, and streams it to the MAX32666 using the QSPI to be displayed on the TFT. Besides, it initializes the CNN and feeds the image sensor data to the CNN to run the inferences. The result of inferences is unloaded and sent to the MAX32666 to be displayed. The preprocessing of image data and optional post-processing of the inference results are performed in this application.
 
 2. Second MAX78000 for audio AI application: It is developed on the second MAX78000 which is connected to the digital microphone. This application initializes the CNN and I2S digital microphone (or CODEC), collects audio samples, loads to the CNN, runs inferences, unloads the results, and sends them to the MAX32666 to be displayed and/or further processed. The preprocessing of audio data and optional post-processing of the inference results are performed in this application.
 
@@ -624,9 +624,9 @@ The top-level diagram of audio/video application is shown below:
 
 <img src="maxrefdes178_doc/porting-video-audio-app.png" style="zoom:120%;" />
 
-Following steps summarizes the modifications needed to port a new example: 
+Following steps summarize the modifications needed to port a new example: 
 
-1. Update cc.c, cnn.h and weights.h in src and include folders for your examples. These auto-generated files are created by the synthesis tool once you trained, quantized and synthesized your network.
+1. Update cnn.c, cnn.h and weights.h in src and include folders for your examples. These auto-generated files are created by the synthesis tool once you trained, quantized and synthesized your network.
 
 2. Add your application in `max78000_audio_main.c` and `max78000_video_main.c`. Include necessary initialization, preprocessing of peripherals, microphone or image sensor.
 
@@ -670,7 +670,7 @@ Following steps summarizes the modifications needed to port a new example:
    softmax_q17p14_q15((const q31_t*) ml_data, NUM_OUTPUTS, ml_softmax);
    ```
 
-   - **Note:  If FIFO option is used to synthesis your example (--fifo, or --fast-fifo in ai8xize.py),** **cnn_start() should be called first, followed by loading the data to the FIFOs as they become available.  The CNN will start automatically when enough data is available**.
+   - **Note:  If FIFO option is used to synthesize your example (--fifo, or --fast-fifo in ai8xize.py),** **cnn_start() should be called first, followed by loading the data to the FIFOs as they become available.  The CNN will start automatically when enough data is available**.
 
      
 
@@ -719,5 +719,5 @@ Following steps summarizes the modifications needed to port a new example:
                            QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES);
    ```
 
-8. Send the raw image as needed (video only) to MAX326777: `send_img()`
+8. Send the raw image as needed (video only) to MAX32666: `send_img()`
 
