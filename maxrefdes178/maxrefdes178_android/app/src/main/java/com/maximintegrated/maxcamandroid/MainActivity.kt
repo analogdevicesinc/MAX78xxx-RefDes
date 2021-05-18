@@ -62,6 +62,7 @@ import com.maximintegrated.maxcamandroid.view.BleConnectionInfo
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_layout.*
 import timber.log.Timber
+import com.maximintegrated.maxcamandroid.utils.showWarningPopup
 
 class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
 
@@ -133,8 +134,15 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
                 "MAX32666 - ${it.max32666}\n" +
                         "MAX78000 Video - ${it.max78000_video}\n" +
                         "MAX78000 Audio - ${it.max78000_audio}"
-        }
 
+            try {
+                if (BuildConfig.VERSION_NAME != it.max32666.toString()) {
+                    showWarningPopup(this, getString(R.string.app_firmware_versions_different))
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         mainViewModel.mtuResponse.observe(this) {
             maxCamViewModel.setMtu(it.mtu)
 

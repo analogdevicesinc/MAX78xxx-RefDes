@@ -94,7 +94,7 @@
     <string name="yes">Yes</string>
     <string name="cancel">Cancel</string>
     <string name="new_person">New Person</string>
-    <string name="are_you_sure_to_send_default">Are you sure you want to upload default signature? \nThis operation will overwrite current configuration on device.</string>
+    <string name="are_you_sure_to_send_signature">Are you sure you want to upload this signature? \nThis operation will overwrite current configuration on device.</string>
     <string name="photo_help_title">FaceID Photo Guidelines</string>
     <string name="photo_help_content">
         " 1. Make sure the subject's face is well illuminated.\n"
@@ -138,4 +138,6 @@
     <string name="signature_create_fail">Signature can not be generated!</string>
     <string name="face_id_demo">Generate/Upload Signature</string>
     <string name="info">Info</string>
+    <string name="OK">OK</string>
+    <string name="app_firmware_versions_different">Android application version and device firmware version is different. Actions you\'ll take may corrupt the device!</string>
 </resources>

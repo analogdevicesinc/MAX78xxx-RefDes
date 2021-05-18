@@ -38,15 +38,21 @@ import android.content.Context
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Environment
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.FileWriter
+import com.maximintegrated.maxcamandroid.MainViewModel
 import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.ScannerActivity
-import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
+import com.maximintegrated.maxcamandroid.blePacket.*
 import com.maximintegrated.maxcamandroid.databinding.SettingsItemBinding
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
+import kotlin.math.min
 
 const val ROOT_FRAGMENT = "ROOT_FRAGMENT"
 
@@ -131,6 +137,107 @@ public fun askUserForDeleteOperation(
     }
     alert.show()
 }
+
+fun showWarningPopup(
+    context: Context,
+    warningMessage: String
+) {
+    val alert = AlertDialog.Builder(context)
+    alert.setTitle(R.string.warning)
+    alert.setMessage(warningMessage)
+    alert.setPositiveButton(R.string.OK) { dialog, _ ->
+        dialog.dismiss()
+    }
+    alert.show()
+}
+
+fun sendDefaultEmbeddings(
+    maxCamViewModel: MaxCamViewModel,
+    mainViewModel: MainViewModel,
+    context: Context
+) {
+    try {
+        val inputStream: InputStream = context?.assets?.open("embeddings_default.bin")!!
+
+        val buffer = ByteArray(8192)
+        var bytesRead: Int
+        val output = ByteArrayOutputStream()
+        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+            output.write(buffer, 0, bytesRead)
+        }
+        val byteArr: ByteArray = output.toByteArray()
+        sendEmbeddings(byteArr, maxCamViewModel, mainViewModel, context)
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
+fun sendEmbeddings(
+    embeddingsFile: File,
+    maxCamViewModel: MaxCamViewModel,
+    mainViewModel: MainViewModel,
+    context: Context
+) {
+    sendEmbeddings(embeddingsFile.readBytes(), maxCamViewModel, mainViewModel, context)
+}
+
+fun sendEmbeddings(
+    embeddingsArr: ByteArray,
+    maxCamViewModel: MaxCamViewModel,
+    mainViewModel: MainViewModel,
+    context: Context
+) {
+
+    val alert = AlertDialog.Builder(context)
+    alert.setMessage(context.getString(R.string.are_you_sure_to_send_signature))
+    alert.setPositiveButton(context.getString(R.string.upload_signature)) { dialog, _ ->
+        dialog.dismiss()
+
+        if (maxCamViewModel.mtuSize.value != null) {
+            mainViewModel.setEmbeddingsSendInProgress(true)
+
+            val command_packet_payload_size: Int =
+                maxCamViewModel.packetSize - ble_command_packet_header_t.size()
+            val payload_packet_payload_size: Int =
+                maxCamViewModel.packetSize - ble_payload_packet_header_t.size()
+            var spentPayloadSize = 0
+            var remainingSize = embeddingsArr.size
+
+            val commandPacket = ble_command_packet_t.from(
+                ble_command_e.BLE_COMMAND_FACEID_EMBED_UPDATE_CMD,
+                embeddingsArr,
+                min(command_packet_payload_size, embeddingsArr.size),
+                embeddingsArr.size
+            )
+
+            mainViewModel.setSendTimeout()
+            maxCamViewModel.sendData(commandPacket.toByteArray())
+
+            spentPayloadSize += command_packet_payload_size
+            remainingSize -= command_packet_payload_size
+            while (remainingSize > 0) {
+                val payloadPacket = ble_payload_packet_t.from(
+                    embeddingsArr.sliceArray(spentPayloadSize until embeddingsArr.size),
+                    min(payload_packet_payload_size, remainingSize)
+                )
+                maxCamViewModel.sendData(payloadPacket.toByteArray())
+                spentPayloadSize += payload_packet_payload_size
+                remainingSize -= payload_packet_payload_size
+            }
+        } else {
+            Toast.makeText(
+                context,
+                "Connection issue! Mtu is not set yet",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    alert.setNegativeButton(context.getString(R.string.cancel)) { dialog, _ ->
+        dialog.dismiss()
+    }
+    alert.show()
+}
+
 
 private val IO_EXECUTOR = Executors.newSingleThreadExecutor()
 
