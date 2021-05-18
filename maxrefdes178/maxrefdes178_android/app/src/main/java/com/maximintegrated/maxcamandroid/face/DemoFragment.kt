@@ -166,7 +166,9 @@ class DemoFragment : Fragment() {
             }
         }
         sendDefaultButton.setOnClickListener {
+
             sendDefaultEmbeddings(maxCamViewModel, mainViewModel, requireContext())
+
         }
 
         mainViewModel.embeddingsSendInProgress.observe(viewLifecycleOwner) {
@@ -187,6 +189,7 @@ class DemoFragment : Fragment() {
         }
 
     }
+
 
 
 }
