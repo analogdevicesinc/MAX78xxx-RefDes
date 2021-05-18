@@ -53,6 +53,55 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/signatureButton" />
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/embeddingResultCounts"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/embeddingsTextView"
+        android:visibility="gone">
+        <ImageView
+            android:id="@+id/goodResultMark"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:adjustViewBounds="true"
+            android:src="@mipmap/check"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/goodResultCount"
+            android:padding="2dp"
+            />
+        <TextView
+            android:id="@+id/goodResultCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" : 8"
+            app:layout_constraintStart_toEndOf="@id/goodResultMark"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+        <ImageView
+            android:id="@+id/badResultMark"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:adjustViewBounds="true"
+            android:src="@mipmap/cancel"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/goodResultCount"
+            app:layout_constraintBottom_toBottomOf="@id/badResultCount"
+            android:layout_marginStart="10dp"
+            android:padding="2dp"/>
+        <TextView
+            android:id="@+id/badResultCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" : 8"
+            app:layout_constraintStart_toEndOf="@id/badResultMark"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <TextView
         android:id="@+id/sendEmbeddingsTextView"
         android:layout_width="0dp"
@@ -63,7 +112,7 @@
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/embeddingsTextView" />
+        app:layout_constraintTop_toBottomOf="@id/embeddingResultCounts" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/sendButton"

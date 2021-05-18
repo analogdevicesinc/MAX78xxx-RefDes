@@ -51,6 +51,7 @@ import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.blePacket.*
 import com.maximintegrated.maxcamandroid.utils.EventObserver
 import kotlinx.android.synthetic.main.fragment_demo.*
+import kotlinx.android.synthetic.main.fragment_demo.view.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
@@ -95,6 +96,7 @@ class DemoFragment : Fragment() {
                     R.string.script_in_progress
                 )
                 sendButton.isEnabled = false
+                embeddingResultCounts.visibility = View.GONE
             } else {
                 val file = faceIdViewModel.selectedDatabase?.embeddingsFile
                 if (file == null) {
@@ -102,12 +104,32 @@ class DemoFragment : Fragment() {
                         R.string.signature_not_found
                     )
                     sendButton.isEnabled = false
+                    embeddingResultCounts.visibility = View.GONE
                 } else {
                     embeddingsTextView.text = getString(
                         R.string.signature_created_at,
                         sdf.format(Date(file.lastModified()))
                     )
                     sendButton.isEnabled = true
+                    embeddingResultCounts.visibility = View.VISIBLE
+                    embeddingResultCounts.goodResultCount.text = " : " +
+                            faceIdViewModel.selectedDatabase?.embeddingsResult?.subjects?.sumBy {
+                                if (it.goodPhotos != null) {
+                                    it.goodPhotos!!.size
+                                }
+                                else{
+                                    0
+                                }
+                            }
+                    embeddingResultCounts.badResultCount.text = " : " +
+                            faceIdViewModel.selectedDatabase?.embeddingsResult?.subjects?.sumBy {
+                                if (it.badPhotos != null) {
+                                    it.badPhotos!!.size
+                                }
+                                else{
+                                    0
+                                }
+                            }
                 }
 
             }
