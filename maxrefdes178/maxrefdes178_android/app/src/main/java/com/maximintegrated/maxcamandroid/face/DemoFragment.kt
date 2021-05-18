@@ -58,6 +58,7 @@ import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.min
+import com.maximintegrated.maxcamandroid.utils.*
 
 
 class DemoFragment : Fragment() {
@@ -116,8 +117,7 @@ class DemoFragment : Fragment() {
                             faceIdViewModel.selectedDatabase?.embeddingsResult?.subjects?.sumBy {
                                 if (it.goodPhotos != null) {
                                     it.goodPhotos!!.size
-                                }
-                                else{
+                                } else {
                                     0
                                 }
                             }
@@ -125,8 +125,7 @@ class DemoFragment : Fragment() {
                             faceIdViewModel.selectedDatabase?.embeddingsResult?.subjects?.sumBy {
                                 if (it.badPhotos != null) {
                                     it.badPhotos!!.size
-                                }
-                                else{
+                                } else {
                                     0
                                 }
                             }
@@ -163,21 +162,11 @@ class DemoFragment : Fragment() {
 
         sendButton.setOnClickListener {
             faceIdViewModel.selectedDatabase!!.embeddingsFile?.let {
-                sendEmbeddings(it)
+                sendEmbeddings(it, maxCamViewModel, mainViewModel, requireContext())
             }
         }
         sendDefaultButton.setOnClickListener {
-            val alert = AlertDialog.Builder(it.context)
-            alert.setMessage(it.context.getString(R.string.are_you_sure_to_send_default))
-            alert.setPositiveButton(it.context.getString(R.string.upload_signature)) { dialog, _ ->
-                dialog.dismiss()
-                sendDefaultEmbeddings()
-            }
-            alert.setNegativeButton(it.context.getString(R.string.cancel)) { dialog, _ ->
-                dialog.dismiss()
-            }
-            alert.show()
-
+            sendDefaultEmbeddings(maxCamViewModel, mainViewModel, requireContext())
         }
 
         mainViewModel.embeddingsSendInProgress.observe(viewLifecycleOwner) {
@@ -199,65 +188,5 @@ class DemoFragment : Fragment() {
 
     }
 
-    private fun sendDefaultEmbeddings() {
-        try {
-            val inputStream: InputStream = context?.assets?.open("embeddings_default.bin")!!
 
-            val buffer = ByteArray(8192)
-            var bytesRead: Int
-            val output = ByteArrayOutputStream()
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                output.write(buffer, 0, bytesRead)
-            }
-            val byteArr: ByteArray = output.toByteArray()
-            sendEmbeddings(byteArr)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun sendEmbeddings(embeddingsFile: File) {
-        sendEmbeddings(embeddingsFile.readBytes())
-    }
-
-    private fun sendEmbeddings(embeddingsArr: ByteArray) {
-        if (maxCamViewModel.mtuSize.value != null) {
-            mainViewModel.setEmbeddingsSendInProgress(true)
-
-            val command_packet_payload_size: Int =
-                maxCamViewModel.packetSize - ble_command_packet_header_t.size()
-            val payload_packet_payload_size: Int =
-                maxCamViewModel.packetSize - ble_payload_packet_header_t.size()
-            var spentPayloadSize = 0
-            var remainingSize = embeddingsArr.size
-
-            val commandPacket = ble_command_packet_t.from(
-                ble_command_e.BLE_COMMAND_FACEID_EMBED_UPDATE_CMD,
-                embeddingsArr,
-                min(command_packet_payload_size, embeddingsArr.size),
-                embeddingsArr.size
-            )
-
-            mainViewModel.setSendTimeout()
-            maxCamViewModel.sendData(commandPacket.toByteArray())
-
-            spentPayloadSize += command_packet_payload_size
-            remainingSize -= command_packet_payload_size
-            while (remainingSize > 0) {
-                val payloadPacket = ble_payload_packet_t.from(
-                    embeddingsArr.sliceArray(spentPayloadSize until embeddingsArr.size),
-                    min(payload_packet_payload_size, remainingSize)
-                )
-                maxCamViewModel.sendData(payloadPacket.toByteArray())
-                spentPayloadSize += payload_packet_payload_size
-                remainingSize -= payload_packet_payload_size
-            }
-        } else {
-            Toast.makeText(
-                context,
-                "Connection issue! Mtu is not set yet",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
 }

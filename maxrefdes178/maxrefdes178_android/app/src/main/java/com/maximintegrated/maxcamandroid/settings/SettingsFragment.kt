@@ -46,14 +46,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.MainViewModel
+import com.maximintegrated.maxcamandroid.R
 import com.maximintegrated.maxcamandroid.blePacket.ble_command_e
 import com.maximintegrated.maxcamandroid.blePacket.ble_command_packet_t
 import com.maximintegrated.maxcamandroid.blePacket.camera_clock_e
 import com.maximintegrated.maxcamandroid.blePacket.debugger_select_e
 import com.maximintegrated.maxcamandroid.databinding.FragmentSettingsBinding
 import com.maximintegrated.maxcamandroid.utils.SettingsItemListener
+import com.maximintegrated.maxcamandroid.utils.sendDefaultEmbeddings
 import com.maximintegrated.maxcamandroid.utils.setup
 import com.maximintegrated.maxcamandroid.utils.startScannerActivity
+import kotlinx.android.synthetic.main.fragment_demo.*
 
 class SettingsFragment : Fragment() {
 
@@ -221,6 +224,9 @@ class SettingsFragment : Fragment() {
                 dialog.dismiss()
             }
             alert.show()
+        }
+        binding.sendDefaultButton.setOnClickListener {
+            sendDefaultEmbeddings(maxCamViewModel, mainViewModel, requireContext())
         }
     }
 
