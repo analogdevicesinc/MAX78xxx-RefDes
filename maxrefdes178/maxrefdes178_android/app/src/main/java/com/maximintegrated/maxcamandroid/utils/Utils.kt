@@ -35,9 +35,12 @@
 package com.maximintegrated.maxcamandroid.utils
 
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
+import android.icu.text.DateTimePatternGenerator.PatternInfo.OK
 import android.os.AsyncTask
 import android.os.Environment
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.maximintegrated.maxcamandroid.FileWriter
 import com.maximintegrated.maxcamandroid.R
@@ -131,6 +134,20 @@ public fun askUserForDeleteOperation(
     }
     alert.show()
 }
+
+fun showWarningPopup(
+    context: Context,
+    warningMessage : String
+) {
+    val alert = AlertDialog.Builder(context)
+    alert.setTitle(R.string.warning)
+    alert.setMessage(warningMessage)
+    alert.setPositiveButton(R.string.OK) { dialog, _ ->
+        dialog.dismiss()
+    }
+    alert.show()
+}
+
 
 private val IO_EXECUTOR = Executors.newSingleThreadExecutor()
 

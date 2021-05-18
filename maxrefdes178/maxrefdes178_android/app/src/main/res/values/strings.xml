@@ -138,4 +138,6 @@
     <string name="signature_create_fail">Signature can not be generated!</string>
     <string name="face_id_demo">Generate/Upload Signature</string>
     <string name="info">Info</string>
+    <string name="OK">OK</string>
+    <string name="app_firmware_versions_different">Android application version and device firmware version is different. Actions you\'ll take may corrupt the device!</string>
 </resources>
