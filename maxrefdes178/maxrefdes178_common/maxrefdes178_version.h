@@ -45,8 +45,8 @@
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_VERSION_MAJOR 0
-#define S_VERSION_MINOR 12
+#define S_VERSION_MAJOR 1
+#define S_VERSION_MINOR 0
 #define S_VERSION_BUILD S_BUILD_NUMBER
 
 #endif /* _MAXREFDES178_VERSION_H_ */
