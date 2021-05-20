@@ -719,8 +719,8 @@ typedef struct __attribute__((packed)) {
     max78000_statistics_t max78000_audio;
     float lcd_fps;
     uint8_t battery_soc;
-    uint32_t max78000_video_cnn_power_mw;
-    uint32_t max78000_audio_cnn_power_mw;
+    uint32_t max78000_video_power_mw;
+    uint32_t max78000_audio_power_mw;
 } device_statistics_t;
 
 // Classification command response

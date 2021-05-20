@@ -152,8 +152,8 @@ int powmon_worker(void)
 //    PR_DEBUG("V %f %f %f %f", voltage[0], voltage[1], voltage[2], voltage[3]);
     PR_DEBUG("P %g %g %g %g", power[0], power[1], power[2], power[3]);
 
-    device_status.statistics.max78000_video_cnn_power_mw = power[0] + power[1];
-    device_status.statistics.max78000_audio_cnn_power_mw = power[2] + power[3];
+    device_status.statistics.max78000_video_power_mw = power[0] + power[1];
+    device_status.statistics.max78000_audio_power_mw = power[2] + power[3];
 
     powmon_update();
 

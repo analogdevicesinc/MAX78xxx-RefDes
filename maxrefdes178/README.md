@@ -106,8 +106,8 @@ The MAXREFDES178# comes with a preloaded demo application.
     - KWS20 duration (MAX78000 Audio CNN) in microsecond.
     - Video camera (frame) capture duration in millisecond.
     - Video communication duration (frame transfer from MAX78000 to MAX32666 over QSPI).
-    - MAX78000 Video power in milliwatt.
-    - MAX78000 Audio power in milliwatt.
+    - MAX78000 Video power consumption in milliwatt. (V<sub>REGI</sub> + V<sub>COREA</sub> = Input supply + CNN active supply)
+    - MAX78000 Audio power consumption in milliwatt. (V<sub>REGI</sub> + V<sub>COREA</sub> = Input supply + CNN active supply)
     - FaceID embeddings database subject names.
     
       ![](maxrefdes178_doc/mrd178_stats.jpg)
