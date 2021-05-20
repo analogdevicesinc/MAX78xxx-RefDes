@@ -94,7 +94,7 @@
     <string name="yes">Yes</string>
     <string name="cancel">Cancel</string>
     <string name="new_person">New Person</string>
-    <string name="are_you_sure_to_send_signature">Are you sure you want to upload this signature? \nThis operation will overwrite current configuration on device.</string>
+    <string name="are_you_sure_to_send_signature">This action will overwrite the current configuration on the device.</string>
     <string name="photo_help_title">FaceID Photo Guidelines</string>
     <string name="photo_help_content">
         " 1. Make sure the subject's face is well illuminated.\n"
@@ -130,16 +130,16 @@
     <string name="script_in_progress">Signature generation is in progress...</string>
     <string name="create_signature">Generate Signature</string>
     <string name="upload_signature">Upload Signature</string>
-    <string name="upload_default_signature">Upload Default Signature</string>
+    <string name="upload_default_signature">Reset FaceID Signature</string>
     <string name="command_operation">Command Operation</string>
     <string name="signature_created_at">Generated Date: %1$s</string>
     <string name="signature_update_success">Signature updated is successful.</string>
     <string name="signature_update_fail">Signature update is failed!</string>
     <string name="signature_create_fail">Signature can not be generated!</string>
-    <string name="face_id_demo">Generate/Upload Signature</string>
+    <string name="face_id_demo">Generate Signature</string>
     <string name="info">Info</string>
     <string name="OK">OK</string>
-    <string name="app_firmware_versions_different">Android application version and device firmware version is different. Actions you\'ll take may corrupt the device!</string>
+    <string name="app_firmware_versions_different">Android application version and device firmware version are different!</string>
     <string name="signature_generated">Signature Generated!</string>
     <string name="face_detection_results">Face Detection Results: </string>
     <string name="signature_detaction_information">Only detected photos are embedded in the signature file. You can edit non detected photos on the previous page.</string>
