@@ -41,66 +41,145 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/signatureTextView" />
 
-    <TextView
-        android:id="@+id/embeddingsTextView"
-        android:layout_width="wrap_content"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/image_card"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:text="@string/signature_not_found"
-        android:textColor="@color/color_primary"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/signatureButton" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/embeddingResultCounts"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="20dp"
+        app:cardBackgroundColor="@color/color_background"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="2dp"
+        app:cardUseCompatPadding="true"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/embeddingsTextView"
-        android:visibility="gone">
-        <ImageView
-            android:id="@+id/goodResultMark"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:adjustViewBounds="true"
-            android:src="@mipmap/check"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/goodResultCount"
-            android:padding="2dp"
-            />
-        <TextView
-            android:id="@+id/goodResultCount"
-            android:layout_width="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signatureButton">
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/embeddingResultCard"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=" : 8"
-            app:layout_constraintStart_toEndOf="@id/goodResultMark"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-        <ImageView
-            android:id="@+id/badResultMark"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:adjustViewBounds="true"
-            android:src="@mipmap/cancel"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@id/goodResultCount"
-            app:layout_constraintBottom_toBottomOf="@id/badResultCount"
-            android:layout_marginStart="10dp"
-            android:padding="2dp"/>
-        <TextView
-            android:id="@+id/badResultCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" : 8"
-            app:layout_constraintStart_toEndOf="@id/badResultMark"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_margin="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:id="@+id/generatedSignatureTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/signature_not_found"
+                android:textColor="@color/color_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/embeddingResultCardContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/generatedSignatureTitle">
+
+                <TextView
+                    android:id="@+id/signGenDateTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/signature_not_found"
+                    android:textSize="16sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/resultMarksText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/face_detection_results"
+                    android:textSize="16sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/signGenDateTV" />
+
+                <ImageView
+                    android:id="@+id/goodResultMark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:adjustViewBounds="true"
+                    android:padding="2dp"
+                    android:src="@mipmap/check"
+                    app:layout_constraintBottom_toBottomOf="@id/goodResultCount"
+                    app:layout_constraintStart_toEndOf="@id/resultMarksText"
+                    app:layout_constraintTop_toTopOf="@id/resultMarksText" />
+
+                <TextView
+                    android:id="@+id/goodResultCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" : 8"
+                    app:layout_constraintStart_toEndOf="@id/goodResultMark"
+                    app:layout_constraintTop_toTopOf="@id/goodResultMark" />
+
+                <ImageView
+                    android:id="@+id/badResultMark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="10dp"
+                    android:adjustViewBounds="true"
+                    android:padding="2dp"
+                    android:src="@mipmap/cancel"
+                    app:layout_constraintBottom_toBottomOf="@id/badResultCount"
+                    app:layout_constraintStart_toEndOf="@id/goodResultCount"
+                    app:layout_constraintTop_toTopOf="@id/goodResultCount" />
+
+                <TextView
+                    android:id="@+id/badResultCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" : 8"
+                    app:layout_constraintStart_toEndOf="@id/badResultMark"
+                    app:layout_constraintTop_toTopOf="@id/badResultMark" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/suggestConstraint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/badResultCount">
+
+                    <TextView
+                        android:id="@+id/editDbSuggestionTV"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/signature_detaction_information"
+                        android:textSize="16sp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/previousPageButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="20dp"
+                        android:layout_marginTop="5dp"
+                        android:text="@string/previous_page"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/editDbSuggestionTV" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
 
     <TextView
         android:id="@+id/sendEmbeddingsTextView"
@@ -112,7 +191,7 @@
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/embeddingResultCounts" />
+        app:layout_constraintTop_toBottomOf="@id/image_card" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/sendButton"

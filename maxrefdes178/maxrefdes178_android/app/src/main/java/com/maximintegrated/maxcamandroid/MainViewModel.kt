@@ -41,6 +41,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.maximintegrated.maxcamandroid.blePacket.*
+import com.maximintegrated.maxcamandroid.utils.Event
 import com.maximintegrated.maxcamandroid.utils.concatenate
 import timber.log.Timber
 
@@ -69,6 +70,13 @@ class MainViewModel(private val app: Application) : AndroidViewModel(app) {
 
     private var sendTimeoutCallback = Runnable {}
     private var sendTimeoutHandler = Handler()
+
+    private val _onBackPressed = MutableLiveData<Event<Boolean>>()
+    val onBackPressed: LiveData<Event<Boolean>> = _onBackPressed
+
+    fun onBackPressed(){
+        _onBackPressed.value = Event(true)
+    }
 
     fun setSendTimeout() {
         sendTimeoutHandler.removeCallbacks(sendTimeoutCallback)
