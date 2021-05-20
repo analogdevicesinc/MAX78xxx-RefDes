@@ -56,6 +56,7 @@ import com.maximintegrated.maxcamandroid.exts.addFragment
 import com.maximintegrated.maxcamandroid.exts.getCurrentFragment
 import com.maximintegrated.maxcamandroid.main.LandingPage
 import com.maximintegrated.maxcamandroid.main.MainFragment
+import com.maximintegrated.maxcamandroid.utils.EventObserver
 import com.maximintegrated.maxcamandroid.utils.ROOT_FRAGMENT
 import com.maximintegrated.maxcamandroid.utils.startScannerActivity
 import com.maximintegrated.maxcamandroid.view.BleConnectionInfo
@@ -165,6 +166,9 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
                 onBackPressed()
             }
         }
+        mainViewModel.onBackPressed.observe(this, EventObserver {
+            onBackPressed()
+        })
     }
 
     override fun onBackPressed() {
