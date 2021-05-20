@@ -126,13 +126,13 @@
     <string name="db_edit">DB Edit</string>
     <string name="create_signature_text">Click the button below to generate a signature using the selected FaceID database. Please click once and wait, signature generation might take a while.</string>
     <string name="send_signature_text">Click the button below to send the signature to the device.</string>
-    <string name="signature_not_found">Signature has not been generated yet.</string>
+    <string name="signature_not_found">Signature has not been generated yet</string>
     <string name="script_in_progress">Signature generation is in progress...</string>
     <string name="create_signature">Generate Signature</string>
     <string name="upload_signature">Upload Signature</string>
     <string name="upload_default_signature">Reset FaceID Signature</string>
     <string name="command_operation">Command Operation</string>
-    <string name="signature_created_at">Signature was generated at %1$s</string>
+    <string name="signature_created_at">Generated Date: %1$s</string>
     <string name="signature_update_success">Signature updated is successful.</string>
     <string name="signature_update_fail">Signature update is failed!</string>
     <string name="signature_create_fail">Signature can not be generated!</string>
@@ -140,4 +140,8 @@
     <string name="info">Info</string>
     <string name="OK">OK</string>
     <string name="app_firmware_versions_different">Android application version and device firmware version are different!</string>
+    <string name="signature_generated">Signature Generated!</string>
+    <string name="face_detection_results">Face Detection Results: </string>
+    <string name="signature_detaction_information">Only photos containing a face are included in the signature. You can review the processed photos on previous page.</string>
+    <string name="previous_page">Previous Page</string>
 </resources>

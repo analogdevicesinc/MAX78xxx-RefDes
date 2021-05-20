@@ -38,8 +38,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
@@ -48,16 +46,11 @@ import com.google.android.material.snackbar.Snackbar
 import com.maximintegrated.communication.MaxCamViewModel
 import com.maximintegrated.maxcamandroid.MainViewModel
 import com.maximintegrated.maxcamandroid.R
-import com.maximintegrated.maxcamandroid.blePacket.*
 import com.maximintegrated.maxcamandroid.utils.EventObserver
 import kotlinx.android.synthetic.main.fragment_demo.*
 import kotlinx.android.synthetic.main.fragment_demo.view.*
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.min
 import com.maximintegrated.maxcamandroid.utils.*
 
 
@@ -93,27 +86,30 @@ class DemoFragment : Fragment() {
         faceIdViewModel.scriptInProgress.observe(viewLifecycleOwner) {
             val sdf = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault())
             if (it) {
-                embeddingsTextView.text = getString(
+                generatedSignatureTitle.text = getString(
                     R.string.script_in_progress
                 )
                 sendButton.isEnabled = false
-                embeddingResultCounts.visibility = View.GONE
+                embeddingResultCardContent.visibility = View.GONE
             } else {
                 val file = faceIdViewModel.selectedDatabase?.embeddingsFile
                 if (file == null) {
-                    embeddingsTextView.text = getString(
+                    generatedSignatureTitle.text = getString(
                         R.string.signature_not_found
                     )
                     sendButton.isEnabled = false
-                    embeddingResultCounts.visibility = View.GONE
+                    embeddingResultCardContent.visibility = View.GONE
                 } else {
-                    embeddingsTextView.text = getString(
+                    signGenDateTV.text = getString(
                         R.string.signature_created_at,
                         sdf.format(Date(file.lastModified()))
                     )
                     sendButton.isEnabled = true
-                    embeddingResultCounts.visibility = View.VISIBLE
-                    embeddingResultCounts.goodResultCount.text = " : " +
+                    generatedSignatureTitle.text = getString(
+                        R.string.signature_generated
+                    )
+                    embeddingResultCardContent.visibility = View.VISIBLE
+                    embeddingResultCard.goodResultCount.text = " : " +
                             faceIdViewModel.selectedDatabase?.embeddingsResult?.subjects?.sumBy {
                                 if (it.goodPhotos != null) {
                                     it.goodPhotos!!.size
@@ -121,34 +117,44 @@ class DemoFragment : Fragment() {
                                     0
                                 }
                             }
-                    embeddingResultCounts.badResultCount.text = " : " +
-                            faceIdViewModel.selectedDatabase?.embeddingsResult?.subjects?.sumBy {
-                                if (it.badPhotos != null) {
-                                    it.badPhotos!!.size
-                                } else {
-                                    0
-                                }
-                            }
+
+                    val badPhotoCount = faceIdViewModel.selectedDatabase?.embeddingsResult?.subjects?.sumBy {
+                        if (it.badPhotos != null) {
+                            it.badPhotos!!.size
+                        } else {
+                            0
+                        }
+                    }
+                    embeddingResultCard.badResultCount.text = " : " + badPhotoCount
+                    suggestConstraint.visibility =if( badPhotoCount == 0) View.GONE else View.VISIBLE
+
                 }
 
             }
-
             progressBar.isVisible = it
             signatureButton.isEnabled = !it
 
         }
+        previousPageButton.setOnClickListener { mainViewModel.onBackPressed() }
 
         faceIdViewModel.embeddingsFileEvent.observe(viewLifecycleOwner, EventObserver {
             val sdf = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault())
 
-            embeddingsTextView.text = if (!it.isDirectory) getString(
-                R.string.signature_created_at,
-                sdf.format(Date(it.lastModified()))
-            )
-            else
-                getString(
+            if (!it.isDirectory) {
+                signGenDateTV.visibility = View.VISIBLE
+                signGenDateTV.text = getString(
+                    R.string.signature_created_at,
+                    sdf.format(Date(it.lastModified()))
+                )
+                generatedSignatureTitle.text = getString(
+                    R.string.signature_generated
+                )
+            } else {
+                embeddingResultCardContent.visibility = View.GONE
+                generatedSignatureTitle.text = getString(
                     R.string.signature_not_found
                 )
+            }
 
             progressBar.isVisible = false
         })
@@ -184,7 +190,6 @@ class DemoFragment : Fragment() {
         }
 
     }
-
 
 
 }
