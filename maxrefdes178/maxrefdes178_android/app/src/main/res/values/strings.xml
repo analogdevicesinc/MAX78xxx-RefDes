@@ -142,6 +142,6 @@
     <string name="app_firmware_versions_different">Android application version and device firmware version are different!</string>
     <string name="signature_generated">Signature Generated!</string>
     <string name="face_detection_results">Face Detection Results: </string>
-    <string name="signature_detaction_information">Only detected photos are embedded in the signature file. You can edit non detected photos on the previous page.</string>
+    <string name="signature_detaction_information">Only photos containing a face are included in the signature. You can review the processed photos on previous page.</string>
     <string name="previous_page">Previous Page</string>
 </resources>
