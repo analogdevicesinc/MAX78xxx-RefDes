@@ -85,7 +85,7 @@
 #define FT6236U_CHIPER             0x64  //!< Chip selecting
 
 // FT6236U settings
-#define FT6236U_TH_GROUP           50   //!< Default threshold for touch detection
+#define FT6236U_TH_GROUP           50    //!< Default threshold for touch detection
 #define FT6236U_PERIODMONITOR      20    //!< Default mMonitor mode report rate
 
 

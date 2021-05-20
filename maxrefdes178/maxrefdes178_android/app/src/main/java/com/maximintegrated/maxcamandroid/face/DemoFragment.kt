@@ -165,11 +165,6 @@ class DemoFragment : Fragment() {
                 sendEmbeddings(it, maxCamViewModel, mainViewModel, requireContext())
             }
         }
-        sendDefaultButton.setOnClickListener {
-
-            sendDefaultEmbeddings(maxCamViewModel, mainViewModel, requireContext())
-
-        }
 
         mainViewModel.embeddingsSendInProgress.observe(viewLifecycleOwner) {
             sendButton.isEnabled = false
