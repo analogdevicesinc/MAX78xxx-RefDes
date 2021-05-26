@@ -157,18 +157,33 @@ The remaining steps requires an Android device. Currently, ARM 64-bit devices an
 #### Change MAXREFDES178# demo settings using the Android Application
 
 - Navigate to the settings page to change demo settings.
+
 - Video capture can be enabled / disabled.
+
 - FaceID can be enabled / disabled.
+
 - Video capture vertical flip for selfie adaptor can be enabled / disabled.
+
 - The video flash LED can be enabled / disabled.
+
 - Camera clock can be set to 5 MHz, 10 MHz, or 15 MHz. 
+
 - Audio (KWS20) can be enabled / disabled.
+
 - The LCD can be enabled / disabled.
+
 - Device statistics on LCD can be enabled / disabled.
+
 - The KWS20 classification probability display on LCD can be enabled / disabled.
+
 - The inactivity timer can be enabled / disabled.
+
 - The second debug channel target can be changed.
+
+- The FaceID signature can be reset to default (after user approval).
+
 - The device can be restarted (after user approval).
+
 - The device can be shut down (after user approval).
   
   ![](maxrefdes178_doc/app_settings1.jpg) ![](maxrefdes178_doc/app_settings2.jpg)
@@ -177,20 +192,24 @@ The remaining steps requires an Android device. Currently, ARM 64-bit devices an
 
 - Navigate to the FaceID page.
 
+  ![](maxrefdes178_doc/app_faceid_db.jpg)
+
 - Click the ‘+’ icon on the right bottom corner to create a new FaceID database:
   
-  ![](maxrefdes178_doc/app_faceid_add_db.jpg) 
+  ![](maxrefdes178_doc/app_faceid_add_db_name.jpg) ![](maxrefdes178_doc/app_faceid_add_db.jpg)
 
 - Click the ‘+’ icon on the right bottom corner to add a new person (subject) to the database.
   
   - A maximum of six subjects is allowed.
+
+  ![](maxrefdes178_doc/app_faceid_no_subject.jpg) ![](maxrefdes178_doc/app_faceid_add_subject_name.jpg) ![](maxrefdes178_doc/app_faceid_add_subject.jpg)
   
 - Click the ‘+’ icon under the subject name to add a new face photo to the subject.
   - Photos can be added using the camera or from the file system.
   - Photos can be cropped.
   - A maximum of eight photos is allowed.
   
-  ![](maxrefdes178_doc/app_faceid_add_subject.jpg) 
+  ![](maxrefdes178_doc/app_faceid_subjects.jpg)
 
 - Click the ‘INFO’ button on the top right corner for more information about FaceID photo guidelines.
   
@@ -201,12 +220,22 @@ The remaining steps requires an Android device. Currently, ARM 64-bit devices an
   ![](maxrefdes178_doc/app_faceid_demo.jpg) 
 
 - Click the ‘GENERATE SIGNATURE’ button to generate a signature from the database.
-  
-  ![](maxrefdes178_doc/app_faceid_gen_sign.jpg) ![](maxrefdes178_doc/app_faceid_sign_ready.jpg) 
 
-- Click the ‘UPLOAD SIGNATURE’ button to upload a FaceID signature to the MAXREFDES178#.
+  - Only the photos containing a face are included in the signature. Face detection result will be shown after signature is generated.
   
-  ![](maxrefdes178_doc/app_faceid_send_sign.jpg)
+  ![](maxrefdes178_doc/app_faceid_gen_sign.jpg) ![](maxrefdes178_doc/app_faceid_sign_ready_good.jpg)
+
+  - If face is detected in any photo, you can review the photos by pressing the previous page button.
+
+  ![](maxrefdes178_doc/app_faceid_sign_ready_bad.jpg)
+
+  - Good/Bad photos will be indicated by :heavy_check_mark:/:x: marks in previous page.
+
+  ![](maxrefdes178_doc/app_faceid_subjects_processed.jpg)
+
+- Click the ‘UPLOAD SIGNATURE’ button to upload a FaceID signature to the MAXREFDES178#. (after user approval)
+  
+  ![](maxrefdes178_doc/app_faceid_send_sign_approve.jpg) ![](maxrefdes178_doc/app_faceid_send_sign.jpg)
 
 - A notification on MAXREFDES178# will appear if the signature update is successful.
   
@@ -670,7 +699,6 @@ The following steps summarize the modifications needed to port a new example:
 
    - **Note: If the FIFO option is used to synthesize your example (`--fifo`, or `--fast-fifo` in ai8xize.py),** **`cnn_start()` should be called first, followed by loading the data to the FIFOs as they become available. The CNN will start automatically when enough data is available.**
 
-     
 5. Populate the classification result in the `classification_result_t` structure to be reported to MAX32666:
 
    ```c++
@@ -691,7 +719,6 @@ The following steps summarize the modifications needed to port a new example:
    } classification_result_t;
    ```
 
-   
 6. Populate the statistics in the `max78000_statistics_t` structure to be reported to MAX32666:
 
    ```c
