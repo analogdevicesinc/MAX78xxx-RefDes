@@ -49,7 +49,7 @@ def get_file_dir(db):
 def get_include_dir():
     return str(path.join(path.dirname(CURRENT_DIR), 'include'))
 
-def create_db(db, db_filename):
+def create_db(db, db_filename, android_progress_callback):
     print(f'(create_db)db: {db}')
     """
     Main function of the script to generate face detector, AI85 simulator and calls the utility
@@ -61,7 +61,7 @@ def create_db(db, db_filename):
     ai85_adapter = AI85SimulatorAdapter(MODEL_PATH)
 
     embedding_db, proc_img_log, _ = append_db_file_from_path(db, face_detector, ai85_adapter,
-                                                             db_dict=None, verbose=True)
+                                                             db_dict=None, verbose=True, progress_callback = android_progress_callback)
     if not embedding_db:
         print(f'Cannot create a DB file. No face could be detected from the images in folder ',
               f'`{db}`')

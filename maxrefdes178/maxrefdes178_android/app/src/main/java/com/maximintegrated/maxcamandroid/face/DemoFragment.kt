@@ -131,6 +131,7 @@ class DemoFragment : Fragment() {
                 }
 
             }
+            progressBar.isIndeterminate = !it
             progressBar.isVisible = it
             signatureButton.isEnabled = !it
 
@@ -160,9 +161,10 @@ class DemoFragment : Fragment() {
         })
 
         signatureButton.setOnClickListener {
+            faceIdViewModel.onCreateSignatureButtonClicked()
+            progressBar.isIndeterminate = false
             progressBar.isVisible = true
             //faceIdViewModel.selectedDatabase?.embeddingsFile?.delete()
-            faceIdViewModel.onCreateSignatureButtonClicked()
         }
         faceIdViewModel.getEmbeddingsFile()
 
@@ -174,6 +176,7 @@ class DemoFragment : Fragment() {
 
         mainViewModel.embeddingsSendInProgress.observe(viewLifecycleOwner) {
             sendButton.isEnabled = false
+            progressBar.isIndeterminate = true
             progressBar.isVisible = true
             signatureButton.isEnabled = false
             if (!it) {
@@ -187,6 +190,10 @@ class DemoFragment : Fragment() {
                     signatureButton.isEnabled = !inProgress
                 }
             }
+        }
+
+        faceIdViewModel.progress.observe(viewLifecycleOwner){
+            progressBar.progress = it
         }
 
     }
