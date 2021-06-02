@@ -48,6 +48,7 @@ import com.maximintegrated.maxcamandroid.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 
@@ -83,6 +84,9 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
 
     private val _scriptInProgress = MutableLiveData<Boolean>(false)
     val scriptInProgress: LiveData<Boolean> = _scriptInProgress
+
+    private val _progress = MutableLiveData(-1)
+    val progress: LiveData<Int> = _progress
 
     var selectedDatabase: DbModel? = null
         private set
@@ -295,7 +299,13 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private fun progressCallbackPython(progress: Int) {
+        val imageCount = selectedDatabase?.persons?.sumBy { it.imageCount }!!
+        _progress.postValue(progress * 100 / imageCount)
+    }
+
     fun onCreateSignatureButtonClicked() {
+        progressCallbackPython(0)
         deleteEmbeddingsFile()
         _scriptInProgress.value = true
         val python = Python.getInstance()
@@ -305,7 +315,8 @@ class FaceIdViewModel(private val app: Application) : AndroidViewModel(app) {
             withContext(Dispatchers.IO) {
                 try {
                     selectedDatabase?.let {
-                        val obj = script.callAttr("create_db", it.dbFolder.path, "embeddings")
+                        //script.put("android_progress_callback", this@FaceIdViewModel::progressCallbackPython)
+                        val obj = script.callAttr("create_db", it.dbFolder.path, "embeddings", this@FaceIdViewModel::progressCallbackPython)
                         status = obj.toBoolean()
                     }
                 } catch (e: Exception) {

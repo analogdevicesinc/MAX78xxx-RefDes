@@ -160,7 +160,7 @@ def rotate_image(img, img_rot):
 
 # pylint: disable=too-many-statements
 def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, verbose=True,
-                             preview_images=False):
+                             preview_images=False, progress_callback=None):
     """Creates embeddings for each image in the given folder and appends to the existing embedding
     dictionary
     """
@@ -171,6 +171,7 @@ def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, ver
     img_list = []
     subj_id = 0
     subject_list = sorted(os.listdir(folder_path))
+    processed_image_count = 0
     for subject in subject_list:
         print(f'Processing subject: {subject}')
         proc_img_log['subjects'].append({'name': subject, 'good_photos': [], 'bad_photos': []})
@@ -204,6 +205,9 @@ def append_db_file_from_path(folder_path, mtcnn, ai85_adapter, db_dict=None, ver
                     proc_img_log['subjects'][-1]['bad_photos'].append(file)
             else:
                 proc_img_log['subjects'][-1]['bad_photos'].append(file)
+            processed_image_count += 1
+            if progress_callback:
+                progress_callback(processed_image_count)
 
     now_utc = datetime.now(timezone.utc)
     proc_img_log['timestamp'] = now_utc.strftime("%Y-%m-%dT%H:%M:%S%z")
