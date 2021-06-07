@@ -137,7 +137,8 @@ class MainActivity : AppCompatActivity(), OnBluetoothDeviceClickListener {
                         "MAX78000 Audio - ${it.max78000_audio}"
 
             try {
-                if (BuildConfig.VERSION_NAME != it.max32666.toString()) {
+                val ver = BuildConfig.VERSION_NAME.split(".")
+                if (!(ver[0] == it.max32666.major.toString() && ver[1] == it.max32666.minor.toString())) {
                     showWarningPopup(this, getString(R.string.app_firmware_versions_different))
                 }
             } catch (e: Exception) {
