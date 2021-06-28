@@ -181,7 +181,7 @@ int main(void)
     }
 
     // Initialize DMA peripheral
-    ret = MXC_DMA_Init();
+    ret = MXC_DMA_Init(MXC_DMA0);
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_DMA_Init failed %d", ret);
         pmic_led_red(1);
