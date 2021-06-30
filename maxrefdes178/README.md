@@ -41,13 +41,17 @@ The MAXREFDES178# comes with a preloaded demo application.
 
 ### MAXREFDES178# Demo Firmware
 
+- *Some* units have a protective film installed covering the camera. Remove the film:
+
+  ![](maxrefdes178_doc/camera-protective-film.jpg)
+
 - Plug in a USB-C cable to charge the device.
 
-- Press the power button for 1 second to turn on the device.
+- Press the power button for one second to turn on the device.
 
 - The power LED will start blinking blue.
 
-- Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
+- The Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
   ![](maxrefdes178_doc/mrd178_init.jpg)
 
@@ -295,9 +299,9 @@ Repo folder structure:
 
 - cd into the `maxrefdes178_max32666` directory.
 
-- Run make.
+- Run make:
   ```
-  make -r -j
+  make -r -j 4
   ```
   
   ![](maxrefdes178_doc/make_max32666.png)
