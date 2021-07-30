@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-// cats-dogs
-// Created using ./ai8xize.py --verbose --log --test-dir sdk/Examples/MAX78000/CNN --prefix cats-dogs --checkpoint-file trained/ai85-catsdogs-qat8-q.pth.tar --config-file networks/cats-dogs-chw.yaml --softmax --fifo --device MAX78000 --compact-data --mexpress --timer 0 --display-checkpoint
+// pt-wildlife82
+// Created using ./ai8xize.py --verbose --log --test-dir pytorch --prefix pt-wildlife82 --checkpoint-file trained/ai85-wildlife82-chw.pth.tar --config-file networks/wildlife-chw.yaml --softmax --embedded-code --device MAX78000 --compact-data --mexpress --timer 0 --display-checkpoint --fifo
 
 // DO NOT EDIT - regenerate this file instead!
 

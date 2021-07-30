@@ -63,8 +63,8 @@
 
 //#define PRINT_TIME_CNN
 
-#define CATS_DOGS_HEIGHT 192
-#define CATS_DOGS_WIDTH 192
+#define PIC_HEIGHT 192
+#define PIC_WIDTH 192
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
@@ -715,11 +715,11 @@ static void run_cnn(int x_offset, int y_offset)
 
 	// Read 192x192, pick one out of 3 pixels to make it 64x64
 	// CNN needs RGB888, pack for bytes into 1 int for each color
-    for (int i = y_offset; i < CATS_DOGS_HEIGHT + y_offset; i+=3) {
-        data = raw + (((LCD_HEIGHT - CATS_DOGS_HEIGHT) / 2) + i) * LCD_WIDTH * LCD_BYTE_PER_PIXEL;  // down
-        data += ((LCD_WIDTH - CATS_DOGS_WIDTH) / 2) * LCD_BYTE_PER_PIXEL;  // right
+    for (int i = y_offset; i < PIC_HEIGHT + y_offset; i+=3) {
+        data = raw + (((LCD_HEIGHT - PIC_HEIGHT) / 2) + i) * LCD_WIDTH * LCD_BYTE_PER_PIXEL;  // down
+        data += ((LCD_WIDTH - PIC_WIDTH) / 2) * LCD_BYTE_PER_PIXEL;  // right
 
-        for(int j = x_offset; j < CATS_DOGS_WIDTH + x_offset; j+=3) {
+        for(int j = x_offset; j < PIC_WIDTH + x_offset; j+=3) {
 
         	// RGB565, |RRRRRGGG|GGGBBBBB|
             ub = (data[j * LCD_BYTE_PER_PIXEL + 1] << 3);
