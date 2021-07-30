@@ -726,7 +726,7 @@ static int refresh_screen(void)
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2, FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
         fonts_drawRectangle(FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3, FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
     }
-
+*/
     if (device_settings.enable_lcd_statistics) {
         int line_pos = 3;
 
