@@ -1,3 +1,7 @@
 [submodule "maxrefdes178/maxrefdes178_max32666/External/BMI160_driver"]
 	path = maxrefdes178/maxrefdes178_max32666/External/BMI160_driver
 	url = https://github.com/BoschSensortec/BMI160_driver
+
+[submodule "maxrefdes178-UNet/maxrefdes178_max32666/External/BMI160_driver"]
+	path = maxrefdes178-UNet/maxrefdes178_max32666/External/BMI160_driver
+	url = https://github.com/BoschSensortec/BMI160_driver
