@@ -267,7 +267,7 @@ Download MAXREFDES178# from GitHub with submodules:
 
 ![](maxrefdes178_doc/codebase.png)
 
-**WARNING:** Put the MAXREFDES178# directory close to the root of the drive. Long Windows paths may cause failed builds.
+**WARNING:** **Put the MAXREFDES178# directory close to the root of the drive. Long Windows paths may cause failed builds.**
 
 Repo folder structure:
 
@@ -308,10 +308,12 @@ Repo folder structure:
 
 - A `maxrefdes178_max32666\build\maxrefdes178_max32666.bin` firmware binary should be generated.
 
-**WARNING:** If you get the following error during build, put MAXREFDES178# directory closer to the root of the drive. Long Windows paths cause failed buils:
+**WARNING:** I**f you get the following error during build, put MAXREFDES178# directory closer to the root of the drive. Long Windows paths cause failed builds:**
 
-```
+```bash
 collect2.exe: fatal error: CreateProcess: No such file or directory
+or
+/bin/sh: line 15: /g/MaximSDK/Tools/GNUTools/bin/arm-none-eabi-gcc: Bad file number
 ```
 
 

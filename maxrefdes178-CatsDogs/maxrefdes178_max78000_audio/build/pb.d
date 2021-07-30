@@ -1,0 +1,24 @@
+g:/MaximSDK/Examples/CubeCamera/maxrefdes178_max78000_audio/build/pb.o: \
+ g:\maximsdk\libraries\boards\max78000\source\pb.c \
+ g:\maximsdk\tools\gnutools\lib\gcc\arm-none-eabi\9.2.1\include\stddef.h \
+ g:/MaximSDK/Libraries/PeriphDrivers/Include/MAX78000/mxc_device.h \
+ g:/MaximSDK/Libraries/CMSIS/Device/Maxim/MAX78000/Include/max78000.h \
+ g:\maximsdk\tools\gnutools\lib\gcc\arm-none-eabi\9.2.1\include\stdint.h \
+ g:\maximsdk\tools\gnutools\arm-none-eabi\include\stdint.h \
+ g:\maximsdk\tools\gnutools\arm-none-eabi\include\machine\_default_types.h \
+ g:\maximsdk\tools\gnutools\arm-none-eabi\include\sys\features.h \
+ g:\maximsdk\tools\gnutools\arm-none-eabi\include\_newlib_version.h \
+ g:\maximsdk\tools\gnutools\arm-none-eabi\include\sys\_intsup.h \
+ g:\maximsdk\tools\gnutools\arm-none-eabi\include\sys\_stdint.h \
+ g:/MaximSDK/Libraries/CMSIS/Include/core_cm4.h \
+ g:/MaximSDK/Libraries/CMSIS/Include/core_cmInstr.h \
+ g:/MaximSDK/Libraries/CMSIS/Include/core_cmFunc.h \
+ g:/MaximSDK/Libraries/CMSIS/Include/core_cm4_simd.h \
+ g:/MaximSDK/Libraries/CMSIS/Device/Maxim/MAX78000/Include/system_max78000.h \
+ g:/MaximSDK/Libraries/PeriphDrivers/Include/MAX78000/mxc_errors.h \
+ g:/MaximSDK/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h \
+ g:/MaximSDK/Libraries/PeriphDrivers/Include/MAX78000/gpio.h \
+ g:/MaximSDK/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gpio_regs.h \
+ g:/MaximSDK/Libraries/PeriphDrivers/Include/MAX78000/mxc_assert.h \
+ g:\maximsdk\libraries\boards\max78000\include\pb.h \
+ g:/MaximSDK/Libraries/PeriphDrivers/Include/MAX78000/gpio.h
