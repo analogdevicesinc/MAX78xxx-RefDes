@@ -43,7 +43,7 @@ Before beginning, make sure you have all of the following components.
 
 Please refer to main Cube Camera repo for instructions how to build, and load firmware:
 
-https://github.com/MaximIntegratedAI/refdes/blob/develop/README.md
+[Getting Started with the MAXREFDES178# Cube Camera](./../maxrefdes178-FaceId)
 
 NOTE: Cats and Dogs demo does not support Android application.
 
