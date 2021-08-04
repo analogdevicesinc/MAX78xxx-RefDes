@@ -80,13 +80,13 @@ SRCS += max78000_softmax.c
 
 # Where to find source files for this test
 VPATH += src
-VPATH += ../maxrefdes178_common
+VPATH += ../../maxrefdes178_common
 VPATH += ../maxrefdes178_max78000_common
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 
 # Where to find header files for this test
 IPATH += include
-IPATH += ../maxrefdes178_common
+IPATH += ../../maxrefdes178_common
 IPATH += ../maxrefdes178_max78000_common
 
 # Enable assertion checking for development

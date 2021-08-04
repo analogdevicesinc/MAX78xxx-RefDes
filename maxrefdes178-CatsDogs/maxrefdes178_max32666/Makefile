@@ -107,7 +107,7 @@ SRCS += bmi160.c
 
 # Where to find source files for this test
 VPATH = src
-VPATH += ../maxrefdes178_common
+VPATH += ../../maxrefdes178_common
 ifeq ($(MAKECMDGOALS),sla)
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 endif
@@ -115,7 +115,7 @@ VPATH += External/BMI160_driver
 
 # Where to find header files for this test
 IPATH  = include
-IPATH += ../maxrefdes178_common
+IPATH += ../../maxrefdes178_common
 IPATH += External/BMI160_driver
 
 # Enable assertion checking for development

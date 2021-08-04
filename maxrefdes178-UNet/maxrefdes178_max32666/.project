@@ -42,7 +42,7 @@
 		<link>
 			<name>maxrefdes178_common</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/maxrefdes178_common</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/maxrefdes178_common</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

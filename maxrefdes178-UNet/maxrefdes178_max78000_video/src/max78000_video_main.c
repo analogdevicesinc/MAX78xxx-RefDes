@@ -781,7 +781,7 @@ static void run_cnn(int x_offset, int y_offset)
 
 
     MXC_Delay(MXC_DELAY_MSEC(500));
-    qspi_slave_send_packet(raw, IMAGE_SIZE_X*IMAGE_SIZE_Y*4, QSPI_PACKET_TYPE_VIDEO_ML_RES); // r,g,b,unknown per pixel
+    qspi_slave_send_packet(raw, UNET_IMAGE_SIZE_X*UNET_IMAGE_SIZE_Y*4, QSPI_PACKET_TYPE_VIDEO_ML_RES); // r,g,b,unknown per pixel
 	//qspi_slave_send_packet(raw, 115200/4, QSPI_PACKET_TYPE_VIDEO_ML_RES);
     MXC_Delay(MXC_DELAY_MSEC(500));
 }

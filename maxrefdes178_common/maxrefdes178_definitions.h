@@ -92,14 +92,14 @@
 #define CLASSIFICATION_STRING_SIZE         15
 
 // Common FaceID
-#define FACEID_WIDTH                      192// 120
-#define FACEID_HEIGHT                     172//192// 160
+#define FACEID_WIDTH                       120
+#define FACEID_HEIGHT                      160
 
 #define FACEID_RECTANGLE_X1                ((LCD_WIDTH - FACEID_WIDTH) / 2)
 #define FACEID_RECTANGLE_Y1                ((LCD_HEIGHT - FACEID_HEIGHT) / 2)
 #define FACEID_RECTANGLE_X2                (FACEID_RECTANGLE_X1 + FACEID_WIDTH)
 #define FACEID_RECTANGLE_Y2                (FACEID_RECTANGLE_Y1 + FACEID_HEIGHT)
-
+//
 #define FACEID_MAX_SUBJECT                 6
 #define FACEID_MAX_PHOTO_PER_SUBJECT       8
 #define FACEID_MAX_SUBJECT_NAME_SIZE       CLASSIFICATION_STRING_SIZE
@@ -107,6 +107,36 @@
 #define FACEID_MAX_EMBEDDINGS_HEADER_SIZE  (((FACEID_MAX_SUBJECT_NAME_SIZE + 1) * FACEID_MAX_SUBJECT) + 9)
 #define FACEID_MAX_EMBEDDINGS_DATA_SIZE    ((FACEID_EMBEDDING_SIZE + 1) * FACEID_MAX_SUBJECT * FACEID_MAX_PHOTO_PER_SUBJECT)
 #define FACEID_MAX_EMBEDDINGS_SIZE         (FACEID_MAX_EMBEDDINGS_HEADER_SIZE + FACEID_MAX_EMBEDDINGS_DATA_SIZE)
+
+// Common CatsDogs
+#define CATSDOGS_WIDTH                     192
+#define CATSDOGS_HEIGHT                    172
+
+#define CATSDOGS_RECTANGLE_X1              ((LCD_WIDTH - CATSDOGS_WIDTH) / 2)
+#define CATSDOGS_RECTANGLE_Y1              ((LCD_HEIGHT - CATSDOGS_HEIGHT) / 2)
+#define CATSDOGS_RECTANGLE_X2              (CATSDOGS_RECTANGLE_X1 + CATSDOGS_WIDTH)
+#define CATSDOGS_RECTANGLE_Y2              (CATSDOGS_RECTANGLE_Y1 + CATSDOGS_HEIGHT)
+
+// Common UNet
+#define UNET_WIDTH                         192
+#define UNET_HEIGHT                        172
+
+#define UNET_RECTANGLE_X1                  ((LCD_WIDTH - UNET_WIDTH) / 2)
+#define UNET_RECTANGLE_Y1                  ((LCD_HEIGHT - UNET_HEIGHT) / 2)
+#define UNET_RECTANGLE_X2                  (UNET_RECTANGLE_X1 + UNET_WIDTH)
+#define UNET_RECTANGLE_Y2                  (UNET_RECTANGLE_Y1 + UNET_HEIGHT)
+
+#define UNET_IMAGE_SIZE_X                  80
+#define UNET_IMAGE_SIZE_Y                  80
+
+// Common WILDLIFE
+#define WILDLIFE_WIDTH                     192
+#define WILDLIFE_HEIGHT                    172
+
+#define WILDLIFE_RECTANGLE_X1              ((LCD_WIDTH - WILDLIFE_WIDTH) / 2)
+#define WILDLIFE_RECTANGLE_Y1              ((LCD_HEIGHT - WILDLIFE_HEIGHT) / 2)
+#define WILDLIFE_RECTANGLE_X2              (WILDLIFE_RECTANGLE_X1 + WILDLIFE_WIDTH)
+#define WILDLIFE_RECTANGLE_Y2              (WILDLIFE_RECTANGLE_Y1 + WILDLIFE_HEIGHT)
 
 // Common BLE
 #define BLE_MAX_MTU_SIZE                   256
@@ -216,7 +246,7 @@
 #define MAX32666_SOC_WARNING_LEVEL         10
 
 // MAX32666 Power Accumulator
-#define MAX32666_POWMON_INTERVAL           UINT32_C(1000)  // ms
+#define MAX32666_POWMON_INTERVAL           UINT32_C(5000)  // ms
 
 // MAX32666 LED
 #define MAX32666_LED_INTERVAL              UINT32_C(1000)  // ms
@@ -383,6 +413,8 @@ typedef enum {
     QSPI_PACKET_TYPE_AUDIO_DEBUG_CMD, // None
 
     QSPI_PACKET_TYPE_TEST, // None
+
+    QSPI_PACKET_TYPE_VIDEO_ML_RES, // 80x80 ml result
 
     QSPI_PACKET_TYPE_LAST
 } qspi_packet_type_e;
@@ -719,8 +751,8 @@ typedef struct __attribute__((packed)) {
     max78000_statistics_t max78000_audio;
     float lcd_fps;
     uint8_t battery_soc;
-    uint32_t max78000_video_cnn_power_mw;
-    uint32_t max78000_audio_cnn_power_mw;
+    uint32_t max78000_video_power_mw;
+    uint32_t max78000_audio_power_mw;
 } device_statistics_t;
 
 // Classification command response

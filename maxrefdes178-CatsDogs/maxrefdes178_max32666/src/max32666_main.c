@@ -707,10 +707,10 @@ static int refresh_screen(void)
             strncpy(lcd_string_buff, device_status.classification_video.result, sizeof(lcd_string_buff) - 1);
             fonts_putStringCentered(LCD_HEIGHT - 29, lcd_string_buff, &Font_16x26, video_string_color, lcd_data.buffer);
         }
-        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 0, FACEID_RECTANGLE_Y1 - 0, FACEID_RECTANGLE_X2 + 0, FACEID_RECTANGLE_Y2 + 0, video_frame_color, lcd_data.buffer);
-        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 1, FACEID_RECTANGLE_Y1 - 1, FACEID_RECTANGLE_X2 + 1, FACEID_RECTANGLE_Y2 + 1, video_frame_color, lcd_data.buffer);
-        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 2, FACEID_RECTANGLE_Y1 - 2, FACEID_RECTANGLE_X2 + 2, FACEID_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
-        fonts_drawRectangle(FACEID_RECTANGLE_X1 - 3, FACEID_RECTANGLE_Y1 - 3, FACEID_RECTANGLE_X2 + 3, FACEID_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
+        fonts_drawRectangle(CATSDOGS_RECTANGLE_X1 - 0, CATSDOGS_RECTANGLE_Y1 - 0, CATSDOGS_RECTANGLE_X2 + 0, CATSDOGS_RECTANGLE_Y2 + 0, video_frame_color, lcd_data.buffer);
+        fonts_drawRectangle(CATSDOGS_RECTANGLE_X1 - 1, CATSDOGS_RECTANGLE_Y1 - 1, CATSDOGS_RECTANGLE_X2 + 1, CATSDOGS_RECTANGLE_Y2 + 1, video_frame_color, lcd_data.buffer);
+        fonts_drawRectangle(CATSDOGS_RECTANGLE_X1 - 2, CATSDOGS_RECTANGLE_Y1 - 2, CATSDOGS_RECTANGLE_X2 + 2, CATSDOGS_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
+        fonts_drawRectangle(CATSDOGS_RECTANGLE_X1 - 3, CATSDOGS_RECTANGLE_Y1 - 3, CATSDOGS_RECTANGLE_X2 + 3, CATSDOGS_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
     }
 
     if (device_settings.enable_lcd_statistics) {

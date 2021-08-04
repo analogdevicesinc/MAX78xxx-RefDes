@@ -932,15 +932,15 @@ void update_mask(uint32_t mask)
   x = 0;
   y = 0;
 
-  for (i = 0; i < IMAGE_SIZE_X*IMAGE_SIZE_Y; i++)
+  for (i = 0; i < UNET_IMAGE_SIZE_X*UNET_IMAGE_SIZE_Y; i++)
   {
 		max = -256; // smaller than -128
 		max_index = 0;
 
 		rr = ml_data8[i];
-		bb = ml_data8[i + IMAGE_SIZE_X * IMAGE_SIZE_Y];  //swapped b&g
-		gg = ml_data8[i + 2 * IMAGE_SIZE_X * IMAGE_SIZE_Y];
-		uu = ml_data8[i + 3 * IMAGE_SIZE_X * IMAGE_SIZE_Y];	
+		bb = ml_data8[i + UNET_IMAGE_SIZE_X * UNET_IMAGE_SIZE_Y];  //swapped b&g
+		gg = ml_data8[i + 2 * UNET_IMAGE_SIZE_X * UNET_IMAGE_SIZE_Y];
+		uu = ml_data8[i + 3 * UNET_IMAGE_SIZE_X * UNET_IMAGE_SIZE_Y];
 		//printf("[%d] %d  %d  %d  %d \n",i,rr, bb, gg, uu);
 
 		if (rr > max)
@@ -1013,7 +1013,7 @@ void update_mask(uint32_t mask)
 		cnt+=9;
 
 		x += 1;
-		if (x >= (IMAGE_SIZE_X)) {
+		if (x >= (UNET_IMAGE_SIZE_X)) {
 		  x = 0;
 		  y += 1;
 	}
