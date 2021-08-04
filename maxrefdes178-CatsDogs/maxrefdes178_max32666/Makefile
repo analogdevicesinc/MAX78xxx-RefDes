@@ -77,9 +77,9 @@ export CMSIS_ROOT
 SRCS  = max32666_main.c
 SRCS += max32666_accel.c
 SRCS += max32666_audio_codec.c
-SRCS += max32666_ble.c
-SRCS += max32666_ble_command.c
-SRCS += max32666_ble_queue.c
+#SRCS += max32666_ble.c
+#SRCS += max32666_ble_command.c
+#SRCS += max32666_ble_queue.c
 SRCS += max32666_data.c
 SRCS += max32666_expander.c
 #SRCS += max32666_ext_flash.c
@@ -156,15 +156,15 @@ LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
 endif
 
 ################################################################################
-# Cordio Library Options
-DEBUG           := 1
-TRACE           := 1
-BT_VER          := 8
-INIT_PERIPHERAL := 1
-
-# Select either option, or both for combined Host and Controller on single core
-BLE_HOST        := 1
-BLE_CONTROLLER  := 1
+## Cordio Library Options
+#DEBUG           := 1
+#TRACE           := 1
+#BT_VER          := 8
+#INIT_PERIPHERAL := 1
+#
+## Select either option, or both for combined Host and Controller on single core
+#BLE_HOST        := 1
+#BLE_CONTROLLER  := 1
 
 ################################################################################
 # Include external library makefiles here
@@ -185,8 +185,8 @@ export PERIPH_DRIVER_DIR
 #include $(SDHC_DRIVER_DIR)/sdhc.mk
 
 # Include the Cordio Library
-CORDIO_DIR=Cordio
-include $(CORDIO_DIR)/platform/targets/maxim/build/cordio.mk
+#CORDIO_DIR=Cordio
+#include $(CORDIO_DIR)/platform/targets/maxim/build/cordio.mk
 
 # Inlcude USB Library
 #MAXUSB_DIR=$(LIBS_DIR)/MAXUSB

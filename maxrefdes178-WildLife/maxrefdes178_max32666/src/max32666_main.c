@@ -49,9 +49,9 @@
 
 #include "max32666_accel.h"
 #include "max32666_audio_codec.h"
-#include "max32666_ble.h"
-#include "max32666_ble_command.h"
-#include "max32666_ble_queue.h"
+//#include "max32666_ble.h"
+//#include "max32666_ble_command.h"
+//#include "max32666_ble_queue.h"
 #include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
@@ -258,18 +258,18 @@ int main(void)
 //        PR_ERROR("sdcard_init failed %d", ret);
 //        pmic_led_red(1);
 //    }
-
-    ret = ble_queue_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("ble_queue_init failed %d", ret);
-        pmic_led_red(1);
-    }
-
-    ret = ble_command_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("ble_command_init failed %d", ret);
-        pmic_led_red(1);
-    }
+//
+//    ret = ble_queue_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("ble_queue_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
+//
+//    ret = ble_command_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("ble_command_init failed %d", ret);
+//        pmic_led_red(1);
+//    }
 
     ret = MXC_SYS_GetUSN(device_info.device_serial_num.max32666, sizeof(device_info.device_serial_num.max32666));
     if (ret != E_NO_ERROR) {
@@ -292,10 +292,10 @@ int main(void)
             device_info.device_serial_num.max32666[12]);
     PR_INFO("MAX32666 Serial number: %s", usn_string);
 
-    snprintf(mac_string, sizeof(mac_string) - 1, "%02X:%02X:%02X:%02X:%02X:%02X",
-            device_info.ble_mac[5], device_info.ble_mac[4], device_info.ble_mac[3],
-            device_info.ble_mac[2], device_info.ble_mac[1], device_info.ble_mac[0]);
-    PR_INFO("MAX32666 BLE MAC: %s", mac_string);
+//    snprintf(mac_string, sizeof(mac_string) - 1, "%02X:%02X:%02X:%02X:%02X:%02X",
+//            device_info.ble_mac[5], device_info.ble_mac[4], device_info.ble_mac[3],
+//            device_info.ble_mac[2], device_info.ble_mac[1], device_info.ble_mac[0]);
+//    PR_INFO("MAX32666 BLE MAC: %s", mac_string);
 
     /* Select USB-Type-C Debug Connection to MAX78000-Video on IO expander */
     if ((ret = expander_select_debugger(DEBUGGER_SELECT_MAX78000_VIDEO)) != E_NO_ERROR) {
@@ -377,9 +377,9 @@ int main(void)
             lcd_drawImage(maxim_logo);
             pmic_led_red(1);
             while(1) {
-                if (device_settings.enable_ble && device_status.ble_connected) {
-                    ble_command_worker();
-                }
+//                if (device_settings.enable_ble && device_status.ble_connected) {
+//                    ble_command_worker();
+//                }
                 expander_worker();
 
                 if (lcd_data.refresh_screen && !spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
@@ -442,16 +442,16 @@ static void run_application(void)
                     video_frame_color = WHITE;
                 }
 
-                if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
-                    ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES,
-                        sizeof(device_status.classification_video), (uint8_t *) &device_status.classification_video);
-                }
+//                if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
+//                    ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES,
+//                        sizeof(device_status.classification_video), (uint8_t *) &device_status.classification_video);
+//                }
                 break;
             case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
-                if (device_status.ble_connected) {
-                    ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
-                        sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
-                }
+//                if (device_status.ble_connected) {
+//                    ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
+//                        sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
+//                }
                 qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
                 lcd_notification(GREEN, "FaceID signature updated");
                 break;
@@ -509,10 +509,10 @@ static void run_application(void)
                     }
                 }
 
-                if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
-                    ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
-                        sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
-                }
+//                if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
+//                    ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
+//                        sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
+//                }
                 if (!device_settings.enable_max78000_video) {
                     lcd_data.refresh_screen = 1;
                 }
@@ -526,14 +526,14 @@ static void run_application(void)
         qspi_master_video_tx_worker();
         qspi_master_audio_tx_worker();
 
-        // Send BLE periodic statistics
-        if (device_settings.enable_ble_send_statistics && device_status.ble_connected) {
-            if ((timer_ms_tick - timestamps.statistics_sent) > BLE_STATISTICS_INTERVAL) {
-                timestamps.statistics_sent = timer_ms_tick;
-                ble_command_send_single_packet(BLE_COMMAND_GET_STATISTICS_RES,
-                    sizeof(device_status.statistics), (uint8_t *) &device_status.statistics);
-            }
-        }
+//        // Send BLE periodic statistics
+//        if (device_settings.enable_ble_send_statistics && device_status.ble_connected) {
+//            if ((timer_ms_tick - timestamps.statistics_sent) > BLE_STATISTICS_INTERVAL) {
+//                timestamps.statistics_sent = timer_ms_tick;
+//                ble_command_send_single_packet(BLE_COMMAND_GET_STATISTICS_RES,
+//                    sizeof(device_status.statistics), (uint8_t *) &device_status.statistics);
+//            }
+//        }
 
         if (device_settings.enable_max78000_video) {
             // If video is not available for a long time, draw logo and refresh periodically
@@ -554,42 +554,42 @@ static void run_application(void)
             }
         }
 
-        // Handle BLE communication
-        if (device_settings.enable_ble && device_status.ble_connected) {
-            ble_command_worker();
-        }
-
-        // Check if BLE status changed
-        if (device_status.ble_connected_status_changed) {
-            device_status.ble_connected_status_changed = 0;
-
-            ble_queue_flush();
-            ble_command_reset();
-            device_settings.enable_ble_send_classification = 0;
-            device_settings.enable_ble_send_statistics = 0;
-
-            if (device_status.ble_connected) {
-                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1,
-                        "BLE %02X:%02X:%02X:%02X:%02X:%02X connected!",
-                        device_status.ble_connected_peer_mac[5], device_status.ble_connected_peer_mac[4],
-                        device_status.ble_connected_peer_mac[3], device_status.ble_connected_peer_mac[2],
-                        device_status.ble_connected_peer_mac[1], device_status.ble_connected_peer_mac[0]);
-                lcd_notification(BLUE, lcd_string_buff);
-            } else {
-                lcd_notification(BLUE, "BLE disconnected!");
-            }
-        }
-
-        if (device_status.ble_running_status_changed) {
-            if (device_settings.enable_ble) {
-                PR_INFO("Enable Core1");
-                Core1_Start();
-            } else {
-                PR_INFO("Disable Core1");
-                Core1_Stop();
-            }
-            device_status.ble_running_status_changed = 0;
-        }
+//        // Handle BLE communication
+//        if (device_settings.enable_ble && device_status.ble_connected) {
+//            ble_command_worker();
+//        }
+//
+//        // Check if BLE status changed
+//        if (device_status.ble_connected_status_changed) {
+//            device_status.ble_connected_status_changed = 0;
+//
+//            ble_queue_flush();
+//            ble_command_reset();
+//            device_settings.enable_ble_send_classification = 0;
+//            device_settings.enable_ble_send_statistics = 0;
+//
+//            if (device_status.ble_connected) {
+//                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1,
+//                        "BLE %02X:%02X:%02X:%02X:%02X:%02X connected!",
+//                        device_status.ble_connected_peer_mac[5], device_status.ble_connected_peer_mac[4],
+//                        device_status.ble_connected_peer_mac[3], device_status.ble_connected_peer_mac[2],
+//                        device_status.ble_connected_peer_mac[1], device_status.ble_connected_peer_mac[0]);
+//                lcd_notification(BLUE, lcd_string_buff);
+//            } else {
+//                lcd_notification(BLUE, "BLE disconnected!");
+//            }
+//        }
+//
+//        if (device_status.ble_running_status_changed) {
+//            if (device_settings.enable_ble) {
+//                PR_INFO("Enable Core1");
+//                Core1_Start();
+//            } else {
+//                PR_INFO("Disable Core1");
+//                Core1_Stop();
+//            }
+//            device_status.ble_running_status_changed = 0;
+//        }
 
         // Check inactivity
         if (device_settings.enable_inactivity) {
@@ -813,16 +813,16 @@ int Core1_Main(void)
     // Disable Core1 ICC1 Instruction cache
     core1_icc(0);
 
-    int ret = 0;
+//    int ret = 0;
 
     PR_INFO("maxrefdes178_max32666 core1");
 
     core1_irq_init();
 
-    ret = ble_init();
-    if (ret != E_NO_ERROR) {
-        PR_ERROR("ble_init %d", ret);
-    }
+//    ret = ble_init();
+//    if (ret != E_NO_ERROR) {
+//        PR_ERROR("ble_init %d", ret);
+//    }
 
     core1_init_done = 1;
 
@@ -831,7 +831,7 @@ int Core1_Main(void)
 //    core1_icc(1);
 
     while (1) {
-        ble_worker();
+//        ble_worker();
     }
 
     return E_NO_ERROR;
