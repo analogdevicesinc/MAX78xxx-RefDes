@@ -2,49 +2,18 @@
 
 # Forest Demo on the MAXREFDES178# Cube Camera
 
-## List of MAXREFDES178# Components
+## Getting Started with MAXREFDES178, Building Firmware, Loading and Debugging
 
-Before beginning, make sure you have all of the following components.
+Please refer to main MAXREFDES178 documentation for instructions how to build, and load firmware:
 
-  * MAXREFDES178# Cube Camera with enclosure.
+[Getting Started with the MAXREFDES178# Cube Camera](./../maxrefdes178_doc/README.md)
 
-    Front - Right Side (LCD, USB-C Socket, SD Card Socket) | Back - Left Side (Camera, Audio Jacks) 
-    :-------------------------:|:-------------------------:
-    ![](maxrefdes178_doc/mrd178_front.png) | ![](maxrefdes178_doc/mrd178_back.png) 
-
-  * MAXDAP-TYPE-C Pico adaptor.
-
-    ![](maxrefdes178_doc/maxdap_type_c.jpg)
-
-  * MAX32625PICO Debugger with ribbon SWD cable.
-
-    ![](maxrefdes178_doc/max32625pico.jpg)
-
-  * 2 x USB-A to USB-Micro-B cables.
-
-    ![](maxrefdes178_doc/usb-a_to_usb-micro-b.jpg)
-
-  * USB-A to USB-C cable.
-
-    ![](maxrefdes178_doc/usb-a_to_usb-type-c.jpg)
-
-     
-
-
-
-## Building Firmware, Loading and Debugging
-
-Please refer to main Cube Camera repo for instructions how to build, and load firmware:
-
-[Getting Started with the MAXREFDES178# Cube Camera](./../maxrefdes178-FaceId)
-
-NOTE: Cats and Dogs demo does not support Android application.
-
+NOTE: Forest demo does not support Android application.
 
 
 ## Testing Forest Demo
 
-After loading all 3 components of Cats and Dogs Demo (MAX32666, MAX78000_video and MAX78000_audio), turn on the cube camera:
+After loading all 3 components of Forest Demo (MAX32666, MAX78000_video and MAX78000_audio), turn on the cube camera:
 
 - Plug a USB-C cable to charge the device.
 
@@ -54,7 +23,7 @@ After loading all 3 components of Cats and Dogs Demo (MAX32666, MAX78000_video a
 
 - Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  <img src="maxrefdes178_doc/intro.jpg" style="zoom: 25%;" />
+  <img src="../maxrefdes178_doc/wildlife_intro.jpg" style="zoom: 25%;" />
 
 - Device will start with pressing Start Video
 
@@ -64,5 +33,5 @@ After loading all 3 components of Cats and Dogs Demo (MAX32666, MAX78000_video a
 
 - The images are captured at 250msec interval and categorized as Deer, Human, Vehicle, Nature and Building:
 
-  <img src="maxrefdes178_doc/forest.jpg"  />
+  <img src="../maxrefdes178_doc/wildlife_forest.jpg"  />
 
