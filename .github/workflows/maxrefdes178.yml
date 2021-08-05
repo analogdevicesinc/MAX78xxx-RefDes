@@ -116,31 +116,31 @@ jobs:
             exit -1
           }
           
-      - name: Build FaceID MAX32666 Firmware
-        run: |
-          @"
-          cd "${{github.workspace}}"
-          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
-          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
-          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
-          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
-          
-          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
-          cd "maxrefdes178-FaceId\maxrefdes178_max32666"
-          make -r -j
-          make -r -j
-          if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
-          exit -1
-          fi
-          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
-          
-          "@ | Out-File -Encoding ASCII -filepath run_build.sh
-          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
-          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
-          if (!$?) {
-            exit -1
-          }
+#      - name: Build FaceID MAX32666 Firmware
+#        run: |
+#          @"
+#          cd "${{github.workspace}}"
+#          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+#          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+#          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+#          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+#          
+#          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+#          cd "maxrefdes178-FaceId\maxrefdes178_max32666"
+#          make -r -j
+#          make -r -j
+#          if [ `$? -ne 0 ]; then
+#            echo "BUILD IS FAILED!"
+#          exit -1
+#          fi
+#          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+#          
+#          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+#          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+#          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+#          if (!$?) {
+#            exit -1
+#          }
           
           
       - name: Build CatsDogs MAX78000 Video Firmware
@@ -378,7 +378,7 @@ jobs:
           mkdir release\FaceId
           mv maxrefdes178-FaceId\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\FaceId\maxrefdes178_max78000_video_faceid_v${env:VERSION}.bin
           mv maxrefdes178-FaceId\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\FaceId\maxrefdes178_max78000_audio_faceid_v${env:VERSION}.bin
-          mv maxrefdes178-FaceId\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\FaceId\maxrefdes178_max32666_faceid_v${env:VERSION}.bin
+          # mv maxrefdes178-FaceId\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\FaceId\maxrefdes178_max32666_faceid_v${env:VERSION}.bin
           
           mkdir release\CatsDogs
           mv maxrefdes178-CatsDogs\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\CatsDogs\maxrefdes178_max78000_video_catsdogs_v${env:VERSION}.bin

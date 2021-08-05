@@ -1,15 +1,3 @@
-[submodule "maxrefdes178-FaceId/maxrefdes178_max32666/External/BMI160_driver"]
-	path = maxrefdes178-FaceId/maxrefdes178_max32666/External/BMI160_driver
-	url = https://github.com/BoschSensortec/BMI160_driver
-
-[submodule "maxrefdes178-UNet/maxrefdes178_max32666/External/BMI160_driver"]
-	path = maxrefdes178-UNet/maxrefdes178_max32666/External/BMI160_driver
-	url = https://github.com/BoschSensortec/BMI160_driver
-
-[submodule "maxrefdes178-WildLife/maxrefdes178_max32666/External/BMI160_driver"]
-	path = maxrefdes178-WildLife/maxrefdes178_max32666/External/BMI160_driver
-	url = https://github.com/BoschSensortec/BMI160_driver
-
-[submodule "maxrefdes178-CatsDogs/maxrefdes178_max32666/External/BMI160_driver"]
-	path = maxrefdes178-CatsDogs/maxrefdes178_max32666/External/BMI160_driver
+[submodule "external/BMI160_driver"]
+	path = external/BMI160_driver
 	url = https://github.com/BoschSensortec/BMI160_driver

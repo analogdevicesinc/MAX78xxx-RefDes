@@ -40,6 +40,11 @@
 			<locationURI>PARENT-3-ECLIPSE_HOME/Libraries/CMSIS/Device/Maxim/MAX32665/Include</locationURI>
 		</link>
 		<link>
+			<name>external</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/external</locationURI>
+		</link>
+		<link>
 			<name>maxrefdes178_common</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/maxrefdes178_common</locationURI>
