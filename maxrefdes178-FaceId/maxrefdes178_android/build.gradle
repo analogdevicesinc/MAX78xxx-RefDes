@@ -1,8 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    def versionFile = new File('../maxrefdes178_common/maxrefdes178_version.h')
-    def buildFile = new File('../maxrefdes178_common/maxrefdes178_build_info.h')
+    def versionFile = new File('../../maxrefdes178_common/maxrefdes178_version.h')
+    def buildFile = new File('../../maxrefdes178_common/maxrefdes178_build_info.h')
     String versionMajorLine = versionFile.filterLine { line -> line.contains('S_VERSION_MAJOR')}
     Integer versionMajor = versionMajorLine.split(' ')[2].toInteger()
     String versionMinorLine = versionFile.filterLine { line -> line.contains('S_VERSION_MINOR')}

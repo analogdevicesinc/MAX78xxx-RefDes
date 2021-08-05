@@ -34,10 +34,10 @@ jobs:
         run: |
           # This block parses version.h file in source code for version info.
           
-          $VERSION_MAJOR_LINE=Get-Content maxrefdes178-FaceId\maxrefdes178_common\maxrefdes178_version.h | Select-String -Pattern VERSION_MAJOR
+          $VERSION_MAJOR_LINE=Get-Content maxrefdes178_common\maxrefdes178_version.h | Select-String -Pattern VERSION_MAJOR
           $VERSION_MAJOR=$VERSION_MAJOR_LINE.Line.Split(' ')[-1] 
           
-          $VERSION_MINOR_LINE=Get-Content maxrefdes178-FaceId\maxrefdes178_common\maxrefdes178_version.h | Select-String -Pattern VERSION_MINOR
+          $VERSION_MINOR_LINE=Get-Content maxrefdes178_common\maxrefdes178_version.h | Select-String -Pattern VERSION_MINOR
           $VERSION_MINOR=$VERSION_MINOR_LINE.Line.Split(' ')[-1]
           
           $VERSION= -join($VERSION_MAJOR, ".", $VERSION_MINOR, ".", ${{github.run_number}})
@@ -63,10 +63,10 @@ jobs:
           
           #endif /* _BUILD_INFO_H_ */
           
-          "@ | Out-File -Encoding ASCII -filepath maxrefdes178-FaceId\maxrefdes178_common\maxrefdes178_build_info.h
-          (Get-Content maxrefdes178-FaceId\maxrefdes178_common\maxrefdes178_build_info.h -Raw).Replace("`n","`r`n") | Set-Content maxrefdes178-FaceId\maxrefdes178_common\maxrefdes178_build_info.h -Force
+          "@ | Out-File -Encoding ASCII -filepath maxrefdes178_common\maxrefdes178_build_info.h
+          (Get-Content maxrefdes178_common\maxrefdes178_build_info.h -Raw).Replace("`n","`r`n") | Set-Content maxrefdes178_common\maxrefdes178_build_info.h -Force
           
-      - name: Build MAX78000 Video Firmware
+      - name: Build FaceID MAX78000 Video Firmware
         run: |
           @"
           cd "${{github.workspace}}"
@@ -91,7 +91,7 @@ jobs:
             exit -1
           }
           
-      - name: Build MAX78000 Audio Firmware
+      - name: Build FaceID MAX78000 Audio Firmware
         run: |
           @"
           cd "${{github.workspace}}"
@@ -116,32 +116,7 @@ jobs:
             exit -1
           }
           
-#      - name: Build MAX32666 Bootloader
-#        run: |
-#          @"
-#          cd "${{github.workspace}}"
-#          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
-#          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
-#          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
-#          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
-#          
-#          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
-#          cd "maxrefdes178-FaceId\maxrefdes178_max32666_bootloader"
-#          make -r -j
-#          if [ `$? -ne 0 ]; then
-#            echo "BUILD IS FAILED!"
-#          exit -1
-#          fi
-#          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
-#          
-#          "@ | Out-File -Encoding ASCII -filepath run_build.sh
-#          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
-#          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
-#          if (!$?) {
-#            exit -1
-#          }
-          
-      - name: Build MAX32666 Firmware
+      - name: Build FaceID MAX32666 Firmware
         run: |
           @"
           cd "${{github.workspace}}"
@@ -167,22 +142,264 @@ jobs:
             exit -1
           }
           
+          
+      - name: Build CatsDogs MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-CatsDogs\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build CatsDogs MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-CatsDogs\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build CatsDogs MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-CatsDogs\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build UNet MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-UNet\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build UNet MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-UNet\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build UNet MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-UNet\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+        
+
+      - name: Build WildLife MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-WildLife\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build WildLife MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-WildLife\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build WildLife MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-WildLife\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }  
+          
       - name: Prepare Release
         run: |
           # VERSION environment variable must be set before.
           
-          mkdir maxrefdes178-FaceId\release
+          mkdir release
           
-          mv maxrefdes178-FaceId\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin maxrefdes178-FaceId\release\maxrefdes178_max78000_video_v${env:VERSION}.bin
-          mv maxrefdes178-FaceId\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin maxrefdes178-FaceId\release\maxrefdes178_max78000_audio_v${env:VERSION}.bin
-          # mv maxrefdes178-FaceId\maxrefdes178_max32666_bootloader\build\maxrefdes178_max32666_bootloader.bin maxrefdes178\release\maxrefdes178_max32666_bootloader_v${env:VERSION}.bin
-          mv maxrefdes178-FaceId\maxrefdes178_max32666\build\maxrefdes178_max32666.bin maxrefdes178-FaceId\release\maxrefdes178_max32666_v${env:VERSION}.bin
-                              
+          mkdir release\FaceId
+          mv maxrefdes178-FaceId\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\FaceId\maxrefdes178_max78000_video_faceid_v${env:VERSION}.bin
+          mv maxrefdes178-FaceId\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\FaceId\maxrefdes178_max78000_audio_faceid_v${env:VERSION}.bin
+          mv maxrefdes178-FaceId\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\FaceId\maxrefdes178_max32666_faceid_v${env:VERSION}.bin
+          
+          mkdir release\CatsDogs
+          mv maxrefdes178-CatsDogs\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\CatsDogs\maxrefdes178_max78000_video_catsdogs_v${env:VERSION}.bin
+          mv maxrefdes178-CatsDogs\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\CatsDogs\maxrefdes178_max78000_audio_catsdogs_v${env:VERSION}.bin
+          mv maxrefdes178-CatsDogs\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\CatsDogs\maxrefdes178_max32666_catsdogs_v${env:VERSION}.bin
+          
+          mkdir release\UNet
+          mv maxrefdes178-UNet\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\UNet\maxrefdes178_max78000_video_unet_v${env:VERSION}.bin
+          mv maxrefdes178-UNet\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\UNet\maxrefdes178_max78000_audio_unet_v${env:VERSION}.bin
+          mv maxrefdes178-UNet\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\UNet\maxrefdes178_max32666_unet_v${env:VERSION}.bin
+          
+          mkdir release\WildLife
+          mv maxrefdes178-WildLife\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\WildLife\maxrefdes178_max78000_video_wildlife_v${env:VERSION}.bin
+          mv maxrefdes178-WildLife\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\WildLife\maxrefdes178_max78000_audio_wildlife_v${env:VERSION}.bin
+          mv maxrefdes178-WildLife\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\WildLife\maxrefdes178_max32666_wildlife_v${env:VERSION}.bin
+          
       - uses: actions/upload-artifact@v2
         if: always()
         with:
           name: maxrefdes178_firmware_v${{env.VERSION}}
-          path: maxrefdes178/release/**
+          path: release/**
           
   build_android:
     name: Build Android App
@@ -198,8 +415,8 @@ jobs:
         run: |
           # This block parses version.h file in source code for version info.
           
-          VERSION_MAJOR=$(awk '/VERSION_MAJOR/ {print $3}' maxrefdes178-FaceId/maxrefdes178_common/maxrefdes178_version.h | tr -d '\r') 
-          VERSION_MINOR=$(awk '/VERSION_MINOR/ {print $3}' maxrefdes178-FaceId/maxrefdes178_common/maxrefdes178_version.h | tr -d '\r')
+          VERSION_MAJOR=$(awk '/VERSION_MAJOR/ {print $3}' maxrefdes178_common/maxrefdes178_version.h | tr -d '\r') 
+          VERSION_MINOR=$(awk '/VERSION_MINOR/ {print $3}' maxrefdes178_common/maxrefdes178_version.h | tr -d '\r')
           VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${{github.run_number}}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           
@@ -207,7 +424,7 @@ jobs:
         run: |
           # This block generates build info header file to include from source code.
                     
-          cat >maxrefdes178-FaceId/maxrefdes178_common/maxrefdes178_build_info.h<<EOF
+          cat >maxrefdes178_common/maxrefdes178_build_info.h<<EOF
           /* AUTOGENERATED, DO NOT EDIT */
           #ifndef _BUILD_INFO_H_
           #define _BUILD_INFO_H_
@@ -219,11 +436,11 @@ jobs:
           #endif /* _BUILD_INFO_H_ */
           EOF
           
-      - name: Pre Build Android
+      - name: Pre Build FaceID Android
         run: |
           echo "chaquopy.license=${{ secrets.MAXREFDES178_CHAQUOPY_LICENSE }}" >> maxrefdes178-FaceId/maxrefdes178_android/local.properties 
           
-      - name: Build Android Application
+      - name: Build FaceID Android Application
         uses: eskatos/gradle-command-action@v1.3.3
         with:
           build-root-directory: maxrefdes178-FaceId/maxrefdes178_android
@@ -247,14 +464,15 @@ jobs:
           
       - name: Prepare Release
         run: |
-          mkdir maxrefdes178-FaceId/release
+          mkdir release
           
-          mv ${{steps.sign_app.outputs.signedReleaseFile}} maxrefdes178-FaceId/release/maxrefdes178_android_v${VERSION}.apk
-          # mv app/build/outputs/apk/debug/app-debug.apk release/maxrefdes178_android_debug_v${VERSION}.apk
+          mkdir release/FaceId
+          mv ${{steps.sign_app.outputs.signedReleaseFile}} release/FaceId/maxrefdes178_android_faceid_v${VERSION}.apk
+          # mv app/build/outputs/apk/debug/app-debug.apk release/FaceId/maxrefdes178_android_faceid_debug_v${VERSION}.apk
           
       - uses: actions/upload-artifact@v2
         if: always()
         with:
           name: maxrefdes178_android_v${{env.VERSION}}
-          path: maxrefdes178-FaceId/release/**
+          path: release/**
           

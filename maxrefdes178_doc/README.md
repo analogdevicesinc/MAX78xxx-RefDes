@@ -55,15 +55,15 @@ The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://w
 
 - Please refer to FaceID Demo documentation for preloaded demo details:
 
-  - [FaceID Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-FaceId/README.md)
+  - [FaceID Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-FaceId/)
 
 - Other available MAXREFDES178# demo documentations are:
 
-  - [Cats and Dogs Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-CatsDogs/README.md)
+  - [Cats and Dogs Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-CatsDogs/)
 
-  - [UNet Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-UNet/README.md)
+  - [UNet Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-UNet/)
 
-  - [Forest Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-WildLife/README.md)
+  - [Forest Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-WildLife/)
 
 ## Build Demo Firmware using MINGW on Windows
 
