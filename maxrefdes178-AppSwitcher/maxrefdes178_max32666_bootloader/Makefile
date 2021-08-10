@@ -95,7 +95,7 @@ endif
 # Where to find source files for this test
 VPATH = src
 VPATH += src/hal/max32665
-VPATH += ../maxrefdes178_common
+VPATH += ../../maxrefdes178_common
 ifeq ($(MAKECMDGOALS),sla)
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 endif
@@ -105,7 +105,7 @@ PROJ_CFLAGS+=-DBOOTLOADER
 
 # Where to find header files for this test
 IPATH  = include
-IPATH += ../maxrefdes178_common
+IPATH += ../../maxrefdes178_common
 
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE

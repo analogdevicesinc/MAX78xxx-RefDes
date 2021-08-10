@@ -89,6 +89,7 @@ char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN] = {0};
 char max32666_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN] = {0};
 char max78000_video_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN] = {0};
 char max78000_audio_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN] = {0};
+char bootlaoder_string[40] = {0};
 static const mxc_gpio_cfg_t button_x_int_pin = MAX32666_BUTTON_X_INT_PIN;
 volatile int button_x_pressed = 0;
 volatile int button_y_pressed = 0;
@@ -151,7 +152,8 @@ int main(void)
     }
 
     loader_int_enable_bootloader_mode();
-    PR_INFO("maxrefdes178_max32666 bootloader v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
+    snprintf(bootlaoder_string, sizeof(bootlaoder_string) - 1, "MRD178 App Switcher v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    PR_INFO("%s [%s]", bootlaoder_string, S_BUILD_TIMESTAMP);
 
     // Init button X interrupt
     MXC_GPIO_RegisterCallback(&button_x_int_pin, button_x_int_handler, NULL);
@@ -189,7 +191,7 @@ int main(void)
 
     // Draw bootlaoder title
     memset(lcd_buff, 0xff, sizeof(lcd_buff));
-    fonts_putString(31, 3, "MAXREFDES178 App Switcher", &Font_7x10, BLUE, 0, 0, lcd_buff);
+    fonts_putStringCentered(3, bootlaoder_string, &Font_7x10, BLUE, lcd_buff);
 
     ret = sdcard_init();
     if (ret != E_NO_ERROR) {
@@ -225,7 +227,7 @@ int main(void)
 
     while (1) {
         memset(lcd_buff, 0xff, sizeof(lcd_buff));
-        fonts_putString(31, 3, "MAXREFDES178 App Switcher", &Font_7x10, BLUE, 0, 0, lcd_buff);
+        fonts_putStringCentered(3, bootlaoder_string, &Font_7x10, BLUE, lcd_buff);
 
         expander_worker();
 
@@ -249,7 +251,7 @@ int main(void)
             if (ret != E_NO_ERROR) {
                 PR_ERROR("Folder content is invalid! %s", dir_list[selected]);
                 memset(lcd_buff, 0xff, sizeof(lcd_buff));
-                fonts_putString(31, 3, "MAXREFDES178 App Switcher", &Font_7x10, BLUE, 0, 0, lcd_buff);
+                fonts_putStringCentered(3, bootlaoder_string, &Font_7x10, BLUE, lcd_buff);
                 fonts_putString(1, 20, "Folder content is invalid!", &Font_7x10, RED, 0, 0, lcd_buff);
                 fonts_putString(1, 40, dir_list[selected], &Font_7x10, RED, 0, 0, lcd_buff);
                 lcd_drawImage(lcd_buff);
@@ -257,7 +259,7 @@ int main(void)
             } else {
                 PR_INFO("Firmware update started for: %s", dir_list[selected]);
                 memset(lcd_buff, 0xff, sizeof(lcd_buff));
-                fonts_putString(31, 3, "MAXREFDES178 App Switcher", &Font_7x10, BLUE, 0, 0, lcd_buff);
+                fonts_putStringCentered(3, bootlaoder_string, &Font_7x10, BLUE, lcd_buff);
                 fonts_putString(1, 20, "Firmware update started for:", &Font_7x10, BLACK, 0, 0, lcd_buff);
                 fonts_putString(1, 40, dir_list[selected], &Font_7x10, BROWN, 0, 0, lcd_buff);
                 lcd_drawImage(lcd_buff);
