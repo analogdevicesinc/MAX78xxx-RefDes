@@ -40,43 +40,38 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <stdio.h>
-#include <sema.h>
-
 #include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-extern uint32_t __isr_vector_core1;
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-//    while(MXC_SEMA_GetSema(MAX32666_SEMAPHORE_PRINT) == E_BUSY) {}
-//    MXC_SEMA_FreeSema(MAX32666_SEMAPHORE_PRINT);
 #define PR_DEBUG(fmt, args...)  if(0) { \
-    printf("D%d[%-6s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
+    printf("D[%-6s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args); \
     fflush(stdout); \
 }
 
 #define PR_INFO(fmt, args...)  if(0) { \
-    printf("I%d[%-6s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
+    printf("I[%-6s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args); \
     fflush(stdout); \
 }
 
 #define PR_WARN(fmt, args...)  if(0) { \
-    printf("W%d[%-6s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
+    printf("W[%-6s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args); \
     fflush(stdout); \
 }
 
-#define PR_ERROR(fmt, args...)  if(0) { \
-    printf("E%d[%-6s:%4d] " fmt "\r\n", (SCB->VTOR == (unsigned long)&__isr_vector_core1), S_MODULE_NAME, __LINE__, ##args); \
+#define PR_ERROR(fmt, args...)  if(1) { \
+    printf("E[%-6s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args); \
     fflush(stdout); \
 }
 
-#define PR(fmt, args...) \
+#define PR(fmt, args...) if(0) { \
     printf(fmt , ##args); \
     fflush(stdout); \
 

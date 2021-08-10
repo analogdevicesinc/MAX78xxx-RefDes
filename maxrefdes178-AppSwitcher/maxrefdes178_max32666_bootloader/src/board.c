@@ -64,7 +64,7 @@ const unsigned int num_pbs = 0;
 /******************************************************************************/
 __attribute__((noreturn)) void mxc_assert(const char *expr, const char *file, int line)
 {
-    printf("MXC_ASSERT %s #%d: (%s)\n", file, line, expr);
+    //printf("MXC_ASSERT %s #%d: (%s)\n", file, line, expr);
     while (1);
     __builtin_unreachable();
 }

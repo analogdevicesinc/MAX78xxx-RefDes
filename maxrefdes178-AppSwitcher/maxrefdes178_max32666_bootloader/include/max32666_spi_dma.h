@@ -33,17 +33,20 @@
  *******************************************************************************
  */
 
-#ifndef _MAX32666_SDCARD_H_
-#define _MAX32666_SDCARD_H_
+#ifndef _MAX32666_SPI_DMA_H_
+#define _MAX32666_SPI_DMA_H_
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
+#include <dma.h>
+#include <spi.h>
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
+
 
 
 //-----------------------------------------------------------------------------
@@ -54,9 +57,10 @@
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int sdcard_init(void);
-int sdcard_uninit(void);
-int sdcard_get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN], int *dir_count);
-int sdcard_get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000_video_msbl_path, char *max78000_audio_msbl_path);
+void spi_dma_int_handler(uint8_t ch, mxc_spi_regs_t *spi);
+int spi_dma_master_init(mxc_spi_regs_t *spi, sys_map_t map, uint32_t speed, uint8_t quad);
+int spi_dma(uint8_t ch, mxc_spi_regs_t *spi, uint8_t *data_out, uint8_t *data_in, uint32_t len, mxc_dma_reqsel_t reqsel, void (*callback)(void));
+int spi_dma_wait(uint8_t ch, mxc_spi_regs_t *spi);
+uint8_t spi_dma_busy_flag(uint8_t ch);
 
-#endif /* _MAX32666_SDCARD_H_ */
+#endif /* _MAX32666_SPI_DMA_H_ */

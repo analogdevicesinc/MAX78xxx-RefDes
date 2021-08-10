@@ -54,12 +54,18 @@ SRAM_ADDR = SDMA_CODE_ADDR + SDMA_CODE_LEN;
 /* SRAM_SIZE must be defined */
 SRAM_LEN = SRAM_SIZE - OTP_LEN - SHARED_LEN - SDMA_LEN;
 
-/* Make room for PAL_NVM_DB */
-BOOTLOADER_SIZE = 0x10000;
-FLASH_ORIGIN = 0x10000000 + BOOTLOADER_SIZE; 
-FLASH_MEM_SIZE = 0x100000 - _PAL_NVM_SIZE;
-FLASH_MEM_SIZE = 0x100000 - _PAL_NVM_SIZE - BOOTLOADER_SIZE;
+FLASH_ORIGIN = 0x10000000;
+FLASH_SIZE = 0x00100000; /* 1 mb Flash */
+
 PAL_NVM_ORIGIN = 0x100000 - _PAL_NVM_SIZE + FLASH_ORIGIN;
+
+BOOTLOADER_SIZE = 0x10000; /* 64 kb for flash bootloader */
+BOOTMEM_SIZE = 0x40; /* 64 bytes of memory for flash bootloader */
+MAINAPP_SIZE = FLASH_SIZE - BOOTLOADER_SIZE - BOOTMEM_SIZE;
+
+BOOTLOADER_ORIGIN = FLASH_ORIGIN;
+MAINAPP_ORIGIN = BOOTLOADER_ORIGIN + BOOTLOADER_SIZE;
+BOOTMEM_ORIGIN = MAINAPP_ORIGIN + MAINAPP_SIZE;
 
 CORE0_STACK_SIZE = 0x2000;
 CORE1_STACK_SIZE = 0x2000;
@@ -68,11 +74,13 @@ CORE1_STACK_SIZE = 0x2000;
 /* If used, they should be adjusted for the external Flash/RAM size */
 MEMORY {
 
-    SPIX (rx)  : ORIGIN = 0x08000000,                           LENGTH = 128M
-    BOOTLOADER(rx): ORIGIN = 0x10000000,                        LENGTH = BOOTLOADER_SIZE
-    FLASH (rx) : ORIGIN = FLASH_ORIGIN,                           LENGTH = FLASH_MEM_SIZE
-    PAL_NVM_DB (r)  : ORIGIN = PAL_NVM_ORIGIN,                  LENGTH = _PAL_NVM_SIZE
+    SPIX (rx)       : ORIGIN = 0x08000000,                      LENGTH = 128M
+    
+    BOOTLOADER (rx) : ORIGIN = BOOTLOADER_ORIGIN,               LENGTH = BOOTLOADER_SIZE
+    FLASH (rx)      : ORIGIN = MAINAPP_ORIGIN,                  LENGTH = MAINAPP_SIZE
+    BOOTMEM (rw)    : ORIGIN = BOOTMEM_ORIGIN,                  LENGTH = BOOTMEM_SIZE 
 
+    PAL_NVM_DB (r)  : ORIGIN = PAL_NVM_ORIGIN,                  LENGTH = _PAL_NVM_SIZE
     OTP (rwx)       : ORIGIN = OTP_ADDR,                        LENGTH = OTP_LEN
     ARM_SHARED(rwx) : ORIGIN = SHARED_ADDR,                     LENGTH = SHARED_LEN_HALF
     SDMA_SHARED(rwx): ORIGIN = SHARED_ADDR + SHARED_LEN_HALF,   LENGTH = SHARED_LEN_HALF
@@ -84,18 +92,10 @@ MEMORY {
 }
 
  TARGET(binary) /* specify the file format of binary file */
- INPUT (maxrefdes178_max32666_bootloader.bin) /* bootloader bin file path (relative to the output folder)*/
  OUTPUT_FORMAT(default) /* restore the out file format */
 
 /* Sections Definitions */
 SECTIONS {
-     /* place the bootloader binary into 0x0..0x10000 */
-     .bootloader :
-     {
-        maxrefdes178_max32666_bootloader.bin /* place the binary file here */
-    
-     } > BOOTLOADER
-     
     .text :
     {
         _text = .;

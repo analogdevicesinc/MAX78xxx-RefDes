@@ -75,8 +75,19 @@ export CMSIS_ROOT
 
 # Source files for this test (add path to VPATH below)
 SRCS  = max32666_main.c
+SRCS += max32666_i2c.c
+SRCS += max32666_expander.c
+SRCS += max32666_fonts.c
+SRCS += max32666_pmic.c
+SRCS += max32666_lcd.c
+SRCS += max32666_sdcard.c
+SRCS += max32666_spi_dma.c
 SRCS += board.c
 SRCS += hal_sys.c
+SRCS += max32666_loader_int.c
+SRCS += max32666_loader.c
+SRCS += crc32.c
+SRCS += max32666_bl.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
 endif
@@ -122,8 +133,8 @@ PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-secti
 #STARTUPFILE=start.S
 
 # Set MXC_OPTIMIZE to override the default optimization level
-MXC_OPTIMIZE_CFLAGS=-Ofast
 # Use -Og for better debug
+MXC_OPTIMIZE_CFLAGS=-Os
 #MXC_OPTIMIZE_CFLAGS=-Og
 
 # Point this variable to a linker file to override the default file
@@ -147,7 +158,11 @@ PERIPH_DRIVER_DIR=$(LIBS_DIR)/PeriphDrivers
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
 export PERIPH_DRIVER_DIR
 
-# TODO: Add USB based solution
+# Include SDHC and FAT32 Library
+SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
+FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
+include $(FAT32_DRIVER_DIR)/fat32.mk
+include $(SDHC_DRIVER_DIR)/sdhc.mk
 
 # Remove MX25 related files from bootloader as it does not utilize the on-board flash at all
 TMP_SRCS := $(SRCS)
@@ -166,7 +181,8 @@ slaclean:
 distclean: clean libclean slaclean
 
 all:
-	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin
+	# BOOTLOADER_ORIGIN = FLASH_ORIGIN = 0x10000000; BOOTLOADER_SIZE = 0x10000; MAINAPP_ORIGIN = BOOTLOADER_ORIGIN + BOOTLOADER_SIZE;
+	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary --gap-fill 0xFF --pad-to 0x10010000 $(BUILD_DIR)/$(PROJECT).bin
 	arm-none-eabi-size --format=SysV ${BUILD_DIR}/${PROJECT}.elf
 	arm-none-eabi-size --format=berkeley $(BUILD_DIR)/$(PROJECT).elf
 

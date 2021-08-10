@@ -206,7 +206,9 @@ slaclean:
 distclean: clean libclean
 
 all:
-	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin
+	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT)_app.bin
+	cd $(BUILD_DIR) && $(CURDIR)/../../external/msblGenWin32.exe $(BUILD_DIR)/$(PROJECT)_app.bin MAX32666 8192
+	cat $(CURDIR)/../../maxrefdes178-AppSwitcher/maxrefdes178_max32666_bootloader.bin $(BUILD_DIR)/$(PROJECT)_app.bin > $(BUILD_DIR)/$(PROJECT).bin
 
 sla: all
 	@echo " "

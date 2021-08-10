@@ -57,19 +57,32 @@ SRAM_ADDR = DEFINED(ARM_SRAM_START) ? ARM_SRAM_START : (SDMA_CODE_ADDR + SDMA_CO
 /* SRAM_SIZE must be defined */
 SRAM_LEN = SRAM_SIZE + SRAM_ORIGIN - SRAM_ADDR;
 
+FLASH_ORIGIN = 0x10000000;
+FLASH_SIZE = 0x00100000; /* 1 mb Flash */
+
+BOOTLOADER_SIZE = 0x10000; /* 64 kb for flash bootloader */
+BOOTMEM_SIZE = 0x40; /* 64 bytes of memory for flash bootloader */
+MAINAPP_SIZE = FLASH_SIZE - BOOTLOADER_SIZE - BOOTMEM_SIZE;
+
+BOOTLOADER_ORIGIN = FLASH_ORIGIN;
+MAINAPP_ORIGIN = BOOTLOADER_ORIGIN + BOOTLOADER_SIZE;
+BOOTMEM_ORIGIN = MAINAPP_ORIGIN + MAINAPP_SIZE;
+
 /* SPID and SPIX Sections here are maximum possible sizes */
 /* If used, they should be adjusted for the external Flash/RAM size */
 MEMORY {
-    SPIX (rx)  : ORIGIN = 0x08000000,                           LENGTH = 128M
-    BOOTLOADER (rx) : ORIGIN = 0x10000000, LENGTH = 0x0010000   /* 16 kb for bootloader */
-    MAINAPP (rwx) : ORIGIN = 0x10010000, LENGTH = 0x000EFFC0 /* Main application */
-    BOOTMEM (rw) : ORIGIN = 0x100FFFC0, LENGTH = 0x00000040 /* 64 bytes of memory for bootloader */
+    SPIX (rx)       : ORIGIN = 0x08000000,                      LENGTH = 128M
+    
+    BOOTLOADER (rx) : ORIGIN = BOOTLOADER_ORIGIN,               LENGTH = BOOTLOADER_SIZE
+    MAINAPP (rwx)   : ORIGIN = MAINAPP_ORIGIN,                  LENGTH = MAINAPP_SIZE
+    BOOTMEM (rw)    : ORIGIN = BOOTMEM_ORIGIN,                  LENGTH = BOOTMEM_SIZE 
 
     OTP (rwx)       : ORIGIN = OTP_ADDR,                        LENGTH = OTP_LEN
     ARM_SHARED(rwx) : ORIGIN = SHARED_ADDR,                     LENGTH = SHARED_LEN_HALF
     SDMA_SHARED(rwx): ORIGIN = SHARED_ADDR + SHARED_LEN_HALF,   LENGTH = SHARED_LEN_HALF
     SDMA_DATA (rwx) : ORIGIN = SDMA_DATA_ADDR,                  LENGTH = SDMA_DATA_LEN
     SDMA_CODE (rwx) : ORIGIN = SDMA_CODE_ADDR,                  LENGTH = SDMA_CODE_LEN
+
     SRAM (rwx) : ORIGIN = SRAM_ADDR,                            LENGTH = SRAM_LEN
     SPID (rw)  : ORIGIN = 0x80000000,                           LENGTH = 512M
 }

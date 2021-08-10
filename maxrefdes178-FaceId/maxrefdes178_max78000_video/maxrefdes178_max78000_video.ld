@@ -31,10 +31,26 @@
  *
  ******************************************************************************/
 
+FLASH_ORIGIN = 0x10000000;
+FLASH_SIZE = 0x00080000; /* 512kB Flash */
+
+BOOTLOADER_SIZE = 0x8000; /* 32k for flash bootloader */
+BOOTMEM_SIZE = 0x40; /* 64 bytes of memory for flash bootloader */
+ROM_BL_PAGE_SIZE = 0x2000; /* Last page is used by ROM bootlaoder */
+MAINAPP_SIZE = FLASH_SIZE - BOOTLOADER_SIZE - BOOTMEM_SIZE - ROM_BL_PAGE_SIZE;
+
+BOOTLOADER_ORIGIN = FLASH_ORIGIN;
+MAINAPP_ORIGIN = BOOTLOADER_ORIGIN + BOOTLOADER_SIZE;
+BOOTMEM_ORIGIN = MAINAPP_ORIGIN + MAINAPP_SIZE;
+ROM_BL_PAGE_ORIGIN = BOOTMEM_ORIGIN + BOOTMEM_SIZE;
+
 MEMORY {
-    ROM        (rx) : ORIGIN = 0x00000000, LENGTH = 0x00010000 /* 64kB ROM */
-    FLASH      (rx) : ORIGIN = 0x10000000, LENGTH = 0x00080000 /* 512kB Flash */
-    SRAM      (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00020000 /* 128kB SRAM */
+    ROM        (rx) : ORIGIN = 0x00000000,         LENGTH = 0x00010000 /* 64kB ROM */
+    BOOTLOADER (rx) : ORIGIN = BOOTLOADER_ORIGIN,  LENGTH = BOOTLOADER_SIZE
+    FLASH      (rx) : ORIGIN = MAINAPP_ORIGIN,     LENGTH = MAINAPP_SIZE 
+    BOOTMEM    (rw) : ORIGIN = BOOTMEM_ORIGIN,     LENGTH = BOOTMEM_SIZE 
+    ROM_BL_PAGE(rw) : ORIGIN = ROM_BL_PAGE_ORIGIN, LENGTH = ROM_BL_PAGE_SIZE 
+    SRAM      (rwx) : ORIGIN = 0x20000000,         LENGTH = 0x00020000 /* 128kB SRAM */
 }
 
 TARGET(binary) /* specify the file format of binary file */

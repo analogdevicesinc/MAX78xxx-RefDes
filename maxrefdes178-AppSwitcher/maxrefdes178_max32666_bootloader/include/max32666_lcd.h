@@ -33,8 +33,8 @@
  *******************************************************************************
  */
 
-#ifndef _MAX32666_SDCARD_H_
-#define _MAX32666_SDCARD_H_
+#ifndef _MAX32666_LCD_H_
+#define _MAX32666_LCD_H_
 
 //-----------------------------------------------------------------------------
 // Includes
@@ -52,11 +52,18 @@
 
 
 //-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+extern uint8_t lcd_buff[115200];
+extern char line_str[80];
+
+//-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-int sdcard_init(void);
-int sdcard_uninit(void);
-int sdcard_get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN], int *dir_count);
-int sdcard_get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000_video_msbl_path, char *max78000_audio_msbl_path);
+int lcd_init(void);
+int lcd_drawImage(uint8_t *data);
+int lcd_backlight(int on, uint8_t level);
+int lcd_set_rotation(lcd_rotation_e lcd_rotation);
+int lcd_notification(uint16_t color, const char *notification);
 
-#endif /* _MAX32666_SDCARD_H_ */
+#endif /* _MAX32666_LCD_H_ */

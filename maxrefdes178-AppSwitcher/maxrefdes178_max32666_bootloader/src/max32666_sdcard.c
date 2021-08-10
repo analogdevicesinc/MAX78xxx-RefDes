@@ -65,6 +65,7 @@
 
 #define MESSAGE_MAX_LEN    256
 #define ERROR_MAX_LEN      20
+#define WORKING_BUFFER_LEN 4096
 
 
 //-----------------------------------------------------------------------------
@@ -81,10 +82,11 @@ FIL file;       //FFat File Object
 FRESULT err;    //FFat Result (Struct)
 FILINFO fno;    //FFat File Information Object
 DIR dir;        //FFat Directory Object
-TCHAR message[MESSAGE_MAX_LEN], filename[MESSAGE_MAX_LEN], volume_label[24], volume = '0';
+TCHAR message[MESSAGE_MAX_LEN], directory[MESSAGE_MAX_LEN], cwd[MESSAGE_MAX_LEN], filename[MESSAGE_MAX_LEN], volume_label[24], volume = '0';
 TCHAR *FF_ERRORS[ERROR_MAX_LEN];
 DWORD clusters_free = 0, sectors_free = 0, sectors_total = 0, volume_sn = 0;
 UINT bytes_written = 0, bytes_read = 0, mounted = 0;
+BYTE work[WORKING_BUFFER_LEN];
 mxc_gpio_cfg_t SDPowerEnablePin = MAX32666_SD_EN_PIN;
 
 
@@ -93,7 +95,6 @@ mxc_gpio_cfg_t SDPowerEnablePin = MAX32666_SD_EN_PIN;
 //-----------------------------------------------------------------------------
 static int sdcard_mount(void);
 static int sdcard_umount(void);
-static int sdcard_example(void);
 
 
 //-----------------------------------------------------------------------------
@@ -111,6 +112,8 @@ static int sdcard_mount(void)
         mounted = 1;
     }
 
+    f_getcwd(cwd, sizeof(cwd));                         //Set the Current working directory
+
     return err;
 }
 
@@ -127,46 +130,89 @@ static int sdcard_umount(void)
     return err;
 }
 
-static int sdcard_example(void)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+int sdcard_get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN], int *dir_count)
 {
-    //open SD Card
-    if((err = sdcard_mount()) != FR_OK) {
-        PR_ERROR("Error opening SD Card: %s", FF_ERRORS[err]);
-        return err;
-    }
-
-    PR_INFO("Attempting to read back file...");
-    if((err = f_open(&file, "HelloMaxim.txt", FA_READ)) != FR_OK){
-        PR_ERROR("Error opening file: %s", FF_ERRORS[err]);
-        f_mount(NULL, "", 0);
-        return err;
-    }
-
-    if((err = f_read(&file, &message, bytes_written, &bytes_read)) != FR_OK){
-        PR_ERROR("Error reading file: %s", FF_ERRORS[err]);
-        f_mount(NULL, "", 0);
-        return err;
-    }
-
-    PR_INFO("Read Back %d bytes", bytes_read);
-    PR_INFO("Message: ");
-    PR_INFO("%s", message);
-
-    if((err = f_close(&file)) != FR_OK){
-        PR_ERROR("Error closing file: %s", FF_ERRORS[err]);
-        f_mount(NULL, "", 0);
-        return err;
-    }
-    PR_INFO("File Closed!\n");
-
-    //unmount SD Card
-    if((err = sdcard_umount()) != FR_OK){
-        PR_ERROR("Error unmounting volume: %s", FF_ERRORS[err]);
-        return err;
+    *dir_count = 0;
+    err = f_opendir(&dir, "/");                       /* Open the directory */
+    if (err == FR_OK) {
+        for (;;) {
+            err = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (err != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+            if (fno.fattrib & AM_DIR) {                    /* It is a directory */
+                if (strcmp(fno.fname, "System Volume Information") == 0) {
+                    continue;
+                }
+                if (*dir_count == MAX32666_BL_MAX_DIR_NUMBER) {
+                    break;
+                }
+                strncpy(dir_list[*dir_count], fno.fname, MAX32666_BL_MAX_DIR_LEN - 1);
+                dir_list[*dir_count][MAX32666_BL_MAX_DIR_LEN - 1] = '\0';
+                *dir_count += 1;
+            } else {                                       /* It is a file. */
+                PR_DEBUG("file %s", fno.fname);
+            }
+        }
+        f_closedir(&dir);
     }
 
     return 0;
 }
+
+int sdcard_get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000_video_msbl_path, char *max78000_audio_msbl_path)
+{
+    int max32666_found = 0;
+    int max78000_video_found = 0;
+    int max78000_audio_found = 0;
+
+    err = f_opendir(&dir, dir_path);                       /* Open the directory */
+    if (err == FR_OK) {
+        for (;;) {
+            err = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (err != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+            if (fno.fattrib & AM_DIR) {                    /* It is a directory */
+                PR_DEBUG("dir %s", fno.fname);
+            } else {                                       /* It is a file. */
+                PR_INFO("file %s", fno.fname);
+
+                // Check extension
+                if (strncmp(fno.fname + strlen(fno.fname) - strlen(MAX32666_BL_MAX32666_FW_EXTENSION), MAX32666_BL_MAX32666_FW_EXTENSION, strlen(MAX32666_BL_MAX32666_FW_EXTENSION)) != 0) {
+                    continue;
+                }
+
+                // Check fw name
+                if (strncmp(fno.fname, MAX32666_BL_MAX32666_FW_NAME, strlen(MAX32666_BL_MAX32666_FW_NAME)) == 0) {
+                    max32666_found = 1;
+                    strcpy(max32666_msbl_path, dir_path);
+                    max32666_msbl_path[strlen(dir_path)] = '/';
+                    strncpy(max32666_msbl_path + strlen(dir_path) + 1, fno.fname, MAX32666_BL_MAX_FW_PATH_LEN - 2 - strlen(dir_path));
+                    max32666_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN - 1] = '\0';
+                } else if  (strncmp(fno.fname, MAX32666_BL_MAX78000_VIDEO_FW_NAME, strlen(MAX32666_BL_MAX78000_VIDEO_FW_NAME)) == 0) {
+                    max78000_video_found = 1;
+                    strcpy(max78000_video_msbl_path, dir_path);
+                    max78000_video_msbl_path[strlen(dir_path)] = '/';
+                    strncpy(max78000_video_msbl_path + strlen(dir_path) + 1, fno.fname, MAX32666_BL_MAX_FW_PATH_LEN - 2 - strlen(dir_path));
+                    max78000_video_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN - 1] = '\0';
+                } else if  (strncmp(fno.fname, MAX32666_BL_MAX78000_AUDIO_FW_NAME, strlen(MAX32666_BL_MAX78000_AUDIO_FW_NAME)) == 0) {
+                    max78000_audio_found = 1;
+                    strcpy(max78000_audio_msbl_path, dir_path);
+                    max78000_audio_msbl_path[strlen(dir_path)] = '/';
+                    strncpy(max78000_audio_msbl_path + strlen(dir_path) + 1, fno.fname, MAX32666_BL_MAX_FW_PATH_LEN - 2 - strlen(dir_path));
+                    max78000_audio_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN - 1] = '\0';
+                }
+            }
+        }
+        f_closedir(&dir);
+    }
+
+    if (max32666_found && max78000_video_found && max78000_audio_found) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+#pragma GCC diagnostic pop
 
 int sdcard_init(void)
 {
@@ -192,11 +238,10 @@ int sdcard_init(void)
     FF_ERRORS[17] = "FR_NOT_ENOUGH_CORE";
     FF_ERRORS[18] = "FR_TOO_MANY_OPEN_FILES";
     FF_ERRORS[19] = "FR_INVALID_PARAMETER";
-    srand(12347439);
 
     // Enable Power To Card
-    MXC_GPIO_Config(&SDPowerEnablePin);
     GPIO_CLR(SDPowerEnablePin);
+    MXC_GPIO_Config(&SDPowerEnablePin);
 
     // Initialize SDHC peripheral
     cfg.bus_voltage = MAX32666_SD_BUS_VOLTAGE;
@@ -206,6 +251,9 @@ int sdcard_init(void)
         PR_ERROR("Unable to initialize SDHC driver.");
         return 1;
     }
+
+    // wait for card to be inserted
+    for (int i = 0; !MXC_SDHC_Card_Inserted() && (i < 100000); i++);
 
     // Check if card is inserted
     if (!MXC_SDHC_Card_Inserted()) {
@@ -238,12 +286,21 @@ int sdcard_init(void)
         MXC_SDHC_Set_Clock_Config(0);
     }
 
-if (1) { // TODO: remove
-    if(sdcard_example() != E_NO_ERROR) {
-        PR_ERROR("SD CARD example failed");
-        return 1;
+    if((err = sdcard_mount()) != FR_OK) {
+        PR_ERROR("Error opening SD Card: %s", FF_ERRORS[err]);
+        return err;
     }
+    PR_INFO("SD Card Opened!\n");
+
+    return 0;
 }
+
+int sdcard_uninit(void)
+{
+    if((err = sdcard_umount()) != FR_OK) {
+        PR_ERROR("Error umounting SD Card: %s", FF_ERRORS[err]);
+        return err;
+    }
 
     return 0;
 }

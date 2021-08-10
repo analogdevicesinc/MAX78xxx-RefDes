@@ -99,7 +99,7 @@
 #define FACEID_RECTANGLE_Y1                ((LCD_HEIGHT - FACEID_HEIGHT) / 2)
 #define FACEID_RECTANGLE_X2                (FACEID_RECTANGLE_X1 + FACEID_WIDTH)
 #define FACEID_RECTANGLE_Y2                (FACEID_RECTANGLE_Y1 + FACEID_HEIGHT)
-//
+
 #define FACEID_MAX_SUBJECT                 6
 #define FACEID_MAX_PHOTO_PER_SUBJECT       8
 #define FACEID_MAX_SUBJECT_NAME_SIZE       CLASSIFICATION_STRING_SIZE
@@ -349,6 +349,16 @@
 
 // MAX78000 VIDEO SLEEP DEFER TIMER
 #define MAX78000_VIDEO_SLEEP_DEFER_TMR     MXC_TMR2
+
+/*** MAX32666 BOOTLOADER ***/
+#define MAX32666_BL_MAX_DIR_LEN            (34 + 1)     // +1 for NULL terminator
+#define MAX32666_BL_MAX_DIR_NUMBER         22
+#define MAX32666_BL_MAX_FW_PATH_LEN        100
+#define MAX32666_BL_MAX32666_FW_NAME       "maxrefdes178_max32666"
+#define MAX32666_BL_MAX78000_VIDEO_FW_NAME "maxrefdes178_max78000_video"
+#define MAX32666_BL_MAX78000_AUDIO_FW_NAME "maxrefdes178_max78000_audio"
+#define MAX32666_BL_MAX32666_FW_EXTENSION  "msbl"
+
 
 //-----------------------------------------------------------------------------
 // Typedefs
