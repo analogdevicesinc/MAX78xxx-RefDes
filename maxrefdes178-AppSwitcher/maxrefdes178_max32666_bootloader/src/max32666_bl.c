@@ -138,7 +138,7 @@ static int erase_boot_mem_page(unsigned char delete_mark)
 }
 
 
-int master_erase()
+int bl_master_erase()
 {
 	int ret;
 	int startPage;
@@ -249,7 +249,7 @@ int bl_load_image(FIL *file)
     }
 #endif
 
-	ret = master_erase();
+	ret = bl_master_erase();
     if (ret) {
         return ret;
     }
@@ -287,18 +287,18 @@ int bl_load_image(FIL *file)
 #if defined(SECURE_BOOTLOADER)
 			char authenticated = bl_security_decrypt_auth_valid();
 			if (!authenticated) {
-				master_erase();
+				bl_master_erase();
 				return -1;
 			}
 #endif
 
 			memcpy(&header, page_plain, sizeof(app_header_t));
 			if (header.valid_mark) {
-				master_erase();
+				bl_master_erase();
 				return -1;
 			}
 			if (header.length == 0 || header.length > (_boot_mem_start - _app_start)) {
-				master_erase();
+				bl_master_erase();
 				return -2;
 			}
 
@@ -331,7 +331,7 @@ int bl_load_image(FIL *file)
     MXC_Delay(MXC_DELAY_MSEC(10)); // magic delay
 
 	if (is_crc_ok || is_app_valid) {
-		master_erase();
+		bl_master_erase();
 		return -1;
 	}
 

@@ -152,8 +152,7 @@ int main(void)
     }
 
     loader_int_enable_bootloader_mode();
-    snprintf(bootlaoder_string, sizeof(bootlaoder_string) - 1, "MRD178 App Switcher v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    PR_INFO("%s [%s]", bootlaoder_string, S_BUILD_TIMESTAMP);
+    PR_INFO("maxrefdes178_max32666 bootloader v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
 
     // Init button X interrupt
     MXC_GPIO_RegisterCallback(&button_x_int_pin, button_x_int_handler, NULL);
@@ -190,8 +189,9 @@ int main(void)
     }
 
     // Draw bootlaoder title
+    snprintf(bootlaoder_string, sizeof(bootlaoder_string) - 1, "MRD178 App Switcher v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     memset(lcd_buff, 0xff, sizeof(lcd_buff));
-    fonts_putStringCentered(3, bootlaoder_string, &Font_7x10, BLUE, lcd_buff);
+    fonts_putString(23, 3, bootlaoder_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
 
     ret = sdcard_init();
     if (ret != E_NO_ERROR) {
@@ -227,7 +227,7 @@ int main(void)
 
     while (1) {
         memset(lcd_buff, 0xff, sizeof(lcd_buff));
-        fonts_putStringCentered(3, bootlaoder_string, &Font_7x10, BLUE, lcd_buff);
+        fonts_putString(23, 3, bootlaoder_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
 
         expander_worker();
 
@@ -251,7 +251,7 @@ int main(void)
             if (ret != E_NO_ERROR) {
                 PR_ERROR("Folder content is invalid! %s", dir_list[selected]);
                 memset(lcd_buff, 0xff, sizeof(lcd_buff));
-                fonts_putStringCentered(3, bootlaoder_string, &Font_7x10, BLUE, lcd_buff);
+                fonts_putString(23, 3, bootlaoder_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
                 fonts_putString(1, 20, "Folder content is invalid!", &Font_7x10, RED, 0, 0, lcd_buff);
                 fonts_putString(1, 40, dir_list[selected], &Font_7x10, RED, 0, 0, lcd_buff);
                 lcd_drawImage(lcd_buff);
@@ -259,7 +259,7 @@ int main(void)
             } else {
                 PR_INFO("Firmware update started for: %s", dir_list[selected]);
                 memset(lcd_buff, 0xff, sizeof(lcd_buff));
-                fonts_putStringCentered(3, bootlaoder_string, &Font_7x10, BLUE, lcd_buff);
+                fonts_putString(23, 3, bootlaoder_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
                 fonts_putString(1, 20, "Firmware update started for:", &Font_7x10, BLACK, 0, 0, lcd_buff);
                 fonts_putString(1, 40, dir_list[selected], &Font_7x10, BROWN, 0, 0, lcd_buff);
                 lcd_drawImage(lcd_buff);
@@ -274,6 +274,9 @@ int main(void)
     PR_INFO("%s", max32666_msbl_path);
     PR_INFO("%s", max78000_video_msbl_path);
     PR_INFO("%s", max78000_audio_msbl_path);
+
+    // Erase MAX32666 FW
+    bl_master_erase();
 
     loader_int_spi_init();
     loader_int_gpio_init();

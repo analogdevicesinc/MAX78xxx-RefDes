@@ -64,4 +64,5 @@ extern int _boot_mem_len;
 extern int _boot_mem_start;
 //int selfprogrammer_flash_image(const char *image);
 int bl_load_from_sdcard(const char* filename);
+int bl_master_erase();
 #endif /* INCLUDE_MAX32666_BL_H_ */
