@@ -173,6 +173,8 @@ int main(void)
         if (cnt == 1) {
             PR_ERROR("timeout, reset");
             MXC_Delay(MXC_DELAY_MSEC(100));
+            pmic_hard_reset();
+            MXC_Delay(MXC_DELAY_MSEC(100));
             MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
         }
     }
