@@ -91,6 +91,13 @@
 // Common Classification
 #define CLASSIFICATION_STRING_SIZE         15
 
+// Common Demo Name
+#define DEMO_STRING_SIZE                   15
+#define FACEID_DEMO_NAME                   "FaceID"
+#define UNET_DEMO_NAME                     "UNet"
+#define WILDLIFE_DEMO_NAME                 "WildLife"
+#define CATSDOGS_DEMO_NAME                 "CatsDogs"
+
 // Common FaceID
 #define FACEID_WIDTH                       120
 #define FACEID_HEIGHT                      160
@@ -426,6 +433,12 @@ typedef enum {
 
     QSPI_PACKET_TYPE_VIDEO_ML_RES, // 80x80 ml result
 
+    QSPI_PACKET_TYPE_VIDEO_DEMO_NAME_CMD,      // None
+    QSPI_PACKET_TYPE_VIDEO_DEMO_NAME_RES,      // Demo string
+
+    QSPI_PACKET_TYPE_AUDIO_DEMO_NAME_CMD,      // None
+    QSPI_PACKET_TYPE_AUDIO_DEMO_NAME_RES,      // Demo string
+
     QSPI_PACKET_TYPE_LAST
 } qspi_packet_type_e;
 
@@ -570,6 +583,10 @@ typedef enum {
     //// v0.8 commands
     BLE_COMMAND_ENABLE_MAX78000_VIDEO_VFLIP_CMD,    // None
     BLE_COMMAND_DISABLE_MAX78000_VIDEO_VFLIP_CMD,   // None
+
+    //// v1.1 commands
+    BLE_COMMAND_GET_DEMO_NAME_CMD,         // None
+    BLE_COMMAND_GET_DEMO_NAME_RES,         // Demo string
 
     BLE_COMMAND_LAST
 } ble_command_e;

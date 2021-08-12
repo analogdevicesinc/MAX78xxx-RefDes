@@ -134,8 +134,9 @@ int main(void)
     device_info.device_version.max32666.minor = S_VERSION_MINOR;
     device_info.device_version.max32666.build = S_VERSION_BUILD;
     snprintf(version_string, sizeof(version_string) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    snprintf(device_info.max32666_demo_name, sizeof(device_info.max32666_demo_name) - 1, "%s", CATSDOGS_DEMO_NAME);
     PR("\n\n\n");
-    PR_INFO("maxrefdes178_max32666 core0 %s [%s]", version_string, S_BUILD_TIMESTAMP);
+    PR_INFO("maxrefdes178_max32666 %s core0 %s [%s]", device_info.max32666_demo_name, version_string, S_BUILD_TIMESTAMP);
 
     ret = i2c_master_init();
     if (ret != E_NO_ERROR) {
@@ -307,6 +308,7 @@ int main(void)
     fonts_putStringCentered(LCD_HEIGHT - 63, version_string, &Font_16x26, BLACK, maxim_logo);
     fonts_putStringCentered(LCD_HEIGHT - 38, mac_string, &Font_11x18, BLUE, maxim_logo);
     fonts_putStringCentered(3, usn_string, &Font_7x10, BLACK, maxim_logo);
+    fonts_putStringCentered(55, device_info.max32666_demo_name, &Font_16x26, MAGENTA, maxim_logo);
     lcd_drawImage(maxim_logo);
 
     // Wait MAX78000s
@@ -341,6 +343,23 @@ int main(void)
             }
         }
 
+        for (int try = 0; try < 3; try++) {
+            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DEMO_NAME_CMD);
+            qspi_master_wait_video_int();
+            qspi_master_video_rx_worker(&qspi_packet_type_rx);
+            if (device_info.max78000_video_demo_name[0]) {
+                break;
+            }
+        }
+        for (int try = 0; try < 3; try++) {
+            qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_DEMO_NAME_CMD);
+            qspi_master_wait_audio_int();
+            qspi_master_audio_rx_worker(&qspi_packet_type_rx);
+            if (device_info.max78000_audio_demo_name[0]) {
+                break;
+            }
+        }
+
         ret = E_NO_ERROR;
         // Check video and audio fw version
         if (!(device_info.device_version.max78000_video.major || device_info.device_version.max78000_video.minor)) {
@@ -356,6 +375,11 @@ int main(void)
                     device_info.device_version.max78000_video.minor,
                     device_info.device_version.max78000_video.build);
             fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+        } else if (strncmp(device_info.max32666_demo_name, device_info.max78000_video_demo_name, DEMO_STRING_SIZE)) {
+            PR_ERROR("max32666 and max78000_video demos are different");
+            ret = E_INVALID;
+            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video fw demo err %s", device_info.max78000_video_demo_name);
+            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, maxim_logo);
         }
 
         if (!(device_info.device_version.max78000_audio.major || device_info.device_version.max78000_audio.minor)) {
@@ -370,6 +394,11 @@ int main(void)
                     device_info.device_version.max78000_audio.major,
                     device_info.device_version.max78000_audio.minor,
                     device_info.device_version.max78000_audio.build);
+            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+        } else if (strncmp(device_info.max32666_demo_name, device_info.max78000_audio_demo_name, DEMO_STRING_SIZE)) {
+            PR_ERROR("max32666 and max78000_audio demos are different");
+            ret = E_INVALID;
+            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "audio fw demo err %s", device_info.max78000_audio_demo_name);
             fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, maxim_logo);
         }
 
@@ -400,9 +429,6 @@ int main(void)
     // print application name
     snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Audio enabled");
     fonts_putStringCentered(37, lcd_string_buff, &Font_11x18, RED, maxim_logo);
-
-    snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Cats & Dogs");
-    fonts_putStringCentered(60, lcd_string_buff, &Font_16x26, MAGENTA, maxim_logo);
 
     run_application();
 

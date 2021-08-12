@@ -273,6 +273,21 @@ int qspi_master_video_rx_worker(qspi_packet_type_e *qspi_packet_type_rx)
         PR_INFO("MAX78000 Video v%d.%d.%d", device_info.device_version.max78000_video.major, device_info.device_version.max78000_video.minor, device_info.device_version.max78000_video.build);
 
         break;
+    case QSPI_PACKET_TYPE_VIDEO_DEMO_NAME_RES:
+        if (qspi_packet_header_rx.info.packet_size == 0 || qspi_packet_header_rx.info.packet_size > DEMO_STRING_SIZE) {
+            PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+            return E_INVALID;
+        }
+
+        GPIO_CLR(video_cs_pin);
+        MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
+        spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) device_info.max78000_video_demo_name, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+        spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+        GPIO_SET(video_cs_pin);
+
+        PR_INFO("MAX78000 Video demo %s", device_info.max78000_video_demo_name);
+
+        break;
     case QSPI_PACKET_TYPE_VIDEO_SERIAL_RES:
         if (qspi_packet_header_rx.info.packet_size != sizeof(serial_num_t)) {
             PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
@@ -441,6 +456,21 @@ int qspi_master_audio_rx_worker(qspi_packet_type_e *qspi_packet_type_rx)
         GPIO_SET(audio_cs_pin);
 
         PR_INFO("MAX78000 Audio v%d.%d.%d", device_info.device_version.max78000_audio.major, device_info.device_version.max78000_audio.minor, device_info.device_version.max78000_audio.build);
+
+        break;
+    case QSPI_PACKET_TYPE_AUDIO_DEMO_NAME_RES:
+        if (qspi_packet_header_rx.info.packet_size == 0 || qspi_packet_header_rx.info.packet_size > DEMO_STRING_SIZE) {
+            PR_ERROR("Invalid QSPI data len %u", qspi_packet_header_rx.info.packet_size);
+            return E_INVALID;
+        }
+
+        GPIO_CLR(audio_cs_pin);
+        MXC_Delay(MXC_DELAY_USEC(QSPI_CS_ASSERT_WAIT));
+        spi_dma(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI, NULL, (uint8_t *) device_info.max78000_audio_demo_name, qspi_packet_header_rx.info.packet_size, MAX32666_QSPI_DMA_REQSEL_SPIRX, NULL);
+        spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
+        GPIO_SET(audio_cs_pin);
+
+        PR_INFO("MAX78000 Audio demo %s", device_info.max78000_audio_demo_name);
 
         break;
     case QSPI_PACKET_TYPE_AUDIO_SERIAL_RES:

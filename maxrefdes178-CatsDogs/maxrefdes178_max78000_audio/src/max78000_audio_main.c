@@ -140,6 +140,7 @@ static volatile uint8_t i2s_flag = 0;
 static int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
 static max78000_statistics_t max78000_statistics = {0};
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
+static char demo_name[] = CATSDOGS_DEMO_NAME;
 static uint8_t qspi_rx_buffer[100];
 
 /* **** Constants **** */
@@ -262,8 +263,8 @@ int main(void)
     MXC_GPIO_Config(&gpio_exp_out2);
     MXC_GPIO_Config(&gpio_video_int);
 
-    PR_INFO("maxrefdes178_max78000_audio v%d.%d.%d [%s]",
-            version.major, version.minor, version.build, S_BUILD_TIMESTAMP);
+    PR_INFO("maxrefdes178_max78000_audio %s v%d.%d.%d [%s]",
+            demo_name, version.major, version.minor, version.build, S_BUILD_TIMESTAMP);
 
     memset(pAI85Buffer, 0x0, sizeof(pAI85Buffer));
     memset(pPreambleCircBuffer, 0x0, sizeof(pPreambleCircBuffer));
@@ -368,6 +369,11 @@ int main(void)
                 qspi_slave_set_rx_state(QSPI_STATE_IDLE);
                 qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
                         QSPI_PACKET_TYPE_AUDIO_VERSION_RES);
+                break;
+            case QSPI_PACKET_TYPE_AUDIO_DEMO_NAME_CMD:
+                qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+                qspi_slave_send_packet((uint8_t *) demo_name, strlen(demo_name),
+                        QSPI_PACKET_TYPE_AUDIO_DEMO_NAME_RES);
                 break;
             case QSPI_PACKET_TYPE_AUDIO_SERIAL_CMD:
                 // TODO

@@ -84,6 +84,9 @@ typedef struct {
     device_serial_num_t device_serial_num;
     device_version_t device_version;
     volatile uint8_t ble_mac[6];  // written by core1
+    char max32666_demo_name[DEMO_STRING_SIZE];
+    char max78000_video_demo_name[DEMO_STRING_SIZE];
+    char max78000_audio_demo_name[DEMO_STRING_SIZE];
 } device_info_t;
 
 typedef struct {

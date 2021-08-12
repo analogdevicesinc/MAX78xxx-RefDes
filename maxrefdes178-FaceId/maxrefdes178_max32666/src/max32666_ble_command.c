@@ -150,6 +150,14 @@ static int ble_command_execute_rx_command(void)
         ble_command_send_single_packet(BLE_COMMAND_GET_VERSION_RES,
             sizeof(device_info.device_version), (uint8_t *) &device_info.device_version);
         break;
+    case BLE_COMMAND_GET_DEMO_NAME_CMD:
+        if (ble_command_buffer.total_payload_size != 0) {
+            PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);
+            return E_BAD_PARAM;
+        }
+        ble_command_send_single_packet(BLE_COMMAND_GET_DEMO_NAME_RES,
+            strlen(device_info.max32666_demo_name), (uint8_t *) device_info.max32666_demo_name);
+        break;
     case BLE_COMMAND_GET_SERIAL_NUM_CMD:
         if (ble_command_buffer.total_payload_size != 0) {
             PR_ERROR("invalid total payload size %d", ble_command_buffer.total_payload_size);

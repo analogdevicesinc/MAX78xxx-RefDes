@@ -221,6 +221,7 @@ static int8_t enable_video = 0;
 static int8_t enable_sleep = 0;
 static uint8_t *qspi_payload_buffer = NULL;
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
+static char demo_name[] = FACEID_DEMO_NAME;
 static uint32_t camera_clock = 15 * 1000 * 1000;
 
 #ifdef PRINT_TIME_CNN
@@ -301,8 +302,8 @@ int main(void)
     MXC_SYS_Clock_Select(MXC_SYS_CLOCK_IPO);
     SystemCoreClockUpdate();
 
-    PR_INFO("maxrefdes178_max78000_video v%d.%d.%d [%s]",
-            version.major, version.minor, version.build, S_BUILD_TIMESTAMP);
+    PR_INFO("maxrefdes178_max78000_video %s v%d.%d.%d [%s]",
+            demo_name, version.major, version.minor, version.build, S_BUILD_TIMESTAMP);
 
     // Enable peripheral, enable CNN interrupt, turn on CNN clock
     // CNN clock: 50 MHz div 1
@@ -517,6 +518,11 @@ static void run_demo(void)
                 qspi_slave_set_rx_state(QSPI_STATE_IDLE);
                 qspi_slave_send_packet((uint8_t *) &version, sizeof(version),
                         QSPI_PACKET_TYPE_VIDEO_VERSION_RES);
+                break;
+            case QSPI_PACKET_TYPE_VIDEO_DEMO_NAME_CMD:
+                qspi_slave_set_rx_state(QSPI_STATE_IDLE);
+                qspi_slave_send_packet((uint8_t *) demo_name, strlen(demo_name),
+                        QSPI_PACKET_TYPE_VIDEO_DEMO_NAME_RES);
                 break;
             case QSPI_PACKET_TYPE_VIDEO_SERIAL_CMD:
                 // TODO
