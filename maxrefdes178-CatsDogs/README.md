@@ -23,7 +23,7 @@ After loading all 3 components of Cats and Dogs Demo (MAX32666, MAX78000_video a
 
 - Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  <img src="../maxrefdes178_doc/catsdogs_intro.jpg" style="zoom:33%;" />
+  ![](../maxrefdes178_doc/catsdogs_intro.jpg)
 
 - Device will start with pressing Start Video
 
@@ -33,5 +33,4 @@ After loading all 3 components of Cats and Dogs Demo (MAX32666, MAX78000_video a
 
 - The images are captured at 250msec interval and categorized as Cat or Dog:
 
-  <img src="../maxrefdes178_doc/catsdogs_demo.jpg" style="zoom:25%;" />
-
+  ![](../maxrefdes178_doc/catsdogs_demo.jpg)

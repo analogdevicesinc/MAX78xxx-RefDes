@@ -30,7 +30,7 @@ After loading all 3 components of UNet Demo (MAX32666, MAX78000_video and MAX780
 
 - Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  <img src="../maxrefdes178_doc/unet_intro.jpg" style="zoom: 25%;" />
+  ![](../maxrefdes178_doc/unet_intro.jpg)
 
 - Device will start with pressing Start Video
 
@@ -40,8 +40,6 @@ After loading all 3 components of UNet Demo (MAX32666, MAX78000_video and MAX780
 
 - The images are captured at 250msec interval and the alternates with the result of segmentations
 
-  <img src="../maxrefdes178_doc/unet_camera.jpg" style="zoom:50%;" />
-  
-  
-  
-  <img src="../maxrefdes178_doc/unet_mask.jpg" style="zoom:50%;" />
+  ![](../maxrefdes178_doc/unet_camera.jpg)
+
+  ![](../maxrefdes178_doc/unet_mask.jpg)

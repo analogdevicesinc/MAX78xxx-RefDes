@@ -1,6 +1,6 @@
 
 
-# Forest Demo on the MAXREFDES178# Cube Camera
+# WildLife Demo on the MAXREFDES178# Cube Camera
 
 ## Getting Started with MAXREFDES178, Building Firmware, Loading and Debugging
 
@@ -11,7 +11,7 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
 NOTE: Forest demo does not support Android application.
 
 
-## Testing Forest Demo
+## Testing WildLife Demo
 
 After loading all 3 components of Forest Demo (MAX32666, MAX78000_video and MAX78000_audio), turn on the cube camera:
 
@@ -23,7 +23,7 @@ After loading all 3 components of Forest Demo (MAX32666, MAX78000_video and MAX7
 
 - Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  <img src="../maxrefdes178_doc/wildlife_intro.jpg" style="zoom: 25%;" />
+  ![](../maxrefdes178_doc/wildlife_intro.jpg)
 
 - Device will start with pressing Start Video
 
@@ -33,5 +33,4 @@ After loading all 3 components of Forest Demo (MAX32666, MAX78000_video and MAX7
 
 - The images are captured at 250msec interval and categorized as Deer, Human, Vehicle, Nature and Building:
 
-  <img src="../maxrefdes178_doc/wildlife_forest.jpg"  />
-
+  ![](../maxrefdes178_doc/wildlife_forest.jpg)

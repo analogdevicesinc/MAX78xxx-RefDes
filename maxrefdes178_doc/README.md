@@ -49,21 +49,23 @@ The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://w
 
 - The power LED will start blinking blue.
 
+  ![](../maxrefdes178_doc/mrd178_buttons.jpg)
+
 - The Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
   ![](mrd178_init.jpg)
 
-- Please refer to FaceID Demo documentation for preloaded demo details:
+- Please refer to FaceID Demo page for preloaded demo details:
 
   - [FaceID Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-FaceId/)
 
-- Other available MAXREFDES178# demo documentations are:
+- Other available MAXREFDES178# demo pages:
 
   - [Cats and Dogs Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-CatsDogs/)
 
   - [UNet Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-UNet/)
 
-  - [Forest Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-WildLife/)
+  - [WildLife Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-WildLife/)
 
 ## Build Demo Firmware using MINGW on Windows
 
@@ -87,46 +89,60 @@ Download MAXREFDES178# from GitHub with submodules:
 
 ![](codebase.png)
 
-**WARNING:** **Put the MAXREFDES178# directory close to the root of the drive. Long Windows paths may cause failed builds.**
+**WARNING:** **Put the refdes directory close to the root of the drive. Long Windows paths may cause failed builds.**
+
+There are multiple demos for MAXREFDES178. Each demo codebase has its own directory. MAXREFDES178 common files are in top directory. 
 
 Repo folder structure:
 
-- `maxrefdes178_android`:
-  - Android application source files.
-  - Android Studio project files.
+- `external`:
+  - External drivers, modules and binaries.
 - `maxrefdes178_common`:
   - MAX32666, MAX78000 Video and MAX78000 Audio firmware common headers and source files.
-- `maxrefdes178_max32666`:
-  - MAX32666 firmware source files.
-  - MAX32666 firmware Eclipse project files.
-- `maxrefdes178_max32666_bootloader`:
+- `maxrefdes178_doc`:
+  - Markdown documentation files.
+- `maxrefdes178-AppSwitcher`:
   - MAX32666 bootloader firmware source files.
   - MAX32666 bootloader firmware Eclipse project files.
-- `maxrefdes178_max78000_common`:
+  - MAX32666 bootloader binary.
+  - MAX78000 bootloader binary.
+- `maxrefdes178-demo/maxrefdes178_android`:
+  - Android application source files.
+  - Android Studio project files.
+- `maxrefdes178-demo/maxrefdes178_max32666`:
+  - MAX32666 firmware source files.
+  - MAX32666 firmware Eclipse project files.
+- `maxrefdes178-demo/maxrefdes178_max78000_common`:
   - MAX78000 Video and MAX78000 Audio firmware common headers and source files.
-- `maxrefdes178_max78000_audio`:
+- `maxrefdes178-demo/maxrefdes178_max78000_audio`:
   - MAX78000 Audio firmware source files.
   - MAX78000 Audio firmware Eclipse project files.
-- `maxrefdes178_max78000_video`:
+- `maxrefdes178-demo/maxrefdes178_max78000_video`:
   - MAX78000 Video firmware source files.
   - MAX78000 Video firmware Eclipse project files.
 
 ### Build MAXREFDES178# Demo Firmware
 
+- All MAXREFDES178# demos are in different subfolders.  
+
+- cd into one of the demo directories.
+  
+  ![](demo_dir.png)
+
 #### Build MAX32666 Firmware
 
 - Open MinGW MSYS shell.
 
-- cd into the `maxrefdes178_max32666` directory.
+- cd into  `maxrefdes178_max32666` directory.
 
 - Run make:
   ```
-  make -r -j 4
+  make -r -j
   ```
   
   ![](make_max32666.png)
 
-- A `maxrefdes178_max32666\build\maxrefdes178_max32666.bin` firmware binary should be generated.
+- A `build\maxrefdes178_max32666.bin` firmware binary should be generated.
 
 **WARNING:** I**f you get the following error during build, put MAXREFDES178# directory closer to the root of the drive. Long Windows paths cause failed builds:**
 
@@ -148,7 +164,7 @@ or
   
   ![](make_audio.png)
 
-- A `maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin` firmware binary should be generated.
+- A `build\maxrefdes178_max78000_audio.bin` firmware binary should be generated.
 
 #### Build MAX78000 Video Firmware
 
@@ -161,7 +177,7 @@ or
   
   ![](make_video.png)
 
-- A `maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin` firmware binary should be generated.
+- A `build\maxrefdes178_max78000_video.bin` firmware binary should be generated.
 
 ### Build MAXREFDES178# Demo Android Application
 
@@ -169,7 +185,7 @@ or
 
 - Install Android 9 Android SDK from Android Studio SDK manager.
 
-- Click File→Open and select the `maxrefdes178\maxrefdes178_android` directory.
+- Click File→Open and select the `maxrefdes178-FaceId\maxrefdes178_android` directory.
 
 - Build the project.
 
@@ -181,13 +197,27 @@ or
 
 - Applications are loaded and run using OpenOCD. This section shows how to do this specifically with MSYS on Windows.
 
-- Open MinGW console and cd into the `maxrefdes178` directory:
-  
-  ![](mingw.png)
-
 - Connect a USB-Micro-B cable to the MAXDAP-TYPE-C Pico adaptor HDK debugger (Pico) port. The Pico on the adaptor must be programmed with the [max32625pico_max32630hsp.bin](https://os.mbed.com/teams/MaximIntegrated/wiki/MAX32625PICO-Firmware-Updates) DAPLINK image.
 
   ![](maxdap_type_c.jpg)
+  
+- To load local builds (the binaries that you build on your pc):
+
+  - Open MinGW console and cd into one of the demo directory:
+
+  ![](demo_dir.png)
+
+- To load prebuilded binaries:
+
+  - Download latest maxrefdes178_firmware.zip release and extract the content of the zip file.
+
+    - https://github.com/MaximIntegratedAI/refdes/releases for stable releases.
+    - https://github.com/MaximIntegratedAI/refdes/actions/workflows/maxrefdes178.yml for GitHub Action builds.
+
+  - Open MinGW console, cd into the directory where zip is extracted and cd into one of the demo directory:
+
+  ![](demo_dir_download.png)
+
 
 ### Load MAX32666 Firmware
 
@@ -195,7 +225,7 @@ or
   
   ![](maxdap_type_c_face_down.jpg)
 
-- Program MAX32666 firmware:
+- Program MAX32666 firmware (change `maxrefdes178_max32666.bin` path accordingly):
 
   ```bash
   openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max32665_nsrst.cfg -c "init;halt;max32xxx mass_erase 0;exit"
@@ -216,7 +246,7 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
 
 ### Load MAX78000 Video Firmware
 
-- **WARNING:** If you are programming a board that already has MAX78000 Video firmware, make sure video (FaceID) is enabled and running. MAX78000 Video firmware goes to sleep mode when disabled, which causes interruptions during programming.
+- **WARNING:** If you are programming a board that already has MAX78000 Video firmware, make sure video is enabled and running. MAX78000 Video firmware goes to sleep mode when disabled, which causes interruptions during programming.
 
 - MAX32666 firmware should be loaded before this step.
 
@@ -226,7 +256,7 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
 
 - Select MAX78000 Video target with button ‘Y’. MAX78000 Video will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
 
-- Program MAX78000 Video firmware:
+- Program MAX78000 Video firmware (change `maxrefdes178_max78000_video.bin` path accordingly):
   ```bash
   openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max78000_nsrst.cfg -c "program maxrefdes178_max78000_video/build/maxrefdes178_max78000_video.bin verify reset exit 0x10000000"
   ```
@@ -237,7 +267,7 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
 
 
 
-NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using the MAX32625PICO Debugger as described in the “**Erasing Video/Audio FW using MAX32625PICO Debugger**” section*.
+NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using the MAX32625PICO Debugger as described in the [Recovering/Erasing Video or Audio Firmware Using MAX32625PICO](#Recovering/Erasing Video or Audio Firmware Using MAX32625PICO) section*.
 
 ### Load MAX78000 Audio Firmware
 
@@ -249,7 +279,7 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
 
 - Select the MAX78000 Audio target with button ‘Y’. MAX78000 Audio will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
 
-- Program MAX78000 Audio firmware:
+- Program MAX78000 Audio firmware (change `maxrefdes178_max78000_audio.bin` path accordingly):
   ```bash
   openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max78000_nsrst.cfg -c "program maxrefdes178_max78000_audio/build/maxrefdes178_max78000_audio.bin verify reset exit 0x10000000"
   ```
@@ -259,15 +289,98 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
   ![](openocd_write_max78000_audio.png)
   
   
-  NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using MAX32625PICO Debugger as described in the “**Erasing Video/Audio FW using MAX32625PICO Debugger**” section*.
+  NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using MAX32625PICO Debugger as described in the [Recovering/Erasing Video or Audio Firmware Using MAX32625PICO](#Recovering/Erasing Video or Audio Firmware Using MAX32625PICO) section*.
+
+## Load Demo Firmware using App-Switcher and SD Card
+
+MAXREFDES178# has special application switcher bootloader. App-Switcher can load MAX32666, MAX78000 Video and MAX78000 Audio demo firmware using micro SD card.
+
+**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on [Load Demo Firmware using MINGW on Windows](#Load Demo Firmware using MINGW on Windows) section to install App-Switcher.
+
+App-Switcher uses msbl file to load MAX32666, MAX78000 Video and MAX78000 Audio firmware. msbl files can be found in `build` directory when build is completed. Or, you can download latest .msbl files from GitHub Actions.
+
+### Prepare SD Card
+
+- Format SD card with FAT32 file system. **Make sure to back up your SD Card content before formatting!**
+- Download latest maxrefdes178_firmware.zip release from:
+  - https://github.com/MaximIntegratedAI/refdes/releases for stable releases.
+  - https://github.com/MaximIntegratedAI/refdes/actions/workflows/maxrefdes178.yml for GitHub Action builds.
+- Extract zip content to SD card top directory.
+
+![](sd_card.png)
+
+App-Switcher SD Card folder structure requirements:
+
+- All demo directories must be in the root directory of the SD card.
+- All demo directories must contain `maxrefdes178_max32666_demo.msbl`, `maxrefdes178_max78000_video_demo.msbl`, and `maxrefdes178_max78000_audio_demo.msbl` files.
+
+### Enter into App-Switcher
+
+- Turn off the device by pressing power button.
+- Insert micro SD card.
+- While pressing button X, press power button to turn on the device.
+- Device will start in App-Switcher mode.
+- If there isn't any valid demo on MAX32666 flash, App-Switcher will start automatically.
+
+
+### Load a Demo from SD Card
+
+- Button X changes selected demo.
+
+  - Selected demo is highlighted in Green.
+
+- Button Y starts firmware update for selected demo.
+
+![](bl_menu.jpg)
+
+
+![](bl_step1.jpg)
+
+
+
+- First, App-Switcher loads MAX78000 Audio firmware.
+
+![](bl_step2.jpg)
+
+
+
+- Then, App-Switcher loads MAX78000 Video firmware.
+
+![](bl_step3.jpg)
+
+
+
+- And last, App-Switcher loads MAX32666 firmware.
+
+![](bl_step4.jpg)
+
+
+
+- If all three firmware update are successfull. Device will restart with selected demo.
+
+![](bl_step5.jpg)
+
+
+
+
+- If SD card is not inserted, App-Switcher halts and waits for a restart. Press power button for 12 seconds to turn off the App-Switcher.
+
+![](bl_no_sd.jpg)
+
+
+
+- If demo folder content is invalid (incorrect or missing msbl files), App-Switcher returns to main menu.
+
+![](bl_no_demo.jpg)
+
 
 ## Debug Demo Firmware using MINGW on Windows
 
 - Applications are loaded, debugged, and run using OpenOCD and GDB. This section shows how to do this specifically with MSYS on Windows.
 - First, connect to the target with OpenOCD, then you can debug the target with GDB.
-- Open MinGW console and cd into the `maxrefdes178` codebase directory:
+- Open MinGW console and cd into one of the demo directory:
   
-  ![](mingw.png)
+  ![](demo_dir.png)
 
 ### Connect to MAX32666 with OpenOCD
 
@@ -305,7 +418,7 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
 
 ### Debug Target with GDB
 
-- Open another MinGW console and cd into `maxrefdes178` codebase directory.
+- Open another MinGW console and cd into a demo directory.
 
 - Launch GDB using one of the following commands:
 
@@ -360,11 +473,9 @@ Follow the same steps provided in the *Loading and Running Applications on the E
 
 
 
-## Erasing Video or Audio Firmware Using MAX32625PICO
+## Recovering/Erasing Video or Audio Firmware Using MAX32625PICO
 
 If the programming of Audio or Video Firmware fails repeatedly (due to incomplete firmware update, application entering low power or shutdown mode too soon, etc.), you can use the following instructions to erase the existing audio or video firmware and recover. To proceed, a MAX32625PICO loaded with the latest DAPLINK Firmware and enabled automation is required. 
-
-
 
 ### Update MAX32625PICO DAPLINK Firmware
 
@@ -375,8 +486,6 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 
 3. Following the Drag-and-Drop, the debug adapter should reboot and reconnect as a drive named DAPLINK.
 
-
-
 ### Enable Automation in MAX32625PICO
 
 1. Open the DETAILS.TXT file on the DAPLINK drive and make sure the ‘Automation allowed’ field is set to 1. If not, proceed to the next step.
@@ -385,21 +494,18 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 
 3. After it remounts, confirm ‘Automation allowed’ in details.txt is set to 1.
 
-
-
-### Erase Vido/Audio Firmware of Cube Camera
+### Erase Video/Audio Firmware of Cube Camera
 
 1. Turn off the cube camera and disconnect MAXDAP-TYPE-C Pico if connected.
 
 2. Carefully open the camera from the top side (Maxim logo) while making sure that the flex cable connecting the two boards is not damaged or disconnected:
 
-<img src="camera-open1.jpg" style="zoom:33%;" />
-
+![](camera-open1.jpg)
 
 
 3. Remove the battery, connect the MAX32625PICO DAPLINK ribbon cable to J2 (for video firmware) or J3 (for audio firmware). Connect the MAX32625PICO to the USB port. A DAPLINK drive should appear.
 
-<img src="camera-open-2.jpg" style="zoom: 25%;" />
+![](camera-open-2.jpg)
 
 4. Create an empty file named “erase.act”.
 
@@ -423,13 +529,11 @@ Demo examples running on the Cube Camera include three main components:
 
 3. MAX32666 for main control, connectivity, interface, and management. This application includes all initialization and control of Power Management, TFT, accelerometer, BLE, and other peripherals. 
 
-   <img src="maxrefdes178.jpg" style="zoom:80%;" />
+   ![](maxrefdes178.jpg)
 
 To have an application running on the Cube Camera, generally all three components are needed. The provided examples include a framework with required control code, commands, and state machines for each of the three microcontrollers. 
 
 For the fastest route to a working implementation, modify one of the provided demo examples as described below.
-
-
 
 ### MAX32666 Application (maxrefdes178_max32666): 
 
@@ -468,8 +572,6 @@ The following modifications may be needed for a new example application:
 
 1. Add/modify `qspi_packet_type_e` commands as required. The QSPI commands define the communication between MAX32666 and audio/video MAX78000.
 2. Update LCD and camera width/height and format, if the image capture and display format are different.
-
-
 
 ### MAX78000 Audio/Video Applications (maxrefdes178_max78000_audio, maxrefdes178_max78000_video): 
 
