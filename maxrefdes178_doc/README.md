@@ -39,7 +39,7 @@ The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://w
 
 - *Some* units have a protective film installed covering the camera. Remove the film:
 
-![](camera-protective-film.jpg)
+  ![](camera-protective-film.jpg)
 
 - Plug in a USB-C cable to charge the device.
 
@@ -205,7 +205,7 @@ or
 
   - Open MinGW console and cd into one of the demo directory:
 
-  ![](demo_dir.png)
+    ![](demo_dir.png)
 
 - To load prebuilded binaries:
 
@@ -216,7 +216,7 @@ or
 
   - Open MinGW console, cd into the directory where zip is extracted and cd into one of the demo directory:
 
-  ![](demo_dir_download.png)
+    ![](demo_dir_download.png)
 
 
 ### Load MAX32666 Firmware
@@ -267,7 +267,7 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
 
 
 
-NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using the MAX32625PICO Debugger as described in the [Recovering/Erasing Video or Audio Firmware Using MAX32625PICO](#Recovering/Erasing Video or Audio Firmware Using MAX32625PICO) section*.
+NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using the MAX32625PICO Debugger as described in the “**Recovering/Erasing Video or Audio Firmware Using MAX32625PICO**” section*.
 
 ### Load MAX78000 Audio Firmware
 
@@ -289,15 +289,15 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
   ![](openocd_write_max78000_audio.png)
   
   
-  NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using MAX32625PICO Debugger as described in the [Recovering/Erasing Video or Audio Firmware Using MAX32625PICO](#Recovering/Erasing Video or Audio Firmware Using MAX32625PICO) section*.
+  NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using MAX32625PICO Debugger as described in the “**Recovering/Erasing Video or Audio Firmware Using MAX32625PICO**” section*.
 
 ## Load Demo Firmware using App-Switcher and SD Card
 
-MAXREFDES178# has special application switcher bootloader. App-Switcher can load MAX32666, MAX78000 Video and MAX78000 Audio demo firmware using micro SD card.
+MAXREFDES178# has special application switcher bootloader. App-Switcher can load MAX32666, MAX78000 Video and MAX78000 Audio demo firmware using a micro SD card.
 
-**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on [Load Demo Firmware using MINGW on Windows](#Load Demo Firmware using MINGW on Windows) section to install App-Switcher.
+**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on [Load Demo Firmware using MINGW on Windows](#Load Demo Firmware using MINGW on Windows) section. App-Switcher is embedded in the demo firmware. You don't need to any load App-Switcher binary separately.
 
-App-Switcher uses msbl file to load MAX32666, MAX78000 Video and MAX78000 Audio firmware. msbl files can be found in `build` directory when build is completed. Or, you can download latest .msbl files from GitHub Actions.
+App-Switcher uses msbl file to load MAX32666, MAX78000 Video and MAX78000 Audio firmware from SD card. msbl files can be found in `build` directory when build is completed. Alternatively, you can download the latest .msbl files from GitHub Release or GitHub Actions.
 
 ### Prepare SD Card
 
@@ -307,7 +307,7 @@ App-Switcher uses msbl file to load MAX32666, MAX78000 Video and MAX78000 Audio 
   - https://github.com/MaximIntegratedAI/refdes/actions/workflows/maxrefdes178.yml for GitHub Action builds.
 - Extract zip content to SD card top directory.
 
-![](sd_card.png)
+  ![](sd_card.png)
 
 App-Switcher SD Card folder structure requirements:
 
@@ -331,47 +331,46 @@ App-Switcher SD Card folder structure requirements:
 
 - Button Y starts firmware update for selected demo.
 
-![](bl_menu.jpg)
+  ![](bl_menu.jpg)
 
-
-![](bl_step1.jpg)
+  ![](bl_step1.jpg)
 
 
 
 - First, App-Switcher loads MAX78000 Audio firmware.
 
-![](bl_step2.jpg)
+  ![](bl_step2.jpg)
 
 
 
 - Then, App-Switcher loads MAX78000 Video firmware.
 
-![](bl_step3.jpg)
+  ![](bl_step3.jpg)
 
 
 
 - And last, App-Switcher loads MAX32666 firmware.
 
-![](bl_step4.jpg)
+  ![](bl_step4.jpg)
 
 
 
 - If all three firmware update are successfull. Device will restart with selected demo.
 
-![](bl_step5.jpg)
+  ![](bl_step5.jpg)
 
 
 
 
 - If SD card is not inserted, App-Switcher halts and waits for a restart. Press power button for 12 seconds to turn off the App-Switcher.
 
-![](bl_no_sd.jpg)
+  ![](bl_no_sd.jpg)
 
 
 
 - If demo folder content is invalid (incorrect or missing msbl files), App-Switcher returns to main menu.
 
-![](bl_no_demo.jpg)
+  ![](bl_no_demo.jpg)
 
 
 ## Debug Demo Firmware using MINGW on Windows
@@ -500,12 +499,12 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 
 2. Carefully open the camera from the top side (Maxim logo) while making sure that the flex cable connecting the two boards is not damaged or disconnected:
 
-![](camera-open1.jpg)
+   ![](camera-open1.jpg)
 
 
 3. Remove the battery, connect the MAX32625PICO DAPLINK ribbon cable to J2 (for video firmware) or J3 (for audio firmware). Connect the MAX32625PICO to the USB port. A DAPLINK drive should appear.
 
-![](camera-open-2.jpg)
+   ![](camera-open-2.jpg)
 
 4. Create an empty file named “erase.act”.
 
@@ -539,7 +538,8 @@ For the fastest route to a working implementation, modify one of the provided de
 
 The simplified top-level diagram of the application is shown below:
 
-<img src="porting-max32666.png" style="zoom:120%;" />
+![](porting-max32666.png)
+
 
 The following modifications may be needed for a new example application:
 
@@ -577,7 +577,8 @@ The following modifications may be needed for a new example application:
 
 The top-level diagram of the audio/video application is shown below:
 
-<img src="porting-video-audio-app.png" style="zoom:120%;" />
+![](porting-video-audio-app.png)
+
 
 The following steps summarize the modifications needed to port a new example: 
 
