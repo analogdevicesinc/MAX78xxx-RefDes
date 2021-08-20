@@ -520,6 +520,36 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 
 ## Porting Applications to the Cube Camera
 
+To add new MAXREFDES178# demo to this repository:
+
+1. Copy one of the existing demo directories (i.e. maxrefdes178-CatsDogs) and rename as `maxrefdes178-NewDemoName`. Make your changes on new `maxrefdes178-NewDemoName` directory.
+
+3. Add new demo name definition to `maxrefdes178_common\maxrefdes178_definitions.h`. Maximum demo name length is 15.
+
+   ```
+   // Common Demo Name
+   #define DEMO_STRING_SIZE                   15
+   #define FACEID_DEMO_NAME                   "FaceID"
+   #define UNET_DEMO_NAME                     "UNet"
+   #define WILDLIFE_DEMO_NAME                 "WildLife"
+   #define CATSDOGS_DEMO_NAME                 "CatsDogs"
+   ```
+
+4. Set demo name in `max32666_main.c`, `max78000_audio_main.c` and `max78000_video_main.c`.
+   ```
+   snprintf(device_info.max32666_demo_name, sizeof(device_info.max32666_demo_name) - 1, "%s", CATSDOGS_DEMO_NAME);
+   ...
+   static char demo_name[] = CATSDOGS_DEMO_NAME;
+   ```
+
+5. Edit `maxrefdes178-NewDemoName\README.md` file for documentation.
+   - Modify new demo guide.
+   - Add link to the new demo documentation from this page in "Other available MAXREFDES178# demo pages" section.
+
+6. Edit `.github\workflows\maxrefdes178.yml` file for GitHub Actions build.
+   - Add new demo MAX32666, MAX78000 Video and MAX78000 Audio GitHub Actions build steps. Copy/Paste from existing demo build steps and modify.
+   - Add new demo release directory to "Prepare Release" step.
+
 Demo examples running on the Cube Camera include three main components:
 
 1. First MAX78000 for video AI application: The application is executed on the first MAX78000 which is connected to the image sensor. This application initializes the image sensor, captures its image data, and streams it to the MAX32666 using the QSPI for display on the TFT. Additionally, it initializes the CNN and feeds the image sensor data to the CNN to run inferences. Inference results are unloaded and sent to the MAX32666 to be displayed. Preprocessing of image data and optional post-processing of the inference results are performed in this application.
