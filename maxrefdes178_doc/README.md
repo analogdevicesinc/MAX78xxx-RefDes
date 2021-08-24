@@ -295,7 +295,7 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
 
 MAXREFDES178# has special application switcher bootloader. App-Switcher can load MAX32666, MAX78000 Video and MAX78000 Audio demo firmware using a micro SD card.
 
-**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on [Load Demo Firmware using MINGW on Windows](#Load Demo Firmware using MINGW on Windows) section. App-Switcher is embedded in the demo firmware. You don't need to any load App-Switcher binary separately.
+**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on “**Load Demo Firmware using MINGW on Windows**” section. App-Switcher is embedded in the demo firmware. You don't need to load App-Switcher binaries separately.
 
 App-Switcher uses msbl file to load MAX32666, MAX78000 Video and MAX78000 Audio firmware from SD card. msbl files can be found in `build` directory when build is completed. Alternatively, you can download the latest .msbl files from GitHub Release or GitHub Actions.
 
