@@ -63,8 +63,8 @@
 
 //#define PRINT_TIME_CNN
 
-#define ASL_HEIGHT 192
-#define ASL_WIDTH 192
+#define HEIGHT 192
+#define WIDTH 192
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
@@ -231,7 +231,7 @@ static int8_t enable_video = 0;
 static int8_t enable_sleep = 0;
 static uint8_t *qspi_payload_buffer = NULL;
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
-static char demo_name[] = CATSDOGS_DEMO_NAME;
+static char demo_name[] = ASL_DEMO_NAME;
 static uint32_t camera_clock = 15 * 1000 * 1000;
 
 #ifdef PRINT_TIME_CNN
@@ -721,11 +721,11 @@ static void run_cnn(int x_offset, int y_offset)
 
 	// Read 192x192, pick one out of 3 pixels to make it 64x64
 	// CNN needs RGB888, pack for bytes into 1 int for each color
-    for (int i = y_offset; i < ASL_HEIGHT + y_offset; i+=3) {
-        data = raw + (((LCD_HEIGHT - ASL_HEIGHT) / 2) + i) * LCD_WIDTH * LCD_BYTE_PER_PIXEL;  // down
-        data += ((LCD_WIDTH - ASL_WIDTH) / 2) * LCD_BYTE_PER_PIXEL;  // right
+    for (int i = y_offset; i < HEIGHT + y_offset; i+=3) {
+        data = raw + (((LCD_HEIGHT - HEIGHT) / 2) + i) * LCD_WIDTH * LCD_BYTE_PER_PIXEL;  // down
+        data += ((LCD_WIDTH - WIDTH) / 2) * LCD_BYTE_PER_PIXEL;  // right
 
-        for(int j = x_offset; j < ASL_WIDTH + x_offset; j+=3) {
+        for(int j = x_offset; j < WIDTH + x_offset; j+=3) {
 
         	// RGB565, |RRRRRGGG|GGGBBBBB|
             ub = (data[j * LCD_BYTE_PER_PIXEL + 1] << 3);
@@ -842,7 +842,8 @@ static void run_cnn(int x_offset, int y_offset)
     qspi_slave_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
             QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES);
 
-    MXC_Delay(MXC_DELAY_MSEC(250));
+    //MXC_Delay(MXC_DELAY_MSEC(250));
+    MXC_Delay(MXC_DELAY_MSEC(500));
 
 
 #ifdef PRINT_TIME_CNN
