@@ -1,57 +1,27 @@
-## Description
 
-This example demonstrates some of the features of Maxim's Cube Camera evaluation kit. Specifically, audio data is read from WAV files stored on a MircoSD card and played back through the audio jack.
 
-## Building the Example
+# Voice Controlled Audio Playback Demo on the MAXREFDES178# Cube Camera
 
-To create the necessary executable files for this example navigate to both the *WavFile_Processor* and *Audio_Processor* directories in a terminal window and execute the following command:
+## Getting Started with MAXREFDES178, Building Firmware, Loading and Debugging
 
-```
-make release
-```
+Please refer to main MAXREFDES178 documentation for instructions how to build, and load firmware:
 
-## Loading the Example
+[Getting Started with the MAXREFDES178# Cube Camera](./../maxrefdes178_doc/README.md)
 
-Loading the example requires two steps: loading the executable from the *WavFile_Processor* build to the MAX32666 and loading the executable from the *Audio_Processor* build to the MAX78000.
+NOTE: Voice Controlled Audio Playback demo does not support Android application.
 
-First, connect a MAXDAP-TYPE-C Pico adapter to the USB-C port on the side of the Cube Camera with the pico board oriented away from the screen as seen in the image below.
 
-  * MAXDAP-TYPE-C Pico adaptor oriented away from the screen.
-
-    ![](doc/maxdap_type_c_face_down.jpg)
-
-Next, navigate to the *WavFile_Processor* directory in a terminal window and enter the following commands:
-
-```
-openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max32665_nsrst.cfg -c "init;halt;max32xxx mass_erase 0;exit"
-openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max32665_nsrst.cfg -c "program build/max32665.bin verify reset exit 0x10000000"
-```
-
-Upon succesful completion of loading the MAX32666 executable, reverse the orientation of the MAXDAP-TYPE-C Pico adapter so that the Pico board is facing the same direction as the screen (as seen below) and navigate to the *Audio_Processor* directory.
-
-  * MAXDAP-TYPE-C Pico adaptor oriented toward the screen.
-
-    ![](doc/maxdap_type_c_face_up.jpg)
-
-Enter the following command:
-
-```
-openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max78000_nsrst.cfg -c "program build/max78000.bin verify reset exit 0x10000000"
-```
-
-NOTE!: The device may need to be power cycled after loading the executables. Do this by holding down the power button until the LEDs turn off and then plugging the camera back in.
-
-## Running/Using the Example
+## Testing Voice Controlled Audio Playback Demo
 
 For reference:
 
   * MAXDAP-TYPE-C Pico adaptor oriented toward the screen.
 
-    ![](doc/mrd178_buttons.jpg)
+    ![](./../maxrefdes178_doc/mrd178_buttons.jpg)
 
 ##### Setting up the Device
 
-Ensure the MicroSD card is set up properly. First check that the SD card is formatted as a FAT filesystem. If it is not, it can be formatted using your host machine or by running the SDHC\_FAT example on a MAX32665/66 EV Kit. Next load the WAV files onto the SD card in the root directory. If you have your own WAV files you wish to use verify that the sampling rate is less than 48kHz and the sample width is less than 16 bits. Additionally, if you use your own WAV files you'll have to change the filenames on lines 143-146 of *WavFile_Processor/main.c* and the value of "NUM\_FILES" on line 27 of *WavFile_Processor/include/audio_processor.h*. However if you do not have your own WAV files, the example has been set up to use the WAV files provided in the *doc* folder.
+Ensure the MicroSD card is set up properly. First check that the SD card is formatted as a FAT filesystem. If it is not, it can be formatted using your host machine or by running the SDHC\_FAT example on a MAX32665/66 EV Kit. Next load the WAV files onto the SD card in the root directory. If you have your own WAV files you wish to use verify that the sampling rate is less than 48kHz and the sample width is less than 16 bits. Additionally, if you use your own WAV files you'll have to change the filenames on lines 143-146 of *maxrefdes178_max32666/max32666_main.c* and the value of "NUM\_FILES" on line 27 of *maxrefdes178_max32666/include/audio_processor.h*. However if you do not have your own WAV files, the example has been set up to use the WAV files provided in the *WAV-Files* folder.
 
 Next, insert the MicroSD card into the MicroSD card slot located next to the Power Button with the notch on the MicroSD card pointing towards the top of the Cube Camera. Additionally, insert headphones into the audio jack closest to Button B.
 

@@ -1,5 +1,5 @@
 ################################################################################
- # Copyright (C) 2016 Maxim Integrated Products, Inc., All Rights Reserved.
+ # Copyright (C) Maxim Integrated Products, Inc., All Rights Reserved.
  #
  # Permission is hereby granted, free of charge, to any person obtaining a
  # copy of this software and associated documentation files (the "Software"),
@@ -34,12 +34,12 @@
 
 # This is the name of the build output file
 ifeq "$(PROJECT)" ""
-PROJECT=max32665
+PROJECT=maxrefdes178_max78000_audio
 endif
 
 # Specify the target processor
 ifeq "$(TARGET)" ""
-TARGET=MAX32665
+TARGET=MAX78000
 endif
 
 # Create Target name variables
@@ -51,7 +51,7 @@ COMPILER=GCC
 
 # Specify the board used
 ifeq "$(BOARD)" ""
-BOARD=EvKit_V1
+BOARD=MAXREFDES178
 endif
 
 # This is the path to the CMSIS root directory
@@ -62,52 +62,42 @@ LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
 endif
 
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
-ifeq ($(MAKECMDGOALS),sla)
-SECURE_BOOT_TOOLS_DIR=$(LIBS_DIR)/../Tools/SBT
-CA_SIGN_BUILD=$(SECURE_BOOT_TOOLS_DIR)/bin/sign_app
-BUILD_SESSION=$(SECURE_BOOT_TOOLS_DIR)/bin/build_scp_session
-TEST_KEY=$(SECURE_BOOT_TOOLS_DIR)/devices/MAX32666/keys/maximtestcrk.key
-SCP_PACKETS=scp_packets
-endif
 
 #Use this for other library make files so they are all based off the same as root as the project
 export CMSIS_ROOT
 
+# LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/max78000_arm.ld
+LINKERFILE=maxrefdes178_max78000_audio.ld
+
 # Source files for this test (add path to VPATH below)
-SRCS  = main.c
-SRCS += audio_processor.c
-SRCS += bmi160.c
-SRCS += max32666_accel.c
-SRCS += max32666_audio_codec.c
-SRCS += max32666_data.c
-SRCS += max32666_expander.c
-SRCS += max32666_i2c.c
-SRCS += max32666_lcd.c
-SRCS += max32666_pmic.c
-SRCS += max32666_qspi_master.c
-SRCS += max32666_spi_dma.c
-SRCS += max32666_timer_led_button.c
+SRCS  = max78000_audio_main.c
+SRCS += max78000_audio_cnn.c
+SRCS += max78000_softmax.c
+SRCS += max78000_qspi_slave.c
 SRCS += maxrefdes178_utility.c
-ifeq ($(MAKECMDGOALS),sla)
-SRCS += sla_header.c
-endif
+SRCS += audio.c
+SRCS += kws.c
 
 # Where to find source files for this test
-VPATH =.
-VPATH += ./src
-ifeq ($(MAKECMDGOALS),sla)
+VPATH += src
+VPATH += ../../maxrefdes178_common
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
-endif
 
 # Where to find header files for this test
-IPATH = .
-IPATH += ./include
+IPATH += include
+IPATH += ../../maxrefdes178_common
+IPATH += ../maxrefdes178_max78000_common
 
 # Enable assertion checking for development
-PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE 
+PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE
+
+PROJ_CFLAGS+=-DARM_MATH_CM4
+
+PROJ_CFLAGS+=-DMAXREFDES178_MAX78000_AUDIO
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
+PROJ_CFLAGS+=-Werror
 
 # Specify the target revision to override default
 # "A2" in ASCII
@@ -116,25 +106,18 @@ PROJ_CFLAGS+=-Wall
 # Use this variables to specify and alternate tool path
 #TOOL_DIR=/opt/gcc-arm-none-eabi-4_8-2013q4/bin
 
-
 # Use these variables to add project specific tool options
-#PROJ_CFLAGS+=--specs=nano.specs
+#PROJ_CFLAGS+=-D__FPU_PRESENT -DKINTEX_EMU
 #PROJ_LDFLAGS+=--specs=nano.specs
 
 # Point this variable to a startup file to override the default file
 #STARTUPFILE=start.S
 
-# Set MXC_OPTIMIZE to override the default optimization level 
-MXC_OPTIMIZE_CFLAGS=-O0
+# Set MXC_OPTIMIZE to override the default optimization level
+MXC_OPTIMIZE_CFLAGS=-Ofast
+# Use -Og for better debug
+#MXC_OPTIMIZE_CFLAGS=-Og
 
-# Point this variable to a linker file to override the default file
-LINKER=$(TARGET_LC).ld
-LINKERFILE=maxrefdes178_max32666.ld
-
-ifeq ($(MAKECMDGOALS),sla)
-LINKER=$(TARGET_LC)_sla.ld
-LINKERFILE=$(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/GCC/$(LINKER)
-endif
 ################################################################################
 # Include external library makefiles here
 
@@ -147,30 +130,22 @@ PERIPH_DRIVER_DIR=$(LIBS_DIR)/PeriphDrivers
 include $(PERIPH_DRIVER_DIR)/periphdriver.mk
 export PERIPH_DRIVER_DIR
 
-SDHC_DRIVER_DIR=$(LIBS_DIR)/SDHC
-FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
-include $(FAT32_DRIVER_DIR)/fat32.mk
-include $(SDHC_DRIVER_DIR)/sdhc.mk
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be
 # included before this one.
 include $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/$(COMPILER)/$(TARGET_LC).mk
 
+all:
+	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT)_app.bin
+	cd $(BUILD_DIR) && $(CURDIR)/../../external/msblGenWin32.exe $(BUILD_DIR)/$(PROJECT)_app.bin MAX78000 8192
+	cat $(CURDIR)/../../maxrefdes178-AppSwitcher/maxrefdes178_max78000_bootloader.bin $(BUILD_DIR)/$(PROJECT)_app.bin > $(BUILD_DIR)/$(PROJECT).bin
+# 	$(CA_SIGN_BUILD) $(BUILD_DIR)/$(PROJECT).bin $(TEST_KEY)
+# 	arm-none-eabi-objcopy  $(BUILD_DIR)/$(PROJECT).elf --update-section .sig=$(BUILD_DIR)/$(PROJECT).bin.sig
+
 libclean: 
 	$(MAKE)  -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
-
-slaclean:
-	rm -r ${SCP_PACKETS}/
-
-# The rule to clean out all the build products.
-distclean: clean libclean
-
+	
 sla: all
-	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT).bin
-	@echo " "
-	arm-none-eabi-size --format=berkeley $(BUILD_DIR)/$(PROJECT).elf
-	@echo " "
-	$(CA_SIGN_BUILD) -c $(TARGET_UC) key_file=$(TEST_KEY) algo=ecdsa header=no ca=$(BUILD_DIR)/$(PROJECT).bin sca=$(BUILD_DIR)/$(PROJECT).sbin
-	@echo " "
-	arm-none-eabi-objcopy  $(BUILD_DIR)/$(PROJECT).elf --update-section .sig=$(BUILD_DIR)/$(PROJECT).sig
-# $(BUILD_SESSION) -c $(TARGET_UC) key_file=$(TEST_KEY) ${SCP_PACKETS} $(BUILD_DIR)/$(PROJECT).sbin
+#	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -O binary $(BUILD_DIR)/$(PROJECT).sbin
+#	$(BUILD_SESSION) $(BUILD_DIR)/$(PROJECT).sbin scp_packets $(TEST_KEY)
+

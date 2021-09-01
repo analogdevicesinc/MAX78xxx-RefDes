@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Audio_Processor</name>
+	<name>maxrefdes178_max32666</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -22,7 +22,7 @@
 		<nature>org.eclipse.cdt.core.cnature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
-	</natures>	
+	</natures>
 	<linkedResources>
 		<link>
 			<name>PeriphDrivers</name>
@@ -32,12 +32,22 @@
 		<link>
 			<name>PeriphDrivers-Includes</name>
 			<type>2</type>
-			<locationURI>PARENT-3-ECLIPSE_HOME/Libraries/PeriphDrivers/Include/MAX78000</locationURI>
+			<locationURI>PARENT-3-ECLIPSE_HOME/Libraries/PeriphDrivers/Include/MAX32665</locationURI>
 		</link>
 		<link>
 			<name>PeriphDrivers-Registers</name>
 			<type>2</type>
-			<locationURI>PARENT-3-ECLIPSE_HOME/Libraries/CMSIS/Device/Maxim/MAX78000/Include</locationURI>
+			<locationURI>PARENT-3-ECLIPSE_HOME/Libraries/CMSIS/Device/Maxim/MAX32665/Include</locationURI>
+		</link>
+		<link>
+			<name>external</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/external</locationURI>
+		</link>
+		<link>
+			<name>maxrefdes178_common</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/maxrefdes178_common</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

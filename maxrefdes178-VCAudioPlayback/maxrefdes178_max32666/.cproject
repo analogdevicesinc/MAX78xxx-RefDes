@@ -8,9 +8,9 @@
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
@@ -20,7 +20,11 @@
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.335194058" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix"/>
 							<option id="cdt.managedbuild.option.gnu.cross.path.442482612" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.1749116374" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder arguments="ECLIPSE=1 -j 8" buildPath="${workspace_loc:/WavFile_Processor}" command="make" id="cdt.managedbuild.builder.gnu.cross.822648135" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<builder arguments="-r ECLIPSE=1 -j 8" autoBuildTarget="all" buildPath="${ProjDirPath}" cleanBuildTarget="clean" command="make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="cdt.managedbuild.builder.gnu.cross.822648135" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="false" superClass="cdt.managedbuild.builder.gnu.cross">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
+								</outputEntries>
+							</builder>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.244992773" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1326406900" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" valueType="enumerated"/>
 								<option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.option.debugging.level.1790273363" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" valueType="enumerated"/>
@@ -30,7 +34,12 @@
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/CMSIS/Device/Maxim/MAX32665/Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/Boards/MAX32665/Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/PeriphDrivers/Include/MAX32665&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/Boards/MAX32665/EvKit_V1/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/Boards/MAX32665/MAXREFDES178/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/SDHC/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/SDHC/ff13/Source&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/MAXUSB/include/core&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/MAXUSB/include/enumerate&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MAXIM_PATH}/Libraries/MAXUSB/include/devclass&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1262685356" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -52,11 +61,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="PeriphDrivers" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="PeriphDrivers|PeriphDrivers-Includes|PeriphDrivers-Registers" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="PeriphDrivers"/>
-						<entry excluding="PeriphDrivers-Includes" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="PeriphDrivers-Includes"/>
-						<entry excluding="PeriphDrivers-Registers" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="PeriphDrivers-Registers"/>
 					</sourceEntries>
 				</configuration>
@@ -65,12 +72,13 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="WavFile_Processor.ilg.gnuarmeclipse.managedbuild.cross.target.elf.737306620" name="Executable"/>
+		<project id="maxrefdes178_max32666.ilg.gnuarmeclipse.managedbuild.cross.target.elf.737306620" name="Executable"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="MAXIM"/>
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/WavFile_Processor"/>
+			<resource resourceType="PROJECT" workspacePath="/maxrefdes178_max32666"/>
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
