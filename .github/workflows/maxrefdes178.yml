@@ -2,7 +2,8 @@ name: MAXREFDES178
 
 on:
   push:
-    branches-ignore: [master]
+    branches:
+      - main
   pull_request:
     branches-ignore: [master]
 
