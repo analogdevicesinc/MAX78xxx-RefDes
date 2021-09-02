@@ -573,12 +573,12 @@ jobs:
           mv maxrefdes178-CatsDogs\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\CatsDogs\maxrefdes178_max32666_catsdogs_v${env:VERSION}.msbl
           
           mkdir release\ASL
-          mv maxrefdes178-ASL\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\ASL\maxrefdes178_max78000_video_ASL_v${env:VERSION}.bin
-          mv maxrefdes178-ASL\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\ASL\maxrefdes178_max78000_video_ASL_v${env:VERSION}.msbl
-          mv maxrefdes178-ASL\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\ASL\maxrefdes178_max78000_audio_ASL_v${env:VERSION}.bin
-          mv maxrefdes178-ASL\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\ASL\maxrefdes178_max78000_audio_ASL_v${env:VERSION}.msbl
-          mv maxrefdes178-ASL\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\ASL\maxrefdes178_max32666_ASL_v${env:VERSION}.bin
-          mv maxrefdes178-ASL\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\ASL\maxrefdes178_max32666_ASL_v${env:VERSION}.msbl
+          mv maxrefdes178-ASL\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\ASL\maxrefdes178_max78000_video_asl_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\ASL\maxrefdes178_max78000_video_asl_v${env:VERSION}.msbl
+          mv maxrefdes178-ASL\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\ASL\maxrefdes178_max78000_audio_asl_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\ASL\maxrefdes178_max78000_audio_asl_v${env:VERSION}.msbl
+          mv maxrefdes178-ASL\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\ASL\maxrefdes178_max32666_asl_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\ASL\maxrefdes178_max32666_asl_v${env:VERSION}.msbl
           
           mkdir release\UNet
           mv maxrefdes178-UNet\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\UNet\maxrefdes178_max78000_video_unet_v${env:VERSION}.bin
@@ -595,7 +595,7 @@ jobs:
           mv maxrefdes178-WildLife\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\WildLife\maxrefdes178_max78000_audio_wildlife_v${env:VERSION}.msbl
           mv maxrefdes178-WildLife\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\WildLife\maxrefdes178_max32666_wildlife_v${env:VERSION}.bin
           mv maxrefdes178-WildLife\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\WildLife\maxrefdes178_max32666_wildlife_v${env:VERSION}.msbl
-
+          
           mkdir release\VCAudioPlayback
           mv maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\VCAudioPlayback\maxrefdes178_max78000_video_vcap_v${env:VERSION}.bin
           mv maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\VCAudioPlayback\maxrefdes178_max78000_video_vcap_v${env:VERSION}.msbl

@@ -23,7 +23,7 @@ After loading all 3 components of ASL Demo (MAX32666, MAX78000_video and MAX7800
 
 - Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  !(../maxrefdes178_doc/catsdogs_intro.jpg)
+  ![](../maxrefdes178_doc/asl_intro.jpg)
 
 - Device will start with pressing Start Video
 
