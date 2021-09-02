@@ -97,6 +97,7 @@
 #define UNET_DEMO_NAME                     "UNet"
 #define WILDLIFE_DEMO_NAME                 "WildLife"
 #define CATSDOGS_DEMO_NAME                 "CatsDogs"
+#define ASL_DEMO_NAME                      "ASL"
 
 // Common FaceID
 #define FACEID_WIDTH                       120
@@ -123,6 +124,15 @@
 #define CATSDOGS_RECTANGLE_Y1              ((LCD_HEIGHT - CATSDOGS_HEIGHT) / 2)
 #define CATSDOGS_RECTANGLE_X2              (CATSDOGS_RECTANGLE_X1 + CATSDOGS_WIDTH)
 #define CATSDOGS_RECTANGLE_Y2              (CATSDOGS_RECTANGLE_Y1 + CATSDOGS_HEIGHT)
+
+// Common ASL 
+#define ASL_WIDTH                     192
+#define ASL_HEIGHT                    172
+
+#define ASL_RECTANGLE_X1              ((LCD_WIDTH - ASL_WIDTH) / 2)
+#define ASL_RECTANGLE_Y1              ((LCD_HEIGHT - ASL_HEIGHT) / 2)
+#define ASL_RECTANGLE_X2              (ASL_RECTANGLE_X1 + ASL_WIDTH)
+#define ASL_RECTANGLE_Y2              (ASL_RECTANGLE_Y1 + ASL_HEIGHT)
 
 // Common UNet
 #define UNET_WIDTH                         192
