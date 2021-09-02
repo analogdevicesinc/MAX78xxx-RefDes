@@ -248,7 +248,7 @@ jobs:
           }
           
           
-        - name: Build ASL MAX78000 Video Firmware
+      - name: Build ASL MAX78000 Video Firmware
         run: |
           @"
           cd "${{github.workspace}}"
@@ -322,6 +322,7 @@ jobs:
           if (!$?) {
             exit -1
           }
+          
           
       - name: Build UNet MAX78000 Video Firmware
         run: |
