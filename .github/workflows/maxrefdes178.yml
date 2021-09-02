@@ -247,6 +247,83 @@ jobs:
             exit -1
           }
           
+          
+      - name: Build ASL MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ASL\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build ASL MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ASL\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build ASL MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          export FIRMWARE_PATH="`$MAXIM_PATH\Libraries"
+          export TOOLCHAIN_PATH="`$MAXIM_PATH\Tools"
+          export PATH="`$TOOLCHAIN_PATH\GNUTools\bin;`$TOOLCHAIN_PATH\MinGW\msys\1.0\bin;`$PATH"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ASL\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD IS FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+          
       - name: Build UNet MAX78000 Video Firmware
         run: |
           @"
@@ -494,6 +571,14 @@ jobs:
           mv maxrefdes178-CatsDogs\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\CatsDogs\maxrefdes178_max78000_audio_catsdogs_v${env:VERSION}.msbl
           mv maxrefdes178-CatsDogs\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\CatsDogs\maxrefdes178_max32666_catsdogs_v${env:VERSION}.bin
           mv maxrefdes178-CatsDogs\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\CatsDogs\maxrefdes178_max32666_catsdogs_v${env:VERSION}.msbl
+          
+          mkdir release\ASL
+          mv maxrefdes178-ASL\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\ASL\maxrefdes178_max78000_video_ASL_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\ASL\maxrefdes178_max78000_video_ASL_v${env:VERSION}.msbl
+          mv maxrefdes178-ASL\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\ASL\maxrefdes178_max78000_audio_ASL_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\ASL\maxrefdes178_max78000_audio_ASL_v${env:VERSION}.msbl
+          mv maxrefdes178-ASL\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\ASL\maxrefdes178_max32666_ASL_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\ASL\maxrefdes178_max32666_ASL_v${env:VERSION}.msbl
           
           mkdir release\UNet
           mv maxrefdes178-UNet\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\UNet\maxrefdes178_max78000_video_unet_v${env:VERSION}.bin

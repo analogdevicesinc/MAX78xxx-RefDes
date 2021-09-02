@@ -61,6 +61,18 @@ else
 LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
 endif
 
+ifeq ($(OS),Windows_NT)
+MSBLGEN=msblGenWin32.exe
+else
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+MSBLGEN=msblGenLinux
+endif
+ifeq ($(UNAME_S),Darwin)
+MSBLGEN=msblGenOSX
+endif
+endif
+
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 
 #Use this for other library make files so they are all based off the same as root as the project
@@ -138,7 +150,7 @@ include $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/$(COMPILER)/$(TARGET_LC).
 
 all:
 	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT)_app.bin
-	cd $(BUILD_DIR) && $(CURDIR)/../../external/msblGenWin32.exe $(BUILD_DIR)/$(PROJECT)_app.bin MAX78000 8192
+	cd $(BUILD_DIR) && $(CURDIR)/../../external/${MSBLGEN} $(BUILD_DIR)/$(PROJECT)_app.bin MAX78000 8192
 	cat $(CURDIR)/../../maxrefdes178-AppSwitcher/maxrefdes178_max78000_bootloader.bin $(BUILD_DIR)/$(PROJECT)_app.bin > $(BUILD_DIR)/$(PROJECT).bin
 # 	$(CA_SIGN_BUILD) $(BUILD_DIR)/$(PROJECT).bin $(TEST_KEY)
 # 	arm-none-eabi-objcopy  $(BUILD_DIR)/$(PROJECT).elf --update-section .sig=$(BUILD_DIR)/$(PROJECT).bin.sig

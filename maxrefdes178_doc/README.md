@@ -295,7 +295,7 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
 
 MAXREFDES178# has special application switcher bootloader. App-Switcher can load MAX32666, MAX78000 Video and MAX78000 Audio demo firmware using a micro SD card.
 
-**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on [Load Demo Firmware using MINGW on Windows](#Load Demo Firmware using MINGW on Windows) section. App-Switcher is embedded in the demo firmware. You don't need to any load App-Switcher binary separately.
+**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on “**Load Demo Firmware using MINGW on Windows**” section. App-Switcher is embedded in the demo firmware. You don't need to load App-Switcher binaries separately.
 
 App-Switcher uses msbl file to load MAX32666, MAX78000 Video and MAX78000 Audio firmware from SD card. msbl files can be found in `build` directory when build is completed. Alternatively, you can download the latest .msbl files from GitHub Release or GitHub Actions.
 
@@ -519,6 +519,36 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 
 
 ## Porting Applications to the Cube Camera
+
+To add new MAXREFDES178# demo to this repository:
+
+1. Copy one of the existing demo directories (i.e. maxrefdes178-CatsDogs) and rename as `maxrefdes178-NewDemoName`. Make your changes on new `maxrefdes178-NewDemoName` directory.
+
+3. Add new demo name definition to `maxrefdes178_common\maxrefdes178_definitions.h`. Maximum demo name length is 15.
+
+   ```
+   // Common Demo Name
+   #define DEMO_STRING_SIZE                   15
+   #define FACEID_DEMO_NAME                   "FaceID"
+   #define UNET_DEMO_NAME                     "UNet"
+   #define WILDLIFE_DEMO_NAME                 "WildLife"
+   #define CATSDOGS_DEMO_NAME                 "CatsDogs"
+   ```
+
+4. Set demo name in `max32666_main.c`, `max78000_audio_main.c` and `max78000_video_main.c`.
+   ```
+   snprintf(device_info.max32666_demo_name, sizeof(device_info.max32666_demo_name) - 1, "%s", CATSDOGS_DEMO_NAME);
+   ...
+   static char demo_name[] = CATSDOGS_DEMO_NAME;
+   ```
+
+5. Edit `maxrefdes178-NewDemoName\README.md` file for documentation.
+   - Modify new demo guide.
+   - Add link to the new demo documentation from this page in "Other available MAXREFDES178# demo pages" section.
+
+6. Edit `.github\workflows\maxrefdes178.yml` file for GitHub Actions build.
+   - Add new demo MAX32666, MAX78000 Video and MAX78000 Audio GitHub Actions build steps. Copy/Paste from existing demo build steps and modify.
+   - Add new demo release directory to "Prepare Release" step.
 
 Demo examples running on the Cube Camera include three main components:
 
