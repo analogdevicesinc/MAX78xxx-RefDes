@@ -499,6 +499,12 @@ int qspi_master_audio_rx_worker(qspi_packet_type_e *qspi_packet_type_rx)
         }
 
         PR_INFO("Audio button B pressed");
+		
+		device_settings.enable_voicecommand ^= 1;
+		device_settings.enable_voicecommand += 0x2; // second bit shows there is a change in settings
+		
+		PR_INFO("Voice Command changed to: %d", device_settings.enable_voicecommand);
+		
         timestamps.activity_detected = timer_ms_tick;
 
         break;

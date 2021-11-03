@@ -493,31 +493,40 @@ static void run_application(void)
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
                 timestamps.audio_result_received = timer_ms_tick;
                 timestamps.activity_detected = timer_ms_tick;
-
+#if 0
                 if (device_status.classification_audio.classification == CLASSIFICATION_UNKNOWN) {
                     audio_string_color = RED;
                 } else if (device_status.classification_audio.classification == CLASSIFICATION_LOW_CONFIDENCE) {
                     audio_string_color = YELLOW;
                 } else if (device_status.classification_audio.classification == CLASSIFICATION_DETECTED) {
                     audio_string_color = GREEN;
-
-                    if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
-                        device_settings.enable_lcd = 0;
-                        lcd_backlight(0, 0);
-                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
-                    } else if(strcmp(device_status.classification_audio.result, "ON") == 0) {
-                        device_settings.enable_lcd = 1;
-                        if (device_settings.enable_max78000_video) {
-                            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
-                        }
-                        lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
-                    } else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
-                        device_settings.enable_max78000_video_cnn = 1;
-                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
-                    } else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
-                        device_settings.enable_max78000_video_cnn = 0;
-                        qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
-                    }
+				}
+#else
+				if (!device_settings.enable_voicecommand) {
+					audio_string_color = RED;
+				} else {
+					audio_string_color = GREEN;
+#endif
+					// only if it is voice activated
+					if (device_settings.enable_voicecommand) {
+						if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
+							device_settings.enable_lcd = 0;
+							lcd_backlight(0, 0);
+							qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
+						} else if(strcmp(device_status.classification_audio.result, "ON") == 0) {
+							device_settings.enable_lcd = 1;
+							if (device_settings.enable_max78000_video) {
+								qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
+							}
+							lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
+						} else if (strcmp(device_status.classification_audio.result, "GO") == 0) {
+							device_settings.enable_max78000_video_cnn = 1;
+							qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
+						} else if(strcmp(device_status.classification_audio.result, "STOP") == 0) {
+							device_settings.enable_max78000_video_cnn = 0;
+							qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
+						}
+					}
                 }
 
                 if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
@@ -775,8 +784,22 @@ static int refresh_screen(void)
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Start Video");
         fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, GREEN, lcd_data.buffer);
     }
+	
+	// If the status of voicecommand enable status is changed, show on screen for 1sec
+	if (device_settings.enable_voicecommand & 0x02) {
+		static uint32_t voicecommand_time = 0;
+		if (!voicecommand_time)
+		   voicecommand_time = timestamps.screen_drew ;	
+		if ((timestamps.screen_drew - voicecommand_time) < LCD_CLASSIFICATION_DURATION) {
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Voice Command Enable:%d", device_settings.enable_voicecommand&0x1);
+			fonts_putStringCentered(3, lcd_string_buff, &Font_16x26, YELLOW, lcd_data.buffer);
+		} else {
+			device_settings.enable_voicecommand &= 0x01; // clear bit 1 which represents a status change
+			voicecommand_time = 0;
+		}
 
-    if (device_settings.enable_max78000_audio) {
+	}
+    else if (device_settings.enable_max78000_audio) {
         if ((timestamps.screen_drew - timestamps.audio_result_received) < LCD_CLASSIFICATION_DURATION) {
             if (device_settings.enable_lcd_probabilty) {
                 snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%s %0.1f",
@@ -784,8 +807,11 @@ static int refresh_screen(void)
             } else {
                 strncpy(lcd_string_buff, device_status.classification_audio.result, sizeof(lcd_string_buff) - 1);
             }
-
-            fonts_putStringCentered(3, lcd_string_buff, &Font_16x26, audio_string_color, lcd_data.buffer);
+			
+			// if UKNOWN, or low confidence, don't bother showing them when voice command is enabled
+			if ((device_status.classification_audio.classification != CLASSIFICATION_UNKNOWN) &&
+			   (device_status.classification_audio.classification != CLASSIFICATION_LOW_CONFIDENCE)) 
+				fonts_putStringCentered(3, lcd_string_buff, &Font_16x26, audio_string_color, lcd_data.buffer);
         }
     } else {
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Audio disabled");

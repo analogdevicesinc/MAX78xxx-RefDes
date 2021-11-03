@@ -27,17 +27,18 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
 
   - KWS20 keywords are: [‘up’, ‘down’, ‘left’, ‘right’, ‘stop’, ‘go’, ‘yes’, ‘no’, ‘on’, ‘off’, ‘one’, ‘two’, ‘three’, ‘four’, ‘five’, ‘six’, ‘seven’, ‘eight’, ‘nine’, ‘zero’].
   - The KWS20 classification result text changes color according to the KWS20 classification confidence:
-    - Red → Unknown keyword
-    - Yellow → Keyword detected with low confidence
+    - Red → Unknown keyword, or when voice commands are disabled.
     - Green → Keyword detected with high confidence
+    
+  ![](../maxrefdes178_doc/mrd178_kws.jpg)
   
-    ![](../maxrefdes178_doc/mrd178_kws.jpg)
-
 - The ‘On’ & ‘Off’ voice commands (when recognized with high confidence) enable / disable the LCD.
 
 - Touch the “Start Video” button on the LCD to start video capture.
 
 - The ‘Go’ and ‘Stop’ voice commands (when recognized with high confidence) enable / disable FaceID.
+
+- Use Button B to disable/enable voice commands.
 
 - The FaceID frame appears in the center of the LCD when FaceID is enabled:
   
@@ -84,7 +85,7 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
     - MAX78000 Video
     - MAX78000 Audio
   - Button A enables / disables the video Flash LED.
-  - Button B is unused.
+  - Button B enables / disables the voice commands.
   
 - If the inactivity timer is enabled (enabled by default):
 

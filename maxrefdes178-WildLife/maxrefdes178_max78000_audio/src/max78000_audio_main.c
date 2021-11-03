@@ -83,12 +83,12 @@
 /*-----------------------------*/
 
 /* Adjustables */
-#define SAMPLE_SCALE_FACTOR         4       // multiplies 16-bit samples by this scale factor before converting to 8-bit
+#define SAMPLE_SCALE_FACTOR         3       // multiplies 16-bit samples by this scale factor before converting to 8-bit
 #define THRESHOLD_HIGH              350     // voice detection threshold to find beginning of a keyword
 #define THRESHOLD_LOW               100     // voice detection threshold to find end of a keyword
 #define SILENCE_COUNTER_THRESHOLD   20      // [>20] number of back to back CHUNK periods with avg < THRESHOLD_LOW to declare the end of a word
 #define PREAMBLE_SIZE               30*CHUNK// how many samples before beginning of a keyword to include
-#define INFERENCE_THRESHOLD         49      // min probability (0-100) to accept an inference
+#define INFERENCE_THRESHOLD         75      // min probability (0-100) to accept an inference
 
 /* MAX9867 Audio Codec */
 #define MAX9867_I2C        MXC_I2C1
