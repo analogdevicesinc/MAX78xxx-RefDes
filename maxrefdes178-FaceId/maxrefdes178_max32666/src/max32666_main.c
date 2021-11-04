@@ -785,7 +785,7 @@ static int refresh_screen(void)
         fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, GREEN, lcd_data.buffer);
     }
 	
-	// If the status of voicecommand enable status is changed, show on screen for 1sec
+	// If the status of voice command enable is changed, show on screen for 1sec
 	if (device_settings.enable_voicecommand & 0x02) {
 		static uint32_t voicecommand_time = 0;
 		if (!voicecommand_time)
