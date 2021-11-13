@@ -142,7 +142,7 @@ extern device_status_t device_status;
 extern volatile device_settings_t device_settings;
 extern device_info_t device_info;
 extern timestamps_t timestamps;
-
+extern classification_result_t classification_audio_last;
 
 //-----------------------------------------------------------------------------
 // Function declarations

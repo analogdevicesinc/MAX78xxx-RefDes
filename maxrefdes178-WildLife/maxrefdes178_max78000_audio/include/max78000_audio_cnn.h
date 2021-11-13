@@ -55,7 +55,7 @@
   Bias memory:   0 bytes out of 2,048 bytes total (0%)
 */
 /* Number of outputs for this network */
-#define CNN_NUM_OUTPUTS 21
+#define CNN_NUM_OUTPUTS 22
 
 /* Use this timer to time the inference */
 #define CNN_INFERENCE_TIMER MXC_TMR0

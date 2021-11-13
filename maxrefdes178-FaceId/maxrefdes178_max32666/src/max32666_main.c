@@ -492,7 +492,12 @@ static void run_application(void)
             switch(qspi_packet_type_rx) {
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
                 timestamps.audio_result_received = timer_ms_tick;
-                timestamps.activity_detected = timer_ms_tick;
+				
+				// only activate on "CUBE"
+				if ((strcmp(device_status.classification_audio.result, "CUBE") == 0) &&
+				   (device_status.classification_audio.classification != CLASSIFICATION_LOW_CONFIDENCE)){
+					timestamps.activity_detected = timer_ms_tick;
+				}
 #if 0
                 if (device_status.classification_audio.classification == CLASSIFICATION_UNKNOWN) {
                     audio_string_color = RED;
@@ -507,8 +512,11 @@ static void run_application(void)
 				} else {
 					audio_string_color = GREEN;
 #endif
-					// only if it is voice activated
-					if (device_settings.enable_voicecommand) {
+					// only if it is voice activated and the last keyword was "CUBE"
+					if ((device_settings.enable_voicecommand) &&
+						(strcmp(classification_audio_last.result, "CUBE") == 0) &&
+						(classification_audio_last.classification != CLASSIFICATION_LOW_CONFIDENCE))
+					{
 						if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
 							device_settings.enable_lcd = 0;
 							lcd_backlight(0, 0);
@@ -528,7 +536,10 @@ static void run_application(void)
 						}
 					}
                 }
-
+				// update last result
+				strcpy(classification_audio_last.result, device_status.classification_audio.result);
+				classification_audio_last.classification = device_status.classification_audio.classification;
+				
                 if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
                     ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
                         sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);

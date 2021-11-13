@@ -23,25 +23,25 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
   - Video and FaceID in disabled state.
   - Audio and KWS20 (keyword spotting) in enabled state.
 
-- KWS20 classification results will appear on top of the LCD.
+- KWS21 classification results will appear on top of the LCD.
 
-  - KWS20 keywords are: [‘up’, ‘down’, ‘left’, ‘right’, ‘stop’, ‘go’, ‘yes’, ‘no’, ‘on’, ‘off’, ‘one’, ‘two’, ‘three’, ‘four’, ‘five’, ‘six’, ‘seven’, ‘eight’, ‘nine’, ‘zero’].
-  - The KWS20 classification result text changes color according to the KWS20 classification confidence:
+  - KWS21 keywords are: [‘up’, ‘down’, ‘left’, ‘right’, ‘stop’, ‘go’, ‘yes’, ‘no’, ‘on’, ‘off’, ‘one’, ‘two’, ‘three’, ‘four’, ‘five’, ‘six’, ‘seven’, ‘eight’, ‘nine’, ‘zero’, 'cube'].
+  - The KWS21 classification result text changes color according to the KWS21 classification confidence:
     - Red → Unknown keyword, or when voice commands are disabled.
     - Green → Keyword detected with high confidence
     
+  
   ![](../maxrefdes178_doc/mrd178_kws.jpg)
   
-- The ‘On’ & ‘Off’ voice commands (when recognized with high confidence) enable / disable the LCD.
+- Voice Commands:
 
-- Touch the “Start Video” button on the LCD to start video capture.
+  - Touch the “Start Video” button on the LCD to start video capture.
+  - Use Button B to disable/enable voice commands.
+  - Say "Cube" as the wake word,  followed by a command:
+    - The ‘Cube, On’ & ‘Cube, Off’ voice commands (when recognized with high confidence) enable / disable the LCD.
+    - The ‘Cube, Go’ and ‘Cube, Stop’ voice commands (when recognized with high confidence) enable / disable FaceID.
+  - The FaceID frame appears in the center of the LCD when FaceID is enabled:
 
-- The ‘Go’ and ‘Stop’ voice commands (when recognized with high confidence) enable / disable FaceID.
-
-- Use Button B to disable/enable voice commands.
-
-- The FaceID frame appears in the center of the LCD when FaceID is enabled:
-  
   FaceID Disabled | FaceID Enabled
   :-------------------------:|:-------------------------:
   ![](../maxrefdes178_doc/mrd178_video.jpg) | ![](../maxrefdes178_doc/mrd178_faceid.jpg) 
