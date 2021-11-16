@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+* Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
 * of foreign countries. This material may also be protected by patent laws
@@ -78,6 +78,7 @@ typedef struct {
     uint8_t enable_ble_send_classification;  // TODO
     uint8_t enable_inactivity;
     lcd_rotation_e lcd_rotation;
+	uint8_t enable_voicecommand;
 } device_settings_t;
 
 typedef struct {
@@ -93,6 +94,7 @@ typedef struct {
     device_statistics_t statistics;
     classification_result_t classification_video;
     classification_result_t classification_audio;
+    classification_result_t classification_audio_last;
     uint8_t faceid_embed_update_status;
     char faceid_embed_subject_names[FACEID_MAX_SUBJECT * (FACEID_MAX_SUBJECT_NAME_SIZE + 1)];
     uint16_t faceid_embed_subject_names_size;
@@ -141,7 +143,6 @@ extern device_status_t device_status;
 extern volatile device_settings_t device_settings;
 extern device_info_t device_info;
 extern timestamps_t timestamps;
-
 
 //-----------------------------------------------------------------------------
 // Function declarations

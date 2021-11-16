@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -77,18 +77,18 @@
 #define SAMPLE_SIZE         16384   // size of input vector for CNN, keep it multiple of 128
 #define CHUNK               128     // number of data points to read at a time and average for threshold, keep multiple of 128
 #define TRANSPOSE_WIDTH     128     // width of 2d data model to be used for transpose
-#define NUM_OUTPUTS         21      // number of classes
+#define NUM_OUTPUTS         CNN_NUM_OUTPUTS      // number of classes
 #define I2S_RX_BUFFER_SIZE  64      // I2S buffer size
 #define TFT_BUFF_SIZE       50      // TFT buffer size
 /*-----------------------------*/
 
 /* Adjustables */
-#define SAMPLE_SCALE_FACTOR         4       // multiplies 16-bit samples by this scale factor before converting to 8-bit
+#define SAMPLE_SCALE_FACTOR         5//4//3       // multiplies 16-bit samples by this scale factor before converting to 8-bit
 #define THRESHOLD_HIGH              350     // voice detection threshold to find beginning of a keyword
 #define THRESHOLD_LOW               100     // voice detection threshold to find end of a keyword
 #define SILENCE_COUNTER_THRESHOLD   20      // [>20] number of back to back CHUNK periods with avg < THRESHOLD_LOW to declare the end of a word
 #define PREAMBLE_SIZE               30*CHUNK// how many samples before beginning of a keyword to include
-#define INFERENCE_THRESHOLD         49      // min probability (0-100) to accept an inference
+#define INFERENCE_THRESHOLD         75      // min probability (0-100) to accept an inference
 
 /* MAX9867 Audio Codec */
 #define MAX9867_I2C        MXC_I2C1
@@ -128,7 +128,6 @@ static q15_t ml_softmax[NUM_OUTPUTS];
 static uint8_t pAI85Buffer[SAMPLE_SIZE];
 static uint8_t pPreambleCircBuffer[PREAMBLE_SIZE];
 static int16_t Max, Min;
-static int16_t Max, Min;
 static uint16_t thresholdHigh = THRESHOLD_HIGH;
 static uint16_t thresholdLow = THRESHOLD_LOW;
 static int16_t  x0, x1, Coeff;
@@ -154,7 +153,7 @@ typedef enum _mic_processing_state {
 /* Set of detected words */
 static const char keywords[NUM_OUTPUTS][10] = { "UP", "DOWN", "LEFT", "RIGHT", "STOP",
                                          "GO", "YES", "NO", "ON", "OFF", "ONE", "TWO", "THREE", "FOUR", "FIVE",
-                                         "SIX", "SEVEN", "EIGHT", "NINE", "ZERO", "Unknown"
+                                         "SIX", "SEVEN", "EIGHT", "NINE", "ZERO", "CUBE", "Unknown"
                                        };
 
 
@@ -649,7 +648,7 @@ int main(void)
 #ifdef ENABLE_CLASSIFICATION_DISPLAY
                 printf("\n----------------------------------------- \n");
 #endif
-
+                PR_INFO("Min: %d Max:%d", Min, Max);
                 Max = 0;
                 Min = 0;
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+* Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
 * of foreign countries. This material may also be protected by patent laws

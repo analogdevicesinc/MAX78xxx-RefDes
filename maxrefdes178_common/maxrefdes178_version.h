@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+* Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
 * of foreign countries. This material may also be protected by patent laws
@@ -46,7 +46,7 @@
 // Defines
 //-----------------------------------------------------------------------------
 #define S_VERSION_MAJOR 1
-#define S_VERSION_MINOR 2
+#define S_VERSION_MINOR 3
 #define S_VERSION_BUILD S_BUILD_NUMBER
 
 #endif /* _MAXREFDES178_VERSION_H_ */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -55,7 +55,7 @@
   Bias memory:   0 bytes out of 2,048 bytes total (0%)
 */
 /* Number of outputs for this network */
-#define CNN_NUM_OUTPUTS 21
+#define CNN_NUM_OUTPUTS 22
 
 /* Use this timer to time the inference */
 #define CNN_INFERENCE_TIMER MXC_TMR0
@@ -86,6 +86,19 @@ extern volatile uint32_t cnn_time;
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
+
+/* Run software SoftMax on unloaded data */
+void softmax_q17p14_q15(const q31_t * vec_in, const uint16_t dim_vec, q15_t * p_out);
+/* Shift the input, then calculate SoftMax */
+void softmax_shift_q17p14_q15(q31_t * vec_in, const uint16_t dim_vec, uint8_t in_shift, q15_t * p_out);
+
+/* Stopwatch - holds the runtime when accelerator finishes */
+extern volatile uint32_t cnn_time;
+
+/* Custom memcopy routines used for weights and data */
+void memcpy32(uint32_t *dst, const uint32_t *src, int n);
+void memcpy32_const(uint32_t *dst, int n);
+
 /* Enable clocks and power to accelerator, enable interrupt */
 int cnn_enable(uint32_t clock_source, uint32_t clock_divider);
 
@@ -117,13 +130,15 @@ int cnn_stop(void);
 int cnn_continue(void);
 
 /* Unload results from accelerator */
-int cnn_unload(uint32_t* out_buf);
+int cnn_unload(uint32_t *out_buf);
 
 /* Turn on the boost circuit */
-int cnn_boost_enable(mxc_gpio_regs_t* port, uint32_t pin);
+int cnn_boost_enable(mxc_gpio_regs_t *port, uint32_t pin);
 
 /* Turn off the boost circuit */
-int cnn_boost_disable(mxc_gpio_regs_t* port, uint32_t pin);
+int cnn_boost_disable(mxc_gpio_regs_t *port, uint32_t pin);
+
+
 
 
 #endif  /* _MAX78000_AUDIO_CNN_H_ */

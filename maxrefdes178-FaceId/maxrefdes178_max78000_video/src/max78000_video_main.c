@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -213,7 +213,7 @@ static const uint8_t camera_settings[][2] = {
 static int8_t prev_decision = -2;
 static int8_t decision = -2;
 static uint32_t time_counter = 0;
-static int8_t enable_cnn = 0;
+static int8_t enable_cnn = 1;
 static volatile int8_t button_pressed = 0;
 static int8_t flash_led = 0;
 static int8_t camera_vflip = 1;

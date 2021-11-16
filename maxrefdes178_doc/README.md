@@ -144,14 +144,21 @@ Repo folder structure:
 
 - A `build\maxrefdes178_max32666.bin` firmware binary should be generated.
 
-**WARNING:** I**f you get the following error during build, put MAXREFDES178# directory closer to the root of the drive. Long Windows paths cause failed builds:**
+**WARNING:** 
+
+**1- If during the build, MinGW MSYS shell stopped with memory commit error, run the make again and it will continue the build.**
+
+```bash
+*** couldn't commit memory for cygwin heap, Win32 error 0
+```
+
+**2- If you get the following error during build, put MAXREFDES178# directory closer to the root of the drive. Long Windows paths cause failed builds:**
 
 ```bash
 collect2.exe: fatal error: CreateProcess: No such file or directory
 or
 /bin/sh: line 15: /g/MaximSDK/Tools/GNUTools/bin/arm-none-eabi-gcc: Bad file number
 ```
-
 
 #### Build MAX78000 Audio Firmware
 
@@ -225,8 +232,16 @@ or
   
   ![](maxdap_type_c_face_down.jpg)
 
-- Program MAX32666 firmware (change `maxrefdes178_max32666.bin` path accordingly):
+  **WARNING: Connecting Pico adaptor with wrong direction may cause the MAX32666 to become unresponsive and may require to open the camera and use the procedure described later to recover.**
+  
+- Program MAX32666 firmware using provided script: 
 
+  ```bash
+  $ run.sh
+  ```
+  
+  NOTE: The script will start openocd with following commands to update the firmware:
+  
   ```bash
   openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max32665_nsrst.cfg -c "init;halt;max32xxx mass_erase 0;exit"
   openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max32665_nsrst.cfg -c "program maxrefdes178_max32666/build/maxrefdes178_max32666.bin verify reset exit 0x10000000"
@@ -250,16 +265,29 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
 
 - MAX32666 firmware should be loaded before this step.
 
+- Power cycle the MAXREFDES178#.
+
 - Insert the MAXDAP-TYPE-C Pico adaptor board into MAXREFDES178# second debug channel. The MAXDAP-TYPE-C Pico adaptor and MAXREFDES178# LCD should face the same direction:
   
   ![](maxdap_type_c_face_up.jpg)
 
-- Select MAX78000 Video target with button ‘Y’. MAX78000 Video will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
+  **WARNING: Connecting Pico adaptor with wrong direction may cause the MAX78000 to become unresponsive and may require to open the camera and use the procedure described later to recover.**
+  
+- **Select MAX78000 Video target with button ‘Y’**. MAX78000 Video will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
 
-- Program MAX78000 Video firmware (change `maxrefdes178_max78000_video.bin` path accordingly):
+  <img src="MAX78000_video_debug.jpg" style="zoom:15%;" />
+
+- Program MAX78000 Video firmware using provided script: 
+  
   ```bash
-  openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max78000_nsrst.cfg -c "program maxrefdes178_max78000_video/build/maxrefdes178_max78000_video.bin verify reset exit 0x10000000"
+  $ run.sh
   ```
+  
+  NOTE: The script will start openocd with following commands to update the firmware:
+  
+  - ```bash
+    openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max78000_nsrst.cfg -c "program maxrefdes178_max78000_video/build/maxrefdes178_max78000_video.bin verify reset exit 0x10000000"
+    ```
   
 - Successful MAX78000 Video firmware update output:
   
@@ -273,29 +301,43 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
 
 - MAX32666 firmware should be loaded before this step.
 
+- Power cycle the MAXREFDES178#.
+
 - Insert the MAXDAP-TYPE-C Pico adaptor board into the MAXREFDES178# second debug channel. The MAXDAP-TYPE-C Pico adaptor and MAXREFDES178# LCD should face the same direction:
   
   ![](maxdap_type_c_face_up.jpg)
 
-- Select the MAX78000 Audio target with button ‘Y’. MAX78000 Audio will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
+  **WARNING: Connecting Pico adaptor with wrong direction may cause the MAX78000 to become unresponsive and may require to open the camera and use the procedure described later to recover.**
+  
+- **Select the MAX78000 Audio target with button ‘Y’**. MAX78000 Audio will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
 
-- Program MAX78000 Audio firmware (change `maxrefdes178_max78000_audio.bin` path accordingly):
+  <img src="MAX78000_audio_debug.jpg" style="zoom:15%;" />
+
+- Program MAX78000 Audio firmware using provided script: 
   ```bash
-  openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max78000_nsrst.cfg -c "program maxrefdes178_max78000_audio/build/maxrefdes178_max78000_audio.bin verify reset exit 0x10000000"
+  $ run.sh
   ```
   
+  NOTE: The script will start openocd with following commands to update the firmware:
+  
+  - ```bash
+    openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f target/max78000_nsrst.cfg -c "program maxrefdes178_max78000_audio/build/maxrefdes178_max78000_audio.bin verify reset exit 0x10000000"
+    ```
+  
 - Successful MAX78000 Audio firmware update output:
-  
+
   ![](openocd_write_max78000_audio.png)
-  
-  
+
+
   NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using MAX32625PICO Debugger as described in the “**Recovering/Erasing Video or Audio Firmware Using MAX32625PICO**” section*.
 
 ## Load Demo Firmware using App-Switcher and SD Card
 
 MAXREFDES178# has special application switcher bootloader. App-Switcher can load MAX32666, MAX78000 Video and MAX78000 Audio demo firmware using a micro SD card.
 
-**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on “**Load Demo Firmware using MINGW on Windows**” section. App-Switcher is embedded in the demo firmware. You don't need to load App-Switcher binaries separately.
+**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on “**Load Demo Firmware using MINGW on Windows**” section. 
+
+**NOTE: App-Switcher is embedded in the demo firmware. You don't need to load App-Switcher binaries separately.**
 
 App-Switcher uses msbl file to load MAX32666, MAX78000 Video and MAX78000 Audio firmware from SD card. msbl files can be found in `build` directory when build is completed. Alternatively, you can download the latest .msbl files from GitHub Release or GitHub Actions.
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -69,7 +69,7 @@ volatile device_settings_t device_settings = {
         .enable_max78000_audio = 1,
         .enable_max78000_audio_cnn = 1,
         .enable_max78000_video = 0,
-        .enable_max78000_video_cnn = 0,
+        .enable_max78000_video_cnn = 1,
         .enable_max78000_video_flash_led = 0,
         .enable_max78000_video_vflip = 1,
         .enable_max78000_video_and_audio_power = 1,
@@ -79,6 +79,7 @@ volatile device_settings_t device_settings = {
         .enable_ble_send_classification = 0,
         .enable_inactivity = 1,
         .lcd_rotation = LCD_ROTATION_UP,
+		.enable_voicecommand = 1,
 };
 
 //-----------------------------------------------------------------------------

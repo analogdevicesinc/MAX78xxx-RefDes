@@ -29,7 +29,7 @@ After loading all 3 components of Forest Demo (MAX32666, MAX78000_video and MAX7
 
 - Keyword Spotting is enabled and the detected words are displayed on the top. However, **voice commands are disabled** in this demo. Following words are detected:
 
-  - ['up', 'down', 'left', 'right', 'stop', 'go', 'yes', 'no', 'on', 'off', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'zero'].
+  - ['up', 'down', 'left', 'right', 'stop', 'go', 'yes', 'no', 'on', 'off', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'zero', 'cube'].
 
 - The images are captured at 250msec interval and categorized as Deer, Human, Vehicle, Nature and Building:
 
