@@ -63,8 +63,6 @@ device_info_t device_info = {0};
 
 timestamps_t timestamps = {0};
 
-classification_result_t classification_audio_last={0};
-
 volatile device_settings_t device_settings = {
         .enable_ble = 1,
         .enable_lcd = 1,

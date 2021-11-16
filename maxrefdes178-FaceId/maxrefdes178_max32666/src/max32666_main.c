@@ -306,11 +306,15 @@ int main(void)
        pmic_led_red(1);
     }
 
-    // Print logo and version
+
+	// Print Instruction            
+	snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Say 'Cube'+ a command");
+	fonts_putStringCentered(75, lcd_string_buff, &Font_11x18, ORANGE, maxim_logo);
+	// Print logo and version
     fonts_putStringCentered(LCD_HEIGHT - 63, version_string, &Font_16x26, BLACK, maxim_logo);
     fonts_putStringCentered(LCD_HEIGHT - 38, mac_string, &Font_11x18, BLUE, maxim_logo);
     fonts_putStringCentered(3, usn_string, &Font_7x10, BLACK, maxim_logo);
-    fonts_putStringCentered(55, device_info.max32666_demo_name, &Font_16x26, MAGENTA, maxim_logo);
+    fonts_putStringCentered(50, device_info.max32666_demo_name, &Font_16x26, MAGENTA, maxim_logo);
     lcd_drawImage(maxim_logo);
 
     // Wait MAX78000s
@@ -514,8 +518,8 @@ static void run_application(void)
 #endif
 					// only if it is voice activated and the last keyword was "CUBE"
 					if ((device_settings.enable_voicecommand) &&
-						(strcmp(classification_audio_last.result, "CUBE") == 0) &&
-						(classification_audio_last.classification != CLASSIFICATION_LOW_CONFIDENCE))
+						(strcmp(device_status.classification_audio_last.result, "CUBE") == 0) &&
+						(device_status.classification_audio_last.classification != CLASSIFICATION_LOW_CONFIDENCE))
 					{
 						if (strcmp(device_status.classification_audio.result, "OFF") == 0) {
 							device_settings.enable_lcd = 0;
@@ -537,8 +541,8 @@ static void run_application(void)
 					}
                 }
 				// update last result
-				strcpy(classification_audio_last.result, device_status.classification_audio.result);
-				classification_audio_last.classification = device_status.classification_audio.classification;
+				strcpy(device_status.classification_audio_last.result, device_status.classification_audio.result);
+				device_status.classification_audio_last.classification = device_status.classification_audio.classification;
 				
                 if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
                     ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,

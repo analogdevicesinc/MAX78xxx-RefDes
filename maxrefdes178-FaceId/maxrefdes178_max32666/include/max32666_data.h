@@ -94,6 +94,7 @@ typedef struct {
     device_statistics_t statistics;
     classification_result_t classification_video;
     classification_result_t classification_audio;
+    classification_result_t classification_audio_last;
     uint8_t faceid_embed_update_status;
     char faceid_embed_subject_names[FACEID_MAX_SUBJECT * (FACEID_MAX_SUBJECT_NAME_SIZE + 1)];
     uint16_t faceid_embed_subject_names_size;
@@ -142,7 +143,6 @@ extern device_status_t device_status;
 extern volatile device_settings_t device_settings;
 extern device_info_t device_info;
 extern timestamps_t timestamps;
-extern classification_result_t classification_audio_last;
 
 //-----------------------------------------------------------------------------
 // Function declarations

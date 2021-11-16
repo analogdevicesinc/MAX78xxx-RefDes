@@ -16,7 +16,7 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
 
 - The Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  ![](../maxrefdes178_doc/mrd178_init.jpg)
+  <img src="../maxrefdes178_doc/mrd178_init.jpg" style="zoom:25%;" />
 
 - The device will start with:
 
@@ -37,7 +37,7 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
 
   - Touch the “Start Video” button on the LCD to start video capture.
   - Use Button B to disable/enable voice commands.
-  - Say "Cube" as the wake word,  followed by a command:
+  - **Say "Cube" as the wake word,  followed by a command:**
     - The ‘Cube, On’ & ‘Cube, Off’ voice commands (when recognized with high confidence) enable / disable the LCD.
     - The ‘Cube, Go’ and ‘Cube, Stop’ voice commands (when recognized with high confidence) enable / disable FaceID.
   - The FaceID frame appears in the center of the LCD when FaceID is enabled:
@@ -46,7 +46,7 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
   :-------------------------:|:-------------------------:
   ![](../maxrefdes178_doc/mrd178_video.jpg) | ![](../maxrefdes178_doc/mrd178_faceid.jpg) 
 
-- FaceID classification results appear on bottom of the LCD.
+- FaceID classification results appear at the bottom of the LCD.
 
   - The Celebrity FaceID database is the default FaceID database.
   - Celebrity FaceID database subjects are: [‘AshtonKutcher’, ‘BradPitt’, ‘CharlizeTheron’, ‘ChrisHemsworth’, ‘MilaKunis’, ‘ScarlettJohansson’]
