@@ -80,8 +80,8 @@
 
 #define LCD_START_BUTTON_X1                20
 #define LCD_START_BUTTON_X2                220
-#define LCD_START_BUTTON_Y1                100
-#define LCD_START_BUTTON_Y2                144
+#define LCD_START_BUTTON_Y1                150 // changed to fit the start up button to ADI logo
+#define LCD_START_BUTTON_Y2                194 // changed to fit the start up button to ADI logo
 
 // Common Camera
 #define CAMERA_WIDTH                       LCD_WIDTH
