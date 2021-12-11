@@ -318,7 +318,7 @@ int main(void)
     lcd_drawImage(adi_logo);
 
     // Wait MAX78000s
-    MXC_Delay(MXC_DELAY_MSEC(3000)); // longer wait so the firmware version can be read.
+    MXC_Delay(MXC_DELAY_MSEC(3000)); // Increase the startup delay to display the screen information longer
 
     // Get information from MAX78000
     {
