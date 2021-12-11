@@ -208,7 +208,7 @@ int main(void)
 
     ret = qspi_master_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("qspi_naster_init failed %d", ret);
+        PR_ERROR("qspi_master_init failed %d", ret);
         pmic_led_red(1);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
@@ -308,17 +308,17 @@ int main(void)
 
 
 	// Print Instruction            
-	snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Say 'Cube'+ a command");
-	fonts_putStringCentered(75, lcd_string_buff, &Font_11x18, ORANGE, adi_logo);
+	// snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Say 'Cube'+ a command");
+	// fonts_putStringCentered(60, lcd_string_buff, &Font_11x18, ORANGE, adi_logo);
 	// Print logo and version
-    fonts_putStringCentered(LCD_HEIGHT - 63, version_string, &Font_16x26, BLACK, adi_logo);
+    fonts_putStringCentered(LCD_HEIGHT - 66, version_string, &Font_16x26, GRED, adi_logo);
     fonts_putStringCentered(LCD_HEIGHT - 38, mac_string, &Font_11x18, BLUE, adi_logo);
-    fonts_putStringCentered(3, usn_string, &Font_7x10, BLACK, adi_logo);
-    fonts_putStringCentered(50, device_info.max32666_demo_name, &Font_16x26, MAGENTA, adi_logo);
+    fonts_putStringCentered(3, usn_string, &Font_7x10, LGRAY, adi_logo); //change to light grey to match the new background
+    fonts_putStringCentered(34, device_info.max32666_demo_name, &Font_16x26, MAGENTA, adi_logo);
     lcd_drawImage(adi_logo);
 
     // Wait MAX78000s
-    MXC_Delay(MXC_DELAY_MSEC(600));
+    MXC_Delay(MXC_DELAY_MSEC(3000)); // longer wait so the firmware version can be read.
 
     // Get information from MAX78000
     {
@@ -576,7 +576,7 @@ static void run_application(void)
                 timestamps.video_data_received = timer_ms_tick;
                 memcpy(lcd_data.buffer, adi_logo, sizeof(lcd_data.buffer));
                 snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "No video!");
-                fonts_putStringCentered(22, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
+                fonts_putStringCentered(16, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
                 lcd_data.refresh_screen = 1;
             }
         } else {
@@ -584,7 +584,7 @@ static void run_application(void)
             if ((timer_ms_tick - timestamps.screen_drew) > LCD_VIDEO_DISABLE_REFRESH_DURATION) {
                 memcpy(lcd_data.buffer, adi_logo, sizeof(lcd_data.buffer));
                 snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Video disabled");
-                fonts_putStringCentered(22, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
+                fonts_putStringCentered(15, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
                 lcd_data.refresh_screen = 1;
             }
         }
@@ -792,20 +792,24 @@ static int refresh_screen(void)
 
     // Draw button in init screen
     if (device_settings.enable_max78000_video == 0) {
+        // Print Instruction            
+	    snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Say 'Cube'+ a command");
+	    fonts_putStringCentered(59, lcd_string_buff, &Font_11x18, ORANGE, adi_logo);
         // Start button
         fonts_drawFilledRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2 - LCD_START_BUTTON_X1,
                                   LCD_START_BUTTON_Y2 - LCD_START_BUTTON_Y1, LGRAY, lcd_data.buffer);
-        fonts_drawThickRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2, LCD_START_BUTTON_Y2, BLACK, 4, lcd_data.buffer);
+        fonts_drawThickRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2, LCD_START_BUTTON_Y2, DARKBLUE, 4, lcd_data.buffer);
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Start Video");
         fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, ADIBLUE, lcd_data.buffer);
     }
 	
-	// If the status of voice command enable is changed, show on screen for 1sec
+	// If the status of voice command enable is changed, show on screen for 2sec
+    // Increased the command display time from 1 sec to 2 sec.
 	if (device_settings.enable_voicecommand & 0x02) {
 		static uint32_t voicecommand_time = 0;
 		if (!voicecommand_time)
 		   voicecommand_time = timestamps.screen_drew ;	
-		if ((timestamps.screen_drew - voicecommand_time) < LCD_CLASSIFICATION_DURATION) {
+		if ((timestamps.screen_drew - voicecommand_time) < 2*LCD_CLASSIFICATION_DURATION) {
 			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Voice Command Enable:%d", device_settings.enable_voicecommand&0x1);
 			fonts_putStringCentered(3, lcd_string_buff, &Font_16x26, YELLOW, lcd_data.buffer);
 		} else {
