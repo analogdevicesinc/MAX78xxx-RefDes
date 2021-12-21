@@ -67,6 +67,7 @@
 #define LGRAY 0XC618
 #define LGRAYBLUE 0XA651
 #define LBBLUE 0X2B12
+#define ADIBLUE 0X001F
 
 
 //-----------------------------------------------------------------------------

@@ -89,7 +89,7 @@ char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN] = {0};
 char max32666_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN] = {0};
 char max78000_video_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN] = {0};
 char max78000_audio_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN] = {0};
-char bootlaoder_string[40] = {0};
+char bootloader_string[40] = {0};
 static const mxc_gpio_cfg_t button_x_int_pin = MAX32666_BUTTON_X_INT_PIN;
 volatile int button_x_pressed = 0;
 volatile int button_y_pressed = 0;
@@ -189,9 +189,9 @@ int main(void)
     }
 
     // Draw bootlaoder title
-    snprintf(bootlaoder_string, sizeof(bootlaoder_string) - 1, "MRD178 App Switcher v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    snprintf(bootloader_string, sizeof(bootloader_string) - 1, "MRD178 App Switcher v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     memset(lcd_buff, 0xff, sizeof(lcd_buff));
-    fonts_putString(23, 3, bootlaoder_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
+    fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
 
     ret = sdcard_init();
     if (ret != E_NO_ERROR) {
@@ -227,7 +227,9 @@ int main(void)
 
     while (1) {
         memset(lcd_buff, 0xff, sizeof(lcd_buff));
-        fonts_putString(23, 3, bootlaoder_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
+        fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
+        fonts_putString(1, 30, "Select one of the demos:", &Font_7x10, BLACK, 0, 0, lcd_buff);
+        fonts_putString(4, LCD_HEIGHT - 18, "[X]->TOGGLE [Y]->LOAD" , &Font_11x18, LIGHTBLUE, 1, BLACK, lcd_buff);
 
         expander_worker();
 
@@ -238,9 +240,9 @@ int main(void)
 
         for (int i = 0; i < dir_count; i++) {
             if (i == selected) {
-                fonts_putString(1, 14 + (i * 10), dir_list[i], &Font_7x10, GREEN, 0, 0, lcd_buff);
+                fonts_putString(5, 3*18 + (i * 18), dir_list[i], &Font_11x18, GREEN, 0, 0, lcd_buff);
             } else {
-                fonts_putString(1, 14 + (i * 10), dir_list[i], &Font_7x10, BLACK, 0, 0, lcd_buff);
+                fonts_putString(5, 3*18 + (i * 18), dir_list[i], &Font_11x18, BLACK, 0, 0, lcd_buff);
             }
         }
 
@@ -251,7 +253,7 @@ int main(void)
             if (ret != E_NO_ERROR) {
                 PR_ERROR("Folder content is invalid! %s", dir_list[selected]);
                 memset(lcd_buff, 0xff, sizeof(lcd_buff));
-                fonts_putString(23, 3, bootlaoder_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
+                fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
                 fonts_putString(1, 20, "Folder content is invalid!", &Font_7x10, RED, 0, 0, lcd_buff);
                 fonts_putString(1, 40, dir_list[selected], &Font_7x10, RED, 0, 0, lcd_buff);
                 lcd_drawImage(lcd_buff);
@@ -259,7 +261,7 @@ int main(void)
             } else {
                 PR_INFO("Firmware update started for: %s", dir_list[selected]);
                 memset(lcd_buff, 0xff, sizeof(lcd_buff));
-                fonts_putString(23, 3, bootlaoder_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
+                fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
                 fonts_putString(1, 20, "Firmware update started for:", &Font_7x10, BLACK, 0, 0, lcd_buff);
                 fonts_putString(1, 40, dir_list[selected], &Font_7x10, BROWN, 0, 0, lcd_buff);
                 lcd_drawImage(lcd_buff);
