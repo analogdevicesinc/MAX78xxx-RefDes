@@ -275,7 +275,7 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
   
 - **Select MAX78000 Video target with button ‘Y’**. MAX78000 Video will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
 
-  <img src="MAX78000_video_debug.jpg" style="zoom:15%;" />
+  <img src="MAX78000_video_debug_1.jpg" style="zoom:25%;" />
 
 - Program MAX78000 Video firmware using provided script: 
   
@@ -311,7 +311,7 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
   
 - **Select the MAX78000 Audio target with button ‘Y’**. MAX78000 Audio will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
 
-  <img src="MAX78000_audio_debug_1.jpg" style="zoom:25%;" />
+  <img src="MAX78000_audio_debug_1.jpg" style="zoom:20%;" />
 
 - Program MAX78000 Audio firmware using provided script: 
   ```bash
