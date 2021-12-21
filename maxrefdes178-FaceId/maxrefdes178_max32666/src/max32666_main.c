@@ -798,7 +798,7 @@ static int refresh_screen(void)
         // Start button
         fonts_drawFilledRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2 - LCD_START_BUTTON_X1,
                                   LCD_START_BUTTON_Y2 - LCD_START_BUTTON_Y1, LGRAY, lcd_data.buffer);
-        fonts_drawThickRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2, LCD_START_BUTTON_Y2, DARKBLUE, 4, lcd_data.buffer);
+        fonts_drawThickRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2, LCD_START_BUTTON_Y2, LIGHTBLUE, 4, lcd_data.buffer);
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Start Video");
         fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, ADIBLUE, lcd_data.buffer);
     }
