@@ -14,9 +14,9 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
 
 - The power LED will start blinking blue.
 
-- The Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
+- The ADI logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  <img src="../maxrefdes178_doc/mrd178_init.jpg" style="zoom:25%;" />
+  <img src="../maxrefdes178_doc/mrd178_init_1.jpg" style="zoom:25%;" />
 
 - The device will start with:
 
