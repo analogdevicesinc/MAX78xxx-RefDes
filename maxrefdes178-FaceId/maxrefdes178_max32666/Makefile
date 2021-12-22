@@ -225,8 +225,8 @@ all:
 	cd $(BUILD_DIR) && $(CURDIR)/../../external/${MSBLGEN} $(BUILD_DIR)/$(PROJECT)_app.bin MAX32666 8192
 	cat $(CURDIR)/../../maxrefdes178-AppSwitcher/maxrefdes178_max32666_bootloader.bin $(BUILD_DIR)/$(PROJECT)_app.bin > $(BUILD_DIR)/$(PROJECT).bin
 # TODO remove this line
-    rm -rf $(CURDIR)/build
-    cp -r /build $(CURDIR)/
+	rm -rf $(CURDIR)/build
+	cp -r /build $(CURDIR)/
 
 sla: all
 	@echo " "
