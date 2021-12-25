@@ -43,7 +43,9 @@ TARGET=MAX32665
 endif
 
 # TODO remove this line
-BUILD_DIR=/build
+# BUILD_DIR=c:/MaximSDK_101821/Tools/MinGW/msys/1.0/build
+BUILD_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Tools/MinGW/msys/1.0/build)
+# BUILD_DIR=/build
 
 # Create Target name variables
 TARGET_UC:=$(shell echo $(TARGET) | tr a-z A-Z)
@@ -211,6 +213,12 @@ include $(CORDIO_DIR)/platform/targets/maxim/build/cordio.mk
 # Include the rules for building for this target. All other makefiles should be
 # included before this one.
 include $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source/$(COMPILER)/$(TARGET_LC).mk
+$(info **************** Build Directory* $(BUILD_DIR))
+$(info **************** Current Directory* $(CURDIR))
+$(info **************** Libraries Directory* $(LIBS_DIR))
+$(info **************** Project Name* $(PROJECT))
+#$(shell rm -rf $(CURDIR)/build)
+#$(shell cp -r /build $(CURDIR)/)
 
 libclean: 
 	$(MAKE) -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
@@ -221,6 +229,9 @@ slaclean:
 distclean: clean libclean
 
 all:
+	$(info **************** test_test ****************)
+# $(shell rm -rf $(CURDIR)/build)
+# $(shell cp -r /build $(CURDIR)/)
 	arm-none-eabi-objcopy $(BUILD_DIR)/$(PROJECT).elf -R .sig -O binary $(BUILD_DIR)/$(PROJECT)_app.bin
 	cd $(BUILD_DIR) && $(CURDIR)/../../external/${MSBLGEN} $(BUILD_DIR)/$(PROJECT)_app.bin MAX32666 8192
 	cat $(CURDIR)/../../maxrefdes178-AppSwitcher/maxrefdes178_max32666_bootloader.bin $(BUILD_DIR)/$(PROJECT)_app.bin > $(BUILD_DIR)/$(PROJECT).bin
