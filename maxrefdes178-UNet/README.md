@@ -30,7 +30,7 @@ After loading all 3 components of UNet Demo (MAX32666, MAX78000_video and MAX780
 
 - Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  ![](../maxrefdes178_doc/unet_intro.jpg)
+  ![](../maxrefdes178_doc/unet_intro_1.jpg)
 
 - Device will start with pressing Start Video
 

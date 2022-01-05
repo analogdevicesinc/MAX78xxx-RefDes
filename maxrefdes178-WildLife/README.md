@@ -23,7 +23,7 @@ After loading all 3 components of Forest Demo (MAX32666, MAX78000_video and MAX7
 
 - Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  ![](../maxrefdes178_doc/wildlife_intro.jpg)
+  ![](../maxrefdes178_doc/wildlife_intro_1.jpg)
 
 - Device will start with pressing Start Video
 
