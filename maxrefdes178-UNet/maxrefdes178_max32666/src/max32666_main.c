@@ -212,7 +212,7 @@ int main(void)
 
     ret = qspi_master_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("qspi_naster_init failed %d", ret);
+        PR_ERROR("qspi_master_init failed %d", ret);
         pmic_led_red(1);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
@@ -311,14 +311,14 @@ int main(void)
     }
 
     // Print logo and version
-    fonts_putStringCentered(LCD_HEIGHT - 63, version_string, &Font_16x26, BLACK, maxim_logo);
-    fonts_putStringCentered(LCD_HEIGHT - 38, mac_string, &Font_11x18, BLUE, maxim_logo);
-    fonts_putStringCentered(3, usn_string, &Font_7x10, BLACK, maxim_logo);
-    fonts_putStringCentered(55, device_info.max32666_demo_name, &Font_16x26, MAGENTA, maxim_logo);
-    lcd_drawImage(maxim_logo);
+    fonts_putStringCentered(LCD_HEIGHT - 66, version_string, &Font_16x26, GRED, adi_logo);
+    fonts_putStringCentered(LCD_HEIGHT - 38, mac_string, &Font_11x18, BLUE, adi_logo);
+    fonts_putStringCentered(3, usn_string, &Font_7x10, LGRAY, adi_logo); //change to light grey to match the new background
+    fonts_putStringCentered(55, device_info.max32666_demo_name, &Font_16x26, MAGENTA, adi_logo);
+    lcd_drawImage(adi_logo);
 
     // Wait MAX78000s
-    MXC_Delay(MXC_DELAY_MSEC(600));
+    MXC_Delay(MXC_DELAY_MSEC(3000));
 
     // Get information from MAX78000
     {
@@ -372,7 +372,7 @@ int main(void)
             PR_ERROR("max78000_video communication error");
             ret = E_COMM_ERR;
             snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "No video comm");
-            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, adi_logo);
         } else if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_video, sizeof(version_t))) {
             PR_ERROR("max32666 and max78000_video versions are different");
             ret = E_INVALID;
@@ -380,19 +380,19 @@ int main(void)
                     device_info.device_version.max78000_video.major,
                     device_info.device_version.max78000_video.minor,
                     device_info.device_version.max78000_video.build);
-            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, adi_logo);
         } else if (strncmp(device_info.max32666_demo_name, device_info.max78000_video_demo_name, DEMO_STRING_SIZE)) {
             PR_ERROR("max32666 and max78000_video demos are different");
             ret = E_INVALID;
             snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video fw demo err %s", device_info.max78000_video_demo_name);
-            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, adi_logo);
         }
 
         if (!(device_info.device_version.max78000_audio.major || device_info.device_version.max78000_audio.minor)) {
             PR_ERROR("max78000_audio communication error");
             ret = E_COMM_ERR;
             snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "No audio comm");
-            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, adi_logo);
         } else if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_audio, sizeof(version_t))) {
             PR_ERROR("max32666 and max78000_audio versions are different");
             ret = E_INVALID;
@@ -400,16 +400,16 @@ int main(void)
                     device_info.device_version.max78000_audio.major,
                     device_info.device_version.max78000_audio.minor,
                     device_info.device_version.max78000_audio.build);
-            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, adi_logo);
         } else if (strncmp(device_info.max32666_demo_name, device_info.max78000_audio_demo_name, DEMO_STRING_SIZE)) {
             PR_ERROR("max32666 and max78000_audio demos are different");
             ret = E_INVALID;
             snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "audio fw demo err %s", device_info.max78000_audio_demo_name);
-            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, adi_logo);
         }
 
         if (ret != E_NO_ERROR) {
-            lcd_drawImage(maxim_logo);
+            lcd_drawImage(adi_logo);
             pmic_led_red(1);
             while(1) {
 //                if (device_settings.enable_ble && device_status.ble_connected) {
@@ -418,7 +418,7 @@ int main(void)
                 expander_worker();
 
                 if (lcd_data.refresh_screen && !spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
-                    memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
+                    memcpy(lcd_data.buffer, adi_logo, sizeof(lcd_data.buffer));
                     if (strlen(lcd_data.notification) < (LCD_WIDTH / Font_11x18.width)) {
                         fonts_putStringCentered(LCD_HEIGHT - Font_11x18.height - 3, lcd_data.notification, &Font_11x18, lcd_data.notification_color, lcd_data.buffer);
                     } else {
@@ -434,7 +434,7 @@ int main(void)
 
     // print application name
     snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Audio enabled");
-    fonts_putStringCentered(37, lcd_string_buff, &Font_11x18, RED, maxim_logo);
+    fonts_putStringCentered(37, lcd_string_buff, &Font_11x18, RED, adi_logo);
 
     run_application();
 
@@ -579,17 +579,17 @@ static void run_application(void)
             // If video is not available for a long time, draw logo and refresh periodically
             if ((timer_ms_tick - timestamps.video_data_received) > LCD_NO_VIDEO_REFRESH_DURATION) {
                 timestamps.video_data_received = timer_ms_tick;
-                memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
+                memcpy(lcd_data.buffer, adi_logo, sizeof(lcd_data.buffer));
                 snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "No video!");
-                fonts_putStringCentered(22, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
+                fonts_putStringCentered(16, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
                 lcd_data.refresh_screen = 1;
             }
         } else {
             // If video is disabled, draw logo and refresh periodically
             if ((timer_ms_tick - timestamps.screen_drew) > LCD_VIDEO_DISABLE_REFRESH_DURATION) {
-                memcpy(lcd_data.buffer, maxim_logo, sizeof(lcd_data.buffer));
+                memcpy(lcd_data.buffer, adi_logo, sizeof(lcd_data.buffer));
                 snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Video disabled");
-                fonts_putStringCentered(22, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
+                fonts_putStringCentered(15, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
                 lcd_data.refresh_screen = 1;
             }
         }
@@ -808,9 +808,9 @@ static int refresh_screen(void)
         // Start button
         fonts_drawFilledRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2 - LCD_START_BUTTON_X1,
                                   LCD_START_BUTTON_Y2 - LCD_START_BUTTON_Y1, LGRAY, lcd_data.buffer);
-        fonts_drawThickRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2, LCD_START_BUTTON_Y2, BLACK, 4, lcd_data.buffer);
+        fonts_drawThickRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2, LCD_START_BUTTON_Y2, LIGHTBLUE, 4, lcd_data.buffer);
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Start Video");
-        fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, GREEN, lcd_data.buffer);
+        fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, ADIBLUE, lcd_data.buffer);
     }
 
     if (device_settings.enable_max78000_audio) {

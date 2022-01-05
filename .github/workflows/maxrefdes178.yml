@@ -80,7 +80,7 @@ jobs:
           cd "maxrefdes178-AppSwitcher\maxrefdes178_max32666_bootloader"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -108,7 +108,7 @@ jobs:
           cd "maxrefdes178-FaceId\maxrefdes178_max78000_video"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -133,7 +133,7 @@ jobs:
           cd "maxrefdes178-FaceId\maxrefdes178_max78000_audio"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -159,7 +159,7 @@ jobs:
           make -r -j
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -185,7 +185,7 @@ jobs:
           cd "maxrefdes178-CatsDogs\maxrefdes178_max78000_video"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -210,7 +210,7 @@ jobs:
           cd "maxrefdes178-CatsDogs\maxrefdes178_max78000_audio"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -235,7 +235,7 @@ jobs:
           cd "maxrefdes178-CatsDogs\maxrefdes178_max32666"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -261,7 +261,7 @@ jobs:
           cd "maxrefdes178-ASL\maxrefdes178_max78000_video"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -286,7 +286,7 @@ jobs:
           cd "maxrefdes178-ASL\maxrefdes178_max78000_audio"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -311,7 +311,7 @@ jobs:
           cd "maxrefdes178-ASL\maxrefdes178_max32666"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -337,7 +337,7 @@ jobs:
           cd "maxrefdes178-UNet\maxrefdes178_max78000_video"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -362,7 +362,7 @@ jobs:
           cd "maxrefdes178-UNet\maxrefdes178_max78000_audio"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -387,7 +387,7 @@ jobs:
           cd "maxrefdes178-UNet\maxrefdes178_max32666"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -413,7 +413,7 @@ jobs:
           cd "maxrefdes178-WildLife\maxrefdes178_max78000_video"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -438,7 +438,7 @@ jobs:
           cd "maxrefdes178-WildLife\maxrefdes178_max78000_audio"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -463,7 +463,7 @@ jobs:
           cd "maxrefdes178-WildLife\maxrefdes178_max32666"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -488,7 +488,7 @@ jobs:
           cd "maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_video"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -513,7 +513,7 @@ jobs:
           cd "maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_audio"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
@@ -538,7 +538,7 @@ jobs:
           cd "maxrefdes178-VCAudioPlayback\maxrefdes178_max32666"
           make -r -j
           if [ `$? -ne 0 ]; then
-            echo "BUILD IS FAILED!"
+            echo "BUILD FAILED!"
           exit -1
           fi
           echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"

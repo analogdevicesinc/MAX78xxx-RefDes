@@ -53,7 +53,7 @@ The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://w
 
 - The Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  ![](mrd178_init.jpg)
+  ![](mrd178_init_1.jpg)
 
 - Please refer to FaceID Demo page for preloaded demo details:
 
@@ -257,7 +257,7 @@ or
 
 MAX78000 Video Debug Select | MAX78000 Audio Debug Select 
 :-------------------------:|:-------------------------:
-![](mrd178_debug_select_video.jpg) | ![](mrd178_debug_select_audio.jpg) 
+![](mrd178_debug_select_video_1.jpg) | ![](mrd178_debug_select_audio_1.jpg) 
 
 ### Load MAX78000 Video Firmware
 
@@ -275,7 +275,7 @@ MAX78000 Video Debug Select | MAX78000 Audio Debug Select
   
 - **Select MAX78000 Video target with button ‘Y’**. MAX78000 Video will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
 
-  <img src="MAX78000_video_debug.jpg" style="zoom:15%;" />
+  <img src="MAX78000_video_debug_1.jpg" style="zoom:25%;" />
 
 - Program MAX78000 Video firmware using provided script: 
   
@@ -311,7 +311,7 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
   
 - **Select the MAX78000 Audio target with button ‘Y’**. MAX78000 Audio will disable sleep mode for 30 seconds to prevent interruptions during programming. Be quick after selecting target with button ‘Y’.
 
-  <img src="MAX78000_audio_debug.jpg" style="zoom:15%;" />
+  <img src="MAX78000_audio_debug_1.jpg" style="zoom:20%;" />
 
 - Program MAX78000 Audio firmware using provided script: 
   ```bash
@@ -397,7 +397,7 @@ App-Switcher SD Card folder structure requirements:
 
 
 
-- If all three firmware update are successfull. Device will restart with selected demo.
+- If all three firmware update are successful. Device will restart with selected demo.
 
   ![](bl_step5.jpg)
 
@@ -522,7 +522,7 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 
 1. Press and hold the SW on MAX32625PICO and then connect it to the USB port to enter the maintenance mode. A MAINTENANCE drive should appear.
 
-2. Drag and drop the latest bin firmware to the MAINTENENCE drive. The latest DAPLINK binary can be found here:
+2. Drag and drop the latest bin firmware to the MAINTENANCES drive. The latest DAPLINK binary can be found here:
    https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/tree/main/bin
 
 3. Following the Drag-and-Drop, the debug adapter should reboot and reconnect as a drive named DAPLINK.
