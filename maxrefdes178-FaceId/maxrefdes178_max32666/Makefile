@@ -43,8 +43,8 @@ TARGET=MAX32665
 endif
 
 # TODO remove this line
-BUILD_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Tools/MinGW/msys/1.0/build)
-# BUILD_DIR=/build
+#BUILD_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Tools/MinGW/msys/1.0/build)
+#BUILD_DIR=/build
 
 # Create Target name variables
 TARGET_UC:=$(shell echo $(TARGET) | tr a-z A-Z)
@@ -226,8 +226,8 @@ all:
 	cd $(BUILD_DIR) && $(CURDIR)/../../external/${MSBLGEN} $(BUILD_DIR)/$(PROJECT)_app.bin MAX32666 8192
 	cat $(CURDIR)/../../maxrefdes178-AppSwitcher/maxrefdes178_max32666_bootloader.bin $(BUILD_DIR)/$(PROJECT)_app.bin > $(BUILD_DIR)/$(PROJECT).bin
 # TODO remove this line
-	rm -rf $(CURDIR)/build
-	cp -r /build $(CURDIR)/
+	#rm -rf $(CURDIR)/build
+	#cp -r /build $(CURDIR)/
 
 sla: all
 	@echo " "

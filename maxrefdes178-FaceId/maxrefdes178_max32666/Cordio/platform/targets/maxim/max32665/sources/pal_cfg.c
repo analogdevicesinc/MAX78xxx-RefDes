@@ -136,21 +136,22 @@ void palCfgLoadLlParams(uint8_t *pConfig)
 /*************************************************************************************************/
 void palCfgLoadBdAddress(uint8_t *pDevAddr)
 {
-  uint8_t id[MXC_SYS_USN_LEN];
+  uint8_t id[MXC_SYS_USN_CHECKSUM_LEN];
+  uint8_t checksum[MXC_SYS_USN_CHECKSUM_LEN];
 
-  if(MXC_SYS_GetUSN(id, MXC_SYS_USN_LEN) != E_NO_ERROR) {
-    PalSysAssertTrap();
+  if(MXC_SYS_GetUSN(id, checksum) != E_NO_ERROR) {
+    PalSysAssertTrap();	
   }
+
 
   /* MA-L assigend by IEEE to Maxim Integrated Products */
   pDevAddr[5] = 0x00;
   pDevAddr[4] = 0x18;
   pDevAddr[3] = 0x80;
 
-  /* TODO: Need to hash the ID */
-  pDevAddr[2] = id[12];
-  pDevAddr[1] = id[11];
-  pDevAddr[0] = id[10];
+  pDevAddr[2] = checksum[2];
+  pDevAddr[1] = checksum[1];
+  pDevAddr[0] = checksum[0];
 }
 
 /*************************************************************************************************/
@@ -163,18 +164,17 @@ void palCfgLoadBdAddress(uint8_t *pDevAddr)
 void palCfgLoadExtMac154Address(uint8_t *pDevAddr)
 {
   unsigned int devAddrLen = 8;
-  uint8_t id[MXC_SYS_USN_LEN];
+  uint8_t id[MXC_SYS_USN_CHECKSUM_LEN];
+  uint8_t checksum[MXC_SYS_USN_CHECKSUM_LEN];
 
-  if(MXC_SYS_GetUSN(id, MXC_SYS_USN_LEN) != E_NO_ERROR) {
-    PalSysAssertTrap();
+  if(MXC_SYS_GetUSN(id, checksum) != E_NO_ERROR) {
+    PalSysAssertTrap();	
   }
-
-  /* TODO: Need to hash the ID */
 
   /* Set the device address */
   unsigned int i = 0;
   while (i < devAddrLen) {
-    pDevAddr[i] = id[i];
+    pDevAddr[i] = checksum[i];
     i++;
   }
 }

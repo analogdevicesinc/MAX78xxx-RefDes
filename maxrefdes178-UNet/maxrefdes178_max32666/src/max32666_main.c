@@ -278,7 +278,10 @@ int main(void)
 //        pmic_led_red(1);
 //    }
 
-    ret = MXC_SYS_GetUSN(device_info.device_serial_num.max32666, sizeof(device_info.device_serial_num.max32666));
+	//ret = MXC_SYS_GetUSN(device_info.device_serial_num.max32666, sizeof(device_info.device_serial_num.max32666));
+	uint8_t checksum[MXC_SYS_USN_CHECKSUM_LEN];
+    ret = MXC_SYS_GetUSN(device_info.device_serial_num.max32666, checksum);
+
     if (ret != E_NO_ERROR) {
         PR_ERROR("MXC_SYS_GetUSN failed %d", ret);
         pmic_led_red(1);
