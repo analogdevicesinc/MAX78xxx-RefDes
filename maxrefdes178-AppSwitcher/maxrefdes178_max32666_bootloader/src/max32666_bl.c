@@ -51,7 +51,6 @@
 #define S_MODULE_NAME   "bl"
 extern FIL file;
 extern TCHAR *FF_ERRORS[ERROR_MAX_LEN];
-TCHAR message[MESSAGE_MAX_LEN];
 
 static uint8_t page_plain[PAGE_PAYLOAD_SIZE] __attribute__ ((aligned (4)));
 #if defined(SECURE_BOOTLOADER)
