@@ -73,8 +73,8 @@
 #define LCD_DATA_SIZE                      (LCD_WIDTH * LCD_HEIGHT * LCD_BYTE_PER_PIXEL)
 #define LCD_NOTIFICATION_MAX_SIZE          40
 
-#define LCD_CLASSIFICATION_DURATION        UINT32_C(1000)  // ms
-#define LCD_NO_VIDEO_REFRESH_DURATION      UINT32_C(1000)  // ms
+#define LCD_CLASSIFICATION_DURATION        UINT32_C(1000) // ms
+#define LCD_NO_VIDEO_REFRESH_DURATION      UINT32_C(2000) // ms
 #define LCD_VIDEO_DISABLE_REFRESH_DURATION UINT32_C(100)  // ms
 #define LCD_NOTIFICATION_DURATION          UINT32_C(7 * 1000)  // ms
 
@@ -99,6 +99,7 @@
 #define CATSDOGS_DEMO_NAME                 "CatsDogs"
 #define VCAUDIO_DEMO_NAME                  "VC Audio"
 #define ASL_DEMO_NAME                      "ASL"
+#define AIPORTRAIT_DEMO_NAME               "AIPortrait"
 
 // Common FaceID
 #define FACEID_WIDTH                       120
@@ -146,6 +147,19 @@
 
 #define UNET_IMAGE_SIZE_X                  80
 #define UNET_IMAGE_SIZE_Y                  80
+
+// Common AIPortrait
+#define AIPORTRAIT_WIDTH                   240
+#define AIPORTRAIT_HEIGHT                  240
+
+#define AIPORTRAIT_IMAGE_SIZE_X            352
+#define AIPORTRAIT_IMAGE_SIZE_Y            352
+
+#define AIPORTRAIT_RECTANGLE_X1            ((AIPORTRAIT_IMAGE_SIZE_X - AIPORTRAIT_WIDTH) / 2)
+#define AIPORTRAIT_RECTANGLE_Y1            ((AIPORTRAIT_IMAGE_SIZE_Y - AIPORTRAIT_HEIGHT) / 2)
+#define AIPORTRAIT_RECTANGLE_X2            (AIPORTRAIT_RECTANGLE_X1 + AIPORTRAIT_WIDTH)
+#define AIPORTRAIT_RECTANGLE_Y2            (AIPORTRAIT_RECTANGLE_Y1 + AIPORTRAIT_HEIGHT)
+#define AIPORTRAIT_INFER_SIZE              30976 // size of inference 32x88x88/8
 
 // Common WILDLIFE
 #define WILDLIFE_WIDTH                     192

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2022 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -62,24 +62,16 @@
 #define S_MODULE_NAME          "main"
 
 //#define PRINT_TIME_CNN
-
-#define IMAGE_HEIGHT 240
-#define IMAGE_WIDTH 240
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
 
 /* **************************************************************************** */
 
-
+static uint32_t  camera_image[LCD_DATA_SIZE/4];
 //-----------------------------------------------------------------------------
 // Global variables
 //-----------------------------------------------------------------------------
-////
-//uint32_t input[80*80];
-////static int32_t ml_data32[(CNN_NUM_OUTPUTS + 3)/4];
-//int32_t * ml_data32 = (int32_t*)input; // reuse the same buffer
-
 mxc_tmr_unit_t units;
 
 static const mxc_gpio_cfg_t gpio_flash     = MAX78000_VIDEO_FLASH_LED_PIN;
@@ -220,19 +212,16 @@ static const uint8_t camera_settings[][2] = {
 
 // *****************************************************************************
 static volatile int8_t button_pressed = 0;
-
 static uint32_t time_counter = 0;
 static int8_t enable_cnn = 0;
-
 static int8_t flash_led = 0;
 static int8_t camera_vflip = 1;
 static int8_t enable_video = 0;
-
 static int8_t enable_sleep = 0;
 static uint8_t *qspi_payload_buffer = NULL;
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
-static char demo_name[] = UNET_DEMO_NAME;
-static uint32_t camera_clock = 15 * 1000 * 1000;
+static char demo_name[] = AIPORTRAIT_DEMO_NAME;
+static uint32_t camera_clock = 10 * 1000 * 1000;
 
 #ifdef PRINT_TIME_CNN
 #define PR_TIMER(fmt, args...) if((time_counter % 10) == 0) printf("T[%-5s:%4d] " fmt "\r\n", S_MODULE_NAME, __LINE__, ##args )
@@ -267,6 +256,8 @@ void sleep_defer_int(void)
 
 int main(void)
 {
+int dma_channel;
+
     MXC_Delay(MXC_DELAY_MSEC(500)); // Wait supply to be ready
 
     int ret = 0;
@@ -328,7 +319,6 @@ int main(void)
         fail();
     }
 
-
     /* Initialize RTC */
     ret = MXC_RTC_Init(0, 0);
     if (ret != E_NO_ERROR) {
@@ -348,12 +338,16 @@ int main(void)
         fail();
     }
 
+    // Initialize DMA for camera interface
+    dma_channel = MXC_DMA_AcquireChannel();
+    PR_INFO("Camera DMA channel = %d", dma_channel);
+
     ret = qspi_slave_init();
     if (ret != E_NO_ERROR) {
         PR_ERROR("qspi_dma_slave_init fail %d", ret);
         fail();
     }
-
+    
     // Initialize the camera driver.
     ret = camera_init(camera_clock);
     if (ret != E_NO_ERROR) {
@@ -387,13 +381,21 @@ int main(void)
     }
 
     // Setup the camera image dimensions, pixel format and data acquiring details.
-
-    ret = camera_setup(CAMERA_WIDTH, CAMERA_HEIGHT, CAMERA_FORMAT, FIFO_FOUR_BYTE, USE_DMA, MAX78000_VIDEO_CAMERA_DMA_CHANNEL);
+    ret = camera_setup(AIPORTRAIT_IMAGE_SIZE_X, AIPORTRAIT_IMAGE_SIZE_Y, CAMERA_FORMAT, FIFO_FOUR_BYTE, STREAMING_DMA, dma_channel);
 
     if (ret != STATUS_OK) {
         PR_ERROR("Error returned from setting up camera. Error : %d", ret);
         fail();
     }
+
+    // set camera clock prescaller to prevent streaming overflow due to QSPI communication and CNN load latency
+    camera_write_reg(0x11, 0x4);
+
+    // make the scale ratio of camera input size the same as output size, make is faster and regular
+    camera_write_reg(0xc8, 0x1);
+    camera_write_reg(0xc9, 0x60);
+    camera_write_reg(0xca, 0x1);
+    camera_write_reg(0xcb, 0x60);
 
     // Init button interrupt
     PB_RegisterCallback(0, (pb_callback) button_int);
@@ -414,11 +416,7 @@ int main(void)
     MXC_TMR_Start(MAX78000_VIDEO_SLEEP_DEFER_TMR);
 
     // Use camera interface buffer for QSPI payload buffer
-    {
-        uint32_t  imgLen;
-        uint32_t  w, h;
-        camera_get_image(&qspi_payload_buffer, &imgLen, &w, &h);
-    }
+    qspi_payload_buffer = (uint8_t*)&camera_image[0];
 
     // Successfully initialize the program
     PR_INFO("Initialization complete");
@@ -439,7 +437,6 @@ static void fail(void)
     while(1);
 }
 
-
 static void run_demo(void)
 {
     uint32_t capture_started_time = GET_RTC_MS();
@@ -449,9 +446,6 @@ static void run_demo(void)
     max78000_statistics_t max78000_statistics = {0};
     qspi_packet_header_t qspi_rx_header;
     qspi_state_e qspi_rx_state;
-
-
-    camera_start_capture_image();
 
     while (1) { //Capture image and run CNN
 
@@ -471,7 +465,6 @@ static void run_demo(void)
             if (qspi_rx_header.payload_crc16 != crc16_sw(qspi_payload_buffer, qspi_rx_header.info.packet_size)) {
                 PR_ERROR("Invalid payload crc %x", qspi_rx_header.payload_crc16);
                 qspi_slave_set_rx_state(QSPI_STATE_IDLE);
-                camera_start_capture_image();
                 continue;
             }
 
@@ -493,7 +486,6 @@ static void run_demo(void)
             }
 
             qspi_slave_set_rx_state(QSPI_STATE_IDLE);
-            camera_start_capture_image();
 
         } else if (qspi_rx_state == QSPI_STATE_COMPLETED) {
             qspi_rx_header = qspi_slave_get_rx_header();
@@ -521,7 +513,6 @@ static void run_demo(void)
                 enable_cnn = 1;
                 // Enable camera
                 GPIO_CLR(gpio_camera);
-                camera_start_capture_image();
                 break;
             case QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD:
                 PR_INFO("disable video");
@@ -625,74 +616,292 @@ static void run_demo(void)
             continue;
         }
 
-        if (camera_is_image_rcv()) { // Check whether image is ready
-            capture_completed_time = GET_RTC_MS();
+        capture_started_time = GET_RTC_MS();
+        // capture image frame for display
+        camera_start_capture_image();
+        send_img();
+        capture_completed_time = GET_RTC_MS();
+        qspi_completed_time = GET_RTC_MS();
 
-            send_img();
-
-            qspi_completed_time = GET_RTC_MS();
-
-            if (enable_cnn) {
-
-
-            	PR_INFO("CNN_EN");
-                run_cnn(0, 0);
-				
-            }
-            else
-            	PR_INFO("CNN_DIS");
-
-            cnn_completed_time = GET_RTC_MS();
-
-            if (time_counter % 10 == 0) {
-                max78000_statistics.capture_duration_us = (capture_completed_time - capture_started_time) * 1000;
-                max78000_statistics.communication_duration_us = (qspi_completed_time - capture_completed_time) * 1000;
-                max78000_statistics.cnn_duration_us = cnn_time; //(cnn_completed_time - qspi_completed_time) * 1000;
-                max78000_statistics.total_duration_us = (cnn_completed_time - capture_started_time) * 1000;
-
-                PR_DEBUG("Capture : %lu", max78000_statistics.capture_duration_us);
-                PR_DEBUG("CNN     : %lu", max78000_statistics.cnn_duration_us);
-                PR_DEBUG("QSPI    : %lu", max78000_statistics.communication_duration_us);
-                PR_DEBUG("Total   : %lu\n\n", max78000_statistics.total_duration_us);
-
-				PR_INFO("Send Stat");
-                qspi_slave_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
-                        QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES);
-            }
-
-            time_counter++;
-
-            camera_start_capture_image();
-            capture_started_time = GET_RTC_MS();
-
+        if (enable_cnn) {
+           	PR_INFO("CNN_EN");
+            run_cnn(0, 0);
         }
+        else
+          	PR_INFO("CNN_DIS");
+            
+        cnn_completed_time = GET_RTC_MS();
+
+        if (time_counter % 10 == 0) {
+            max78000_statistics.capture_duration_us = (capture_completed_time - capture_started_time) * 1000;
+            max78000_statistics.communication_duration_us = (qspi_completed_time - capture_completed_time) * 1000;
+            max78000_statistics.cnn_duration_us = cnn_time; //(cnn_completed_time - qspi_completed_time) * 1000;
+            max78000_statistics.total_duration_us = (cnn_completed_time - capture_started_time) * 1000;
+
+            PR_DEBUG("Capture : %lu", max78000_statistics.capture_duration_us);
+            PR_DEBUG("CNN     : %lu", max78000_statistics.cnn_duration_us);
+            PR_DEBUG("QSPI    : %lu", max78000_statistics.communication_duration_us);
+            PR_DEBUG("Total   : %lu\n\n", max78000_statistics.total_duration_us);
+
+            PR_INFO("Send Stat");
+            qspi_slave_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statistics),
+                                    QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES);
+        }
+
+        time_counter++;
     }
+}
+
+static uint32_t* data_addr0 = (uint32_t*)0x50400700;
+static uint32_t* data_addr3 = (uint32_t*)0x50418700;
+static uint32_t* data_addr6 = (uint32_t*)0x50810700;
+static uint32_t* data_addr9 = (uint32_t*)0x50c08700;
+static uint32_t *addr, offset0, offset1, subtract;
+
+static void load_row_cnn_init(void)
+{
+    data_addr0 = (uint32_t*)0x50400700;
+    data_addr3 = (uint32_t*)0x50418700;
+    data_addr6 = (uint32_t*)0x50810700;
+    data_addr9 = (uint32_t*)0x50c08700;
+    addr       = data_addr9;
+}
+
+static void load_row_cnn(uint8_t* data, int row)
+{
+    union {
+        uint32_t w;
+        uint8_t b[4];
+    } m;
+
+    uint8_t* dataptr = data;
+
+    offset0  = 0x00002000;
+    offset1  = 0x00002000;
+    subtract = 0x00004000 - 1;
+
+    switch (row & 3) {
+        case 0:
+            data_addr9 = addr;
+            addr       = data_addr0;
+            break;
+
+        case 1:
+            data_addr0 = addr;
+            addr       = data_addr3;
+            offset0 += 0x000FA000 - 0x00002000;
+            subtract += 0x000FC000 - 0x00004000;
+            break;
+
+        case 2:
+            data_addr3 = addr;
+            addr       = data_addr6;
+            offset1 += 0x000FA000 - 0x00002000;
+            subtract += 0x000FC000 - 0x00004000;
+            break;
+
+        default:
+            data_addr6 = addr;
+            addr       = data_addr9;
+            break;
+    }
+
+    // indexes of 352x352 image (row,j)
+    for (int j = 0; j < AIPORTRAIT_IMAGE_SIZE_X; j += 4) {
+        // RGB565 to packed 24-bit RGB
+        m.b[0] = *dataptr & 0xF8;   // r0
+        m.b[1] = (*dataptr << 5) | ((*(dataptr + 1) & 0xE0) >> 3);  // g0
+        m.b[2] = *(dataptr + 1) << 3;   // b0
+        dataptr += 2;
+        m.b[3] = *dataptr & 0xF8;   // r1
+
+        *addr = m.w ^ 0x80808080U;
+        addr += offset0;
+
+        m.b[0] = (*dataptr << 5) | ((*(dataptr + 1) & 0xE0) >> 3);  // g1 
+        m.b[1] = *(dataptr + 1) << 3;   // b1
+        dataptr += 2;
+        m.b[2] = *(dataptr) & 0xF8;   // r2
+        m.b[3] = (*dataptr << 5) | ((*(dataptr + 1) & 0xE0) >> 3);  // g2
+
+        *addr = m.w ^ 0x80808080U;
+        addr += offset1;
+
+        m.b[0] = *(dataptr + 1) << 3;   // b2
+        dataptr += 2;
+        m.b[1] = *dataptr & 0xF8;   // r3
+        m.b[2] = (*dataptr << 5) | ((*(dataptr + 1) & 0xE0) >> 3);  // g3
+        m.b[3] = *(dataptr + 1) << 3;   // b3
+        dataptr += 2;
+
+        *addr = m.w ^ 0x80808080U;
+        addr -= subtract;       
+    }
+}
+
+uint8_t* data = NULL;
+stream_stat_t* stat;
+static void load_input_camera(void)
+{
+int row;
+
+    camera_start_capture_image(); // capture next frame
+    
+    // Initialize loading rows to CNN
+    load_row_cnn_init();
+
+    for (row = 0; row < AIPORTRAIT_IMAGE_SIZE_Y; row++) {    
+        // Wait until camera streaming buffer is full
+        while ((data = get_camera_stream_buffer()) == NULL) {
+            if (camera_is_image_rcv()) {
+                break;
+            }
+        };
+
+        load_row_cnn(data, row);
+
+        // Release stream buffer
+        release_camera_stream_buffer();
+    }
+
+    stat = get_camera_stream_statistic();
+
+    if (stat->overflow_count > 0) {
+        PR_ERROR("OVERFLOW CNN = %d\n", stat->overflow_count);
+        //while (1);
+    }
+    PR_INFO("DMA transfer = %d\n", stat->dma_transfer_count);
 }
 
 static void send_img(void)
 {
-    uint8_t   *raw;
-    uint32_t  imgLen;
-    uint32_t  w, h;
+int row;
 
-    // Get the details of the image from the camera driver.
-    camera_get_image(&raw, &imgLen, &w, &h);
+    // Get image line by line
+    for (row = 0; row < AIPORTRAIT_IMAGE_SIZE_Y; row++) {    
+        // Wait until camera streaming buffer is full
+        while ((data = get_camera_stream_buffer()) == NULL) {
+            if (camera_is_image_rcv()) {
+                break;
+            }
+        };
 
-    qspi_slave_send_packet(raw, imgLen, QSPI_PACKET_TYPE_VIDEO_DATA_RES);
- 
+        #if 0
+        if (row < LCD_HEIGHT)
+        {
+            memcpy((uint8_t*)&camera_image[row*LCD_WIDTH*LCD_BYTE_PER_PIXEL/4], data, LCD_WIDTH*LCD_BYTE_PER_PIXEL);
+            PR_INFO("%d", row);
+        }
+        #else
+        // Send only 240x240 image window
+        if ((row >= AIPORTRAIT_RECTANGLE_Y1) && (row < AIPORTRAIT_RECTANGLE_Y2))
+            memcpy((uint8_t*)&camera_image[(row - AIPORTRAIT_RECTANGLE_Y1)*LCD_WIDTH*LCD_BYTE_PER_PIXEL/4], (data + 2*AIPORTRAIT_RECTANGLE_X1), LCD_WIDTH*LCD_BYTE_PER_PIXEL);
+        #endif
+
+        // Release stream buffer
+        release_camera_stream_buffer();
+    }
+
+    qspi_slave_send_packet((uint8_t*)camera_image, LCD_DATA_SIZE, QSPI_PACKET_TYPE_VIDEO_DATA_RES);
+    stat = get_camera_stream_statistic();
+
+    if (stat->overflow_count > 0) {
+        PR_ERROR("OVERFLOW DISP = %d\n", stat->overflow_count);
+            //while (1);
+    }
+    PR_INFO("DMA transfer = %d\n", stat->dma_transfer_count);
+}
+
+static void cnn_unload_packed(uint32_t* p_out)
+{
+    uint32_t buf;
+    uint8_t* data_addr = (uint8_t*)0x50400000;
+    uint8_t temp, a, b;
+
+    for (int j = 0; j < 8; j++) {           // 8 data blocks
+        for (int i = 0; i < 1936; i += 4) { //packing bits into one byte  352x88/16=30976/16=1936
+            buf = 0;
+
+            for (int n = 0; n < 4; n++) {
+                //0
+                int val = (i + n) * 16;
+                temp    = 0;
+                a       = ((*(data_addr + 0 + val)) ^ 0x80);
+                b       = ((*(data_addr + 1 + val)) ^ 0x80);
+                // Compare CNN outputs and set bit
+                temp += ((a > b) ? 0 : 1) << 7;
+
+                //1
+                a = ((*(data_addr + 2 + val)) ^ 0x80);
+                b = ((*(data_addr + 3 + val)) ^ 0x80);
+                temp += ((a > b) ? 0 : 1) << 6;
+
+                //2
+                a = ((*(data_addr + 4 + val)) ^ 0x80);
+                b = ((*(data_addr + 5 + val)) ^ 0x80);
+                temp += ((a > b) ? 0 : 1) << 5;
+
+                //3
+                a = ((*(data_addr + 6 + val)) ^ 0x80);
+                b = ((*(data_addr + 7 + val)) ^ 0x80);
+                temp += ((a > b) ? 0 : 1) << 4;
+
+                //4
+                a = ((*(data_addr + 8 + val)) ^ 0x80);
+                b = ((*(data_addr + 9 + val)) ^ 0x80);
+                temp += ((a > b) ? 0 : 1) << 3;
+
+                //5
+                a = ((*(data_addr + 10 + val)) ^ 0x80);
+                b = ((*(data_addr + 11 + val)) ^ 0x80);
+                temp += ((a > b) ? 0 : 1) << 2;
+
+                //6
+                a = ((*(data_addr + 12 + val)) ^ 0x80);
+                b = ((*(data_addr + 13 + val)) ^ 0x80);
+                temp += ((a > b) ? 0 : 1) << 1;
+
+                //7
+                a = ((*(data_addr + 14 + val)) ^ 0x80);
+                b = ((*(data_addr + 15 + val)) ^ 0x80);
+                temp += ((a > b) ? 0 : 1);
+
+                // Construct 32-bit word
+                buf |= temp << (8 * n);
+            }
+
+            // Store packed 32-bit word
+            *p_out++ = buf;
+        }
+
+        data_addr += 0x8000;
+
+        if ((data_addr == (uint8_t*)0x50420000) || (data_addr == (uint8_t*)0x50820000) ||
+            (data_addr == (uint8_t*)0x50c20000)) {
+            data_addr += 0x003e0000;
+        }
+    }
+}
+
+static void unfold_display_packed(unsigned char* in_buff, unsigned char* out_buff)
+{
+    int index = 0;
+
+    for (int r = 0; r < 88; r++) {
+        for (int c = 0; c < 8; c++) {
+            int idx = 22 * r + 88 * 22 * c;
+
+            for (int d = 0; d < 22; d++) {
+                out_buff[index + d] = in_buff[idx + d];
+            }
+
+            index += 22;
+        }
+    }
 }
 
 static void run_cnn(int x_offset, int y_offset)
 {
-    uint8_t *data;
-    uint8_t *raw;
-    uint8_t ur, ug, ub;
-    int8_t r, g, b;
-    uint32_t number;
-    uint32_t w, h;
-
-    // Get the details of the image from the camera driver.
-    camera_get_image(&raw, &number, &w, &h);
 
 #ifdef PRINT_TIME_CNN
     uint32_t pass_time = GET_RTC_MS();
@@ -711,38 +920,8 @@ static void run_cnn(int x_offset, int y_offset)
     pass_time = GET_RTC_MS();
 #endif
 
-    int cnt = 0;
-    uint32_t sample;
-	uint32_t *dst = (uint32_t *) 0x50408000; 
-
-	// Read 240x240, pick one out of 3 pixels to make it 80x80
-	// CNN needs RGB888, pack for bytes into 1 int for each color
-    for (int i = y_offset; i < IMAGE_HEIGHT + y_offset; i+=3) {
-        data = raw + (((CAMERA_HEIGHT - IMAGE_HEIGHT) / 2) + i) * CAMERA_WIDTH * LCD_BYTE_PER_PIXEL;  // down
-        data += ((CAMERA_WIDTH - IMAGE_WIDTH) / 2) * LCD_BYTE_PER_PIXEL;  // right
-
-        for(int j = x_offset; j < IMAGE_WIDTH + x_offset; j+=3) {
-
-        	// RGB565, |RRRRRGGG|GGGBBBBB|
-            ub = (data[j * LCD_BYTE_PER_PIXEL + 1] << 3);
-            ug = ((data[j * LCD_BYTE_PER_PIXEL] << 5) | ((data[j * LCD_BYTE_PER_PIXEL + 1] & 0xE0) >> 3));
-            ur = (data[j * LCD_BYTE_PER_PIXEL] & 0xF8);
-
-            b = ub - 128;
-            g = ug - 128;
-            r = ur - 128;
-			
-			sample = r | (g << 8) | (b<<16);
-			// // Load sample to CNN
-			*dst++ = sample;
-			cnt ++;
-
-        }
-    }
-	printf("Total samples loaded: %d \r\n", cnt);
-
+    load_input_camera();
 	cnn_start();
-
 
 #ifdef PRINT_TIME_CNN
     PR_TIMER("CNN load : %d", GET_RTC_MS() - pass_time);
@@ -774,7 +953,11 @@ static void run_cnn(int x_offset, int y_offset)
 	
 	PR_INFO("load_inference_time: %d us", cnn_time);
 	
-    cnn_unload((uint32_t*) raw);
+    // Unload CNN output and packed mask data
+    cnn_unload_packed(&camera_image[0]);
+    
+    // Unfold mask data
+    unfold_display_packed((uint8_t*)&camera_image[0], (uint8_t*)&camera_image[LCD_DATA_SIZE/8]);
 
     cnn_stop();
     // Disable CNN clock to save power
@@ -785,9 +968,9 @@ static void run_cnn(int x_offset, int y_offset)
     pass_time = GET_RTC_MS();
 #endif
 
-
     MXC_Delay(MXC_DELAY_MSEC(500));
-    qspi_slave_send_packet(raw, UNET_IMAGE_SIZE_X*UNET_IMAGE_SIZE_Y*4, QSPI_PACKET_TYPE_VIDEO_ML_RES); // r,g,b,unknown per pixel
-	//qspi_slave_send_packet(raw, 115200/4, QSPI_PACKET_TYPE_VIDEO_ML_RES);
+
+    qspi_slave_send_packet((uint8_t*)&camera_image[LCD_DATA_SIZE/8], AIPORTRAIT_INFER_SIZE/2, QSPI_PACKET_TYPE_VIDEO_ML_RES); // send mask
+
     MXC_Delay(MXC_DELAY_MSEC(500));
 }

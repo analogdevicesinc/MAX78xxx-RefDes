@@ -140,7 +140,7 @@ static volatile uint8_t i2s_flag = 0;
 static int32_t i2s_rx_buffer[I2S_RX_BUFFER_SIZE];
 static max78000_statistics_t max78000_statistics = {0};
 static version_t version = {S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD};
-static char demo_name[] = UNET_DEMO_NAME;
+static char demo_name[] = AIPORTRAIT_DEMO_NAME;
 static uint8_t qspi_rx_buffer[100];
 
 /* **** Constants **** */
