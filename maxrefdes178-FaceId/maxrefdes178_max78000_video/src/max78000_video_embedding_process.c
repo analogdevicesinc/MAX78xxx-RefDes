@@ -178,7 +178,7 @@ int update_database(uint8_t *db, uint32_t db_size)
     MXC_FLC0->clkdiv = 24;
 
     // Setup and enable interrupt
-    NVIC_SetVector(FLC0_IRQn, FLC0_IRQHandler);
+    MXC_NVIC_SetVector(FLC0_IRQn, FLC0_IRQHandler);
     NVIC_EnableIRQ(FLC0_IRQn);
     __enable_irq();
 
