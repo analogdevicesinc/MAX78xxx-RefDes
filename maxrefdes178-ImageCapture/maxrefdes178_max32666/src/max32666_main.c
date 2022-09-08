@@ -134,7 +134,7 @@ int main(void)
     device_info.device_version.max32666.minor = S_VERSION_MINOR;
     device_info.device_version.max32666.build = S_VERSION_BUILD;
     snprintf(version_string, sizeof(version_string) - 1, "v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    snprintf(device_info.max32666_demo_name, sizeof(device_info.max32666_demo_name) - 1, "%s", CATSDOGS_DEMO_NAME);
+    snprintf(device_info.max32666_demo_name, sizeof(device_info.max32666_demo_name) - 1, "%s", IMAGECAPTURE_DEMO_NAME);
     PR("\n\n\n");
     PR_INFO("maxrefdes178_max32666 %s core0 %s [%s]", device_info.max32666_demo_name, version_string, S_BUILD_TIMESTAMP);
 
