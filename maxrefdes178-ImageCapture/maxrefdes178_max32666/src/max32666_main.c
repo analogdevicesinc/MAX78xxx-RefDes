@@ -93,9 +93,6 @@ static char lcd_string_buff[LCD_NOTIFICATION_MAX_SIZE] = {0};
 static char version_string[14] = {0};
 static char usn_string[(sizeof(serial_num_t) + 1) * 3] = {0};
 static char mac_string[(sizeof(device_info.ble_mac) + 1) * 3] = {0};
-static uint16_t video_string_color;
-static uint16_t video_frame_color;
-static uint16_t audio_string_color;
 
 
 //-----------------------------------------------------------------------------
@@ -323,15 +320,6 @@ int main(void)
     {
         qspi_packet_type_e qspi_packet_type_rx = 0;
         for (int try = 0; try < 3; try++) {
-            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
-            qspi_master_wait_video_int();
-            qspi_master_video_rx_worker(&qspi_packet_type_rx);
-            if (device_status.faceid_embed_subject_names_size) {
-                break;
-            }
-        }
-
-        for (int try = 0; try < 3; try++) {
             qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_VERSION_CMD);
             qspi_master_wait_video_int();
             qspi_master_video_rx_worker(&qspi_packet_type_rx);
@@ -372,38 +360,12 @@ int main(void)
             ret = E_COMM_ERR;
             snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "No video comm");
             fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, adi_logo);
-        } else if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_video, sizeof(version_t))) {
-            PR_ERROR("max32666 and max78000_video versions are different");
-            ret = E_INVALID;
-            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video fw err %d.%d.%d",
-                    device_info.device_version.max78000_video.major,
-                    device_info.device_version.max78000_video.minor,
-                    device_info.device_version.max78000_video.build);
-            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, adi_logo);
-        } else if (strncmp(device_info.max32666_demo_name, device_info.max78000_video_demo_name, DEMO_STRING_SIZE)) {
-            PR_ERROR("max32666 and max78000_video demos are different");
-            ret = E_INVALID;
-            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "video fw demo err %s", device_info.max78000_video_demo_name);
-            fonts_putStringCentered(100, lcd_string_buff, &Font_11x18, RED, adi_logo);
         }
 
         if (!(device_info.device_version.max78000_audio.major || device_info.device_version.max78000_audio.minor)) {
             PR_ERROR("max78000_audio communication error");
             ret = E_COMM_ERR;
             snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "No audio comm");
-            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, adi_logo);
-        } else if (memcmp(&device_info.device_version.max32666, &device_info.device_version.max78000_audio, sizeof(version_t))) {
-            PR_ERROR("max32666 and max78000_audio versions are different");
-            ret = E_INVALID;
-            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "audio fw err %d.%d.%d",
-                    device_info.device_version.max78000_audio.major,
-                    device_info.device_version.max78000_audio.minor,
-                    device_info.device_version.max78000_audio.build);
-            fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, adi_logo);
-        } else if (strncmp(device_info.max32666_demo_name, device_info.max78000_audio_demo_name, DEMO_STRING_SIZE)) {
-            PR_ERROR("max32666 and max78000_audio demos are different");
-            ret = E_INVALID;
-            snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "audio fw demo err %s", device_info.max78000_audio_demo_name);
             fonts_putStringCentered(130, lcd_string_buff, &Font_11x18, RED, adi_logo);
         }
 
@@ -431,10 +393,6 @@ int main(void)
 
     PR_INFO("core 0 init completed");
 
-    // print application name
-    snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Audio enabled");
-    fonts_putStringCentered(37, lcd_string_buff, &Font_11x18, RED, adi_logo);
-
     run_application();
 
     return E_NO_ERROR;
@@ -443,7 +401,6 @@ int main(void)
 static void run_application(void)
 {
     qspi_packet_type_e qspi_packet_type_rx = 0;
-    video_frame_color = WHITE;
     uint16_t touch_x1, touch_y1;
 
     core0_icc(1);
@@ -458,37 +415,6 @@ static void run_application(void)
                 timestamps.video_data_received = timer_ms_tick;
                 lcd_data.refresh_screen = 1;
                 break;
-            case QSPI_PACKET_TYPE_VIDEO_CLASSIFICATION_RES:
-                timestamps.activity_detected = timer_ms_tick;
-                if (device_status.classification_video.classification == CLASSIFICATION_UNKNOWN) {
-                    video_string_color = RED;
-                    video_frame_color = RED;
-                } else if (device_status.classification_video.classification == CLASSIFICATION_LOW_CONFIDENCE) {
-                    video_string_color = YELLOW;
-                    video_frame_color = YELLOW;
-                } else if (device_status.classification_video.classification == CLASSIFICATION_DETECTED) {
-                    video_string_color = GREEN;
-                    video_frame_color = GREEN;
-                } else if (device_status.classification_video.classification == CLASSIFICATION_NOTHING) {
-                    video_frame_color = WHITE;
-                }
-
-//                if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
-//                    ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_VIDEO_CLASSIFICATION_RES,
-//                        sizeof(device_status.classification_video), (uint8_t *) &device_status.classification_video);
-//                }
-                break;
-            case QSPI_PACKET_TYPE_VIDEO_FACEID_EMBED_UPDATE_RES:
-//                if (device_status.ble_connected) {
-//                    ble_command_send_single_packet(BLE_COMMAND_FACEID_EMBED_UPDATE_RES,
-//                        sizeof(device_status.faceid_embed_update_status), (uint8_t *) &device_status.faceid_embed_update_status);
-//                }
-                qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_CMD);
-                lcd_notification(GREEN, "FaceID signature updated");
-                break;
-            case QSPI_PACKET_TYPE_VIDEO_FACEID_SUBJECTS_RES:
-                timestamps.faceid_subject_names_received = timer_ms_tick;
-                break;
             default:
                 break;
             }
@@ -501,52 +427,6 @@ static void run_application(void)
         if (qspi_master_audio_rx_worker(&qspi_packet_type_rx) == E_NO_ERROR) {
             switch(qspi_packet_type_rx) {
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
-                timestamps.audio_result_received = timer_ms_tick;
-                timestamps.activity_detected = timer_ms_tick;
-
-                if (device_status.classification_audio.classification == CLASSIFICATION_UNKNOWN) {
-                    audio_string_color = RED;
-                } else if (device_status.classification_audio.classification == CLASSIFICATION_LOW_CONFIDENCE) {
-                    audio_string_color = YELLOW;
-                } else if (device_status.classification_audio.classification == CLASSIFICATION_DETECTED) {
-                    audio_string_color = YELLOW;//GREEN;
-
-                    if (strncmp(device_status.classification_audio.result, "OFF", 3) == 0) {
-                    	PR_INFO("OFF");
-                        //  device_settings.enable_lcd = 0;
-                        //  lcd_backlight(0, 0);
-                        //  qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
-                    } else if(strncmp(device_status.classification_audio.result, "ON", 2) == 0) {
-                    	PR_INFO("ON");
-                        device_settings.enable_lcd = 1;
-                        if (device_settings.enable_max78000_video) {
-                            qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
-                        }
-                        lcd_backlight(1, MAX32666_LCD_BACKLIGHT_HIGH);
-
-                        // also enable cnn
-                        device_settings.enable_max78000_video_cnn = 1;
-                        //  qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
-
-                    } else if (strncmp(device_status.classification_audio.result, "GO", 2) == 0) {
-                    	PR_INFO("GO");
-                    	device_settings.enable_max78000_video_cnn = 1;
-                        //  qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
-                    } else if(strncmp(device_status.classification_audio.result, "STOP", 4) == 0) {
-                    	PR_INFO("STOP");
-                        //  device_settings.enable_max78000_video_cnn = 0;
-                        //  qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
-
-                    }
-                }
-
-//                if (device_settings.enable_ble_send_classification && device_status.ble_connected) {
-//                    ble_command_send_single_packet(BLE_COMMAND_GET_MAX78000_AUDIO_CLASSIFICATION_RES,
-//                        sizeof(device_status.classification_audio), (uint8_t *) &device_status.classification_audio);
-//                }
-                if (!device_settings.enable_max78000_video) {
-                    lcd_data.refresh_screen = 1;
-                }
                 break;
             default:
                 break;
@@ -732,33 +612,11 @@ static int refresh_screen(void)
         }
     }
 
-    // Draw FaceID frame and result
-    if (device_settings.enable_max78000_video && device_settings.enable_max78000_video_cnn) {
-        if (device_status.classification_video.classification != CLASSIFICATION_NOTHING) {
-            strncpy(lcd_string_buff, device_status.classification_video.result, sizeof(lcd_string_buff) - 1);
-            fonts_putStringCentered(LCD_HEIGHT - 29, lcd_string_buff, &Font_16x26, video_string_color, lcd_data.buffer);
-        }
-        fonts_drawRectangle(CATSDOGS_RECTANGLE_X1 - 0, CATSDOGS_RECTANGLE_Y1 - 0, CATSDOGS_RECTANGLE_X2 + 0, CATSDOGS_RECTANGLE_Y2 + 0, video_frame_color, lcd_data.buffer);
-        fonts_drawRectangle(CATSDOGS_RECTANGLE_X1 - 1, CATSDOGS_RECTANGLE_Y1 - 1, CATSDOGS_RECTANGLE_X2 + 1, CATSDOGS_RECTANGLE_Y2 + 1, video_frame_color, lcd_data.buffer);
-        fonts_drawRectangle(CATSDOGS_RECTANGLE_X1 - 2, CATSDOGS_RECTANGLE_Y1 - 2, CATSDOGS_RECTANGLE_X2 + 2, CATSDOGS_RECTANGLE_Y2 + 2, BLACK, lcd_data.buffer);
-        fonts_drawRectangle(CATSDOGS_RECTANGLE_X1 - 3, CATSDOGS_RECTANGLE_Y1 - 3, CATSDOGS_RECTANGLE_X2 + 3, CATSDOGS_RECTANGLE_Y2 + 3, BLACK, lcd_data.buffer);
-    }
-
     if (device_settings.enable_lcd_statistics) {
         int line_pos = 3;
 
         // LCD frame per seconds
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
-
-        // FaceID duration (MAX78000 Video CNN + embeddings calculation)
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Cats&Dogs:%d us", device_status.statistics.max78000_video.cnn_duration_us);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
-
-        // KWS duration (MAX78000 Audio CNN)
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "KWS:%d us", device_status.statistics.max78000_audio.cnn_duration_us);
         fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
         line_pos += 12;
 
@@ -781,15 +639,6 @@ static int refresh_screen(void)
 //        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Aud:%d mW", device_status.statistics.max78000_audio_cnn_power_mw);
 //        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
 //        line_pos += 12;
-
-        if ((timestamps.screen_drew - timestamps.faceid_subject_names_received) < LCD_NOTIFICATION_DURATION) {
-            line_pos += 5;
-            for (int i = 0; i < device_status.faceid_embed_subject_names_size; i += strlen(&device_status.faceid_embed_subject_names[i]) + 1) {
-                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%s", &device_status.faceid_embed_subject_names[i]);
-                fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, CYAN, 0, 0, lcd_data.buffer);
-                line_pos += 12;
-            }
-        }
     }
 
     // Draw button in init screen
@@ -800,22 +649,6 @@ static int refresh_screen(void)
         fonts_drawThickRectangle(LCD_START_BUTTON_X1, LCD_START_BUTTON_Y1, LCD_START_BUTTON_X2, LCD_START_BUTTON_Y2, LIGHTBLUE, 4, lcd_data.buffer);
         snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Start Video");
         fonts_putStringCentered(LCD_START_BUTTON_Y1 + 10, lcd_string_buff, &Font_16x26, ADIBLUE, lcd_data.buffer);
-    }
-
-    if (device_settings.enable_max78000_audio) {
-        if ((timestamps.screen_drew - timestamps.audio_result_received) < LCD_CLASSIFICATION_DURATION) {
-            if (device_settings.enable_lcd_probabilty) {
-                snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "%s (%d%%)",
-                        device_status.classification_audio.result, (uint8_t) device_status.classification_audio.probabily);
-            } else {
-                strncpy(lcd_string_buff, device_status.classification_audio.result, sizeof(lcd_string_buff) - 1);
-            }
-
-            fonts_putStringCentered(3, lcd_string_buff, &Font_16x26, audio_string_color, lcd_data.buffer);
-        }
-    } else {
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Audio disabled");
-        fonts_putStringCentered(3, lcd_string_buff, &Font_11x18, RED, lcd_data.buffer);
     }
 
     if ((timestamps.screen_drew - timestamps.notification_received) < LCD_NOTIFICATION_DURATION) {
