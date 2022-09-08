@@ -97,6 +97,7 @@
 #define UNET_DEMO_NAME                     "UNet"
 #define WILDLIFE_DEMO_NAME                 "WildLife"
 #define CATSDOGS_DEMO_NAME                 "CatsDogs"
+#define IMAGECAPTURE_DEMO_NAME             "Image Capture"
 #define VCAUDIO_DEMO_NAME                  "VC Audio"
 #define ASL_DEMO_NAME                      "ASL"
 #define DIGIT_DET_DEMO_NAME                "DigitDetect"
