@@ -49,12 +49,22 @@
 //-----------------------------------------------------------------------------
 // Typedefs
 //-----------------------------------------------------------------------------
+typedef struct {
+	char key[16];
+	int  val;	 //
+	int  found;
+} config_map_t;
 
 
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
 int sdcard_init(void);
-
+int sdcard_uninit(void);
+int sdcard_write(const char* fname, const uint8_t* data, int len);
+int sdcard_load_config_file(const char *fname, config_map_t *config, int nb_of_item, char delimeter);
+int sdcard_file_exist(const char *fname);
+int sdcard_file_delete(const char *fname);
+int sdcard_card_inserted(void);
 
 #endif /* _MAX32666_SDCARD_H_ */

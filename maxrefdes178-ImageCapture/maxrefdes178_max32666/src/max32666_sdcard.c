@@ -130,6 +130,134 @@ static int sdcard_umount(void)
     return err;
 }
 
+static int getLine(char *buffer, unsigned int *len)
+{
+	int ret = 0;
+	int index = 0;
+	unsigned int rSize;
+
+	do {
+		rSize = 0;
+		err = f_read(&file, &buffer[index], 1, &rSize);
+		if (err != FR_OK || rSize != 1) {
+			buffer[index] = 0;
+			break;
+		}
+
+		if (buffer[index] == '\n') {
+			buffer[index] = 0;
+			break;
+		}
+
+		index++;
+	} while(index < *len);
+
+	*len = index; //
+	if (index != 0) {
+		ret = 0;
+	} else {
+		ret = -1;
+	}
+
+	return ret;
+}
+
+int sdcard_load_config_file(const char *fname, config_map_t *config, int nb_of_item, char delimeter)
+{
+	int ret = 0;
+	char buffer[64];
+	unsigned int bufSize;
+	int i, k;
+
+	char key[64];
+	char val[64];
+
+	err = f_open(&file, (const TCHAR*)fname, FA_READ);
+	if (err != FR_OK) {
+		PR_INFO("Error opening file: %s\n", FF_ERRORS[err]);
+		return -1;
+	}
+
+	while (1) {
+		bufSize = sizeof(buffer);
+		ret = getLine(buffer, &bufSize);
+
+		if (ret == 0) {
+
+			i = 0;
+			while (i < bufSize) {
+				if (buffer[i] == delimeter) {
+					key[i] = 0;
+					break;
+				}
+				key[i] = buffer[i];
+				++i;
+			}
+			i++; // pass delimeter
+
+			k = 0;
+			while (i < bufSize) {
+				val[k++] = buffer[i++];
+			}
+			val[k] = 0;
+
+			for (i=0; i < nb_of_item; i++) {
+				if (strcmp(config[i].key, key) == 0) {
+					//strcpy(config[i].val, val);
+					config[i].val = atoi(val);
+					config[i].found = 1;
+				}
+			}
+		} else {
+			break;// end of file or error
+		}
+	}
+
+	f_close(&file);
+
+	return 0;
+}
+
+int sdcard_write(const char* filepath, const uint8_t* data, int len)
+{
+    unsigned int wrote = 0;
+    err = f_open(&file, (const TCHAR*)filepath, FA_WRITE | FA_OPEN_APPEND | FA_CREATE_NEW);
+    if (err != FR_OK) {
+    	PR_INFO("Error opening %s file err: %s\n", filepath, FF_ERRORS[err]);
+    } else {
+    	err = f_write(&file, data, len, &wrote);
+        if (err != FR_OK || wrote != len) {
+        	PR_INFO("Failed to write to %s file err: %s\n", filepath, FF_ERRORS[err]);
+        }
+    }
+    f_close(&file);
+    return err;
+}
+
+int sdcard_file_exist(const char *fname)
+{
+	int ret = TRUE; // means exist
+
+    err = f_open(&file, (const TCHAR*)fname, FA_READ);
+    if (err != FR_OK) {
+    	ret = FALSE; // means not exist
+    }
+
+    f_close(&file);
+
+    return ret; // means exist
+}
+
+int sdcard_file_delete(const char *fname)
+{
+    err = f_unlink((const TCHAR*)fname);
+    if (err != FR_OK) {
+    	PR_ERROR("Error while deleting: %s\n", FF_ERRORS[err]);
+    }
+
+    return err;
+}
+
 int sdcard_init(void)
 {
     mxc_sdhc_cfg_t cfg;
@@ -154,7 +282,6 @@ int sdcard_init(void)
     FF_ERRORS[17] = "FR_NOT_ENOUGH_CORE";
     FF_ERRORS[18] = "FR_TOO_MANY_OPEN_FILES";
     FF_ERRORS[19] = "FR_INVALID_PARAMETER";
-    srand(12347439);
 
     // Enable Power To Card
     GPIO_CLR(SDPowerEnablePin);
@@ -174,10 +301,10 @@ int sdcard_init(void)
 
     // Check if card is inserted
     if (!MXC_SDHC_Card_Inserted()) {
-        PR_ERROR("Card is not inserted.");
+        //PR_ERROR("Card is not inserted.");
         return 1;
     } else {
-        PR_INFO("Card inserted.");
+        //PR_INFO("Card inserted.");
     }
 
     // set up card to get it ready for a transaction
@@ -203,6 +330,30 @@ int sdcard_init(void)
         MXC_SDHC_Set_Clock_Config(0);
     }
 
+    if((err = sdcard_mount()) != FR_OK) {
+        PR_ERROR("Error opening SD Card: %s", FF_ERRORS[err]);
+        return err;
+    }
+	PR_INFO("SD Card Opened!\n");
 
     return 0;
 }
+
+int sdcard_card_inserted(void)
+{
+    if (!MXC_SDHC_Card_Inserted()) {
+        return FALSE; // Card is not inserted
+    }
+    return TRUE; //Card inserted
+}
+
+int sdcard_uninit(void)
+{
+    if((err = sdcard_umount()) != FR_OK) {
+        PR_ERROR("Error umounting SD Card: %s", FF_ERRORS[err]);
+        return err;
+    }
+
+    return 0;
+}
+

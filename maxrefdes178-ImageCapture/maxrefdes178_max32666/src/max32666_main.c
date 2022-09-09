@@ -70,9 +70,9 @@
 #include "max32666_timer_led_button.h"
 #include "max32666_touch.h"
 #include "max32666_usb.h"
+#include "max32666_image_capture.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_version.h"
-
 
 //-----------------------------------------------------------------------------
 // Defines
@@ -93,7 +93,6 @@ static char lcd_string_buff[LCD_NOTIFICATION_MAX_SIZE] = {0};
 static char version_string[14] = {0};
 static char usn_string[(sizeof(serial_num_t) + 1) * 3] = {0};
 static char mac_string[(sizeof(device_info.ble_mac) + 1) * 3] = {0};
-
 
 //-----------------------------------------------------------------------------
 // Local function declarations
@@ -253,11 +252,9 @@ int main(void)
 //        pmic_led_red(1);
 //    }
 //
-//    ret = sdcard_init();
-//    if (ret != E_NO_ERROR) {
-//        PR_ERROR("sdcard_init failed %d", ret);
-//        pmic_led_red(1);
-//    }
+
+    //
+    imgcap_init();
 
 //    ret = ble_queue_init();
 //    if (ret != E_NO_ERROR) {
@@ -415,6 +412,10 @@ static void run_application(void)
                 timestamps.video_data_received = timer_ms_tick;
                 lcd_data.refresh_screen = 1;
                 break;
+            case QSPI_PACKET_TYPE_VIDEO_BUTTON_PRESS_RES:
+            	// Pressed Button A
+            	imgcap_set_mode(IMGCAP_MODE_ONESHOOT);
+            	break;
             default:
                 break;
             }
@@ -428,6 +429,10 @@ static void run_application(void)
             switch(qspi_packet_type_rx) {
             case QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES:
                 break;
+            case QSPI_PACKET_TYPE_AUDIO_BUTTON_PRESS_RES:
+            	// Pressed Button B
+            	imgcap_set_mode(IMGCAP_MODE_PERIODIC);
+            	break;
             default:
                 break;
             }
@@ -591,6 +596,9 @@ static void run_application(void)
 
         // Refresh LCD
         if (lcd_data.refresh_screen && device_settings.enable_lcd && !spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
+            if (device_settings.enable_max78000_video) {
+                imgcap_tick();
+            }
             refresh_screen();
         }
 
