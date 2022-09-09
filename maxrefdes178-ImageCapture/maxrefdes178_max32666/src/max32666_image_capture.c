@@ -37,6 +37,7 @@
 #include <mxc_sys.h>
 
 #include "max32666_image_capture.h"
+#include "max32666_bitmap.h"
 #include "max32666_sdcard.h"
 #include "maxrefdes178_definitions.h"
 #include "max32666_data.h"
@@ -52,6 +53,8 @@
 typedef struct {
 	char onetime;  //1:on , 0:off
 	char periodic; //1:on , 0:off
+	char store_as_raw;   //1:yes , 0:no
+	char store_as_bitmap;//1:yes , 0:no
 	//
 	unsigned int interval;
 	unsigned int nb_of_sample;
@@ -64,6 +67,12 @@ static int g_sd_ready = FALSE;
 /*****************************    Variables  *********************************/
 static image_capture_config_t g_img_capture_conf;
 
+/*
+   Partial write to SDCard is too slow
+   To increase performance instead of line to line write
+   all file will be written by one write operation
+*/
+static uint16_t bitmap_data[64 + LCD_WIDTH*LCD_HEIGHT];
 
 /***************************  Static Functions *******************************/
 static int check_sd(void)
@@ -78,26 +87,30 @@ static int check_sd(void)
 		config_map_t config[] = {
 			{"interval", 		0, 0},
 			{"number_samples", 	0, 0},
+			{"raw", 	0, 0},
+			{"bitmap", 	0, 0},
 		};
 
 		ret = sdcard_load_config_file("_config.txt", config, sizeof(config)/sizeof(config_map_t), '=');
 		if (ret != E_NO_ERROR) {
 			PR_INFO("sdcard reading _config.txt file failed %d", ret);
 		} else {
-			if (config[0].found) {
-				g_img_capture_conf.interval = config[0].val;
-			}
-			if (config[1].found) {
-				g_img_capture_conf.nb_of_sample = config[1].val;
-			}
+			if (config[0].found) g_img_capture_conf.interval        = config[0].val;
+			if (config[1].found) g_img_capture_conf.nb_of_sample    = config[1].val;
+			if (config[2].found) g_img_capture_conf.store_as_raw    = config[2].val;
+			if (config[3].found) g_img_capture_conf.store_as_bitmap = config[3].val;
 
 			char fileName[64];
 			for (unsigned int k=1; k < (unsigned int)(-1); k++) {
 				snprintf(fileName, sizeof(fileName), "%s%u", IMAGE_PREFIX, k);
 
 				if (sdcard_file_exist(fileName) == FALSE) {// 0 means not exist
-					g_img_capture_conf.currentIndex = k-1;
-					break;
+					// check bitmap file too
+					snprintf(fileName, sizeof(fileName), "%s%u.bmp", IMAGE_PREFIX, k);
+					if (sdcard_file_exist(fileName) == FALSE) {// 0 means not exist
+						g_img_capture_conf.currentIndex = k-1;
+						break;
+					}
 				}
 			}
 			g_img_capture_conf.lastIndex = g_img_capture_conf.currentIndex + g_img_capture_conf.nb_of_sample;
@@ -124,6 +137,41 @@ static int store_raw_img(uint8_t *img, unsigned int len)
 	return ret;
 }
 
+static int store_bitmap_img(uint8_t *rgb565, unsigned int len)
+{
+	int ret = 0;
+	char fileName[64];
+	uint32_t headerLen = sizeof(bitmap_data);
+
+	snprintf(fileName, sizeof(fileName), "%s%u.bmp", IMAGE_PREFIX, g_img_capture_conf.currentIndex);
+	if (sdcard_file_exist(fileName) == TRUE) {
+		return 0; // if file exist pass write, erasing file not good approach
+	}
+
+	BMP_RGB565_create_header(LCD_WIDTH, LCD_HEIGHT, (uint8_t *)bitmap_data, &headerLen);
+
+	if (ret == 0) {
+		int x, y, k;
+		int line;
+		int bytes_per_row = LCD_WIDTH*2;
+
+		k = headerLen/2; // continue after end of header
+		for (y=LCD_HEIGHT-1; y >=0; y--) {
+			line = bytes_per_row*y;
+			for (x=0; x < LCD_WIDTH*2; x+=4) {
+				// pixel1
+				bitmap_data[k++] = (rgb565[line + x + 0] << 8) + rgb565[line + x + 1];
+				// pixel2
+				bitmap_data[k++] = (rgb565[line + x + 2] << 8) + rgb565[line + x + 3];
+			}
+		}
+		// write line to file
+		ret = sdcard_write(fileName, (uint8_t *)bitmap_data, k*2);
+	}
+
+	return ret;
+}
+
 /***************************  Public Functions *******************************/
 int imgcap_init(void)
 {
@@ -134,6 +182,9 @@ int imgcap_init(void)
     g_img_capture_conf.nb_of_sample = 0;
     g_img_capture_conf.currentIndex = 0;
     g_img_capture_conf.lastIndex = 0;
+
+    g_img_capture_conf.store_as_raw = 0;
+    g_img_capture_conf.store_as_bitmap = 1; // on default on
 
     check_sd();
 
@@ -237,13 +288,26 @@ int imgcap_tick(void)
 
 		PR_INFO("Image %d saving", g_img_capture_conf.currentIndex);
 
-		ret = store_raw_img(lcd_data.buffer, LCD_DATA_SIZE);
+		ret = 0;
+		if (ret == 0) {
+			if (g_img_capture_conf.store_as_raw) {
+				ret = store_raw_img(lcd_data.buffer, LCD_DATA_SIZE);
+			}
+		}
+
+		if (ret == 0) {
+			if (g_img_capture_conf.store_as_bitmap) {
+				ret = store_bitmap_img(lcd_data.buffer, LCD_DATA_SIZE);
+			}
+		}
+
 		if (ret != 0) { // failed
 			g_img_capture_conf.currentIndex--;
 			g_img_capture_conf.lastIndex--;
 		}
 	} else if (g_img_capture_conf.periodic) {
 
+		ret = 0;
 		if ( (timer_ms_tick-last_time) > g_img_capture_conf.interval) {
 			last_time = timer_ms_tick;
 			if (g_img_capture_conf.currentIndex >= g_img_capture_conf.lastIndex) {
@@ -252,7 +316,18 @@ int imgcap_tick(void)
 				g_img_capture_conf.currentIndex++;
 				PR_INFO("Image %d/%d saving, Time:%u", g_img_capture_conf.currentIndex, g_img_capture_conf.lastIndex, last_time);
 
-				ret = store_raw_img(lcd_data.buffer, LCD_DATA_SIZE);
+				if (ret == 0) {
+					if (g_img_capture_conf.store_as_raw) {
+						ret = store_raw_img(lcd_data.buffer, LCD_DATA_SIZE);
+					}
+				}
+
+				if (ret == 0) {
+					if (g_img_capture_conf.store_as_bitmap) {
+						ret = store_bitmap_img(lcd_data.buffer, LCD_DATA_SIZE);
+					}
+				}
+
 				if (ret != 0) { // failed
 					g_img_capture_conf.currentIndex--;
 				}
