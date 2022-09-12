@@ -75,6 +75,47 @@ static image_capture_config_t g_img_capture_conf;
 static uint16_t bitmap_data[64 + LCD_WIDTH*LCD_HEIGHT];
 
 /***************************  Static Functions *******************************/
+static int is_image_exist(int index)
+{
+	int ret = TRUE;//
+
+	// use bitmap_data[] buffer to increase performance.
+	snprintf((char *)bitmap_data, 128, "%s%u", IMAGE_PREFIX, index);
+
+	if (sdcard_file_exist((char *)bitmap_data) == FALSE) {// 0 means not exist
+		// check bitmap file too
+		snprintf((char *)bitmap_data, 128, "%s%u.bmp", IMAGE_PREFIX, index);
+		if (sdcard_file_exist((char *)bitmap_data) == FALSE) {// 0 means not exist
+			ret = FALSE;// false means not exist
+		}
+	}
+
+	return ret;
+}
+
+static int binary_search(int l, int r)
+{
+    if (r > (l+1) ) {
+        int mid = (l + r) / 2;
+
+        if (is_image_exist(mid) == FALSE) {
+        	// file not found search [l:mid-1]
+            return binary_search(l, mid);
+        }
+
+        // file found search [mid+1:r]
+        return binary_search(mid, r);
+    } else {
+    	if (is_image_exist(r) == FALSE) {
+    		if (r>0) {
+        		r--;
+    		}
+    	}
+    }
+
+    return r;
+}
+
 static int check_sd(void)
 {
 	int ret = 0;
@@ -100,22 +141,15 @@ static int check_sd(void)
 			if (config[2].found) g_img_capture_conf.store_as_raw    = config[2].val;
 			if (config[3].found) g_img_capture_conf.store_as_bitmap = config[3].val;
 
-			char fileName[64];
-			for (unsigned int k=1; k < (unsigned int)(-1); k++) {
-				snprintf(fileName, sizeof(fileName), "%s%u", IMAGE_PREFIX, k);
-
-				if (sdcard_file_exist(fileName) == FALSE) {// 0 means not exist
-					// check bitmap file too
-					snprintf(fileName, sizeof(fileName), "%s%u.bmp", IMAGE_PREFIX, k);
-					if (sdcard_file_exist(fileName) == FALSE) {// 0 means not exist
-						g_img_capture_conf.currentIndex = k-1;
-						break;
-					}
-				}
-			}
-			g_img_capture_conf.lastIndex = g_img_capture_conf.currentIndex + g_img_capture_conf.nb_of_sample;
-			PR_INFO("Last Image Index in SD: %d\n", g_img_capture_conf.currentIndex);
 		}
+		/* Find last index in SD, the file shall be sequential
+		 * Setting bigger range will cause a delay during setup, so max nubmer configured for 32GB
+		 * Each raw image is 115200KB, 32GB/115200KB =~ 275K sample
+		 */
+		g_img_capture_conf.currentIndex = binary_search(0, 275000);// 275K * 115200 ~= 32GB
+
+		g_img_capture_conf.lastIndex = g_img_capture_conf.currentIndex + g_img_capture_conf.nb_of_sample;
+		PR_INFO("Last Image Index in SD: %d\n", g_img_capture_conf.currentIndex);
 	}
 
 	return ret;
