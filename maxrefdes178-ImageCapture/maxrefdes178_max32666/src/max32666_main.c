@@ -422,8 +422,6 @@ static void run_application(void)
                 lcd_data.refresh_screen = 1;
                 break;
             case QSPI_PACKET_TYPE_VIDEO_BUTTON_PRESS_RES:
-            	// Pressed Button A
-            	imgcap_set_mode(IMGCAP_MODE_ONESHOOT);
             	break;
             default:
                 break;
@@ -597,6 +595,9 @@ static void run_application(void)
                     // enable LCD enable_lcd_statistics
                     device_settings.enable_lcd_statistics = 1;
                 }
+            } else {
+            	// touching screen while video on means capture image
+                imgcap_set_mode(IMGCAP_MODE_ONESHOOT);
             }
 
             PR_INFO("touch %d %d", touch_x1, touch_y1);
@@ -694,11 +695,11 @@ static int refresh_screen(void)
 			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
 			line_pos += 12;
 
-			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "ButtonA: ToCaptureImage", imgcap_get_currentIndex(), imgcap_get_lastIndex());
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Touchscreen Tap: SingleCapture", imgcap_get_currentIndex(), imgcap_get_lastIndex());
 			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
 			line_pos += 12;
 
-			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "ButtonB: ToStartSeqCapture", imgcap_get_currentIndex(), imgcap_get_lastIndex());
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Button_B: StartSeqCapture", imgcap_get_currentIndex(), imgcap_get_lastIndex());
 			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
 			line_pos += 12;
         }
