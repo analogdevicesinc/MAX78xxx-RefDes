@@ -55,6 +55,7 @@ typedef struct {
 	char periodic; //1:on , 0:off
 	char store_as_raw;   //1:yes , 0:no
 	char store_as_bitmap;//1:yes , 0:no
+	char overwrite_if_file_exist;//1:yes , 0:no
 	//
 	unsigned int interval;
 	unsigned int nb_of_sample;
@@ -130,6 +131,7 @@ static int check_sd(void)
 			{"number_samples", 	0, 0},
 			{"raw", 	0, 0},
 			{"bitmap", 	0, 0},
+			{"overwrite_if_file_exist", 0, 0},
 		};
 
 		ret = sdcard_load_config_file("_config.txt", config, sizeof(config)/sizeof(config_map_t), '=');
@@ -140,6 +142,7 @@ static int check_sd(void)
 			if (config[1].found) g_img_capture_conf.nb_of_sample    = config[1].val;
 			if (config[2].found) g_img_capture_conf.store_as_raw    = config[2].val;
 			if (config[3].found) g_img_capture_conf.store_as_bitmap = config[3].val;
+			if (config[4].found) g_img_capture_conf.overwrite_if_file_exist = config[4].val;
 
 		}
 		/* Find last index in SD, the file shall be sequential
@@ -162,8 +165,10 @@ static int store_raw_img(uint8_t *img, unsigned int len)
 
 	snprintf(fileName, sizeof(fileName), "%s%u", IMAGE_PREFIX, g_img_capture_conf.currentIndex);
 
-	if (sdcard_file_exist(fileName) == TRUE) {
-		return 0; // if file exist pass write, erasing file not good approach
+	if (!g_img_capture_conf.overwrite_if_file_exist) {
+		if (sdcard_file_exist(fileName) == TRUE) {
+			return 0; // if file exist pass write, erasing file not good approach
+		}
 	}
 
 	ret = sdcard_write(fileName, img, len);
@@ -178,8 +183,11 @@ static int store_bitmap_img(uint8_t *rgb565, unsigned int len)
 	uint32_t headerLen = sizeof(bitmap_data);
 
 	snprintf(fileName, sizeof(fileName), "%s%u.bmp", IMAGE_PREFIX, g_img_capture_conf.currentIndex);
-	if (sdcard_file_exist(fileName) == TRUE) {
-		return 0; // if file exist pass write, erasing file not good approach
+
+	if (!g_img_capture_conf.overwrite_if_file_exist) {
+		if (sdcard_file_exist(fileName) == TRUE) {
+			return 0; // if file exist pass write, erasing file not good approach
+		}
 	}
 
 	BMP_RGB565_create_header(LCD_WIDTH, LCD_HEIGHT, (uint8_t *)bitmap_data, &headerLen);
@@ -219,6 +227,7 @@ int imgcap_init(void)
 
     g_img_capture_conf.store_as_raw = 0;
     g_img_capture_conf.store_as_bitmap = 1; // on default on
+    g_img_capture_conf.overwrite_if_file_exist = 0;// No
 
     check_sd();
 

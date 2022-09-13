@@ -221,7 +221,7 @@ int sdcard_load_config_file(const char *fname, config_map_t *config, int nb_of_i
 int sdcard_write(const char* filepath, const uint8_t* data, int len)
 {
     unsigned int wrote = 0;
-    err = f_open(&file, (const TCHAR*)filepath, FA_WRITE | FA_OPEN_APPEND);
+    err = f_open(&file, (const TCHAR*)filepath, FA_WRITE | FA_CREATE_NEW);
     if (err != FR_OK) {
     	PR_INFO("Error opening %s file err: %s\n", filepath, FF_ERRORS[err]);
     } else {
