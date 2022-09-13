@@ -516,7 +516,7 @@ static void run_application(void)
 
         // Check inactivity
         if (device_settings.enable_inactivity) {
-            if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_LONG_DURATION) {
+            /*if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_LONG_DURATION) {
                 if (device_status.inactivity_state != INACTIVITY_STATE_INACTIVE_LONG) {
                     device_status.inactivity_state = INACTIVITY_STATE_INACTIVE_LONG;
                     // Switch to inactive long state
@@ -524,7 +524,8 @@ static void run_application(void)
                     qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CMD);
                     PR_INFO("Inactive long");
                 }
-            } else if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_SHORT_DURATION) {
+            } else */
+            if ((timer_ms_tick - timestamps.activity_detected) > INACTIVITY_SHORT_DURATION) {
                 if (device_status.inactivity_state != INACTIVITY_STATE_INACTIVE_SHORT) {
                     device_status.inactivity_state = INACTIVITY_STATE_INACTIVE_SHORT;
                     // Switch to inactive short state
