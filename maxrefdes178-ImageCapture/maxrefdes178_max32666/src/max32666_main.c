@@ -350,6 +350,15 @@ int main(void)
             }
         }
 
+        // disable audio
+        for (int try = 0; try < 3; try++) {
+            ret = qspi_master_send_audio(NULL, 0, QSPI_PACKET_TYPE_AUDIO_DISABLE_CMD);
+            if (ret == 0) {
+                break;
+            }
+            MXC_Delay(MXC_DELAY_MSEC(100));
+        }
+
         ret = E_NO_ERROR;
         // Check video and audio fw version
         if (!(device_info.device_version.max78000_video.major || device_info.device_version.max78000_video.minor)) {
@@ -536,6 +545,9 @@ static void run_application(void)
                     if (device_settings.enable_max78000_video && device_settings.enable_lcd) {
                         MXC_Delay(MXC_DELAY_MSEC(600));
                         qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CMD);
+
+                        MXC_Delay(MXC_DELAY_MSEC(300));
+						qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
                     }
                     PR_INFO("Active");
                 }
@@ -579,8 +591,8 @@ static void run_application(void)
 
                     // Start video
                     MXC_Delay(MXC_DELAY_MSEC(1000));
-                    device_settings.enable_max78000_video_cnn = 1;
-                   // qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
+                    device_settings.enable_max78000_video_cnn = 0;
+                    qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_DISABLE_CNN_CMD);
 
                     // enable LCD enable_lcd_statistics
                     device_settings.enable_lcd_statistics = 1;
