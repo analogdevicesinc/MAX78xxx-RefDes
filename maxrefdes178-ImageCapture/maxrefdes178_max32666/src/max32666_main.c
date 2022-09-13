@@ -581,6 +581,9 @@ static void run_application(void)
                     MXC_Delay(MXC_DELAY_MSEC(1000));
                     device_settings.enable_max78000_video_cnn = 1;
                    // qspi_master_send_video(NULL, 0, QSPI_PACKET_TYPE_VIDEO_ENABLE_CNN_CMD);
+
+                    // enable LCD enable_lcd_statistics
+                    device_settings.enable_lcd_statistics = 1;
                 }
             }
 
@@ -624,19 +627,69 @@ static int refresh_screen(void)
         int line_pos = 3;
 
         // LCD frame per seconds
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
+        //snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "FPS:%.2f", (double)device_status.statistics.lcd_fps);
+        //fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        //line_pos += 12;
 
         // Video camera capture duration (frame capture)
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "VidCap:%d ms", device_status.statistics.max78000_video.capture_duration_us / 1000);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
+        //snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "VidCap:%d ms", device_status.statistics.max78000_video.capture_duration_us / 1000);
+        //fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        //line_pos += 12;
 
         // Video communication duration (frame transfer from MAX78000 to MAX32666 over QSPI)
-        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "VidComm:%d ms", device_status.statistics.max78000_video.communication_duration_us / 1000);
-        fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
-        line_pos += 12;
+        //snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "VidComm:%d ms", device_status.statistics.max78000_video.communication_duration_us / 1000);
+        //fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+        //line_pos += 12;
+
+        char *str_sd_status;
+        imgcap_sd_status_t sd_stat = imgcap_get_sd_status();
+
+        switch(sd_stat) {
+        case IMGCAP_SDSTAT_READY:
+        	str_sd_status = "Ready";
+        	break;
+        case IMGCAP_SDSTAT_SD_NOT_INSERTED:
+        	str_sd_status = "NotInserted";
+        	break;
+        case IMGCAP_SDSTAT_SD_INIT_FAILED:
+        	str_sd_status = "InitFail";
+        	break;
+        default:
+        	str_sd_status = "Unknown";
+        	break;
+        }
+
+		snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "SDCard: %s", str_sd_status);
+		fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+		line_pos += 12;
+
+        if (sd_stat == IMGCAP_SDSTAT_READY) {
+			// Periodic capture mode
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "SequenceCapture: %s", (imgcap_get_mode()==IMGCAP_MODE_PERIODIC)?"ON":"OFF");
+			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+			line_pos += 12;
+
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Interval:%u ms", imgcap_get_interval());
+			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+			line_pos += 12;
+
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "NumOfSample:%u", imgcap_get_nb_of_sample());
+			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+			line_pos += 12;
+
+			// Show last saved image number
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Image %u/%u saved", imgcap_get_currentIndex(), imgcap_get_lastIndex());
+			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+			line_pos += 12;
+
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "ButtonA: ToCaptureImage", imgcap_get_currentIndex(), imgcap_get_lastIndex());
+			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+			line_pos += 12;
+
+			snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "ButtonB: ToStartSeqCapture", imgcap_get_currentIndex(), imgcap_get_lastIndex());
+			fonts_putString(3, line_pos, lcd_string_buff, &Font_7x10, MAGENTA, 0, 0, lcd_data.buffer);
+			line_pos += 12;
+        }
 
 //        // MAX78000 Video power
 //        snprintf(lcd_string_buff, sizeof(lcd_string_buff) - 1, "Vid:%d mW", device_status.statistics.max78000_video_cnn_power_mw);
@@ -668,7 +721,7 @@ static int refresh_screen(void)
     }
 
     if (lcd_drawImage(lcd_data.buffer) == E_NO_ERROR) {
-        device_status.statistics.lcd_fps = (float) 1000.0 / (float)(timer_ms_tick - timestamps.screen_drew);
+        //device_status.statistics.lcd_fps = (float) 1000.0 / (float)(timer_ms_tick - timestamps.screen_drew);
         timestamps.screen_drew = timer_ms_tick;
     }
 
