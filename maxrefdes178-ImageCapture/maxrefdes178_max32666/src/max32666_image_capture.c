@@ -130,7 +130,7 @@ int imgcap_init(void)
 	int ret = 0;
 
 	g_sd_ready = FALSE;
-    g_img_capture_conf.interval = (unsigned int)-1;
+    g_img_capture_conf.interval = 0;
     g_img_capture_conf.nb_of_sample = 0;
     g_img_capture_conf.currentIndex = 0;
     g_img_capture_conf.lastIndex = 0;
@@ -202,20 +202,32 @@ imgcap_mode_t imgcap_get_mode(void)
 	return mode;
 }
 
+imgcap_sd_status_t imgcap_get_sd_status(void)
+{
+    imgcap_sd_status_t ret = IMGCAP_SDSTAT_READY; // sd exist and ready
+
+    if (sdcard_card_inserted() == FALSE) {
+        g_sd_ready = FALSE;
+        return IMGCAP_SDSTAT_SD_NOT_INSERTED; // SD not inserted
+    }
+
+    if (g_sd_ready == FALSE) {
+    	imgcap_init(); // to set default parameters and check sd card
+        if (g_sd_ready == FALSE) {
+            ret = IMGCAP_SDSTAT_SD_INIT_FAILED; // SD exist but init failed
+        }
+    }
+
+    return ret;
+}
+
 int imgcap_tick(void)
 {
 	int ret = -1;
 	static unsigned int last_time = 0;
 
-	if (sdcard_card_inserted() == FALSE) {
-		g_sd_ready = FALSE;
-	}
-
-	if (g_sd_ready == FALSE) {
-		check_sd();
-		if (g_sd_ready == FALSE) {
-			return -1;
-		}
+	if (imgcap_get_sd_status() != IMGCAP_SDSTAT_READY) {
+		return -1;
 	}
 
 	if (g_img_capture_conf.onetime) {

@@ -235,6 +235,7 @@ int button_worker(void)
 
     if (button_power_int) {
         button_power_int = 0;
+        device_settings.enable_lcd_statistics = 0;
 
         PR_INFO("button power pressed");
 

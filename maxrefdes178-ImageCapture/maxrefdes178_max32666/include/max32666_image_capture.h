@@ -47,6 +47,12 @@ typedef enum {
 	IMGCAP_MODE_PERIODIC,
 } imgcap_mode_t;
 
+typedef enum {
+	IMGCAP_SDSTAT_READY,			// SD exist and init done
+	IMGCAP_SDSTAT_SD_NOT_INSERTED,	// SD not inserted
+	IMGCAP_SDSTAT_SD_INIT_FAILED,	// SD inserted but init failed
+} imgcap_sd_status_t;
+
 /***************************  Public Functions *******************************/
 int imgcap_init(void);
 int imgcap_tick(void);
@@ -60,6 +66,6 @@ unsigned int  imgcap_get_nb_of_sample(void);
 unsigned int  imgcap_get_currentIndex(void);
 unsigned int  imgcap_get_lastIndex(void);
 imgcap_mode_t imgcap_get_mode(void);
-
+imgcap_sd_status_t imgcap_get_sd_status(void);
 
 #endif /* _MAX32666_IMAGE_CAPTURE_H_ */
