@@ -50,7 +50,7 @@
 // Typedefs
 //-----------------------------------------------------------------------------
 typedef struct {
-	char key[16];
+	char key[32];
 	int  val;	 //
 	int  found;
 } config_map_t;
