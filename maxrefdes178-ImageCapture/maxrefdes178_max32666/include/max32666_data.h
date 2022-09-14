@@ -117,6 +117,7 @@ typedef struct {
     char notification[LCD_NOTIFICATION_MAX_SIZE];
     uint16_t notification_color;
     volatile uint8_t refresh_screen;
+    volatile uint8_t sync_mode;
 } lcd_data_t;
 
 typedef struct {

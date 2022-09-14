@@ -352,6 +352,9 @@ int lcd_drawImage(uint8_t *data)
     spi_assert_cs();
 
     spi_dma(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI, data, NULL, (w * h * LCD_BYTE_PER_PIXEL), MAX32666_LCD_DMA_REQSEL_SPITX, spi_deassert_cs);
+    if (lcd_data.sync_mode) {
+    	spi_dma_wait(MAX32666_LCD_DMA_CHANNEL, MAX32666_LCD_SPI);
+    }
 
     lcd_data.refresh_screen = 0;
 
@@ -404,5 +407,12 @@ int lcd_init(void)
 
     lcd_configure();
 
+    lcd_data.sync_mode = 1;
+
     return E_NO_ERROR;
+}
+
+void lcd_set_sync_mode(int on)
+{
+	lcd_data.sync_mode = on?1:0;
 }

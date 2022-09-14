@@ -64,5 +64,6 @@ int lcd_drawImage(uint8_t *data);
 int lcd_backlight(int on, uint8_t level);
 int lcd_set_rotation(lcd_rotation_e lcd_rotation);
 int lcd_notification(uint16_t color, const char *notification);
+void lcd_set_sync_mode(int on);
 
 #endif /* _MAX32666_LCD_H_ */
