@@ -43,6 +43,7 @@
 #include "max32666_data.h"
 #include "max32666_debug.h"
 #include "max32666_timer_led_button.h"
+#include "max32666_lcd.h"
 
 /*****************************     Macros    *********************************/
 #define S_MODULE_NAME   "imgcap"
@@ -132,6 +133,7 @@ static int check_sd(void)
 			{"raw", 	0, 0},
 			{"bitmap", 	0, 0},
 			{"overwrite_if_file_exist", 0, 0},
+			{"lcd_sync", 	0, 0},
 		};
 
 		ret = sdcard_load_config_file("_config.txt", config, sizeof(config)/sizeof(config_map_t), '=');
@@ -144,7 +146,15 @@ static int check_sd(void)
 			if (config[3].found) g_img_capture_conf.store_as_bitmap = config[3].val;
 			if (config[4].found) g_img_capture_conf.overwrite_if_file_exist = config[4].val;
 
+			if (config[5].found) {
+				if (config[5].val) {
+					lcd_set_sync_mode(1);
+				} else {
+					lcd_set_sync_mode(0);
+				}
+			}
 		}
+
 		/* Find last index in SD, the file shall be sequential
 		 * Setting bigger range will cause a delay during setup, so max nubmer configured for 32GB
 		 * Each raw image is 115200KB, 32GB/115200KB =~ 275K sample
