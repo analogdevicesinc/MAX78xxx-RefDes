@@ -458,6 +458,9 @@ static void run_application(void)
 //            }
 //        }
 
+        // Button worker
+        button_worker();
+
         if (device_settings.enable_max78000_video) {
             // If video is not available for a long time, draw logo and refresh periodically
             if ((timer_ms_tick - timestamps.video_data_received) > LCD_NO_VIDEO_REFRESH_DURATION) {
@@ -595,6 +598,7 @@ static void run_application(void)
 
                     // enable LCD enable_lcd_statistics
                     device_settings.enable_lcd_statistics = 1;
+                    timestamps.video_data_received = timer_ms_tick;// to pass wrong message on t=0 time
                 }
             } else {
             	// touching screen while video on means capture image
@@ -604,9 +608,6 @@ static void run_application(void)
             PR_INFO("touch %d %d", touch_x1, touch_y1);
             timestamps.activity_detected = timer_ms_tick;
         }
-
-        // Button worker
-        button_worker();
 
         // USB worker
 //        usb_worker();
