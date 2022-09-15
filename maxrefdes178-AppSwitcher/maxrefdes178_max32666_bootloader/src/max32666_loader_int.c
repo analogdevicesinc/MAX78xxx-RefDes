@@ -92,7 +92,7 @@ int loader_int_spi_init(void)
     MXC_SPI_SetWidth(SPI, SPI_WIDTH_STANDARD);
 
 #ifdef SPI_MASTERASYNC
-    NVIC_SetVector(SPI_IRQ, SPI1_IRQHandler);
+    MXC_NVIC_SetVector(SPI_IRQ, SPI1_IRQHandler);
     NVIC_EnableIRQ(SPI_IRQ);
 #endif
 

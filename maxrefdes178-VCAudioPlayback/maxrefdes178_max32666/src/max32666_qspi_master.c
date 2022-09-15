@@ -157,7 +157,7 @@ int qspi_master_init(void)
         return ret;
     }
 
-    NVIC_SetVector(MAX32666_QSPI_DMA_IRQ, MAX32666_QSPI_DMA_IRQ_HAND);
+    MXC_NVIC_SetVector(MAX32666_QSPI_DMA_IRQ, MAX32666_QSPI_DMA_IRQ_HAND);
     NVIC_EnableIRQ(MAX32666_QSPI_DMA_IRQ);
 
     qspi_video_int_flag = 0;

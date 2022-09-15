@@ -207,7 +207,7 @@ int codec_i2sInit(WavFile_t* fileInfo) {
 	MXC_I2S_TXEnable();
 
 	// Enable I2S Interrupts
-    NVIC_SetVector(I2S_IRQn, i2s_isr);
+    MXC_NVIC_SetVector(I2S_IRQn, i2s_isr);
     NVIC_EnableIRQ(I2S_IRQn);
     __enable_irq();
     MXC_I2S_EnableInt(MXC_F_I2S_INTEN_TX_HE_CH0);

@@ -44,7 +44,7 @@ void KWS_i2sInit(void)
 
     /* Set I2S RX FIFO threshold to generate interrupt */
     MXC_I2S_SetRXThreshold(4);
-    NVIC_SetVector(I2S_IRQn, i2s_isr);
+    MXC_NVIC_SetVector(I2S_IRQn, i2s_isr);
     NVIC_EnableIRQ(I2S_IRQn);
     /* Enable RX FIFO Threshold Interrupt */
     MXC_I2S_EnableInt(MXC_F_I2S_INTEN_RX_THD_CH0);
