@@ -150,7 +150,7 @@ int timer_led_button_init(void)
     tmr.mode = TMR_MODE_CONTINUOUS;
     tmr.cmp_cnt = PeripheralClock / 1000;
     tmr.pol = 0;
-    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)), ms_timer);
+    MXC_NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)), ms_timer);
     NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_MS)));
     MXC_TMR_Init(MAX32666_TIMER_MS, &tmr);
     MXC_TMR_Start(MAX32666_TIMER_MS);
@@ -161,7 +161,7 @@ int timer_led_button_init(void)
     tmr.mode = TMR_MODE_ONESHOT;
     tmr.cmp_cnt = MAX32666_BUTTON_POWER_OFF_INTERVAL * PeripheralClock / 128;
     tmr.pol = 0;
-    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BUTTON_POWER)), power_off_timer);
+    MXC_NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BUTTON_POWER)), power_off_timer);
     NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX32666_TIMER_BUTTON_POWER)));
     MXC_TMR_Init(MAX32666_TIMER_BUTTON_POWER, &tmr);
 
