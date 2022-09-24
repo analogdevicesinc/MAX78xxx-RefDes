@@ -11,7 +11,7 @@ Please refer to main MAXREFDES178 documentation for instructions how to build, a
 NOTE: This demo does not support Android application.
 
 
-## Testing AIPortrait Demo
+## Testing DigitDetect Demo
 
 This demo shows a tiny SSD network, trained to localize and recognize digits in images.
 
