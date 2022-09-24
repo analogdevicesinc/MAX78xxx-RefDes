@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
@@ -33,20 +33,24 @@
 *******************************************************************************
 */
 
-#ifndef _MAXREFDES178_VERSION_H_
-#define _MAXREFDES178_VERSION_H_
+#ifndef _MAX32666_FUEL_GAUGE_H_
+#define _MAX32666_FUEL_GAUGE_H_
+
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "maxrefdes178_build_info.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_VERSION_MAJOR 1
-#define S_VERSION_MINOR 5
-#define S_VERSION_BUILD S_BUILD_NUMBER
 
-#endif /* _MAXREFDES178_VERSION_H_ */
+
+//-----------------------------------------------------------------------------
+// Function declarations
+//-----------------------------------------------------------------------------
+int fuel_gauge_init(void);
+int fuel_gauge_worker(void);
+
+#endif /* _MAX32666_FUEL_GAUGE_H_ */

@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
@@ -33,20 +33,42 @@
 *******************************************************************************
 */
 
-#ifndef _MAXREFDES178_VERSION_H_
-#define _MAXREFDES178_VERSION_H_
+#ifndef _MAX32666_BLE_QUEUE_H_
+#define _MAX32666_BLE_QUEUE_H_
+
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "maxrefdes178_build_info.h"
+#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_VERSION_MAJOR 1
-#define S_VERSION_MINOR 5
-#define S_VERSION_BUILD S_BUILD_NUMBER
 
-#endif /* _MAXREFDES178_VERSION_H_ */
+
+//-----------------------------------------------------------------------------
+// Typedefs
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Function declarations
+//-----------------------------------------------------------------------------
+int ble_queue_init(void);
+int ble_queue_flush(void);
+
+// Should be called from core0
+int ble_queue_deq_rx(ble_packet_container_t *ble_packet_container);
+
+// Should be called from core1
+int ble_queue_enq_rx(ble_packet_container_t *ble_packet_container);
+
+// Should be called from core0
+int ble_queue_deq_tx(ble_packet_container_t *ble_packet_container);
+
+// Should be called from core1
+int ble_queue_enq_tx(ble_packet_container_t *ble_packet_container);
+
+#endif /* _MAX32666_BLE_QUEUE_H_ */
