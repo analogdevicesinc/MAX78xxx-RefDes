@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
@@ -33,20 +33,35 @@
 *******************************************************************************
 */
 
-#ifndef _MAXREFDES178_VERSION_H_
-#define _MAXREFDES178_VERSION_H_
+#ifndef _MAX32666_BLE_COMMAND_H_
+#define _MAX32666_BLE_COMMAND_H_
+
 
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "maxrefdes178_build_info.h"
+#include "maxrefdes178_definitions.h"
 
 
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
-#define S_VERSION_MAJOR 1
-#define S_VERSION_MINOR 5
-#define S_VERSION_BUILD S_BUILD_NUMBER
 
-#endif /* _MAXREFDES178_VERSION_H_ */
+
+//-----------------------------------------------------------------------------
+// Typedefs
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Function declarations
+//-----------------------------------------------------------------------------
+int ble_command_send_single_packet(ble_command_e ble_command, uint32_t payload_size, uint8_t *payload);
+
+int ble_command_reset(void);
+
+int ble_command_init(void);
+int ble_command_worker(void);
+
+
+#endif /* _MAX32666_BLE_COMMAND_H_ */

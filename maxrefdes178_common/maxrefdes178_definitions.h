@@ -73,8 +73,8 @@
 #define LCD_DATA_SIZE                      (LCD_WIDTH * LCD_HEIGHT * LCD_BYTE_PER_PIXEL)
 #define LCD_NOTIFICATION_MAX_SIZE          40
 
-#define LCD_CLASSIFICATION_DURATION        UINT32_C(1000)  // ms
-#define LCD_NO_VIDEO_REFRESH_DURATION      UINT32_C(1000)  // ms
+#define LCD_CLASSIFICATION_DURATION        UINT32_C(1000) // ms
+#define LCD_NO_VIDEO_REFRESH_DURATION      UINT32_C(2000) // ms
 #define LCD_VIDEO_DISABLE_REFRESH_DURATION UINT32_C(100)  // ms
 #define LCD_NOTIFICATION_DURATION          UINT32_C(7 * 1000)  // ms
 
@@ -99,6 +99,8 @@
 #define CATSDOGS_DEMO_NAME                 "CatsDogs"
 #define VCAUDIO_DEMO_NAME                  "VC Audio"
 #define ASL_DEMO_NAME                      "ASL"
+#define DIGIT_DET_DEMO_NAME                "DigitDetect"
+#define AIPORTRAIT_DEMO_NAME               "AIPortrait"
 
 // Common FaceID
 #define FACEID_WIDTH                       120
@@ -155,6 +157,27 @@
 #define WILDLIFE_RECTANGLE_Y1              ((LCD_HEIGHT - WILDLIFE_HEIGHT) / 2)
 #define WILDLIFE_RECTANGLE_X2              (WILDLIFE_RECTANGLE_X1 + WILDLIFE_WIDTH)
 #define WILDLIFE_RECTANGLE_Y2              (WILDLIFE_RECTANGLE_Y1 + WILDLIFE_HEIGHT)
+
+// Common AIPortrait
+#define AIPORTRAIT_WIDTH                   240
+#define AIPORTRAIT_HEIGHT                  240
+
+#define AIPORTRAIT_IMAGE_SIZE_X            352
+#define AIPORTRAIT_IMAGE_SIZE_Y            352
+
+#define AIPORTRAIT_RECTANGLE_X1            ((AIPORTRAIT_IMAGE_SIZE_X - AIPORTRAIT_WIDTH) / 2)
+#define AIPORTRAIT_RECTANGLE_Y1            ((AIPORTRAIT_IMAGE_SIZE_Y - AIPORTRAIT_HEIGHT) / 2)
+#define AIPORTRAIT_RECTANGLE_X2            (AIPORTRAIT_RECTANGLE_X1 + AIPORTRAIT_WIDTH)
+#define AIPORTRAIT_RECTANGLE_Y2            (AIPORTRAIT_RECTANGLE_Y1 + AIPORTRAIT_HEIGHT)
+#define AIPORTRAIT_INFER_SIZE              30976 // size of inference 32x88x88/8
+
+// Common DigitDetection
+#define DIGIT_DET_WIDTH                    240
+#define DIGIT_DET_HEIGHT                   240
+#define DIGIT_DET_RECTANGLE_X1             ((LCD_WIDTH - DIGIT_DET_WIDTH) / 2)
+#define DIGIT_DET_RECTANGLE_Y1             ((LCD_HEIGHT - DIGIT_DET_HEIGHT) / 2)
+#define DIGIT_DET_RECTANGLE_X2             (DIGIT_DET_RECTANGLE_X1 + DIGIT_DET_WIDTH)
+#define DIGIT_DET_RECTANGLE_Y2             (DIGIT_DET_RECTANGLE_Y1 + DIGIT_DET_HEIGHT)
 
 // Common BLE
 #define BLE_MAX_MTU_SIZE                   256
