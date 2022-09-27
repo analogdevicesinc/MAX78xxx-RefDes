@@ -1015,7 +1015,8 @@ uint8_t class_idx, x1, x2, y1, y2;
         PR_INFO("x1=%d, y1=%d, x2=%d, y2=%d", x1, y1, x2, y2);
 
         // Draw rectangle around detected digit
-        fonts_drawThickRectangle(x1+BOX_THICKNESS, y1+BOX_THICKNESS, x2-BOX_THICKNESS, y2-BOX_THICKNESS, color, BOX_THICKNESS, lcd_data.buffer);
+        //fonts_drawThickRectangle(x1+BOX_THICKNESS, y1+BOX_THICKNESS, x2-BOX_THICKNESS, y2-BOX_THICKNESS, color, BOX_THICKNESS, lcd_data.buffer);
+        fonts_drawThickRectangle(x1, y1, x2, y2, color, BOX_THICKNESS, lcd_data.buffer);
         
         memset(lcd_string_buff, 0xff, sizeof(lcd_string_buff));
         snprintf(lcd_string_buff, label_text[class_idx].len + 1, label_text[class_idx].data);

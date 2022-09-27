@@ -523,7 +523,7 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 1. Press and hold the SW on MAX32625PICO and then connect it to the USB port to enter the maintenance mode. A MAINTENANCE drive should appear.
 
 2. Drag and drop the latest bin firmware to the MAINTENANCES drive. The latest DAPLINK binary can be found here:
-   https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/tree/main/bin
+   https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/blob/main/bin/max32625_max78000fthr_if_crc_v1.0.2.bin
 
 3. Following the Drag-and-Drop, the debug adapter should reboot and reconnect as a drive named DAPLINK.
 
