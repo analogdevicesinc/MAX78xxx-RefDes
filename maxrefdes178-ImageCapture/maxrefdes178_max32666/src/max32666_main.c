@@ -79,6 +79,7 @@
 //-----------------------------------------------------------------------------
 #define S_MODULE_NAME   "main"
 
+#define IMG_SAVE_LED	1 // 0:RED, 1:GREEN, 2:BLUE
 
 //-----------------------------------------------------------------------------
 // Typedefs
@@ -420,6 +421,10 @@ static void run_application(void)
             case QSPI_PACKET_TYPE_VIDEO_DATA_RES:
                 timestamps.video_data_received = timer_ms_tick;
                 lcd_data.refresh_screen = 1;
+                if (imgcap_get_mode() != IMGCAP_MODE_NONE) {
+                	uint8_t led = IMG_SAVE_LED;
+                	qspi_master_send_audio(&led, 1, QSPI_PACKET_TYPE_AUDIO_LED_OFF_CMD);
+                }
                 break;
             case QSPI_PACKET_TYPE_VIDEO_BUTTON_PRESS_RES:
             	break;
@@ -602,7 +607,10 @@ static void run_application(void)
                 }
             } else {
             	// touching screen while video on means capture image
-                imgcap_set_mode(IMGCAP_MODE_ONESHOOT);
+                if (imgcap_set_mode(IMGCAP_MODE_ONESHOOT) == 0) {
+                	uint8_t led = IMG_SAVE_LED;
+					qspi_master_send_audio(&led, 1, QSPI_PACKET_TYPE_AUDIO_LED_ON_CMD);
+                }
             }
 
             PR_INFO("touch %d %d", touch_x1, touch_y1);
@@ -615,7 +623,14 @@ static void run_application(void)
         // Refresh LCD
         if (lcd_data.refresh_screen && device_settings.enable_lcd && !spi_dma_busy_flag(MAX32666_LCD_DMA_CHANNEL)) {
             if (device_settings.enable_max78000_video) {
-                imgcap_tick();
+                if (imgcap_tick() == 0) {
+                	uint8_t led = IMG_SAVE_LED;
+                    if (imgcap_get_mode() == IMGCAP_MODE_NONE) {
+                    	qspi_master_send_audio(&led, 1, QSPI_PACKET_TYPE_AUDIO_LED_OFF_CMD);
+                    } else {
+                    	qspi_master_send_audio(&led, 1, QSPI_PACKET_TYPE_AUDIO_LED_ON_CMD);
+                    }
+                }
             }
             refresh_screen();
         }

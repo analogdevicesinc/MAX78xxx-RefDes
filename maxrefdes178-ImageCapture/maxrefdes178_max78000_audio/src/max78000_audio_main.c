@@ -353,6 +353,32 @@ int main(void)
                 }
                 printf("\n");
                 break;
+            case QSPI_PACKET_TYPE_AUDIO_LED_ON_CMD:
+            	switch (qspi_rx_buffer[0]) {
+            	case 0:
+            		GPIO_SET(gpio_red);
+            		break;
+            	case 1:
+            		GPIO_SET(gpio_green);
+            		break;
+            	case 2:
+            		GPIO_SET(gpio_blue);
+            		break;
+            	}
+            	break;
+            case QSPI_PACKET_TYPE_AUDIO_LED_OFF_CMD:
+            	switch (qspi_rx_buffer[0]) {
+            	case 0:
+            		GPIO_CLR(gpio_red);
+            		break;
+            	case 1:
+            		GPIO_CLR(gpio_green);
+            		break;
+            	case 2:
+            		GPIO_CLR(gpio_blue);
+            		break;
+            	}
+            	break;
             default:
                 PR_ERROR("Invalid packet %d", qspi_rx_header.info.packet_type);
                 break;

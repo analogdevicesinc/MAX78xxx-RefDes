@@ -474,6 +474,9 @@ typedef enum {
     QSPI_PACKET_TYPE_AUDIO_DEMO_NAME_CMD,      // None
     QSPI_PACKET_TYPE_AUDIO_DEMO_NAME_RES,      // Demo string
 
+	QSPI_PACKET_TYPE_AUDIO_LED_ON_CMD,   // None
+	QSPI_PACKET_TYPE_AUDIO_LED_OFF_CMD,   // None
+
     QSPI_PACKET_TYPE_LAST
 } qspi_packet_type_e;
 
