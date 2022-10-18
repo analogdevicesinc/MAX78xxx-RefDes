@@ -66,5 +66,6 @@ int sdcard_load_config_file(const char *fname, config_map_t *config, int nb_of_i
 int sdcard_file_exist(const char *fname);
 int sdcard_file_delete(const char *fname);
 int sdcard_card_inserted(void);
+int sdcard_mkdir(const char *dir);
 
 #endif /* _MAX32666_SDCARD_H_ */
