@@ -575,6 +575,7 @@ To add new MAXREFDES178# demo to this repository:
    #define UNET_DEMO_NAME                     "UNet"
    #define WILDLIFE_DEMO_NAME                 "WildLife"
    #define CATSDOGS_DEMO_NAME                 "CatsDogs"
+   #define IMAGECAPTURE_DEMO_NAME             "Image Capture"
    ```
 
 4. Set demo name in `max32666_main.c`, `max78000_audio_main.c` and `max78000_video_main.c`.

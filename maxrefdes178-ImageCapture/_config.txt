@@ -1,0 +1,6 @@
+interval=500
+number_samples=20
+overwrite_if_file_exist=1
+lcd_sync=1
+raw=0
+bitmap=1
