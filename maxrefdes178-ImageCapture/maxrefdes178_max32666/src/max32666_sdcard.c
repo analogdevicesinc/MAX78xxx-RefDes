@@ -357,3 +357,13 @@ int sdcard_uninit(void)
     return 0;
 }
 
+int sdcard_mkdir(const char *dir)
+{
+    // Make a directory
+    err = f_mkdir((const TCHAR *)dir);
+    if (err != FR_OK) {
+    	PR_ERROR("Error creating %s folder: %s\n", dir, FF_ERRORS[err]);
+    }
+    return err;
+}
+

@@ -50,6 +50,9 @@
 
 #define IMAGE_PREFIX	"img" // each image in sd will start with this prefix
 
+#define IMAGE_FOLDER		"./ImageCapture/images"
+#define IMAGE_CFG_FOLDER	"./ImageCapture"
+
 /*****************************    Typedef   *********************************/
 typedef struct {
 	char onetime;  //1:on , 0:off
@@ -82,11 +85,11 @@ static int is_image_exist(int index)
 	int ret = TRUE;//
 
 	// use bitmap_data[] buffer to increase performance.
-	snprintf((char *)bitmap_data, 128, "%s%u", IMAGE_PREFIX, index);
+	snprintf((char *)bitmap_data, 128, "%s/%s%u", IMAGE_FOLDER, IMAGE_PREFIX, index);
 
 	if (sdcard_file_exist((char *)bitmap_data) == FALSE) {// 0 means not exist
 		// check bitmap file too
-		snprintf((char *)bitmap_data, 128, "%s%u.bmp", IMAGE_PREFIX, index);
+		snprintf((char *)bitmap_data, 128, "%s/%s%u.bmp", IMAGE_FOLDER, IMAGE_PREFIX, index);
 		if (sdcard_file_exist((char *)bitmap_data) == FALSE) {// 0 means not exist
 			ret = FALSE;// false means not exist
 		}
@@ -136,7 +139,9 @@ static int check_sd(void)
 			{"lcd_sync", 	0, 0},
 		};
 
-		ret = sdcard_load_config_file("_config.txt", config, sizeof(config)/sizeof(config_map_t), '=');
+		char configFile[64];
+		snprintf(configFile, sizeof(configFile), "%s/%s", IMAGE_CFG_FOLDER, "_config.txt");
+		ret = sdcard_load_config_file(configFile, config, sizeof(config)/sizeof(config_map_t), '=');
 		if (ret != E_NO_ERROR) {
 			PR_INFO("sdcard reading _config.txt file failed %d", ret);
 		} else {
@@ -154,6 +159,9 @@ static int check_sd(void)
 				}
 			}
 		}
+
+		// Create Image folder, do not need to check return value
+		sdcard_mkdir(IMAGE_FOLDER);
 
 		/* Find last index in SD, the file shall be sequential
 		 * Setting bigger range will cause a delay during setup, so max nubmer configured for 32GB
@@ -173,7 +181,7 @@ static int store_raw_img(uint8_t *img, unsigned int len)
 	int ret = 0;
 	char fileName[64];
 
-	snprintf(fileName, sizeof(fileName), "%s%u", IMAGE_PREFIX, g_img_capture_conf.currentIndex);
+	snprintf(fileName, sizeof(fileName), "%s/%s%u", IMAGE_FOLDER, IMAGE_PREFIX, g_img_capture_conf.currentIndex);
 
 	if (!g_img_capture_conf.overwrite_if_file_exist) {
 		if (sdcard_file_exist(fileName) == TRUE) {
@@ -192,7 +200,7 @@ static int store_bitmap_img(uint8_t *rgb565, unsigned int len)
 	char fileName[64];
 	uint32_t headerLen = sizeof(bitmap_data);
 
-	snprintf(fileName, sizeof(fileName), "%s%u.bmp", IMAGE_PREFIX, g_img_capture_conf.currentIndex);
+	snprintf(fileName, sizeof(fileName), "%s/%s%u.bmp", IMAGE_FOLDER, IMAGE_PREFIX, g_img_capture_conf.currentIndex);
 
 	if (!g_img_capture_conf.overwrite_if_file_exist) {
 		if (sdcard_file_exist(fileName) == TRUE) {
