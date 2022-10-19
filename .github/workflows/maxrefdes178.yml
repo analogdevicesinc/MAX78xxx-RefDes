@@ -625,6 +625,72 @@ jobs:
           if (!$?) {
             exit -1
           }  
+
+      - name: Build ImageCapture MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ImageCapture\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build ImageCapture MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ImageCapture\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build ImageCapture MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ImageCapture\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
           
       - name: Prepare Release
         run: |
@@ -695,6 +761,14 @@ jobs:
           mv maxrefdes178-AIPortrait\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\AIPortrait\maxrefdes178_max78000_audio_aiportrait_v${env:VERSION}.msbl
           mv maxrefdes178-AIPortrait\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\AIPortrait\maxrefdes178_max32666_aiportrait_v${env:VERSION}.bin
           mv maxrefdes178-AIPortrait\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\AIPortrait\maxrefdes178_max32666_aiportrait_v${env:VERSION}.msbl
+          
+          mkdir release\ImageCapture
+          mv maxrefdes178-ImageCapture\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\ImageCapture\maxrefdes178_max78000_video_imagecapture_v${env:VERSION}.bin
+          mv maxrefdes178-ImageCapture\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\ImageCapture\maxrefdes178_max78000_video_imagecapture_v${env:VERSION}.msbl
+          mv maxrefdes178-ImageCapture\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\ImageCapture\maxrefdes178_max78000_audio_imagecapture_v${env:VERSION}.bin
+          mv maxrefdes178-ImageCapture\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\ImageCapture\maxrefdes178_max78000_audio_imagecapture_v${env:VERSION}.msbl
+          mv maxrefdes178-ImageCapture\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\ImageCapture\maxrefdes178_max32666_imagecapture_v${env:VERSION}.bin
+          mv maxrefdes178-ImageCapture\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\ImageCapture\maxrefdes178_max32666_imagecapture_v${env:VERSION}.msbl
 
       - uses: actions/upload-artifact@v2
         if: always()
