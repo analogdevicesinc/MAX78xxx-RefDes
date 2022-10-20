@@ -130,6 +130,32 @@ static int sdcard_umount(void)
     return err;
 }
 
+static int is_msbl_valid(const char *img)
+{
+	int ret = 0;
+	char magic[8] = {0, };
+	unsigned int rSize = 0;
+	const unsigned int magicLen = 4; // strlen("msbl")
+
+	ret = f_open(&file, (const TCHAR*)img, FA_READ);
+
+	if (ret == FR_OK) {
+		// no need to check return value to get more read ability
+		f_read(&file, magic, magicLen, &rSize);
+
+		// First 4bytes is magic, it shall be msbl
+		if (strncmp(magic, "msbl", magicLen) == 0) {
+			ret = 0;
+		} else {
+			ret = -1;
+		}
+	}
+
+	f_close(&file);
+
+	return ret;
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
 int sdcard_get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN], int *dir_count)
@@ -162,6 +188,7 @@ int sdcard_get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DI
 
 int sdcard_get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000_video_msbl_path, char *max78000_audio_msbl_path)
 {
+	int ret = 0;
     int max32666_found = 0;
     int max78000_video_found = 0;
     int max78000_audio_found = 0;
@@ -207,10 +234,25 @@ int sdcard_get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000
     }
 
     if (max32666_found && max78000_video_found && max78000_audio_found) {
-        return 0;
+        ret = 0;
     } else {
-        return -1;
+        ret = -1;
     }
+
+    // check msbl format
+    if (ret == 0) {
+    	ret = is_msbl_valid(max32666_msbl_path);
+    }
+
+    if (ret == 0) {
+    	ret = is_msbl_valid(max78000_video_msbl_path);
+    }
+
+    if (ret == 0) {
+    	ret = is_msbl_valid(max78000_audio_msbl_path);
+    }
+
+    return ret;
 }
 #pragma GCC diagnostic pop
 
