@@ -20,15 +20,24 @@ jobs:
       - name: Checkout Maxim SDK
         uses: actions/checkout@v2
         with:
-          repository: Maxim-Integrated-Software-Public/maxim-sdk-windows-actions
+          repository: Analog-Devices-MSDK/msdk
           path: MaximSDK
+          submodules: recursive
+
+      - name: Checkout Maxim SDK Tools
+        uses: actions/checkout@v2
+        with:
+          repository: Maxim-Integrated-Software-Public/maxim-sdk-windows-actions
+          path: MSDKTools
           lfs: 'true'
 
-      - name: Prepare Maxim Toolchain and SDK
+      - name: Prepare Maxim Toolchain
         run: |
-          cd MaximSDK
+          cd MSDKTools
           7z x Tools.7z
-          7z x Libraries.7z
+          cp -r ./Tools/GNUTools/ ../MaximSDK/Tools/
+          cp -r ./Tools/MinGW/ ../MaximSDK/Tools/
+          cd ../MaximSDK
           
       - name: Get Version Info
         run: |
