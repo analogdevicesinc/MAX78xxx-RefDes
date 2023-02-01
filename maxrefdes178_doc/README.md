@@ -73,7 +73,7 @@ The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://w
 
 You will need to download and install the Maxim SDK on a Windows 10 host. The Maxim SDK is available here:
 
-https://www.maximintegrated.com/content/maximintegrated/en/design/software-description.html/swpart=SFW0010820A
+https://www.analog.com/en/design-center/evaluation-hardware-and-software/software/software-download.html?swpart=SFW0010820A
 
 On Windows, the MSYS shell (included in the SDK) can be used to build examples. Start `msys.bat` to launch the shell. The shell can be accessed from the Windows Start Menu or in the default installation directory show below:
 
