@@ -20,15 +20,24 @@ jobs:
       - name: Checkout Maxim SDK
         uses: actions/checkout@v2
         with:
-          repository: Maxim-Integrated-Software-Public/maxim-sdk-windows-actions
+          repository: Analog-Devices-MSDK/msdk
           path: MaximSDK
+          submodules: recursive
+
+      - name: Checkout Maxim SDK Tools
+        uses: actions/checkout@v2
+        with:
+          repository: Maxim-Integrated-Software-Public/maxim-sdk-windows-actions
+          path: MSDKTools
           lfs: 'true'
 
-      - name: Prepare Maxim Toolchain and SDK
+      - name: Prepare Maxim Toolchain
         run: |
-          cd MaximSDK
+          cd MSDKTools
           7z x Tools.7z
-          7z x Libraries.7z
+          cp -r ./Tools/GNUTools/ ../MaximSDK/Tools/
+          cp -r ./Tools/MinGW/ ../MaximSDK/Tools/
+          cd ../MaximSDK
           
       - name: Get Version Info
         run: |
@@ -227,6 +236,73 @@ jobs:
           }
           
           
+      - name: Build ASL MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ASL\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build ASL MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ASL\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build ASL MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ASL\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+          
       - name: Build UNet MAX78000 Video Firmware
         run: |
           @"
@@ -360,7 +436,270 @@ jobs:
           if (!$?) {
             exit -1
           }  
+
+      - name: Build Voice Controlled Audio Playback MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
           
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build Voice Controlled Audio Playback MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build Voice Controlled Audio Playback MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-VCAudioPlayback\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+
+      - name: Build AIPortrait MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-AIPortrait\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build AIPortrait MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-AIPortrait\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build AIPortrait MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-AIPortrait\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }            
+
+      - name: Build DigitDetection MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-DigitDetection\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build DigitDetection MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-DigitDetection\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build DigitDetection MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-DigitDetection\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }  
+
+      - name: Build ImageCapture MAX78000 Video Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ImageCapture\maxrefdes178_max78000_video"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build ImageCapture MAX78000 Audio Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ImageCapture\maxrefdes178_max78000_audio"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
+          
+      - name: Build ImageCapture MAX32666 Firmware
+        run: |
+          @"
+          cd "${{github.workspace}}"
+          export MAXIM_PATH="${{github.workspace}}\MaximSDK"
+          
+          echo "*-*-*-*-*-* BUILD STARTED -*-*-*-*-*-"
+          cd "maxrefdes178-ImageCapture\maxrefdes178_max32666"
+          make -r -j
+          if [ `$? -ne 0 ]; then
+            echo "BUILD FAILED!"
+          exit -1
+          fi
+          echo "*-*-*-*-*-* BUILD FINISHED -*-*-*-*-*-"
+          
+          "@ | Out-File -Encoding ASCII -filepath run_build.sh
+          $env:Path += ";${{github.workspace}}\MaximSDK\Tools\GNUTools\10.3\bin"
+          ${{github.workspace}}\MaximSDK\Tools\MinGW\msys\1.0\bin\sh --login -i ${{github.workspace}}\run_build.sh
+          if (!$?) {
+            exit -1
+          }
           
       - name: Prepare Release
         run: |
@@ -384,6 +723,14 @@ jobs:
           mv maxrefdes178-CatsDogs\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\CatsDogs\maxrefdes178_max32666_catsdogs_v${env:VERSION}.bin
           mv maxrefdes178-CatsDogs\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\CatsDogs\maxrefdes178_max32666_catsdogs_v${env:VERSION}.msbl
           
+          mkdir release\ASL
+          mv maxrefdes178-ASL\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\ASL\maxrefdes178_max78000_video_asl_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\ASL\maxrefdes178_max78000_video_asl_v${env:VERSION}.msbl
+          mv maxrefdes178-ASL\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\ASL\maxrefdes178_max78000_audio_asl_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\ASL\maxrefdes178_max78000_audio_asl_v${env:VERSION}.msbl
+          mv maxrefdes178-ASL\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\ASL\maxrefdes178_max32666_asl_v${env:VERSION}.bin
+          mv maxrefdes178-ASL\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\ASL\maxrefdes178_max32666_asl_v${env:VERSION}.msbl
+          
           mkdir release\UNet
           mv maxrefdes178-UNet\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\UNet\maxrefdes178_max78000_video_unet_v${env:VERSION}.bin
           mv maxrefdes178-UNet\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\UNet\maxrefdes178_max78000_video_unet_v${env:VERSION}.msbl
@@ -400,84 +747,40 @@ jobs:
           mv maxrefdes178-WildLife\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\WildLife\maxrefdes178_max32666_wildlife_v${env:VERSION}.bin
           mv maxrefdes178-WildLife\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\WildLife\maxrefdes178_max32666_wildlife_v${env:VERSION}.msbl
           
+          mkdir release\DigitDetection
+          mv maxrefdes178-DigitDetection\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\DigitDetection\maxrefdes178_max78000_video_digitdetect_v${env:VERSION}.bin
+          mv maxrefdes178-DigitDetection\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\DigitDetection\maxrefdes178_max78000_video_digitdetect_v${env:VERSION}.msbl
+          mv maxrefdes178-DigitDetection\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\DigitDetection\maxrefdes178_max78000_audio_digitdetect_v${env:VERSION}.bin
+          mv maxrefdes178-DigitDetection\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\DigitDetection\maxrefdes178_max78000_audio_digitdetect_v${env:VERSION}.msbl
+          mv maxrefdes178-DigitDetection\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\DigitDetection\maxrefdes178_max32666_digitdetect_v${env:VERSION}.bin
+          mv maxrefdes178-DigitDetection\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\DigitDetection\maxrefdes178_max32666_digitdetect_v${env:VERSION}.msbl
+          
+          mkdir release\VCAudioPlayback
+          mv maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\VCAudioPlayback\maxrefdes178_max78000_video_vcap_v${env:VERSION}.bin
+          mv maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\VCAudioPlayback\maxrefdes178_max78000_video_vcap_v${env:VERSION}.msbl
+          mv maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\VCAudioPlayback\maxrefdes178_max78000_audio_vcap_v${env:VERSION}.bin
+          mv maxrefdes178-VCAudioPlayback\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\VCAudioPlayback\maxrefdes178_max78000_audio_vcap_v${env:VERSION}.msbl
+          mv maxrefdes178-VCAudioPlayback\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\VCAudioPlayback\maxrefdes178_max32666_vcap_v${env:VERSION}.bin
+          mv maxrefdes178-VCAudioPlayback\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\VCAudioPlayback\maxrefdes178_max32666_vcap_v${env:VERSION}.msbl
+          
+          mkdir release\AIPortrait
+          mv maxrefdes178-AIPortrait\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\AIPortrait\maxrefdes178_max78000_video_aiportrait_v${env:VERSION}.bin
+          mv maxrefdes178-AIPortrait\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\AIPortrait\maxrefdes178_max78000_video_aiportrait_v${env:VERSION}.msbl
+          mv maxrefdes178-AIPortrait\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\AIPortrait\maxrefdes178_max78000_audio_aiportrait_v${env:VERSION}.bin
+          mv maxrefdes178-AIPortrait\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\AIPortrait\maxrefdes178_max78000_audio_aiportrait_v${env:VERSION}.msbl
+          mv maxrefdes178-AIPortrait\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\AIPortrait\maxrefdes178_max32666_aiportrait_v${env:VERSION}.bin
+          mv maxrefdes178-AIPortrait\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\AIPortrait\maxrefdes178_max32666_aiportrait_v${env:VERSION}.msbl
+          
+          mkdir release\ImageCapture
+          mv maxrefdes178-ImageCapture\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video.bin release\ImageCapture\maxrefdes178_max78000_video_imagecapture_v${env:VERSION}.bin
+          mv maxrefdes178-ImageCapture\maxrefdes178_max78000_video\build\maxrefdes178_max78000_video_app.msbl release\ImageCapture\maxrefdes178_max78000_video_imagecapture_v${env:VERSION}.msbl
+          mv maxrefdes178-ImageCapture\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio.bin release\ImageCapture\maxrefdes178_max78000_audio_imagecapture_v${env:VERSION}.bin
+          mv maxrefdes178-ImageCapture\maxrefdes178_max78000_audio\build\maxrefdes178_max78000_audio_app.msbl release\ImageCapture\maxrefdes178_max78000_audio_imagecapture_v${env:VERSION}.msbl
+          mv maxrefdes178-ImageCapture\maxrefdes178_max32666\build\maxrefdes178_max32666.bin release\ImageCapture\maxrefdes178_max32666_imagecapture_v${env:VERSION}.bin
+          mv maxrefdes178-ImageCapture\maxrefdes178_max32666\build\maxrefdes178_max32666_app.msbl release\ImageCapture\maxrefdes178_max32666_imagecapture_v${env:VERSION}.msbl
+
       - uses: actions/upload-artifact@v2
         if: always()
         with:
           name: maxrefdes178_firmware_v${{env.VERSION}}
           path: release/**
-          
-  build_android:
-    name: Build Android App
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-          
-      - name: Get Version Info
-        run: |
-          # This block parses version.h file in source code for version info.
-          
-          VERSION_MAJOR=$(awk '/VERSION_MAJOR/ {print $3}' maxrefdes178_common/maxrefdes178_version.h | tr -d '\r') 
-          VERSION_MINOR=$(awk '/VERSION_MINOR/ {print $3}' maxrefdes178_common/maxrefdes178_version.h | tr -d '\r')
-          VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${{github.run_number}}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          
-      - name: Set Build Info
-        run: |
-          # This block generates build info header file to include from source code.
-                    
-          cat >maxrefdes178_common/maxrefdes178_build_info.h<<EOF
-          /* AUTOGENERATED, DO NOT EDIT */
-          #ifndef _BUILD_INFO_H_
-          #define _BUILD_INFO_H_
-          #define S_BUILD_NUMBER ${{github.run_number}}
-          #define S_BUILD_TYPE "${BUILD_TYPE}"
-          #define S_BUILD_MACHINE "$(hostname)"
-          #define S_BUILD_SCM_REVISION "${{github.sha}}"
-          #define S_BUILD_TIMESTAMP "$(date +%Y%m%d%H%M)"
-          #endif /* _BUILD_INFO_H_ */
-          EOF
-          
-      - name: Pre Build FaceID Android
-        run: |
-          echo "chaquopy.license=${{ secrets.MAXREFDES178_CHAQUOPY_LICENSE }}" >> maxrefdes178-FaceId/maxrefdes178_android/local.properties 
-          
-      - name: Build FaceID Android Application
-        uses: eskatos/gradle-command-action@v1.3.3
-        with:
-          build-root-directory: maxrefdes178-FaceId/maxrefdes178_android
-          wrapper-directory: maxrefdes178-FaceId/maxrefdes178_android
-          arguments: app::assembleRelease --no-daemon
-          gradle-version: wrapper
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          
-      - name: Sign Android Application
-        uses: r0adkll/sign-android-release@v1
-        # ID used to access action output
-        id: sign_app
-        with:
-          releaseDirectory: maxrefdes178-FaceId/maxrefdes178_android/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.MAXREFDES178_SIGNING_KEY }}
-          alias: ${{ secrets.MAXREFDES178_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.MAXREFDES178_KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.MAXREFDES178_KEY_PASSWORD }}
-          
-      - name: Prepare Release
-        run: |
-          mkdir release
-          
-          mkdir release/FaceId
-          mv ${{steps.sign_app.outputs.signedReleaseFile}} release/FaceId/maxrefdes178_android_faceid_v${VERSION}.apk
-          # mv app/build/outputs/apk/debug/app-debug.apk release/FaceId/maxrefdes178_android_faceid_debug_v${VERSION}.apk
-          
-      - uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: maxrefdes178_android_v${{env.VERSION}}
-          path: release/**
-          

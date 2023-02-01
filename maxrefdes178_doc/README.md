@@ -31,7 +31,7 @@ Before you begin, make sure you have all of the following components:
 
 ## Schematic
 
-The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://www.maximintegrated.com/products/MAXREFDES178
+The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://www.analog.com/en/design-center/reference-designs/maxrefdes178.html
 
 ## Powering Up the MAXREFDES178# for the First Time
 
@@ -69,13 +69,14 @@ The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://w
 
 ## Build Demo Firmware using MINGW on Windows
 
-### Install Maxim SDK
+### Install Analog Devices MSDK
 
-You will need to download and install the Maxim SDK on a Windows 10 host. The Maxim SDK is available here:
+You will need to download and install the Analog Devices MSDK. The MSDK is available here:
+  * [Windows](https://www.analog.com/en/design-center/evaluation-hardware-and-software/software/software-download?swpart=SFW0010820A)
+  * [Ubuntu Linux](https://www.analog.com/en/design-center/evaluation-hardware-and-software/software/software-download?swpart=SFW0018720A)
+  * [macOS](https://www.analog.com/en/design-center/evaluation-hardware-and-software/software/software-download?swpart=SFW0018610A)
 
-https://www.analog.com/en/design-center/evaluation-hardware-and-software/software/software-download.html?swpart=SFW0010820A
-
-On Windows, the MSYS shell (included in the SDK) can be used to build examples. Start `msys.bat` to launch the shell. The shell can be accessed from the Windows Start Menu or in the default installation directory show below:
+On Windows, the MSYS shell (included in the MSDK) can be used to build examples. Start `msys.bat` to launch the shell. The shell can be accessed from the Windows Start Menu or in the default installation directory show below:
 
 ![](msys.png)
 
@@ -523,7 +524,7 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 1. Press and hold the SW on MAX32625PICO and then connect it to the USB port to enter the maintenance mode. A MAINTENANCE drive should appear.
 
 2. Drag and drop the latest bin firmware to the MAINTENANCES drive. The latest DAPLINK binary can be found here:
-   https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/tree/main/bin
+   https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/blob/main/bin/max32625_max78000fthr_if_crc_v1.0.2.bin
 
 3. Following the Drag-and-Drop, the debug adapter should reboot and reconnect as a drive named DAPLINK.
 
@@ -575,6 +576,7 @@ To add new MAXREFDES178# demo to this repository:
    #define UNET_DEMO_NAME                     "UNet"
    #define WILDLIFE_DEMO_NAME                 "WildLife"
    #define CATSDOGS_DEMO_NAME                 "CatsDogs"
+   #define IMAGECAPTURE_DEMO_NAME             "Image Capture"
    ```
 
 4. Set demo name in `max32666_main.c`, `max78000_audio_main.c` and `max78000_video_main.c`.

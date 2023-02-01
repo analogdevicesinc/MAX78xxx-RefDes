@@ -311,7 +311,7 @@ int main(void)
     tmr.clock = MXC_TMR_APB_CLK;
     tmr.cmp_cnt = MAX78000_SLEEP_DEFER_DURATION * PeripheralClock / 128;
     tmr.pol = 0;
-    NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX78000_AUDIO_SLEEP_DEFER_TMR)), sleep_defer_int);
+    MXC_NVIC_SetVector(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX78000_AUDIO_SLEEP_DEFER_TMR)), sleep_defer_int);
     NVIC_EnableIRQ(MXC_TMR_GET_IRQ(MXC_TMR_GET_IDX(MAX78000_AUDIO_SLEEP_DEFER_TMR)));
     MXC_TMR_Init(MAX78000_AUDIO_SLEEP_DEFER_TMR, &tmr, false);
     MXC_TMR_EnableInt(MAX78000_AUDIO_SLEEP_DEFER_TMR);
@@ -693,7 +693,7 @@ static void I2SInit()
 
     /* Set I2S RX FIFO threshold to generate interrupt */
     MXC_I2S_SetRXThreshold(4);
-    NVIC_SetVector(I2S_IRQn, i2s_isr);
+    MXC_NVIC_SetVector(I2S_IRQn, i2s_isr);
     NVIC_EnableIRQ(I2S_IRQn);
     /* Enable RX FIFO Threshold Interrupt */
     MXC_I2S_EnableInt(MXC_F_I2S_INTEN_RX_THD_CH0);
