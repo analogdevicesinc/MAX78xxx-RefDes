@@ -4,11 +4,13 @@
 
 ## Getting Started with MAXREFDES178, Building Firmware, Loading and Debugging
 
+**NOTE: The accuracy of the existing ASL demo is low due to the inferior quality of images taken with the cube camera as compared with images used in the training dataset. An improved version of this demo using the Domain Adaptation technique is available and will be ported to this demo in the near future.**
+
 Please refer to main MAXREFDES178 documentation for instructions how to build, and load firmware:
 
 [Getting Started with the MAXREFDES178# Cube Camera](./../maxrefdes178_doc/README.md)
 
-NOTE: ASL demo does not support Android application.
+Please note that ASL demo does not support Android application.
 
 
 ## Testing ASL Demo
@@ -21,10 +23,8 @@ After loading all 3 components of ASL Demo (MAX32666, MAX78000_video and MAX7800
 
 - Power LED will start blinking blue.
 
-- Maxim logo, BLE MAC, serial number and firmware version will appear on the LCD.
+- Logo, BLE MAC, serial number and firmware version will appear on the LCD.
   
-  ![](../maxrefdes178_doc/asl_intro.jpg)
-
 - Device will start with pressing Start Video
 
 - Keyword Spotting is enabled and the detected words are displayed on the top. However, **voice commands are disabled** in this demo. Following words are detected:
