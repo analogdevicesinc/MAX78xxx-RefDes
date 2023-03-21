@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2017 Maxim Integrated Products, Inc., All Rights Reserved.
+ * Copyright (C) 2017-2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -232,7 +232,7 @@ SECTIONS {
     {
         . = ALIGN(4);
         _bss = .;
-        *(.bss*)     /*read-write zero initialized data: uninitialzed global variable*/
+        *(.bss*)     /*read-write zero initialized data: uninitialized global variable*/
         *(COMMON)
         _ebss = ALIGN(., 4);
     } > SRAM

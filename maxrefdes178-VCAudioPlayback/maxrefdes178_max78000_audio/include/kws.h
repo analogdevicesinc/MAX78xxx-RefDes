@@ -43,7 +43,7 @@ extern int16_t Max, Min;
 //-----------------------------------------------------------------------------
 // Function declarations
 //-----------------------------------------------------------------------------
-/* Enter infinite loop if any step in the intialization or computation fails */
+/* Enter infinite loop if any step in the initialization or computation fails */
 void fail(void);
 
 /* Load data into the CNN for calculation */

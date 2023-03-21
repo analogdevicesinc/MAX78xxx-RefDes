@@ -21,7 +21,7 @@ After loading all 3 components of Cats and Dogs Demo (MAX32666, MAX78000_video a
   
  | **Parameter**            | **Description**                                                   |
  | -------------------------| ------------------------------------------------------------------|
- | interval	                | Image capture interval, resolution milisecond					    |
+ | interval	                | Image capture interval, resolution millisecond					    |
  | number_samples	        | Required number of sample					              			|
  | overwrite_if_file_exist  | Set it to 1 to overwrite image in case of same file exist in the image folder               |
  | lcd_sync                 | Can be set to 1 or 0. If it set to 0 image will be capture more fast but display will blink |
@@ -44,7 +44,7 @@ After loading all 3 components of Cats and Dogs Demo (MAX32666, MAX78000_video a
 
   ![](../maxrefdes178_doc/imagecapture_intro_2.jpg)
   
-  In sequence capture mode "Seqeunce Capture" label on display indicate whether sequence mode ON of OFF. Use Button B to start sequence capture mode.
+  In sequence capture mode "Sequence Capture" label on display indicate whether sequence mode ON of OFF. Use Button B to start sequence capture mode.
   "Image n/m saved" indicates last image number saved in SD Card.
   
   During each image capture Button B green LED will blink to indicate status.

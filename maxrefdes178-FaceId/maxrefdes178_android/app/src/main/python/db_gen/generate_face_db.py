@@ -1,5 +1,5 @@
 ###################################################################################################
-# Copyright (C) Maxim Integrated Products, Inc., All Rights Reserved.
+# Copyright (C) 2016-2023 Maxim Integrated Products, Inc., All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 # associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -101,7 +101,7 @@ def create_db_from_folder(args):
 
 def parse_arguments():
     """
-    Function to parse comman line arguments.
+    Function to parse command line arguments.
     """
     parser = argparse.ArgumentParser(description='Create embedding database file.')
     parser.add_argument('--db', '-db-path', type=str, default='db',

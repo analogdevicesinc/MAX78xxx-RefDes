@@ -1,0 +1,25 @@
+---
+name: Lint Code Base
+
+on:
+  push:
+    branches-ignore: [test]
+  pull_request:
+    branches-ignore: [test]
+
+jobs:
+  build:
+    name: Lint Code Base
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: pip install codespell tomli
+
+      - name: Run codespell
+        run: codespell

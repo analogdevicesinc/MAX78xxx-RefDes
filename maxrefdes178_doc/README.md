@@ -716,7 +716,7 @@ The following steps summarize the modifications needed to port a new example:
    
    // Classification command response
    typedef struct __attribute__((packed)) {
-       float probabily;  // confidence level
+       float probability;  // confidence level
        classification_e classification;  // status of detection
        char result[CLASSIFICATION_STRING_SIZE]; // result of classification
    } classification_result_t;

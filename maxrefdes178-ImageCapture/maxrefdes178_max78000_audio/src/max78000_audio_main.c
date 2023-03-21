@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -662,7 +662,7 @@ int main(void)
                 }
 
                 memcpy(classification_result.result, keywords[out_class], sizeof(classification_result.result));
-                classification_result.probabily = probability;
+                classification_result.probability = probability;
 
                 qspi_slave_send_packet((uint8_t *) &classification_result, sizeof(classification_result),
                         QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES);
@@ -773,7 +773,7 @@ static uint8_t cnn_load_data(uint8_t* pIn)
     uint32_t mem;
     uint16_t index = 0;
 
-    /* data should already be formated correctly */
+    /* data should already be formatted correctly */
     /* pIn is 16KB, each 1KB belongs to a memory group */
     for (mem = 0x50400000; mem <= 0x50418000; mem += 0x8000) {
         memcpy((uint8_t*)mem, &pIn[index], 1024);
@@ -803,7 +803,7 @@ static uint8_t AddTranspose(uint8_t *pIn, uint8_t *pOut, uint16_t inSize,
         uint16_t outSize, uint16_t width) {
     /* Data order in Ai85 memory (transpose is included):
 	input(series of 8 bit samples): (0,0) ...  (0,127)  (1,0) ... (1,127) ...... (127,0)...(127,127)    16384 samples
-	output (32bit word): 16K samples in a buffer. Later, each 1K goes to a seperate CNN memory group
+	output (32bit word): 16K samples in a buffer. Later, each 1K goes to a separate CNN memory group
 	0x0000:
 		(0,3)(0,2)(0,1)(0,0)
 		(0,67)(0,66)(0,65)(0,64)

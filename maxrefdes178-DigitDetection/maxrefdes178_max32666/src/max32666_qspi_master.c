@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -248,7 +248,7 @@ int qspi_master_video_rx_worker(qspi_packet_type_e *qspi_packet_type_rx)
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(video_cs_pin);
 
-        PR_INFO("video %s %d %0.1f", device_status.classification_video.result, device_status.classification_video.classification, (double)device_status.classification_video.probabily);
+        PR_INFO("video %s %d %0.1f", device_status.classification_video.result, device_status.classification_video.classification, (double)device_status.classification_video.probability);
 
         break;
     case QSPI_PACKET_TYPE_VIDEO_STATISTICS_RES:
@@ -436,7 +436,7 @@ int qspi_master_audio_rx_worker(qspi_packet_type_e *qspi_packet_type_rx)
         spi_dma_wait(MAX32666_QSPI_DMA_CHANNEL, MAX32666_QSPI);
         GPIO_SET(audio_cs_pin);
 
-        PR_INFO("audio %s %d %0.1f", device_status.classification_audio.result, device_status.classification_audio.classification, (double)device_status.classification_audio.probabily);
+        PR_INFO("audio %s %d %0.1f", device_status.classification_audio.result, device_status.classification_audio.classification, (double)device_status.classification_audio.probability);
 
         break;
     case QSPI_PACKET_TYPE_AUDIO_STATISTICS_RES:

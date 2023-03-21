@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -460,7 +460,7 @@ static int ble_command_execute_rx_command(void)
         expander_select_debugger((debugger_select_e)ble_command_buffer.total_payload_buffer[0]);
         break;
     default:
-        PR_ERROR("Unknwon command");
+        PR_ERROR("Unknown command");
         break;
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -162,7 +162,7 @@ static int getLine(char *buffer, unsigned int *len)
 	return ret;
 }
 
-int sdcard_load_config_file(const char *fname, config_map_t *config, int nb_of_item, char delimeter)
+int sdcard_load_config_file(const char *fname, config_map_t *config, int nb_of_item, char delimiter)
 {
 	int ret = 0;
 	char buffer[64];
@@ -186,14 +186,14 @@ int sdcard_load_config_file(const char *fname, config_map_t *config, int nb_of_i
 
 			i = 0;
 			while (i < bufSize) {
-				if (buffer[i] == delimeter) {
+				if (buffer[i] == delimiter) {
 					key[i] = 0;
 					break;
 				}
 				key[i] = buffer[i];
 				++i;
 			}
-			i++; // pass delimeter
+			i++; // pass delimiter
 
 			k = 0;
 			while (i < bufSize) {
