@@ -57,15 +57,15 @@ The schematic and BOM can be found in the MAXREFDES178# Datasheet. See https://w
 
 - Please refer to FaceID Demo page for preloaded demo details:
 
-  - [FaceID Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-FaceId/)
+  - [FaceID Demo on the MAXREFDES178# Cube Camera](../maxrefdes178-FaceId/)
 
 - Other available MAXREFDES178# demo pages:
 
-  - [Cats and Dogs Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-CatsDogs/)
+  - [Cats and Dogs Demo on the MAXREFDES178# Cube Camera](../maxrefdes178-CatsDogs/)
 
-  - [UNet Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-UNet/)
+  - [UNet Demo on the MAXREFDES178# Cube Camera](../maxrefdes178-UNet/)
 
-  - [WildLife Demo on the MAXREFDES178# Cube Camera](./../maxrefdes178-WildLife/)
+  - [WildLife Demo on the MAXREFDES178# Cube Camera](../maxrefdes178-WildLife/)
 
 ## Build Demo Firmware using MINGW on Windows
 
@@ -524,7 +524,7 @@ If the programming of Audio or Video Firmware fails repeatedly (due to incomplet
 1. Press and hold the SW on MAX32625PICO and then connect it to the USB port to enter the maintenance mode. A MAINTENANCE drive should appear.
 
 2. Drag and drop the latest bin firmware to the MAINTENANCES drive. The latest DAPLINK binary can be found here:
-   https://github.com/MaximIntegratedMicros/max32625pico-firmware-images/blob/main/bin/max32625_max78000fthr_if_crc_v1.0.2.bin
+   https://github.com/MaximIntegratedAI/MaximAI_Documentation/raw/master/MAX78000_Feather/MAX32625PICO_files/max32625_max78000fthr_if_crc_v1.0.2.bin
 
 3. Following the Drag-and-Drop, the debug adapter should reboot and reconnect as a drive named DAPLINK.
 

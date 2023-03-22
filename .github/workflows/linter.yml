@@ -1,5 +1,5 @@
 ---
-name: Lint Code Base
+name: Lint code
 
 on:
   push:
@@ -13,13 +13,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Install dependencies
+      - name: Install codespell
         run: pip install codespell tomli
 
       - name: Run codespell
         run: codespell
+
+      - name: Install markdown-lint-check
+        run: npm install -g markdown-link-check
+
+      - name: Run markdown-lint-check
+        run: find . -name \*.md -print0 | xargs -0 -n1 markdown-link-check -a 0 -p -v -r
