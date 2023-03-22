@@ -6,7 +6,7 @@
 
 Please refer to main MAXREFDES178 documentation for instructions how to build, and load firmware:
 
-[Getting Started with the MAXREFDES178# Cube Camera](./../maxrefdes178_doc/README.md)
+[Getting Started with the MAXREFDES178# Cube Camera](../maxrefdes178_doc/README.md)
 
 NOTE: Voice Controlled Audio Playback demo does not support Android application.
 
@@ -17,7 +17,7 @@ For reference:
 
   * MAXDAP-TYPE-C Pico adaptor oriented toward the screen.
 
-    ![](./../maxrefdes178_doc/mrd178_buttons.jpg)
+    ![](../maxrefdes178_doc/mrd178_buttons.jpg)
 
 ##### Setting up the Device
 

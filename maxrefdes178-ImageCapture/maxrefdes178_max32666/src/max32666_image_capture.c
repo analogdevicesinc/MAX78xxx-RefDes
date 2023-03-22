@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) Maxim Integrated Products, Inc., All Rights Reserved.
+ * Copyright (C) 2016-2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -164,7 +164,7 @@ static int check_sd(void)
 		sdcard_mkdir(IMAGE_FOLDER);
 
 		/* Find last index in SD, the file shall be sequential
-		 * Setting bigger range will cause a delay during setup, so max nubmer configured for 32GB
+		 * Setting bigger range will cause a delay during setup, so max number configured for 32GB
 		 * Each raw image is 115200KB, 32GB/115200KB =~ 275K sample
 		 */
 		g_img_capture_conf.currentIndex = binary_search(0, 275000);// 275K * 115200 ~= 32GB

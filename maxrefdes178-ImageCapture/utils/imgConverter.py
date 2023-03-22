@@ -1,6 +1,6 @@
 """
 /*******************************************************************************
-* Copyright (C) Maxim Integrated Products, Inc., All Rights Reserved.
+* Copyright (C) 2016-2023 Maxim Integrated Products, Inc., All Rights Reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy of this software and associated documentation files (the "Software"),
@@ -284,10 +284,10 @@ if __name__ == "__main__":
                     with open(img_in, mode='rb') as file: # b is important -> binary
                         fileContent = file.read()
                         convert(fileContent, img_out, 240, 240, "RGB565")
-                        nb_of_converted_file += 1 # convertion done
+                        nb_of_converted_file += 1 # conversion done
         except:
             print(f"----> Error occur while converting {file_path}")
 
     print("-" * 64)
-    print(f"Conversion done, {nb_of_converted_file} file conveted to png format in the current folder", flush=True)
+    print(f"Conversion done, {nb_of_converted_file} file converted to png format in the current folder", flush=True)
 

@@ -1,0 +1,10 @@
+[tool.black]
+line-length = 99
+target-version = ['py36']
+
+[tool.codespell]
+count = ''
+ignore-words-list = 'pres,cconfiguration'
+quiet-level = 3
+skip = '*.dasm,*.map,./.mypy_cache,./venv,./.git,./super-linter.log,./maxrefdes178-FaceId/maxrefdes178_max32666/Cordio'
+ignore-regex = '^\s+"image/png".*$'

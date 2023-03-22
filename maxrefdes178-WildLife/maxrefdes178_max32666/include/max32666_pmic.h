@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+* Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
 * of foreign countries. This material may also be protected by patent laws
@@ -53,7 +53,7 @@
 /**
  * @brief  Initialize MAX20303 PMIC. Before calling this function, I2C should
  * be initialized via i2c_init() function.
- * @retval     #E_NO_ERROR   Intialization successful.
+ * @retval     #E_NO_ERROR   Initialization successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
 int pmic_init(void);
@@ -61,7 +61,7 @@ int pmic_init(void);
 /**
  * @brief  Worker function for MAX20303 PMIC. Before calling this function, I2C should
  * be initialized via i2c_init() function.
- * @retval     #E_NO_ERROR   Intialization successful.
+ * @retval     #E_NO_ERROR   Initialization successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
 int pmic_worker(void);

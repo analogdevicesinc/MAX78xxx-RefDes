@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+* Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
 * of foreign countries. This material may also be protected by patent laws
@@ -111,7 +111,7 @@ static const uint32_t crc32Table[256] =
  *
  *  \brief  Calculate the CRC-32 of the given buffer.
  *
- *  \param  len   Length fo the buffer.
+ *  \param  len   Length for the buffer.
  *  \param  pBuf  Buffer to compute the CRC.
  *
  *  \return None.
@@ -144,7 +144,7 @@ uint32_t calcCrc32(const uint8_t *pBuf, int size)
  *
  *  \brief  verify the CRC-32 of the given buffer.
  *
- *  \param  len   Length fo the buffer.
+ *  \param  len   Length for the buffer.
  *  \param  pBuf  Buffer to compute the CRC.
  *
  *  \return 0 if msg checksum is verified

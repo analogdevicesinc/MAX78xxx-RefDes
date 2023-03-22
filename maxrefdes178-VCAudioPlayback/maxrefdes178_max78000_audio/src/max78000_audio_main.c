@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2016 Maxim Integrated Products, Inc., All Rights Reserved.
+ * Copyright (C) 2016-2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -237,7 +237,7 @@ int main(void)
 		        }
 
 		        memcpy(classification_result.result, keywords[out_class], sizeof(classification_result.result));
-		        classification_result.probabily = probability;
+		        classification_result.probability = probability;
 
 		        if(classification_result.classification == CLASSIFICATION_DETECTED) {
 					if(strcmp(classification_result.result, "GO") == 0) {

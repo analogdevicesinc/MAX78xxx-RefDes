@@ -297,7 +297,7 @@ int playAudio(int bufIndex) {
 
 void stopAudio(void)
 {
-	classification_result_t stopClass = { .probabily = 99.0,  .classification = CLASSIFICATION_DETECTED, .result = "STOP"};
+	classification_result_t stopClass = { .probability = 99.0,  .classification = CLASSIFICATION_DETECTED, .result = "STOP"};
 	qspi_slave_set_rx_state(QSPI_STATE_IDLE);
 	qspi_slave_send_packet((uint8_t*) &stopClass, sizeof(stopClass), QSPI_PACKET_TYPE_AUDIO_CLASSIFICATION_RES);
 }

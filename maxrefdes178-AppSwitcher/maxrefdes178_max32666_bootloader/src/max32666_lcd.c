@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -209,7 +209,7 @@ static int lcd_configure(void)
     lcd_sendSmallData(0x01);           //  Default value
 
     lcd_sendCommand(0xC3);             //  VRH set
-    lcd_sendSmallData(0x12);           //  +-4.45v (defalut +-4.1v for 0x0B)
+    lcd_sendSmallData(0x12);           //  +-4.45v (default +-4.1v for 0x0B)
 
     lcd_sendCommand(0xC4);             //  VDV set
     lcd_sendSmallData(0x20);           //  Default value

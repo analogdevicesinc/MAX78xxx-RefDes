@@ -1,5 +1,5 @@
 ################################################################################
- # Copyright (C) 2016 Maxim Integrated Products, Inc., All Rights Reserved.
+ # Copyright (C) 2016-2023 Maxim Integrated Products, Inc., All Rights Reserved.
  #
  # Permission is hereby granted, free of charge, to any person obtaining a
  # copy of this software and associated documentation files (the "Software"),
@@ -116,7 +116,7 @@ ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
 endif
 
-# External libray source files
+# External library source files
 SRCS += bmi160.c
 
 # Where to find source files for this test
@@ -202,7 +202,7 @@ include $(SDHC_DRIVER_DIR)/sdhc.mk
 #CORDIO_DIR=Cordio
 #include $(CORDIO_DIR)/platform/targets/maxim/build/cordio.mk
 
-# Inlcude USB Library
+# Include USB Library
 #MAXUSB_DIR=$(LIBS_DIR)/MAXUSB
 #include $(MAXUSB_DIR)/maxusb.mk
 

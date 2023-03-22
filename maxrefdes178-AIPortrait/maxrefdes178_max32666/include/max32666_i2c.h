@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+* Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
 * of foreign countries. This material may also be protected by patent laws
@@ -125,7 +125,7 @@ int i2c_master_reg_read_buf(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t len
 
 /**
  * @brief  Initialize I2C peripheral
- * @retval     #E_NO_ERROR   Intialization successful.
+ * @retval     #E_NO_ERROR   Initialization successful.
  * @retval     "Error Code"  @ref MXC_Error_Codes "Error Code" if unsuccessful.
  */
 int i2c_master_init(void);

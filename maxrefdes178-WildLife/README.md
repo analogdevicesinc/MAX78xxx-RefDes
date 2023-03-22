@@ -6,7 +6,7 @@
 
 Please refer to main MAXREFDES178 documentation for instructions how to build, and load firmware:
 
-[Getting Started with the MAXREFDES178# Cube Camera](./../maxrefdes178_doc/README.md)
+[Getting Started with the MAXREFDES178# Cube Camera](../maxrefdes178_doc/README.md)
 
 NOTE: Forest demo does not support Android application.
 

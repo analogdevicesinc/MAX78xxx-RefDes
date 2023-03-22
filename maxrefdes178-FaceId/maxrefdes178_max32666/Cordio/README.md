@@ -78,12 +78,12 @@ For more information consult the following documents:
 
 * Packetcraft BLE Mesh Sample App Developer's Guide - TBD
 * Packetcraft Mesh Developer's Guide - TBD
-* [Packetcraft BLE Sample App Developer's Guide](https://os.mbed.com/docs/mbed-cordio/19.02/sample-apps/index.html)
-* [Packetcraft Profiles Developer's Guide](https://os.mbed.com/docs/mbed-cordio/19.02/profiles/index.html)
-* [Packetcraft Host Developer's Guide](https://os.mbed.com/docs/mbed-cordio/19.02/stack/index.html)
-* [Packetcraft Controller Developer's Guide](https://os.mbed.com/docs/mbed-cordio/19.02/controller/index.html)
-* [Packetcraft WSF Developer's Guide](https://os.mbed.com/docs/mbed-cordio/19.02/wsf/index.html)
-* [Packetcraft PAL Developer's Guide](https://os.mbed.com/docs/mbed-cordio/19.02/porting-pal/index.html)
+* Packetcraft BLE Sample App Developer's Guide - TBD
+* Packetcraft Profiles Developer's Guide - TBD
+* Packetcraft Host Developer's Guide - TBD
+* Packetcraft Controller Developer's Guide - TBD
+* Packetcraft WSF Developer's Guide - TBD
+* Packetcraft PAL Developer's Guide - TBD
 
 
 Certification

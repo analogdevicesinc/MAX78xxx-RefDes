@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+* Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
 * of foreign countries. This material may also be protected by patent laws
@@ -52,8 +52,8 @@ typedef struct {
 	uint32_t boot_mode;
 	/*
 	Please note that when app_header_t is modified,
-	bootloader linker files also need to be modifed.
-	Becase Linker exposes boot_mode varible in the flash memory.
+	bootloader linker files also need to be modified.
+	Because Linker exposes boot_mode variable in the flash memory.
 	*/
 } app_header_t;
 extern void *_app_isr[];

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+ * Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
  *
  * This software is protected by copyright laws of the United States and
  * of foreign countries. This material may also be protected by patent laws
@@ -188,7 +188,7 @@ int main(void)
         pmic_led_red(1);
     }
 
-    // Draw bootlaoder title
+    // Draw bootloader title
     snprintf(bootloader_string, sizeof(bootloader_string) - 1, "MRD178 App Switcher v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
     memset(lcd_buff, 0xff, sizeof(lcd_buff));
     fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
