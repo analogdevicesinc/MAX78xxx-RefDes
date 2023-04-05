@@ -69,6 +69,6 @@ The companion Android application for FaceID demo can be downloaded from Google 
 
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
 <span>
-NEXT : <a href="InputsOutputs">Inputs and Outputs</a>
+NEXT : <a href="InputsOutputs.md">Inputs and Outputs</a>
 </span>
 </div>
