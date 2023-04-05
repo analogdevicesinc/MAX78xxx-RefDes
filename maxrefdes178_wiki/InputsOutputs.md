@@ -35,7 +35,7 @@ For all audio connectors, it is required to use a 2.5mm to 3.5mm adapter is need
 
 <img src="images/wiki_ports_top.png" width="400" alt="Top Side" align="left" >
 
-The user programable buttons are located on top of the cube. A and B buttons have dedicated RGB LEDs. The transparent keycaps allow buttons to be illuminated with the desired color and blink pattern. X and Y buttons do not have RGB LEDs.  All buttons are connected through MAX6817 ESD Protected Switch Debouncer ICs.
+The user programmable buttons are located on top of the cube. A and B buttons have dedicated RGB LEDs. The transparent keycaps allow buttons to be illuminated with the desired color and blink pattern. X and Y buttons do not have RGB LEDs.  All buttons are connected through MAX6817 ESD Protected Switch Debouncer ICs.
 
 Two of the buttons are placed on the Connectivity Board, other two are placed on the AI board.
 

@@ -31,7 +31,7 @@ The schematics of MAXDAP-TYPE-C can be found here:
 | ------- |------|-----|
 |USB Type-C Male|Target Device|SWD (Serial Wire Debug) signals and optional UART|
 |Debugger Connector|Host (PC)|DAPLink interface. Allow debugging of selected target|
-|Target USB Interface|Host (PC)|USB pass-thru connector. Normally a standard USB Type-C cable is used to connect the target to a Host PC. When MAXDAP-TYPE-C is plugged for debugging or programming, target's USB interface becomes occupied. It is possible to use this connector to access target USB interface.|
+|Target USB Interface|Host (PC)|USB pass-through connector. Normally a standard USB Type-C cable is used to connect the target to a Host PC. When MAXDAP-TYPE-C is plugged for debugging or programming, target's USB interface becomes occupied. It is possible to use this connector to access target USB interface.|
 
 
 The female USB Type-C connector on MAXREFDES178 is located on Connectivity board. USB data lines are connected to [MAX32666](https://www.analog.com/en/products/max32666.html) microcontroller on the same board.
@@ -41,7 +41,7 @@ MAXDAP-TYPE-C can:
 * Debug or program selected target processor. Please refer to [Target Selection](#Target-Selection) section in this document.
 MAXREFDES178 Connectivity Board
 * Provide access to selected target processor UART (console).  Please refer to [Target Selection](#Target-Selection) section in this document.
-* Provide accees to target USB interface. [MAX32666](https://www.analog.com/en/products/max32666.html) USB interface can be accessed using the second Micro USB connector.
+* Provide access to target USB interface. [MAX32666](https://www.analog.com/en/products/max32666.html) USB interface can be accessed using the second Micro USB connector.
 
 
 MAXREFDES178 has been designed to work with a standard USB Type-C cable for powering, charging or communication via [MAX32666](https://www.analog.com/en/products/max32666.html) USB interface. A standard USB Type-C cable may be inserted into the MAXREFDES178 in either orientation.
@@ -115,7 +115,7 @@ MAXDAP-TYPE-C has one SWD interface and one UART (console) interface available o
 <br><br>
 
 
-When the components on MAXDAP-TYPE-C and MAXREFDES178front (camera) face are aligned as shown in the image, DAPLink and UART (console) gets connected to [MAX32666](https://www.analog.com/en/products/max32666.html) microcontroller. The secondary SWD and UART (console) interfaces of MAXREFDES178 isn't connected to MAX32625PICO board. At the bottom side of MAXDAP-TYPE-C, there is a footprint for unpopulated 10-pin 1.27mm pin debug header. This operation is not supported but it is possible to access secondary SWD and UART using this header pads. It is suggested to use dedicated SWD header connectors directly on MAXREFDES178 AI board instead by seperating front and rear parts of the cube camera enclousure.
+When the components on MAXDAP-TYPE-C and MAXREFDES178front (camera) face are aligned as shown in the image, DAPLink and UART (console) gets connected to [MAX32666](https://www.analog.com/en/products/max32666.html) microcontroller. The secondary SWD and UART (console) interfaces of MAXREFDES178 isn't connected to MAX32625PICO board. At the bottom side of MAXDAP-TYPE-C, there is a footprint for unpopulated 10-pin 1.27mm pin debug header. This operation is not supported but it is possible to access secondary SWD and UART using this header pads. It is suggested to use dedicated SWD header connectors directly on MAXREFDES178 AI board instead by separating front and rear parts of the cube camera enclousure.
 
 
 
@@ -128,7 +128,7 @@ When the components on MAXDAP-TYPE-C and MAXREFDES178front (camera) face are ali
 <p align="center"><img src="images/wiki_debuggerreverseddiagram.png" width="800" alt="MAXDAP TYPE-C Reversed" title="DAPLink Adapter Reversed Connection"></p>
 <br><br>
 
-If the MAXDAP-TYPE-C and MAXREFDES178 connected to each other with USB Type-C connector in reverse alignment as shown in the image, the first SWD channel and UART (console) channel of MAXREFDES178 becomes seperated from the debugger.
+If the MAXDAP-TYPE-C and MAXREFDES178 connected to each other with USB Type-C connector in reverse alignment as shown in the image, the first SWD channel and UART (console) channel of MAXREFDES178 becomes separated from the debugger.
 The second SWD and UART (console) channel gets connected to the debugger as shown in the diagram. In this case there are multiple target connection options. The target selection is done with a series of MAX14689 multiplexers. HDK1_TARGET_SEL, UART_TARGET_SEL, SLAVE_DEBUG_SEL signals on the connectivity board selects which SWD and UART interface gets connected to the second channel. All these selection signals are controlled by [MAX32666](https://www.analog.com/en/products/max32666.html) on the connectivity board.
 
 MAXREFDES178 demo applications have target selection implemented using the Y button at the top side of the enclosure. Pressing Y button switches between:

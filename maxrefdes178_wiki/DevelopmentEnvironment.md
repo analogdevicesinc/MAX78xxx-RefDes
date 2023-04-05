@@ -1,6 +1,6 @@
 # Development Environment Setup
 
-The MAXREFDES178 demo applications are developed using C languge and they can be compiled using GNU Arm Embedded Toolchain. ADI provides a complete installation package for Windows, Ubuntu Linux ad macOS host operating systems. The package includes an SDK with GNU Arm Toolchain, ADI SDK libraries, example projects, OpenOCD debugger and Eclipse IDE. VSCode support files for existing VSCode installation are also available.
+The MAXREFDES178 demo applications are developed using C language and they can be compiled using GNU Arm Embedded Toolchain. ADI provides a complete installation package for Windows, Ubuntu Linux ad macOS host operating systems. The package includes an SDK with GNU Arm Toolchain, ADI SDK libraries, example projects, OpenOCD debugger and Eclipse IDE. VSCode support files for existing VSCode installation are also available.
 
 ## ADI MSDK Download
 

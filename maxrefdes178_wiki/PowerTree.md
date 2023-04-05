@@ -48,7 +48,7 @@ The **Safe LDO** of the PMIC is an always-on output when USB cable is plugged. T
   * MAX32666 SIMO input is powered from this rail.
   * Micro SD card is powered from this rail.
 * MAX1574 White LED Flash Driver (AI board)
-* 2x MAX38642 Buck Regulators. (AI Board) These buck regulators are normally disabled. Each regulator can be enabled by the dedicated MAX78000 processor; image our audio. These regulators are connected to CNN supply of the corresonding MAX78000 processor. Normally MAX78000 internal SIMO regulator is sufficient to power CNN block itself. But for very heavy networks, an external regulator might be needed for powering the CNN unit.
+* 2x MAX38642 Buck Regulators. (AI Board) These buck regulators are normally disabled. Each regulator can be enabled by the dedicated MAX78000 processor; image our audio. These regulators are connected to CNN supply of the corresponding MAX78000 processor. Normally MAX78000 internal SIMO regulator is sufficient to power CNN block itself. But for very heavy networks, an external regulator might be needed for powering the CNN unit.
 
 
 

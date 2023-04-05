@@ -54,7 +54,7 @@ App-Switcher SD Card folder structure requirements:
 <br><br>
 
 * Pressing **Button X** changes the selected demo.
-  * Selected demo is higlighted in Green.
+  * Selected demo is highlighted in Green.
 
   <p align="center"><img src="images/wiki_appswitcherdemolist.jpg" width="400" alt="MAXDAP TYPE-C" title=""></p>
 
