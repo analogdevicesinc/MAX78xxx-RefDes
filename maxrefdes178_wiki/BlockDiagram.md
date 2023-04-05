@@ -42,5 +42,5 @@ The existing MAXREFDES178 example projects are based on QSPI interface between [
 <br><br><br>
 
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
-NEXT : <a href="PowerTree">Power Tree</a>
+NEXT : <a href="PowerTree.md">Power Tree</a>
 </div>

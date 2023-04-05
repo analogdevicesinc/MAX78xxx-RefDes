@@ -148,6 +148,6 @@ Stop switching when the desired target is displayed on LCD and use debugger to d
 
 <br><br><br>
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
-NEXT : <a href="ProgrammingFirmware">Programming Firmware</a>
+NEXT : <a href="ProgrammingFirmware.md">Programming Firmware</a>
 </div>
 

@@ -189,5 +189,5 @@ Follow the same steps provided in the Loading and Running Applications on the EV
 
 <br><br><br>
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
-NEXT : <a href="AppSwitcher">App Switcher</a>
+NEXT : <a href="AppSwitcher.md">App Switcher</a>
 </div>

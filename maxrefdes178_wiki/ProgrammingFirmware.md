@@ -268,7 +268,7 @@ openocd -s ${TOOLCHAIN_PATH}/OpenOCD/scripts -f interface/cmsis-dap.cfg -f targe
 
 <br><br><br>
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
-NEXT : <a href="DevelopmentEnvironment">Development Environment</a>
+NEXT : <a href="DevelopmentEnvironment.md">Development Environment</a>
 </div>
 
 

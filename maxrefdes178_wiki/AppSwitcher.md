@@ -122,7 +122,7 @@ App-Switcher SD Card folder structure requirements:
 
 <br><br><br>
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
-NEXT : <a href="RecoveryProcedure">Recovery Procedure</a>
+NEXT : <a href="RecoveryProcedure.md">Recovery Procedure</a>
 </div>
 
 

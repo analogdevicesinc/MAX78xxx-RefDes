@@ -61,5 +61,5 @@ The **Safe LDO** of the PMIC is an always-on output when USB cable is plugged. T
 <br><br><br>
 
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
-NEXT : <a href="GettingStarted">Getting Started</a>
+NEXT : <a href="GettingStarted.md">Getting Started</a>
 </div>

@@ -208,6 +208,6 @@ qspi_slave_send_packet((uint8_t *) &max78000_statistics, sizeof(max78000_statist
 
 <br><br><br>
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
-NEXT : <a href="AppSwitcher">App-Switcher</a>
+NEXT : <a href="AppSwitcher.md">App-Switcher</a>
 </div>
 

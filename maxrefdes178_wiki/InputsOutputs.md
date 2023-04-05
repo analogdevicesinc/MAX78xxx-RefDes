@@ -68,6 +68,6 @@ There is also a rectangular window at this side to assemble the enclosure and bo
 <br><br><br>
 <br><br><br><br><br><br>
 <span>
-NEXT : <a href="BlockDiagram">Block Diagram</a>
+NEXT : <a href="BlockDiagram.md">Block Diagram</a>
 </span>
 </div>

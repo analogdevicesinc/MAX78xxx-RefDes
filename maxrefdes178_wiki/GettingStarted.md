@@ -46,5 +46,5 @@ Other available MAXREFDES178# demo pages:
 <br><br><br>
 
 <div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
-NEXT : <a href="DebuggerOperation">Debugger Operation</a>
+NEXT : <a href="DebuggerOperation.md">Debugger Operation</a>
 </div>
