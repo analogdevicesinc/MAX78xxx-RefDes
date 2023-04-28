@@ -88,6 +88,9 @@ SRCS += max32666_loader_int.c
 SRCS += max32666_loader.c
 SRCS += crc32.c
 SRCS += max32666_bl.c
+SRCS += mscmem.c
+SRCS += mx25.c
+SRCS += massStorage.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
 endif
@@ -112,7 +115,7 @@ PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
-PROJ_CFLAGS+=-Werror
+#PROJ_CFLAGS+=-Werror
 PROJ_CFLAGS+=-ffunction-sections -fdata-sections -fuse-linker-plugin #-flto
 # For nano.specs see: http://pabigot.github.io/bspacm/newlib.html
 PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-sections
@@ -131,9 +134,10 @@ PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-secti
 
 # Point this variable to a startup file to override the default file
 #STARTUPFILE=start.S
-
+FLASH=yes
 # Set MXC_OPTIMIZE to override the default optimization level
 # Use -Og for better debug
+
 MXC_OPTIMIZE_CFLAGS=-Os
 #MXC_OPTIMIZE_CFLAGS=-Og
 
@@ -164,9 +168,12 @@ FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
 include $(FAT32_DRIVER_DIR)/fat32.mk
 include $(SDHC_DRIVER_DIR)/sdhc.mk
 
+MAXUSB_DIR=$(LIBS_DIR)/MAXUSB
+include $(MAXUSB_DIR)/maxusb.mk
+export MAXUSB_DIR
 # Remove MX25 related files from bootloader as it does not utilize the on-board flash at all
-TMP_SRCS := $(SRCS)
-SRCS := $(filter-out mx25.c, $(TMP_SRCS))
+#TMP_SRCS := $(SRCS)
+#SRCS := $(filter-out mx25.c, $(TMP_SRCS))
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be
 # included before this one.

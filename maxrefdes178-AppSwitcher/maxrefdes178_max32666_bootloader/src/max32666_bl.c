@@ -319,7 +319,7 @@ int bl_load_image(FIL *file)
 		currentPage++;
 
         sprintf(line_str, "MAX32666 FW %d/%d", currentPage - startPage, header.numPages);
-        fonts_putStringOver(1, 100, line_str, &Font_7x10, BLACK, 0, 0, lcd_buff);
+        fonts_putStringOver(1, 200, line_str, &Font_11x18, WHITE, 1, BLACK, lcd_buff);
         lcd_drawImage(lcd_buff);
 	}
 

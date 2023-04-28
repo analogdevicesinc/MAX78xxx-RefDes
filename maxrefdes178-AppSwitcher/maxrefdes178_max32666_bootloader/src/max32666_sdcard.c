@@ -93,14 +93,14 @@ mxc_gpio_cfg_t SDPowerEnablePin = MAX32666_SD_EN_PIN;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-static int sdcard_mount(void);
+int sdcard_mount(void);
 static int sdcard_umount(void);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-static int sdcard_mount(void)
+int sdcard_mount(void)
 {
     fs = &fs_obj;
     if((err = f_mount(fs, "", 1)) != FR_OK) {           //Mount the default drive to fs now
@@ -300,7 +300,7 @@ int sdcard_init(void)
     // Check if card is inserted
     if (!MXC_SDHC_Card_Inserted()) {
         PR_ERROR("Card is not inserted.");
-        return 1;
+        return 3;
     } else {
         PR_INFO("Card inserted.");
     }

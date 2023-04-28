@@ -46,7 +46,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <tmr.h>
-
+#include "spixf.h"
 #include "max32666_debug.h"
 #include "max32666_expander.h"
 #include "max32666_fonts.h"
@@ -59,7 +59,10 @@
 #include "max32666_loader_int.h"
 #include "max32666_bl.h"
 #include "max32666_loader.h"
-
+#include "mx25.h"
+#include "mscmem.h"
+#include "diskio.h"
+#include "massStorage.h"
 #include <errno.h>
 #include <unistd.h>
 
@@ -91,10 +94,9 @@ char max78000_video_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN] = {0};
 char max78000_audio_msbl_path[MAX32666_BL_MAX_FW_PATH_LEN] = {0};
 char bootloader_string[40] = {0};
 static const mxc_gpio_cfg_t button_x_int_pin = MAX32666_BUTTON_X_INT_PIN;
-volatile int button_x_pressed = 0;
-volatile int button_y_pressed = 0;
-
-
+volatile uint8_t button_x_pressed = 0;
+volatile uint8_t button_y_pressed = 0;
+static uint8_t flash = 0;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
@@ -124,10 +126,23 @@ static int check_if_app_is_valid(void)
 {
     //Does app have a valid isr vector table?
     if ((uint32_t)_app_isr[1] == UNINITIALIZED_MEM) {
-        PR_INFO("\r\n#App ISR table is not valid.\n");
         return FALSE;
     }
     return TRUE;
+}
+
+static void flash_setup(){
+    MXC_SPIXF_Disable();
+    MXC_SPIXF_SetSPIFrequency(EXT_FLASH_BAUD);
+    MXC_SPIXF_SetMode(MXC_SPIXF_MODE_0);
+    MXC_SPIXF_SetSSPolActiveLow();
+    MXC_SPIXF_SetSSActiveTime(MXC_SPIXF_SYS_CLOCKS_0);
+    MXC_SPIXF_SetSSInactiveTime(MXC_SPIXF_SYS_CLOCKS_1);
+    MXC_SPIXF_SetCmdValue(EXT_FLASH_CMD_QREAD);
+    MXC_SPIXF_SetCmdWidth(MXC_SPIXF_QUAD_SDIO);
+    MXC_SPIXF_SetAddrWidth(MXC_SPIXF_QUAD_SDIO);
+    MXC_SPIXF_SetDataWidth(MXC_SPIXF_WIDTH_4);
+    MXC_SPIXF_SetModeClk(EXT_FLASH_QREAD_DUMMY);
 }
 
 int main(void)
@@ -141,18 +156,11 @@ int main(void)
     MXC_GPIO0->vssel =  0x00;
     MXC_GPIO1->vssel =  0x00;
 
+
     MXC_GPIO_Config(&button_x_int_pin);
     x_pressed = (MXC_GPIO_InGet (button_x_int_pin.port, button_x_int_pin.mask)& button_x_int_pin.mask) ? FALSE : TRUE;
 
-    if(!((check_if_app_is_valid() == FALSE) || (x_pressed == TRUE))) {
-        loader_int_disable_bootloader_mode();
-        Console_Shutdown();
-        run_application();
-        return E_NO_ERROR;
-    }
-
     loader_int_enable_bootloader_mode();
-    PR_INFO("maxrefdes178_max32666 bootloader v%d.%d.%d [%s]", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD, S_BUILD_TIMESTAMP);
 
     // Init button X interrupt
     MXC_GPIO_RegisterCallback(&button_x_int_pin, button_x_int_handler, NULL);
@@ -162,62 +170,92 @@ int main(void)
 
     ret = i2c_master_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("i2c_init failed %d", ret);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
     ret = expander_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("expander_init failed %d", ret);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
+    }
+    uint8_t buff[2];
+
+    i2c_master_byte_read_buf(I2C_ADDR_MAX7325_PORTS, buff, 2);
+    if(!((check_if_app_is_valid() == FALSE) || (x_pressed == TRUE) || (((buff[1] & EXPANDER_INPUT_BUTTON_Y)==0) && ((buff[0] & EXPANDER_INPUT_BUTTON_Y) == 0)))) {
+        loader_int_disable_bootloader_mode();
+        Console_Shutdown();
+        run_application();
+        return E_NO_ERROR;
     }
 
     ret = pmic_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("pmic_init failed %d", ret);
         MXC_Delay(MXC_DELAY_MSEC(100));
         MXC_SYS_Reset_Periph(MXC_SYS_RESET_SYSTEM);
     }
 
     ret = lcd_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("lcd_init failed %d", ret);
         pmic_led_blue(0);
         pmic_led_red(1);
     }
 
+    if(((buff[1] & EXPANDER_INPUT_BUTTON_Y)==0) && ((buff[0] & EXPANDER_INPUT_BUTTON_Y) == 0)){
+    	loader_int_disable_bootloader_mode();
+        memset(lcd_buff, 0x00, sizeof(lcd_buff));
+        fonts_putString(6, 33, "USBMassStorage", &Font_16x26, WHITE, 1,BLACK, lcd_buff);
+        fonts_putString(6, 123, "Restart the camera to start applications", &Font_11x18, BLUE, 1,BLACK, lcd_buff);
+        pmic_led_green(1);
+        pmic_led_blue(1);
+    	lcd_drawImage(lcd_buff);
+    	massstorage();
+    	return 0;
+    }
     // Draw bootloader title
-    snprintf(bootloader_string, sizeof(bootloader_string) - 1, "MRD178 App Switcher v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
-    memset(lcd_buff, 0xff, sizeof(lcd_buff));
-    fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
+    snprintf(bootloader_string, sizeof(bootloader_string) - 1, "App Switcher v%d.%d.%d", S_VERSION_MAJOR, S_VERSION_MINOR, S_VERSION_BUILD);
+    memset(lcd_buff, 0x00, sizeof(lcd_buff));
+    fonts_putString(6, 3, bootloader_string, &Font_11x18, BLUE, 1,BLACK, lcd_buff);
 
     ret = sdcard_init();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("sdcard_init failed %d", ret);
-        pmic_led_blue(0);
-        pmic_led_red(1);
-        fonts_putString(1, 14, "SD card not found!", &Font_7x10, RED, 0, 0, lcd_buff);
-        fonts_putString(1, 30, "Insert SD card and restart", &Font_7x10, BLACK, 0, 0, lcd_buff);
-        lcd_drawImage(lcd_buff);
-        MXC_Delay(MXC_DELAY_MSEC(1000));
-        while(1);
+        if(ret == 3){
+        	flash = 1;
+            disk_flash(flash);
+            flash_setup();
+            int err;
+            if((err = sdcard_mount()) != E_NO_ERROR) {
+            	pmic_led_blue(0);
+            	pmic_led_red(1);
+            	fonts_putString(1, 34, "External flash not   initialized", &Font_11x18, RED, 1, BLACK, lcd_buff);
+            	fonts_putString(1, 84, "Start the camera in  mass storage mode and format the external  flash with the FAT32 file system.", &Font_11x18, RED, 1, BLACK, lcd_buff);
+            	lcd_drawImage(lcd_buff);
+            	MXC_Delay(MXC_DELAY_MSEC(1000));
+            	while(1);
+            }
+        }
+        else{
+        	pmic_led_blue(0);
+        	pmic_led_red(1);
+        	fonts_putString(1, 14, "SD card not found!", &Font_11x18, RED, 1, BLACK, lcd_buff);
+        	lcd_drawImage(lcd_buff);
+        	MXC_Delay(MXC_DELAY_MSEC(1000));
+        	while(1);
+        }
     }
+
 
     ret = sdcard_get_dirs(dir_list, &dir_count);
     if (ret != E_NO_ERROR) {
         pmic_led_blue(0);
         pmic_led_red(1);
-        PR_ERROR("sdcard_get_dirs failed %d", ret);
     }
 
     if (dir_count == 0) {
-        PR_ERROR("No folder found in SD card!");
+    	fonts_putString(1, 40, "No folder found!", &Font_11x18, RED, 1, BLACK, lcd_buff);
         pmic_led_blue(0);
         pmic_led_red(1);
-        fonts_putString(1, 14, "No folder found in SD card!", &Font_7x10, RED, 0, 0, lcd_buff);
-        fonts_putString(1, 30, "Please restart", &Font_7x10, BLACK, 0, 0, lcd_buff);
+        fonts_putString(1,100, "Please restart", &Font_11x18, WHITE, 1, BLACK, lcd_buff);
         lcd_drawImage(lcd_buff);
         MXC_Delay(MXC_DELAY_MSEC(1000));
         while(1);
@@ -226,9 +264,10 @@ int main(void)
     pmic_led_blue(1);
 
     while (1) {
-        memset(lcd_buff, 0xff, sizeof(lcd_buff));
-        fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
-        fonts_putString(1, 30, "Select one of the demos:", &Font_7x10, BLACK, 0, 0, lcd_buff);
+        memset(lcd_buff, 0x00, sizeof(lcd_buff));
+
+        fonts_putString(6, 3, bootloader_string, &Font_11x18, BLUE, 1, BLACK, lcd_buff);
+        fonts_putString(4, 40, "Select the demo:", &Font_11x18, WHITE, 1, BLACK, lcd_buff);
         fonts_putString(4, LCD_HEIGHT - 18, "[X]->TOGGLE [Y]->LOAD" , &Font_11x18, LIGHTBLUE, 1, BLACK, lcd_buff);
 
         expander_worker();
@@ -238,12 +277,20 @@ int main(void)
             selected = (selected + 1) % dir_count;
         }
 
-        for (int i = 0; i < dir_count; i++) {
-            if (i == selected) {
-                fonts_putString(5, 3*18 + (i * 18), dir_list[i], &Font_11x18, GREEN, 0, 0, lcd_buff);
-            } else {
-                fonts_putString(5, 3*18 + (i * 18), dir_list[i], &Font_11x18, BLACK, 0, 0, lcd_buff);
-            }
+        if(selected<5){
+        	for (int i = 0; i < 5; i++) {
+        		if (i == selected) {
+        			fonts_putString(5, 3*25 + (i * 26), dir_list[i], &Font_16x26, GREEN, 1, BLACK, lcd_buff);
+        		} else {
+        			fonts_putString(5, 3*25 + (i * 26), dir_list[i], &Font_16x26, WHITE, 1, BLACK, lcd_buff);
+        		}
+        	}
+        }
+        else{
+        	for (int i = 0; i < 4; i++) {
+        			fonts_putStringOver(5, 3*25 + (4 * 26), dir_list[selected], &Font_16x26, GREEN, 1, BLACK, lcd_buff);
+        			fonts_putStringOver(5, 3*25 + (i * 26), dir_list[selected-(4-i)], &Font_16x26, WHITE, 1, BLACK, lcd_buff);
+        	}
         }
 
         if (button_y_pressed) {
@@ -251,19 +298,15 @@ int main(void)
 
             ret = sdcard_get_fw_paths(dir_list[selected], max32666_msbl_path, max78000_video_msbl_path, max78000_audio_msbl_path);
             if (ret != E_NO_ERROR) {
-                PR_ERROR("Folder content is invalid! %s", dir_list[selected]);
-                memset(lcd_buff, 0xff, sizeof(lcd_buff));
-                fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
-                fonts_putString(1, 20, "Folder content is invalid!", &Font_7x10, RED, 0, 0, lcd_buff);
-                fonts_putString(1, 40, dir_list[selected], &Font_7x10, RED, 0, 0, lcd_buff);
+                memset(lcd_buff, 0x00, sizeof(lcd_buff));
+                fonts_putString(1, 30, "Folder content is not valid!", &Font_11x18, RED, 1, BLACK, lcd_buff);
+                fonts_putString(1, 80, dir_list[selected], &Font_11x18, RED, 1, BLACK, lcd_buff);
                 lcd_drawImage(lcd_buff);
                 MXC_Delay(MXC_DELAY_SEC(3));
             } else {
-                PR_INFO("Firmware update started for: %s", dir_list[selected]);
-                memset(lcd_buff, 0xff, sizeof(lcd_buff));
-                fonts_putString(23, 3, bootloader_string, &Font_7x10, BLUE, 0, 0, lcd_buff);
-                fonts_putString(1, 20, "Firmware update started for:", &Font_7x10, BLACK, 0, 0, lcd_buff);
-                fonts_putString(1, 40, dir_list[selected], &Font_7x10, BROWN, 0, 0, lcd_buff);
+                memset(lcd_buff, 0x00, sizeof(lcd_buff));
+                fonts_putStringCentered(30, dir_list[selected], &Font_16x26, BROWN,lcd_buff);
+                fonts_putString(1, 80, "Updating Firmware", &Font_11x18, WHITE, 1, BLACK, lcd_buff);
                 lcd_drawImage(lcd_buff);
                 break;
             }
@@ -272,10 +315,6 @@ int main(void)
         lcd_drawImage(lcd_buff);
         MXC_Delay(MXC_DELAY_MSEC(100));
     }
-
-    PR_INFO("%s", max32666_msbl_path);
-    PR_INFO("%s", max78000_video_msbl_path);
-    PR_INFO("%s", max78000_audio_msbl_path);
 
     // Erase MAX32666 FW
     bl_master_erase();
@@ -295,16 +334,14 @@ int main(void)
     loader_int_set_active_ss(S_SS_AUDIO);
     ret = loader_flash_image(max78000_audio_msbl_path, 0);
     if (ret != E_NO_ERROR) {
-        PR_ERROR("MAX78000 Audio FW Update Failed");
         pmic_led_blue(0);
         pmic_led_red(1);
-        fonts_putStringOver(1, 60, "MAX78000 Audio FW Update Failed", &Font_7x10, RED, 0, 0, lcd_buff);
-        fonts_putString(1, 150, "Please restart", &Font_7x10, BLACK, 0, 0, lcd_buff);
+        fonts_putStringOver(1, 120, "Audio FW Update Failed", &Font_11x18, RED, 1,BLACK, lcd_buff);
         lcd_drawImage(lcd_buff);
         while(1);
     } else {
-        PR_INFO("MAX78000 Audio FW Update OK");
-        fonts_putStringOver(1, 60, "MAX78000 Audio FW Update OK", &Font_7x10, GREEN, 0, 0, lcd_buff);
+
+        fonts_putStringOver(1, 120, "Audio FW Update OK", &Font_11x18, WHITE, 1,BLACK, lcd_buff);
         lcd_drawImage(lcd_buff);
     }
 
@@ -312,38 +349,31 @@ int main(void)
     loader_int_set_active_ss(S_SS_VIDEO);
     ret = loader_flash_image(max78000_video_msbl_path, 1);
     if (ret != E_NO_ERROR) {
-        PR_ERROR("MAX78000 Video FW Update Failed");
         pmic_led_blue(0);
         pmic_led_red(1);
-        fonts_putStringOver(1, 80, "MAX78000 Video FW Update Failed", &Font_7x10, RED, 0, 0, lcd_buff);
-        fonts_putString(1, 150, "Please restart", &Font_7x10, BLACK, 0, 0, lcd_buff);
+        fonts_putStringOver(1, 160, "Video FW Update Failed", &Font_11x18, RED, 1, BLACK, lcd_buff);
         lcd_drawImage(lcd_buff);
         while(1);
     } else {
-        PR_INFO("MAX78000 Video FW Update OK");
-        fonts_putStringOver(1, 80, "MAX78000 Video FW Update OK", &Font_7x10, GREEN, 0, 0, lcd_buff);
+        fonts_putStringOver(1, 160, "Video FW Update OK", &Font_11x18, WHITE, 1,BLACK, lcd_buff);
         lcd_drawImage(lcd_buff);
     }
 
     // MAX32666 Self programmer
     ret = bl_load_from_sdcard(max32666_msbl_path);
     if (ret != E_NO_ERROR) {
-        PR_ERROR("MAX32666 FW Update Failed");
         pmic_led_blue(0);
         pmic_led_red(1);
-        fonts_putStringOver(1, 100, "MAX32666 FW Update Failed", &Font_7x10, RED, 0, 0, lcd_buff);
-        fonts_putString(1, 150, "Please restart", &Font_7x10, BLACK, 0, 0, lcd_buff);
+        fonts_putStringOver(1, 200, "MAX32666 FW Update Failed", &Font_11x18, RED, 1,BLACK, lcd_buff);
         lcd_drawImage(lcd_buff);
         while(1);
     } else {
-        PR_INFO("MAX32666 FW Update OK");
-        fonts_putStringOver(1, 100, "MAX32666 FW Update OK", &Font_7x10, GREEN, 0, 0, lcd_buff);
+        fonts_putStringOver(1, 200, "MAX32666 FW Update OK", &Font_11x18, WHITE, 1, BLACK, lcd_buff);
         lcd_drawImage(lcd_buff);
     }
 
     ret = sdcard_uninit();
     if (ret != E_NO_ERROR) {
-        PR_ERROR("sdcard_uninit failed %d", ret);
         pmic_led_blue(0);
         pmic_led_red(1);
     }
