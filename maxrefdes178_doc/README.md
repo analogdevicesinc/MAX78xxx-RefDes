@@ -332,88 +332,136 @@ NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were u
 
   NOTE: *If the firmware update fails or OpenOCD crashes repeatedly and you were unable to program the video or audio firmware, please erase the video or audio firmware using MAX32625PICO Debugger as described in the “**Recovering/Erasing Video or Audio Firmware Using MAX32625PICO**” section*.
 
-## Load Demo Firmware using App-Switcher and SD Card
+# App Switcher
 
-MAXREFDES178# has special application switcher bootloader. App-Switcher can load MAX32666, MAX78000 Video and MAX78000 Audio demo firmware using a micro SD card.
+MAXREFDES178# has a special application switcher bootloader. App-Switcher can load MAX32666, MAX78000-Video and MAX78000-Audio demo firmware using a micro SD card or the external flash on the board. The application checks whether an SD card is inserted. If not, the external flash is used to load the firmware.
 
-**Warning:** The MAXREFDES178# App-Switcher is available from version v1.1.67 and later. Please update MAX32666, MAX78000 Video and MAX78000 Audio firmware with FaceID demo with version v1.1.67 (or later) by following steps on “**Load Demo Firmware using MINGW on Windows**” section. 
+<div style="margin-left: 0; background-color: #dfd;" >
 
-**NOTE: App-Switcher is embedded in the demo firmware. You don't need to load App-Switcher binaries separately.**
+**Warning:** The MAXREFDES178# App-Switcher is available from version **v1.1.67** and later. Please update MAX32666, MAX78000-Video and MAX78000-Audio firmware with the FaceID demo with version **v1.1.67** (or later) by following the steps in the "Load Demo Firmware using MINGW on Windows" section.
 
-App-Switcher uses msbl file to load MAX32666, MAX78000 Video and MAX78000 Audio firmware from SD card. msbl files can be found in `build` directory when build is completed. Alternatively, you can download the latest .msbl files from GitHub Release or GitHub Actions.
+</div>
 
-### Prepare SD Card
+**NOTE:** App-Switcher is embedded in the demo firmware. It is not necessary to load App-Switcher binaries separately.
 
-- Format SD card with FAT32 file system. **Make sure to back up your SD Card content before formatting!**
-- Download latest maxrefdes178_firmware.zip release from:
-  - https://github.com/MaximIntegratedAI/refdes/releases for stable releases.
-  - https://github.com/MaximIntegratedAI/refdes/actions/workflows/maxrefdes178.yml for GitHub Action builds.
-- Extract zip content to SD card top directory.
+App-Switcher uses **msbl** files to load MAX32666, MAX78000-Video and MAX78000-Audio firmware from a micro SD card or from the external flash. **msbl** files can be found in `build` directory when the build is completed. Alternatively, you can download the latest **.msbl** files from GitHub Release or GitHub Actions.
 
-  ![](sd_card.png)
+<br>
+
+## Preparing an SD Card
+
+* Format the micro SD card with **FAT32** file system. **Make sure to back up your SD Card content before formatting!**
+
+* Download the latest maxrefdes178_firmware.zip release from:
+
+  * https://github.com/MaximIntegratedAI/refdes/releases for stable releases.
+  * https://github.com/MaximIntegratedAI/refdes/actions/workflows/maxrefdes178.yml for GitHub Action builds.
+
+* Extract zip content to the micro SD card root directory.
+
+![](sd_card.png)
 
 App-Switcher SD Card folder structure requirements:
 
-- All demo directories must be in the root directory of the SD card.
-- All demo directories must contain `maxrefdes178_max32666_demo.msbl`, `maxrefdes178_max78000_video_demo.msbl`, and `maxrefdes178_max78000_audio_demo.msbl` files.
+  * All demo directories must be in the root directory of the SD card.
+  * All demo directories must contain these files:
+       `maxrefdes178_max32666_demo.msbl`
+       `maxrefdes178_max78000_video_demo.msbl`
+       `maxrefdes178_max78000_audio_demo.msbl`
 
-### Enter into App-Switcher
+<br>
 
-- Turn off the device by pressing power button.
-- Insert micro SD card.
-- While pressing button X, press power button to turn on the device.
-- Device will start in App-Switcher mode.
-- If there isn't any valid demo on MAX32666 flash, App-Switcher will start automatically.
+## Preparing the External Flash
+The AppSwitcher has a built-in mass storage device application. If one presses power-up button while pressing Y-button, mass storage class application runs. The external flash should be formatted with the FAT32 file system to be used in the AppSwitcher. Therefore, first-time users should start the camera in mass storage device mode (powering up the camera while pressing the Y-Button). 
 
+If the mass storage device example runs on the camera, the following screen appears:
+![](USBMassStorage.PNG)
 
-### Load a Demo from SD Card
-
-- Button X changes selected demo.
-
-  - Selected demo is highlighted in Green.
-
-- Button Y starts firmware update for selected demo.
-
-  ![](bl_menu.jpg)
-
-  ![](bl_step1.jpg)
+ If the external flash is not formatted correctly, the following error appears when the AppSwitcher is started in the bootloader mode:
+ ![](ExternalFlashError.PNG)
 
 
+* Format the external flash with **FAT32** file system. **Make sure to back up your external flash content before formatting!**
 
-- First, App-Switcher loads MAX78000 Audio firmware.
+* Download the latest maxrefdes178_firmware.zip release from:
 
-  ![](bl_step2.jpg)
+  * https://github.com/MaximIntegratedAI/refdes/releases for stable releases.
+  * https://github.com/MaximIntegratedAI/refdes/actions/workflows/maxrefdes178.yml for GitHub Action builds.
 
-
-
-- Then, App-Switcher loads MAX78000 Video firmware.
-
-  ![](bl_step3.jpg)
+* Extract zip content to the external flash root directory.
 
 
+App-Switcher external flash folder structure requirements:
 
-- And last, App-Switcher loads MAX32666 firmware.
+  * All demo directories must be in the root directory of the external flash.
+  * All demo directories must contain these files:
+       `maxrefdes178_max32666_demo.msbl`
+       `maxrefdes178_max78000_video_demo.msbl`
+       `maxrefdes178_max78000_audio_demo.msbl`
 
-  ![](bl_step4.jpg)
+## Running App-Switcher
+
+* Turn off the device by pressing the **power button**.
+* Insert the micro SD card.
+* If there is no SD card inserted, the application will look for the external flash.
+* While pressing **Button X**, press **power button** to turn on the device.
+* The device will start in App-Switcher mode.
+* If there isn't a valid demo on MAX32666 flash, App-Switcher will start automatically.
+* While pressing **Button Y**, press **power button** to turn on the cube camera in mass storage device mode. In this mode, the user can add demos to the external flash.
+
+<br>
+
+## Loading a Demo From an SD Card or the External Flash
+
+<br>
+
+* Pressing **Button X** changes the selected demo. The selected demo will be highlighted in Green.
 
 
-
-- If all three firmware update are successful. Device will restart with selected demo.
-
-  ![](bl_step5.jpg)
+ ![](DemoList.PNG)
 
 
+* **Button Y** starts the firmware update procedure for the selected demo.
 
+ ![](DemoLoadStart.PNG)
 
-- If SD card is not inserted, App-Switcher halts and waits for a restart. Press power button for 12 seconds to turn off the App-Switcher.
+* First, App-Switcher loads MAX78000-Audio firmware.
 
-  ![](bl_no_sd.jpg)
+ ![](DemoAudio.PNG)
 
+* Then, App-Switcher loads MAX78000-Video firmware.
 
+ ![](DemoVideo.PNG)
 
-- If demo folder content is invalid (incorrect or missing msbl files), App-Switcher returns to main menu.
+* And last, App-Switcher loads MAX32666 firmware.
 
-  ![](bl_no_demo.jpg)
+ ![](MAX32666FW.PNG)
+
+* If all three firmware updates are successful, the device will restart with the selected demo.
+
+ ![](DemoLoaded.PNG)
+
+* If the micro SD card is not inserted, and external flash not initialized correctly, App-Switcher halts and waits for a restart. Press the power button for 12 seconds to turn off the App-Switcher.
+
+ ![](ExternalFlashError.PNG)
+
+* If there is no demo in the SD Card or the external flash, App-Switcher halts and waits for a restart. Open the App-Switcher in mass storage mode or load demos to the SD card.
+
+ ![](NoFolderFound.PNG)
+
+* If the demo folder content is invalid (incorrect or missing **msbl** files), App-Switcher returns to the main menu.
+
+ ![](FolderContentNotValid.PNG)
+
+* If the camera is started in the mass storage device mode, the camera should be restarted after loading .bin and .msbl files. Press the power button for 12 seconds to turn off the App-Switcher.
+
+ ![](USBMassStorage.PNG)
+
+<br>
+<div class="nextpage" style="margin-left: 0; margin-right: auto; text-align: right; background-color: #dfd;" >
+
+</div>
+
 
 
 ## Debug Demo Firmware using MINGW on Windows
@@ -746,4 +794,3 @@ The following steps summarize the modifications needed to port a new example:
    ```
 
 8. Send the raw image as needed (video only) to MAX32666: `send_img()`
-
