@@ -53,7 +53,7 @@
 #include <string.h>
 
 #include "max32666_debug.h"
-#include "max32666_sdcard.h"
+#include "max32666_memory.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_utility.h"
 
@@ -93,40 +93,57 @@ mxc_gpio_cfg_t SDPowerEnablePin = MAX32666_SD_EN_PIN;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
-int sdcard_mount(void);
-static int sdcard_umount(void);
+static int umount(uint8_t external_flash);
 
 
 //-----------------------------------------------------------------------------
 // Function definitions
 //-----------------------------------------------------------------------------
-int sdcard_mount(void)
+
+
+int memory_mount(uint8_t external_flash)
 {
-    fs = &fs_obj;
-    if((err = f_mount(fs, "", 1)) != FR_OK) {           //Mount the default drive to fs now
-        PR_ERROR("Error opening SD card: %s", FF_ERRORS[err]);
-        f_mount(NULL, "", 0);
-    }
-    else {
-        PR_INFO("SD card mounted.");
-        mounted = 1;
-    }
-
+	fs = &fs_obj;
+	if(external_flash){
+	    if((err = f_mount(fs, "1:", 1)) != FR_OK) {           //Mount the default drive to fs now
+	        f_mount(NULL, "", 0);
+	    }
+	    else {
+	        mounted = 1;
+	    }
+	}
+	else{
+	    if((err = f_mount(fs, "", 1)) != FR_OK) {           //Mount the default drive to fs now
+	        f_mount(NULL, "", 0);
+	    }
+	    else {
+	        mounted = 1;
+	    }
+	}
     f_getcwd(cwd, sizeof(cwd));                         //Set the Current working directory
-
     return err;
 }
 
-static int sdcard_umount(void)
+static int umount(uint8_t external_flash)
 {
-    if((err = f_mount(NULL, "", 0)) != FR_OK){          //Unmount the default drive from its mount point
-        PR_ERROR("Error unmounting volume: %s", FF_ERRORS[err]);
-    }
-    else {
-        PR_INFO("SD card unmounted.");
-        mounted = 0;
-    }
-
+	if(external_flash){
+	    if((err = f_mount(NULL, "1:", 0)) != FR_OK){          //Unmount the external flash drive from its mount point
+	        PR_ERROR("Error unmounting volume: %s", FF_ERRORS[err]);
+	    }
+	    else {
+	        PR_INFO("Memory device unmounted.");
+	        mounted = 0;
+	    }
+	}
+	else{
+		if((err = f_mount(NULL, "", 0)) != FR_OK){          //Unmount the default drive from its mount point
+			PR_ERROR("Error unmounting volume: %s", FF_ERRORS[err]);
+		}
+		else {
+			PR_INFO("Memory device unmounted.");
+			mounted = 0;
+		}
+	}
     return err;
 }
 
@@ -158,10 +175,16 @@ static int is_msbl_valid(const char *img)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
-int sdcard_get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN], int *dir_count)
+
+int get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN], int *dir_count, uint8_t external_flash)
 {
     *dir_count = 0;
-    err = f_opendir(&dir, "/");                       /* Open the directory */
+    if(external_flash){
+    	err = f_opendir(&dir, "1:");                       /* Open the directory */
+    }
+    else{
+    	err = f_opendir(&dir, "/");
+    }
     if (err == FR_OK) {
         for (;;) {
             err = f_readdir(&dir, &fno);                   /* Read a directory item */
@@ -186,13 +209,17 @@ int sdcard_get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DI
     return 0;
 }
 
-int sdcard_get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000_video_msbl_path, char *max78000_audio_msbl_path)
+int get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000_video_msbl_path, char *max78000_audio_msbl_path, uint8_t external_flash)
 {
 	int ret = 0;
     int max32666_found = 0;
     int max78000_video_found = 0;
     int max78000_audio_found = 0;
-
+    if(external_flash){
+    	char flash_path[100] = "1:";
+    	strcat(flash_path,dir_path);
+    	strcpy(dir_path,flash_path);
+    }
     err = f_opendir(&dir, dir_path);                       /* Open the directory */
     if (err == FR_OK) {
         for (;;) {
@@ -328,7 +355,7 @@ int sdcard_init(void)
         MXC_SDHC_Set_Clock_Config(0);
     }
 
-    if((err = sdcard_mount()) != FR_OK) {
+    if((err = memory_mount(0)) != FR_OK) {
         PR_ERROR("Error opening SD Card: %s", FF_ERRORS[err]);
         return err;
     }
@@ -337,9 +364,9 @@ int sdcard_init(void)
     return 0;
 }
 
-int sdcard_uninit(void)
+int uninit(uint8_t external_flash)
 {
-    if((err = sdcard_umount()) != FR_OK) {
+    if((err = umount(external_flash)) != FR_OK) {
         PR_ERROR("Error umounting SD Card: %s", FF_ERRORS[err]);
         return err;
     }

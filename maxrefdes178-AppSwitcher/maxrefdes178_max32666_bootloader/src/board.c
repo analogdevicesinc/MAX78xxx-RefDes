@@ -43,7 +43,7 @@
 #include "pb.h"
 #include "i2c.h"
 #include "spixf.h"
-#include "mx25.h"
+#include "Ext_Flash.h"
 
 /***** Global Variables *****/
 mxc_uart_regs_t *ConsoleUart = MXC_UART_GET_UART(CONSOLE_UART);

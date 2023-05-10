@@ -55,9 +55,9 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 int sdcard_init(void);
-int sdcard_mount(void);
-int sdcard_uninit(void);
-int sdcard_get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN], int *dir_count);
-int sdcard_get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000_video_msbl_path, char *max78000_audio_msbl_path);
-
+int memory_mount(uint8_t external_flash);
+int uninit(uint8_t external_flash);
+int get_dirs(char dir_list[MAX32666_BL_MAX_DIR_NUMBER][MAX32666_BL_MAX_DIR_LEN], int *dir_count, uint8_t external_flash);
+int get_fw_paths(char *dir_path, char *max32666_msbl_path, char *max78000_video_msbl_path, char *max78000_audio_msbl_path, uint8_t external_flash);
+int flash_mount(void);
 #endif /* _MAX32666_SDCARD_H_ */

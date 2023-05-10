@@ -53,15 +53,14 @@
 #include "max32666_i2c.h"
 #include "max32666_lcd.h"
 #include "max32666_pmic.h"
-#include "max32666_sdcard.h"
+#include "max32666_memory.h"
 #include "maxrefdes178_definitions.h"
 #include "maxrefdes178_version.h"
 #include "max32666_loader_int.h"
 #include "max32666_bl.h"
 #include "max32666_loader.h"
-#include "mx25.h"
+#include "Ext_Flash.h"
 #include "mscmem.h"
-#include "diskio.h"
 #include "massStorage.h"
 #include <errno.h>
 #include <unistd.h>
@@ -96,7 +95,7 @@ char bootloader_string[40] = {0};
 static const mxc_gpio_cfg_t button_x_int_pin = MAX32666_BUTTON_X_INT_PIN;
 volatile uint8_t button_x_pressed = 0;
 volatile uint8_t button_y_pressed = 0;
-static uint8_t flash = 0;
+uint8_t external_flash = 0;
 //-----------------------------------------------------------------------------
 // Local function declarations
 //-----------------------------------------------------------------------------
@@ -134,7 +133,7 @@ static int check_if_app_is_valid(void)
 static void flash_setup(){
     MXC_SPIXF_Disable();
     MXC_SPIXF_SetSPIFrequency(EXT_FLASH_BAUD);
-    MXC_SPIXF_SetMode(MXC_SPIXF_MODE_0);
+    MXC_SPIXF_SetMode(MXC_SPIXF_MODE_3);
     MXC_SPIXF_SetSSPolActiveLow();
     MXC_SPIXF_SetSSActiveTime(MXC_SPIXF_SYS_CLOCKS_0);
     MXC_SPIXF_SetSSInactiveTime(MXC_SPIXF_SYS_CLOCKS_1);
@@ -209,6 +208,7 @@ int main(void)
         pmic_led_green(1);
         pmic_led_blue(1);
     	lcd_drawImage(lcd_buff);
+        flash_setup();
     	massstorage();
     	return 0;
     }
@@ -220,11 +220,10 @@ int main(void)
     ret = sdcard_init();
     if (ret != E_NO_ERROR) {
         if(ret == 3){
-        	flash = 1;
-            disk_flash(flash);
             flash_setup();
             int err;
-            if((err = sdcard_mount()) != E_NO_ERROR) {
+            external_flash = 1;
+            if((err = memory_mount(external_flash)) != E_NO_ERROR) {
             	pmic_led_blue(0);
             	pmic_led_red(1);
             	fonts_putString(1, 34, "External flash not   initialized", &Font_11x18, RED, 1, BLACK, lcd_buff);
@@ -245,7 +244,7 @@ int main(void)
     }
 
 
-    ret = sdcard_get_dirs(dir_list, &dir_count);
+    ret = get_dirs(dir_list, &dir_count,external_flash);
     if (ret != E_NO_ERROR) {
         pmic_led_blue(0);
         pmic_led_red(1);
@@ -296,7 +295,7 @@ int main(void)
         if (button_y_pressed) {
             button_y_pressed = 0;
 
-            ret = sdcard_get_fw_paths(dir_list[selected], max32666_msbl_path, max78000_video_msbl_path, max78000_audio_msbl_path);
+            ret = get_fw_paths(dir_list[selected], max32666_msbl_path, max78000_video_msbl_path, max78000_audio_msbl_path,external_flash);
             if (ret != E_NO_ERROR) {
                 memset(lcd_buff, 0x00, sizeof(lcd_buff));
                 fonts_putString(1, 30, "Folder content is not valid!", &Font_11x18, RED, 1, BLACK, lcd_buff);
@@ -305,6 +304,9 @@ int main(void)
                 MXC_Delay(MXC_DELAY_SEC(3));
             } else {
                 memset(lcd_buff, 0x00, sizeof(lcd_buff));
+                if(external_flash){
+                	memmove(dir_list[selected], dir_list[selected] + 2, strlen(dir_list[selected]) - 1);
+                }
                 fonts_putStringCentered(30, dir_list[selected], &Font_16x26, BROWN,lcd_buff);
                 fonts_putString(1, 80, "Updating Firmware", &Font_11x18, WHITE, 1, BLACK, lcd_buff);
                 lcd_drawImage(lcd_buff);
@@ -372,7 +374,7 @@ int main(void)
         lcd_drawImage(lcd_buff);
     }
 
-    ret = sdcard_uninit();
+    ret = uninit(external_flash);
     if (ret != E_NO_ERROR) {
         pmic_led_blue(0);
         pmic_led_red(1);
