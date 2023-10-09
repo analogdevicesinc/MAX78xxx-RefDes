@@ -446,13 +446,13 @@ int loader_flash_image(const char* filename, int video_audio)
 		PR_INFO("Flashing page %d/%d  [SUCCESS]", i+1, header.numPages);
 
 		if (video_audio) { // MAX78000 Video
-		    sprintf(line_str, "MAX78000 Video FW %d/%d", i+1, header.numPages);
-		    fonts_putStringOver(1, 80, line_str, &Font_7x10, BLACK, 0, 0, lcd_buff);
+		    sprintf(line_str, "Video FW %d/%d", i+1, header.numPages);
+		    fonts_putStringOver(1, 160, line_str, &Font_11x18, WHITE, 1,BLACK, lcd_buff);
 		    lcd_drawImage(lcd_buff);
 		} else { // MAX78000 Audio
-		    sprintf(line_str, "MAX78000 Audio FW %d/%d", i+1, header.numPages);
-		    fonts_putStringOver(1, 60, line_str, &Font_7x10, BLACK, 0, 0, lcd_buff);
-		    lcd_drawImage(lcd_buff);
+		    sprintf(line_str, "Audio FW %d/%d", i+1, header.numPages);
+		    fonts_putStringOver(1, 120, line_str, &Font_11x18, WHITE,1,BLACK, lcd_buff);
+			lcd_drawImage(lcd_buff);
 		}
     }
 

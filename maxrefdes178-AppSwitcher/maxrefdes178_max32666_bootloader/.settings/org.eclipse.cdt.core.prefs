@@ -5,6 +5,9 @@ environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/BOARD/v
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/GCC_PREFIX/delimiter=;
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/GCC_PREFIX/operation=replace
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/GCC_PREFIX/value=arm-none-eabi-
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/MAXIM_PATH/delimiter=;
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/MAXIM_PATH/operation=replace
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/MAXIM_PATH/value=C\:\\Users\\MBoz\\devsdhc\\msdk
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/PROJECT/delimiter=;
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/PROJECT/operation=append
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1028364529/PROJECT/value=maxrefdes178_max32666_bootloader

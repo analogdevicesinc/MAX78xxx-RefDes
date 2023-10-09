@@ -61,6 +61,8 @@ else
 LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
 endif
 
+#MISC_DRIVERS_DIR=$(LIBS_DIR)/MiscDrivers
+
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
 ifeq ($(MAKECMDGOALS),sla)
 SECURE_BOOT_TOOLS_DIR=$(LIBS_DIR)/../Tools/SBT
@@ -80,7 +82,7 @@ SRCS += max32666_expander.c
 SRCS += max32666_fonts.c
 SRCS += max32666_pmic.c
 SRCS += max32666_lcd.c
-SRCS += max32666_sdcard.c
+SRCS += max32666_memory.c
 SRCS += max32666_spi_dma.c
 SRCS += board.c
 SRCS += hal_sys.c
@@ -88,9 +90,14 @@ SRCS += max32666_loader_int.c
 SRCS += max32666_loader.c
 SRCS += crc32.c
 SRCS += max32666_bl.c
+SRCS += mscmem.c
+SRCS += mx25_64MB.c
+SRCS += massStorage.c
 ifeq ($(MAKECMDGOALS),sla)
 SRCS += sla_header.c
 endif
+
+
 
 # Where to find source files for this test
 VPATH = src
@@ -99,20 +106,20 @@ VPATH += ../../maxrefdes178_common
 ifeq ($(MAKECMDGOALS),sla)
 VPATH += $(CMSIS_ROOT)/Device/Maxim/$(TARGET_UC)/Source
 endif
-
+#VPATH += $(MISC_DRIVERS_DIR)/ExtMemory
 # Project specific define statements
 PROJ_CFLAGS+=-DBOOTLOADER
 
 # Where to find header files for this test
 IPATH  = include
 IPATH += ../../maxrefdes178_common
-
+#IPATH += $(MISC_DRIVERS_DIR)/ExtMemory
 # Enable assertion checking for development
 PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
-PROJ_CFLAGS+=-Werror
+#PROJ_CFLAGS+=-Werror
 PROJ_CFLAGS+=-ffunction-sections -fdata-sections -fuse-linker-plugin #-flto
 # For nano.specs see: http://pabigot.github.io/bspacm/newlib.html
 PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-sections
@@ -131,9 +138,10 @@ PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-secti
 
 # Point this variable to a startup file to override the default file
 #STARTUPFILE=start.S
-
+EXTERNAL_FLASH=yes
 # Set MXC_OPTIMIZE to override the default optimization level
 # Use -Og for better debug
+
 MXC_OPTIMIZE_CFLAGS=-Os
 #MXC_OPTIMIZE_CFLAGS=-Og
 
@@ -164,9 +172,14 @@ FAT32_DRIVER_DIR=$(SDHC_DRIVER_DIR)/ff13
 include $(FAT32_DRIVER_DIR)/fat32.mk
 include $(SDHC_DRIVER_DIR)/sdhc.mk
 
+MAXUSB_DIR=$(LIBS_DIR)/MAXUSB
+include $(MAXUSB_DIR)/maxusb.mk
+export MAXUSB_DIR
+
+
 # Remove MX25 related files from bootloader as it does not utilize the on-board flash at all
-TMP_SRCS := $(SRCS)
-SRCS := $(filter-out mx25.c, $(TMP_SRCS))
+#TMP_SRCS := $(SRCS)
+#SRCS := $(filter-out mx25.c, $(TMP_SRCS))
 ################################################################################
 # Include the rules for building for this target. All other makefiles should be
 # included before this one.
