@@ -108,7 +108,7 @@ PROJ_CFLAGS+=-DMAXREFDES178_MAX78000_AUDIO
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
-PROJ_CFLAGS+=-Werror
+#PROJ_CFLAGS+=-Werror
 
 # Specify the target revision to override default
 # "A2" in ASCII

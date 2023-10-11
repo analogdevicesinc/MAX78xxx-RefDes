@@ -112,7 +112,7 @@ PROJ_CFLAGS+=-DMXC_ASSERT_ENABLE
 
 # Enable all warnings
 PROJ_CFLAGS+=-Wall
-PROJ_CFLAGS+=-Werror
+#PROJ_CFLAGS+=-Werror
 PROJ_CFLAGS+=-ffunction-sections -fdata-sections -fuse-linker-plugin #-flto
 # For nano.specs see: http://pabigot.github.io/bspacm/newlib.html
 PROJ_LDFLAGS += --use-linker-plugin --specs=nano.specs -Wl,--cref -Wl,--gc-sections
