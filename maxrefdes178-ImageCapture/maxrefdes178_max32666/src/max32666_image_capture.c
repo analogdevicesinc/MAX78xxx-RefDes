@@ -33,7 +33,7 @@
 
 
 /*****************************    Includes   *********************************/
-#include <MAX32665.h>
+#include <max32665.h>
 #include <mxc_sys.h>
 
 #include "max32666_image_capture.h"
