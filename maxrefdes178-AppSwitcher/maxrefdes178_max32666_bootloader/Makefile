@@ -58,7 +58,7 @@ endif
 ifeq "$(MAXIM_PATH)" ""
 LIBS_DIR=../../../Libraries
 else
-LIBS_DIR=/$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
+LIBS_DIR=$(subst \,/,$(subst :,,$(MAXIM_PATH))/Libraries)
 endif
 
 CMSIS_ROOT=$(LIBS_DIR)/CMSIS
@@ -82,7 +82,6 @@ SRCS += max32666_pmic.c
 SRCS += max32666_lcd.c
 SRCS += max32666_sdcard.c
 SRCS += max32666_spi_dma.c
-SRCS += board.c
 SRCS += hal_sys.c
 SRCS += max32666_loader_int.c
 SRCS += max32666_loader.c
