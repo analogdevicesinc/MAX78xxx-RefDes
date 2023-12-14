@@ -20,7 +20,7 @@ if __name__ == "__main__":
             sub_projects = [Path(i).parent for i in subitem.rglob("Makefile")]
             for project in sub_projects:
                 print(f"\t- Building {project.name}")
-                result = run("make -r -j --output-sync=target --no-print-directory", cwd=project, shell=True, capture_output=True)
+                result = run("make clean && make -r -j --output-sync=target --no-print-directory", cwd=project, shell=True, capture_output=True)
                 if result.returncode != 0:
                     print("[red]Failed![/red]\n")
                     print(escape(result.stderr.decode()))
@@ -28,12 +28,16 @@ if __name__ == "__main__":
                 
 
             print("Packaging...")
-            build_folder = Path(here) / "build"
-            dest = build_folder / Path(f"{subitem.name}/build")
-            dest.mkdir(exist_ok=True, parents=True)
+            build_folder = Path(here) / "build"            
 
             for project in sub_projects:
+                dest = build_folder / Path(f"{subitem.name}/{project.name}/build")
+                dest.mkdir(exist_ok=True, parents=True)
                 for i in (project / "build").iterdir():
                     if i.is_file() and i.suffix == ".bin" and "_app" not in i.name:
                         print(f"Copying {i} to {dest}")
                         shutil.copy(i, dest)
+                
+                if (project / "run.sh").exists():
+                    dest = build_folder / Path(f"{subitem.name}/{project.name}")
+                    shutil.copy(project / "run.sh", dest)
