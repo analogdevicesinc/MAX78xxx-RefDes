@@ -1,5 +1,0 @@
-include ':app'
-include ':style'
-include ':bluetooth'
-include ':communication'
-rootProject.name='MaxCamAndroid'

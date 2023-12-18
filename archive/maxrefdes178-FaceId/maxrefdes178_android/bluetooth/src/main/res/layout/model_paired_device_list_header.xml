@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/header_text"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/bluetooth_device_list_header_height"
+    android:paddingStart="@dimen/bluetooth_device_list_header_padding_horizontal"
+    android:paddingEnd="@dimen/bluetooth_device_list_header_padding_horizontal"
+    android:gravity="center_vertical"
+    android:textSize="@dimen/bluetooth_device_list_header_text_size"
+    android:textColor="?colorAccent"
+    android:text="@string/bluetooth_list_header_paired_devices"/>

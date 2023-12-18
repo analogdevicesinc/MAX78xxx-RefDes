@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bluetooth_device_name_text">@color/material_typography_primary_text_color_dark</color>
+    <color name="bluetooth_device_address_text">@color/material_typography_secondary_text_color_dark</color>
+    <color name="bluetooth_device_rssi_icon">@color/material_color_grey_700</color>
+
+    <color name="bluetooth_no_available_devices_message_text">@color/material_typography_secondary_text_color_dark</color>
+</resources>

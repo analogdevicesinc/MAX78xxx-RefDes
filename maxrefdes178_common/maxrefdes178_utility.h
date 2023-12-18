@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) 2020-2021 Maxim Integrated Products, Inc., All rights Reserved.
+* Copyright (C) 2020-2023 Maxim Integrated Products, Inc., All rights Reserved.
 *
 * This software is protected by copyright laws of the United States and
 * of foreign countries. This material may also be protected by patent laws
@@ -42,14 +42,12 @@
 //-----------------------------------------------------------------------------
 #include <stdint.h>
 
-
 //-----------------------------------------------------------------------------
 // Defines
 //-----------------------------------------------------------------------------
 #define GPIO_SET(x)         MXC_GPIO_OutSet(x.port, x.mask)
 #define GPIO_CLR(x)         MXC_GPIO_OutClr(x.port, x.mask)
 
-#define GET_RTC_MS()        ((MXC_RTC_GetSecond() * 1000) + (( MXC_RTC_GetSubSecond() / 4096.0)*1000))
 
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
@@ -63,6 +61,6 @@
 // Function declarations
 //-----------------------------------------------------------------------------
 uint16_t crc16_sw(uint8_t *data, uint8_t len);
-
+uint32_t GET_RTC_MS(void);
 
 #endif /* _MAXREFDES178_UTILITY_H_ */
