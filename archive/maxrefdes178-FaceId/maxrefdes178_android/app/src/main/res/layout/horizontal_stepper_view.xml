@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="@string/back"
+            app:icon="@drawable/ic_arrow_left"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/nextButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="@string/next"
+            app:icon="@drawable/ic_arrow_right"
+            app:iconGravity="end"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="10dp"
+            app:layout_constraintBottom_toBottomOf="@id/backButton"
+            app:layout_constraintEnd_toStartOf="@id/nextButton"
+            app:layout_constraintStart_toEndOf="@id/backButton"
+            app:layout_constraintTop_toTopOf="@id/backButton"
+            tools:progress="50" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/firstButton"
+            style="@style/MaximCircleButton"
+            android:layout_marginTop="10dp"
+            android:clickable="false"
+            android:focusable="false"
+            app:backgroundTint="@color/outlined_button_background"
+            app:layout_constraintEnd_toEndOf="@id/firstTextView"
+            app:layout_constraintStart_toStartOf="@id/firstTextView"
+            app:layout_constraintTop_toBottomOf="@id/backButton"
+            tools:text="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/secondButton"
+            style="@style/MaximCircleButton"
+            android:clickable="false"
+            android:focusable="false"
+            app:backgroundTint="@color/outlined_button_background"
+            app:layout_constraintEnd_toEndOf="@id/secondTextView"
+            app:layout_constraintStart_toStartOf="@id/secondTextView"
+            app:layout_constraintTop_toTopOf="@id/firstButton"
+            tools:text="2" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/thirdButton"
+            style="@style/MaximCircleButton"
+            android:clickable="false"
+            android:focusable="false"
+            app:backgroundTint="@color/outlined_button_background"
+            app:layout_constraintEnd_toEndOf="@id/thirdTextView"
+            app:layout_constraintStart_toStartOf="@id/thirdTextView"
+            app:layout_constraintTop_toTopOf="@id/firstButton"
+            tools:text="3" />
+
+        <TextView
+            android:id="@+id/firstTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toStartOf="@id/secondTextView"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/firstButton"
+            tools:text="First Chip Text" />
+
+        <TextView
+            android:id="@+id/secondTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toStartOf="@id/thirdTextView"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toEndOf="@id/firstTextView"
+            app:layout_constraintTop_toBottomOf="@id/secondButton"
+            tools:text="Second Chip Text" />
+
+        <TextView
+            android:id="@+id/thirdTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toEndOf="@id/secondTextView"
+            app:layout_constraintTop_toBottomOf="@id/thirdButton"
+            tools:text="Third Chip Text" />
+
+        <View
+            android:id="@+id/connectionView1"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_margin="4dp"
+            android:background="@color/colorGray"
+            app:layout_constraintBottom_toBottomOf="@id/firstButton"
+            app:layout_constraintEnd_toStartOf="@id/secondButton"
+            app:layout_constraintStart_toEndOf="@id/firstButton"
+            app:layout_constraintTop_toTopOf="@id/firstButton" />
+
+        <View
+            android:id="@+id/connectionView2"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_margin="4dp"
+            android:background="@color/colorGray"
+            app:layout_constraintBottom_toBottomOf="@id/firstButton"
+            app:layout_constraintEnd_toStartOf="@id/thirdButton"
+            app:layout_constraintStart_toEndOf="@id/secondButton"
+            app:layout_constraintTop_toTopOf="@id/firstButton" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</merge>

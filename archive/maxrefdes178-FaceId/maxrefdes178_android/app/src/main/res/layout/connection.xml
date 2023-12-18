@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <eo.view.bluetoothstate.BluetoothStateView
+        android:id="@+id/bluetooth_state_view"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        app:bluetoothAnimateStateChanges="false"
+        app:bluetoothColor="?android:textColorPrimary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/toolbarTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/bluetooth_state_view"
+        app:layout_constraintStart_toEndOf="@id/bluetooth_state_view"
+        android:layout_marginStart="20dp"
+        app:layout_constraintTop_toTopOf="@id/bluetooth_state_view"
+        tools:text="TITLE" />
+
+    <TextView
+        android:id="@+id/toolbarSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        tools:text="00:00:00"
+        android:textColor="#808080"
+        android:textSize="13sp"
+        app:layout_constraintTop_toBottomOf="@id/toolbarTitle"
+        app:layout_constraintStart_toStartOf="@id/toolbarTitle"
+        android:visibility="gone"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

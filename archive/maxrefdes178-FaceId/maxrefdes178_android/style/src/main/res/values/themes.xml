@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Base.Theme.Maxim" parent="Theme.MaterialComponents.Light">
+        <!--Material color attributes -->
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorPrimaryVariant">@color/color_primary_variant</item>
+        <item name="colorSecondary">@color/color_secondary</item>
+        <item name="colorSecondaryVariant">@color/color_secondary_variant</item>
+
+        <item name="android:colorBackground">@color/color_background</item>
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorError">@color/color_error</item>
+
+        <item name="colorOnPrimary">@color/color_on_primary</item>
+        <item name="colorOnSecondary">@color/color_on_secondary</item>
+        <item name="colorOnBackground">@color/color_on_background</item>
+        <item name="colorOnSurface">@color/color_on_surface</item>
+        <item name="colorOnError">@color/color_on_error</item>
+
+        <!--Material type attributes-->
+        <item name="textAppearanceHeadline1">@style/TextAppearance.Maxim.Headline1</item>
+        <item name="textAppearanceHeadline2">@style/TextAppearance.Maxim.Headline2</item>
+        <item name="textAppearanceHeadline3">@style/TextAppearance.Maxim.Headline3</item>
+        <item name="textAppearanceHeadline4">@style/TextAppearance.Maxim.Headline4</item>
+        <item name="textAppearanceHeadline5">@style/TextAppearance.Maxim.Headline5</item>
+        <item name="textAppearanceHeadline6">@style/TextAppearance.Maxim.Headline6</item>
+        <item name="textAppearanceSubtitle1">@style/TextAppearance.Maxim.Subtitle1</item>
+        <item name="textAppearanceSubtitle2">@style/TextAppearance.Maxim.Subtitle2</item>
+        <item name="textAppearanceBody1">@style/TextAppearance.Maxim.Body1</item>
+        <item name="textAppearanceBody2">@style/TextAppearance.Maxim.Body2</item>
+        <item name="textAppearanceButton">@style/TextAppearance.Maxim.Button</item>
+        <item name="textAppearanceCaption">@style/TextAppearance.Maxim.Caption</item>
+        <item name="textAppearanceOverline">@style/TextAppearance.Maxim.Overline</item>
+
+        <!--Material shape attributes-->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Maxim.SmallComponent
+        </item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Maxim.MediumComponent
+        </item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Maxim.LargeComponent
+        </item>
+
+        <!--Component styles-->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.MaterialComponents.Dialog.Alert
+        </item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Maxim.BottomSheetDialog</item>
+        <item name="navigationViewStyle">@style/Widget.Maxim.NavigationView</item>
+        <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar.Surface</item>
+
+        <!--Remap legacy AppCompat attributes to MaterialComponent attributes-->
+        <item name="colorPrimaryDark">?colorPrimaryVariant</item>
+        <item name="colorAccent">?colorSecondary</item>
+    </style>
+
+
+    <style name="Theme.Maxim" parent="Base.Theme.Maxim" />
+
+</resources>
