@@ -1,0 +1,66 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion config.compileSdk
+
+    defaultConfig {
+        minSdkVersion config.minSdk
+        targetSdkVersion config.targetSdk
+
+        versionCode config.versionCode
+        versionName config.versionName
+
+        vectorDrawables.useSupportLibrary = true
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+        test.java.srcDirs += 'src/test/kotlin'
+    }
+
+    kapt {
+        correctErrorTypes = true
+    }
+}
+
+dependencies {
+    implementation project(':style')
+
+    final epoxyVersion = '3.7.0'
+
+    implementation deps.kotlinStdLib
+    implementation deps.appcompat
+    implementation deps.material
+    implementation deps.constraintLayout
+    implementation deps.recyclerView
+    implementation deps.timber
+
+    implementation deps.lifecycleExtensions
+    implementation deps.lifecycleCommon
+    implementation deps.liveData
+    implementation deps.viewModel
+
+    implementation "com.airbnb.android:epoxy:$epoxyVersion"
+    kapt "com.airbnb.android:epoxy-processor:$epoxyVersion"
+
+    implementation "blue.aodev:material-values:1.1.1"
+
+    implementation "com.afollestad.material-dialogs:core:0.9.6.0"
+    implementation "no.nordicsemi.android.support.v18:scanner:1.4.0"
+
+    testImplementation deps.junit
+    androidTestImplementation deps.atsl
+    androidTestImplementation deps.espresso
+}

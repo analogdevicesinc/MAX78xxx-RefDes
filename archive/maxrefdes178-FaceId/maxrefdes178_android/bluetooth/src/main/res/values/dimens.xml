@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="bluetooth_device_list_header_height">@dimen/material_subheader_height</dimen>
+    <dimen name="bluetooth_device_list_header_padding_horizontal">@dimen/material_subheader_padding_start</dimen>
+    <dimen name="bluetooth_device_list_header_text_size">@dimen/material_subheader_text_size</dimen>
+
+    <dimen name="bluetooth_device_height">@dimen/material_list_two_line_dense_height</dimen>
+    <dimen name="bluetooth_device_icon_size">@dimen/material_list_icon_size</dimen>
+    <dimen name="bluetooth_device_icon_margin_start">@dimen/material_list_icon_first_position_margin_start</dimen>
+    <dimen name="bluetooth_device_text_margin_start">@dimen/material_list_text_second_position_edge_margin_start</dimen>
+    <dimen name="bluetooth_device_text_margin_end">@dimen/material_list_text_last_position_margin_end</dimen>
+    <dimen name="bluetooth_device_name_text_size">@dimen/material_list_normal_primary_text_size</dimen>
+    <dimen name="bluetooth_device_address_text_size">@dimen/material_list_normal_secondary_text_size</dimen>
+
+    <dimen name="bluetooth_no_available_devices_message_height">@dimen/material_list_single_line_without_avatar_normal_height</dimen>
+    <dimen name="bluetooth_no_available_devices_message_padding_horizontal">@dimen/material_content_edge_margin_horizontal</dimen>
+    <dimen name="bluetooth_no_available_devices_message_text_size">@dimen/material_list_normal_secondary_text_size</dimen>
+
+    <dimen name="error_view_icon_size">@dimen/material_icon_size_product</dimen>
+    <dimen name="error_view_text_size">@dimen/material_subheader_text_size</dimen>
+
+    <dimen name="bluetooth_dialog_min_height">400dp</dimen>
+    <dimen name="bluetooth_dialog_side_padding">8dp</dimen>
+</resources>

@@ -1,0 +1,210 @@
+/*******************************************************************************
+ * Copyright (C) 2016-2023 Maxim Integrated Products, Inc., All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of Maxim Integrated
+ * Products, Inc. shall not be used except as stated in the Maxim Integrated
+ * Products, Inc. Branding Policy.
+ *
+ * The mere transfer of this software does not imply any licenses
+ * of trade secrets, proprietary technology, copyrights, patents,
+ * trademarks, maskwork rights, or any other form of intellectual
+ * property whatsoever. Maxim Integrated Products, Inc. retains all
+ * ownership rights.
+ *
+ ******************************************************************************/
+
+FLASH_ORIGIN = 0x10000000;
+FLASH_SIZE = 0x00080000; /* 512kB Flash */
+
+BOOTLOADER_SIZE = 0x8000; /* 32k for flash bootloader */
+BOOTMEM_SIZE = 0x40; /* 64 bytes of memory for flash bootloader */
+ROM_BL_PAGE_SIZE = 0x2000; /* Last page is used by ROM bootloader */
+MAINAPP_SIZE = FLASH_SIZE - BOOTLOADER_SIZE - BOOTMEM_SIZE - ROM_BL_PAGE_SIZE;
+
+BOOTLOADER_ORIGIN = FLASH_ORIGIN;
+MAINAPP_ORIGIN = BOOTLOADER_ORIGIN + BOOTLOADER_SIZE;
+BOOTMEM_ORIGIN = MAINAPP_ORIGIN + MAINAPP_SIZE;
+ROM_BL_PAGE_ORIGIN = BOOTMEM_ORIGIN + BOOTMEM_SIZE;
+
+MEMORY {
+    ROM        (rx) : ORIGIN = 0x00000000,         LENGTH = 0x00010000 /* 64kB ROM */
+    BOOTLOADER (rx) : ORIGIN = BOOTLOADER_ORIGIN,  LENGTH = BOOTLOADER_SIZE
+    FLASH      (rx) : ORIGIN = MAINAPP_ORIGIN,     LENGTH = MAINAPP_SIZE 
+    BOOTMEM    (rw) : ORIGIN = BOOTMEM_ORIGIN,     LENGTH = BOOTMEM_SIZE 
+    ROM_BL_PAGE(rw) : ORIGIN = ROM_BL_PAGE_ORIGIN, LENGTH = ROM_BL_PAGE_SIZE 
+    SRAM      (rwx) : ORIGIN = 0x20000000,         LENGTH = 0x00020000 /* 128kB SRAM */
+}
+
+TARGET(binary) /* specify the file format of binary file */
+INPUT (embeddings.bin) /* bin file path */
+OUTPUT_FORMAT(default) /* restore the out file format */
+
+SECTIONS {
+    .rom :
+    {
+        KEEP(*(.rom_vector))
+        *(.rom_handlers*)
+    } > ROM
+
+    .text :
+    {
+        _text = .;
+        KEEP(*(.isr_vector))
+        *(.text*)    /* program code */
+        *(.rodata*)  /* read-only data: "const" */
+
+        KEEP(*(.init))
+        KEEP(*(.fini))
+
+        /* C++ Exception handling */
+        KEEP(*(.eh_frame*))
+        _etext = .;
+    } > FLASH
+
+    /* Binary import */
+    .bin_storage :
+    {
+       FILL(0xFF)
+      _bin_start_ = .;
+      KEEP(*(.bin_storage_img))
+      _bin_end_ = .;
+      . = ALIGN(4);
+    } > FLASH
+
+    /* FaceID embeddings database 32kB sector aligned  */
+    .embeddings_storage :
+    {
+      /* Align to the sector size */
+      . = ALIGN(0x2000);
+      _embeddings_start_ = .;
+      embeddings.bin
+      . = _embeddings_start_ + 0x8000;
+      _embeddings_end_ = .;
+    } > FLASH
+
+    .rom_code :
+    {
+        . = ALIGN(16);
+        _sran_code = .;
+        *(.rom_code_section)
+        _esran_code = .;
+    } > ROM
+
+    .flash_code :
+    {
+        . = ALIGN(16);
+        _sran_code = .;
+        *(.flash_code_section)
+        _esran_code = .;
+    } > FLASH
+
+    .sram_code :
+    {
+        . = ALIGN(16);
+        _sran_code = .;
+        *(.sram_code_section)
+        _esran_code = .;
+    } > SRAM
+
+    /* it's used for C++ exception handling      */
+    /* we need to keep this to avoid overlapping */
+    .ARM.exidx :
+    {
+        __exidx_start = .;
+        *(.ARM.exidx*)
+        __exidx_end = .;
+    } > FLASH
+
+    .data :
+    {
+        _data = ALIGN(., 4);
+        *(.data*)           /*read-write initialized data: initialized global variable*/
+
+        /* These array sections are used by __libc_init_array to call static C++ constructors */
+        . = ALIGN(4);
+        /* preinit data */
+        PROVIDE_HIDDEN (__preinit_array_start = .);
+        KEEP(*(.preinit_array))
+        PROVIDE_HIDDEN (__preinit_array_end = .);
+
+        . = ALIGN(4);
+        /* init data */
+        PROVIDE_HIDDEN (__init_array_start = .);
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array))
+        PROVIDE_HIDDEN (__init_array_end = .);
+
+        . = ALIGN(4);
+        /* finit data */
+        PROVIDE_HIDDEN (__fini_array_start = .);
+        KEEP(*(SORT(.fini_array.*)))
+        KEEP(*(.fini_array))
+        PROVIDE_HIDDEN (__fini_array_end = .);
+
+        _edata = ALIGN(., 4);
+    } > SRAM AT>FLASH
+    __load_data = LOADADDR(.data);
+
+    .bss :
+    {
+        . = ALIGN(4);
+        _bss = .;
+        *(.bss*)     /*read-write zero initialized data: uninitialized global variable*/
+        *(COMMON)
+        _ebss = ALIGN(., 4);
+    } > SRAM
+
+    .shared :
+    {
+        . = ALIGN(4);
+        _shared = .;
+        *(.mailbox*)
+        . = ALIGN(4);
+        *(.shared*)     /*read-write zero initialized data: uninitialized global variable*/
+        _eshared = ALIGN(., 4);
+    } > SRAM
+    __shared_data = LOADADDR(.shared);
+
+    /* Set stack top to end of RAM, and stack limit move down by
+     * size of stack_dummy section */
+    __StackTop = ORIGIN(SRAM) + LENGTH(SRAM);
+    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
+
+    /* .stack_dummy section doesn't contains any symbols. It is only
+     * used for linker to calculate size of stack sections, and assign
+     * values to stack symbols later */
+    .stack_dummy (COPY):
+    {
+        *(.stack*)
+    } > SRAM
+
+    .heap (COPY):
+    {
+        . = ALIGN(4);
+        *(.heap*)
+        __HeapLimit = ABSOLUTE(__StackLimit);
+    } > SRAM
+
+    PROVIDE(__stack = __StackTop);
+
+    /* Check if data + heap + stack exceeds RAM limit */
+    ASSERT(__StackLimit >= _ebss, "region RAM overflowed with stack")
+}

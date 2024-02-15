@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/bluetooth_device_height"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <ImageView
+        android:id="@+id/device_icon"
+        android:layout_width="@dimen/bluetooth_device_icon_size"
+        android:layout_height="@dimen/bluetooth_device_icon_size"
+        android:layout_marginStart="@dimen/bluetooth_device_icon_margin_start"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/ic_bluetooth_type_unknown" />
+
+    <TextView
+        android:id="@+id/device_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/bluetooth_device_text_margin_start"
+        android:layout_marginEnd="@dimen/bluetooth_device_text_margin_end"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/bluetooth_device_name_text"
+        android:textSize="@dimen/bluetooth_device_name_text_size"
+        app:layout_constraintBottom_toTopOf="@id/device_address"
+        app:layout_constraintEnd_toStartOf="@id/signal_strength_icon"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Unknown device" />
+
+    <TextView
+        android:id="@+id/device_address"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/bluetooth_device_address_text"
+        android:textSize="@dimen/bluetooth_device_address_text_size"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/device_name"
+        app:layout_constraintStart_toStartOf="@id/device_name"
+        app:layout_constraintTop_toBottomOf="@id/device_name"
+        tools:text="01:23:45:67:89:AB" />
+
+    <ImageView
+        android:id="@+id/signal_strength_icon"
+        android:layout_width="@dimen/bluetooth_device_icon_size"
+        android:layout_height="@dimen/bluetooth_device_icon_size"
+        android:layout_gravity="center_vertical|end"
+        android:tint="@color/bluetooth_device_rssi_icon"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/rssi_value"
+        app:layout_constraintEnd_toEndOf="@id/rssi_value"
+        app:layout_constraintStart_toStartOf="@id/rssi_value"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:srcCompat="@drawable/ic_signal_strength"
+        tools:src="@drawable/ic_signal_strength_3_bar" />
+
+    <TextView
+        android:id="@+id/rssi_value"
+        android:layout_width="56dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/material_list_icon_last_position_margin_horizontal"
+        android:gravity="center_horizontal"
+        android:textAppearance="?textAppearanceCaption"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/device_name"
+        app:layout_constraintTop_toBottomOf="@id/signal_strength_icon"
+        tools:text="-100 dBm" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
